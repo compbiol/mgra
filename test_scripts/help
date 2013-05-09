@@ -1,0 +1,2 @@
+
+sfdp -Goverlap=prism -Tpdf stage0.dot -o stage.pdf

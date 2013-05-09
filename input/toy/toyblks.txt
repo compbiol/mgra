@@ -1,0 +1,18 @@
+# Synteny blocks for a set of 4 toy genomes shown in Fig.3 in the paper:
+# Max Alekseyev, Pavel Pevzner "Breakpoint Graphs and Ancestral Genome Reconstructions."
+# Genome Research, special issue "Genomics and Darwinism", 2009.
+
+> P1
++a -c -b $
++d +e +f $
+
+> P2
++d +e +b +c $
++a +f $
+
+> P3
++a -d $
+-c -b +e -f $
+
+> P4
++d -a -c -b +e -f $

@@ -285,11 +285,10 @@ void save_dot(const ProblemInstance& cfg, size_t stage, bool outbad = false) {
 
     //multimularcs_t Mx = MBG.get_adjacent_multiedges_v2(x);
     mularcs_t Mx = MBG.get_adjacent_multiedges(x);
-//#ifndef VERSION2
+
     if (Mx.size() == 1) { 
       continue; // trivial cycle
     } 
-//#endif
 
     for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
       const std::string& y = im->first;
@@ -333,6 +332,93 @@ void save_dot(const ProblemInstance& cfg, size_t stage, bool outbad = false) {
   dot << "}" << std::endl;
   dot.close();
 }
+
+void save_components(const ProblemInstance& cfg, size_t stage) { 
+  std::string dotname = cfg.get_graphname() + toString(stage);
+
+  equivalence<vertex_t> CC; // connected components
+  		
+  for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {
+    CC.addrel(*is, *is);
+  } 
+  
+  for(size_t i = 0; i < MBG.size_graph(); ++i) {
+    for(auto il = MBG.LG[i].cbegin(); il != MBG.LG[i].cend(); ++il) {
+      CC.addrel(il->first, il->second);
+    }
+  }
+
+  CC.update();    
+  /*for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {    
+    mularcs_t M = MBG.get_adjacent_multiedges(*is);
+
+    for(auto im = M.cbegin(); im != M.cend(); ++im) {    
+	CC.addrel(*is, im->first);
+    }
+  }
+  
+  CC.update();*/
+  
+  std::map<std::string, std::set<std::string> > components;
+  CC.get_eclasses(components);
+    
+  std::cerr << components.size() << std::endl;
+
+  size_t i = 0; 
+  for(auto it = components.cbegin(); it != components.cend(); ++it) { 
+    const std::set<std::string>& current = it->second;
+    if (current.size() <= 7) {
+      continue;
+    }
+
+    std::cerr << current.size() << std::endl; 
+  
+    std::string namefile = dotname + "_" + toString(++i) + ".dot"; 
+    std::ofstream dot(namefile.c_str());
+
+    dot << "graph {" << std::endl;
+    if (!cfg.get_colorscheme().empty()) { 
+      dot << "edge [colorscheme=" << cfg.get_colorscheme() << "];" << std::endl;
+    } 
+
+    std::unordered_set<vertex_t> mark; // vertex set
+    for(auto is = current.cbegin(); is != current.cend(); ++is) {
+      const std::string& x = *is;
+  
+      if (x == Infty) { 
+	continue;
+      } 
+
+      mularcs_t Mx = MBG.get_adjacent_multiedges(x);
+
+      if (Mx.size() == 1) { 
+	continue; // trivial cycle
+      } 
+      
+      for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
+	const std::string& y = im->first;
+	
+	if (mark.find(y) != mark.end()) { 
+	  continue; // already output
+	} 
+
+	const Mcolor& C = im->second;
+	for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
+	  if (y != Infty) { 
+	    dot << "\t\"" << x << "\"\t--\t\"";
+	    dot << y << "\"\t[";
+	    dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;
+	  } 
+	}
+      }
+      mark.insert(x);
+    }
+
+    dot << "}" << std::endl;
+    dot.close();
+  } 
+
+} 
 
 /*
 canformQ(x,Q) говорит, можно ли из мультицветов мультиребер инцидентных вершине x образовать мультицвет Q.
@@ -681,6 +767,8 @@ void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
 #ifndef VERSION2
   write_stats.print_fair_edges(graph);
   write_stats.histStat();
+#else 
+  save_components(cfg, 5);
 #endif
 } 
 

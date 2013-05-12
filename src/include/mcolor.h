@@ -32,6 +32,7 @@ struct Mcolor {
 	} 
 
 	bool is_good_multiedge() const;
+	bool includes(const Mcolor& second) const;
 
 	inline void insert(size_t i) {
 		if (main_color.find(i) == main_color.end()) {  
@@ -57,8 +58,6 @@ struct Mcolor {
 		return main_color.size();
 	} 
 	
-	bool includes(const Mcolor& second) const;
-
 	inline iter begin() { 
 		return main_color.begin();
 	} 

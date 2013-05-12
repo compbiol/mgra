@@ -20,6 +20,7 @@ struct Statistics {
   std::vector<Mcolor> get_new_color() const;
 
 private:
+  void count_weak_simple_vertex(const MBGraph& graph); 
   void count_compl_multiedges(const MBGraph& graph); 
   void count_not_compl_multiedges(const MBGraph& graph); 
   void count_cycles(const MBGraph& graph);

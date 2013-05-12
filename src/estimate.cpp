@@ -5,6 +5,10 @@ Statistics::Statistics(const MBGraph& graph) {
   count_not_compl_multiedges(graph);	
   count_cycles(graph);
   count_chromosomes(graph); 
+
+#ifdef VERSION2 
+  count_weak_simple_vertex(graph);
+#endif
 }	      	
 
 std::vector<std::string> Statistics::get_compl_stat(const MBGraph& graph) const { 
@@ -52,6 +56,26 @@ std::vector<std::string> Statistics::get_compl_stat(const MBGraph& graph) const 
     output.push_back(it->second); 
   }  	
   return output;
+} 
+
+void Statistics::count_weak_simple_vertex(const MBGraph& graph) { 
+  size_t irreg_count = 0;
+  size_t count = 0; 
+
+  for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
+    mularcs_t Mx = graph.get_adjacent_multiedges(*it);
+    
+    if (Mx.size() == 2) { 
+      if (Mx.cbegin()->first == Infty || Mx.crbegin()->first == Infty) { 
+	++irreg_count; 
+      } else { 
+	++count;
+      } 
+    } 
+  } 
+
+  std::cerr << "Regular vertex: " << count << std::endl;
+  std::cerr << "Irregular vertex: " << irreg_count << std::endl;
 } 
 
 std::vector<std::string> Statistics::get_no_compl_stat(const MBGraph& graph) const { 
@@ -229,12 +253,12 @@ void Statistics::count_chromosomes(const MBGraph& graph) { //FIXME
 	  }
 	  
 	  processed.insert(y);
-	  if (!graph.LG[i].defined(y)) {
+	  if (!graph.is_there_edge(i, y)) {
 	    ++liniar_chr[i];
 	    break;
 	  }
 	  
-	  y = graph.LG[i][y];
+	  y = graph.get_adj_vertex(i, y);
 	  if (member(processed, y)) {
 	    ++circular_chr[i];
 	    break;
@@ -243,8 +267,8 @@ void Statistics::count_chromosomes(const MBGraph& graph) { //FIXME
 	  y = graph.get_adj_vertex(y);
 	}
 		
-	if (graph.LG[i].defined(*is)) {
-	  std::string y = graph.LG[i][*is];
+	if (graph.is_there_edge(i, *is)) {
+	  std::string y = graph.get_adj_vertex(i, *is);
 					
 	  while (processed.find(y) == processed.end()) {
 	    processed.insert(y);
@@ -254,10 +278,10 @@ void Statistics::count_chromosomes(const MBGraph& graph) { //FIXME
 	    } 
 
 	    processed.insert(y);
-	    if (!graph.LG[i].defined(y))  { 
+	    if (!graph.is_there_edge(i, y))  { 
 	      break;
 	    } 
-	    y = graph.LG[i][y];
+	    y = graph.get_adj_vertex(i, y);
 	  }
 	}		    
       }	

@@ -27,6 +27,7 @@
 #include <unordered_set>
 using namespace std;
 
+#include "Wdots.h"
 #include "genome_match.h"
 #include "structures/Tree.h"
 
@@ -41,24 +42,15 @@ extern std::ofstream outlog;
 const std::string Infty = "oo";
 
 typedef std::string vertex_t;
-
-typedef sym_multi_hashmap<vertex_t> multi_hashmap;
-
 typedef sym_multi_hashmap<vertex_t> partgraph_t; //s graph represented in list of edges/ but not
-
 typedef std::map <vertex_t, Mcolor> mularcs_t;
 typedef std::multimap <vertex_t, Mcolor> multimularcs_t;
 
-/*Unordered set of vertex is bad, because need order. Why? */
 struct MBGraph {
-	void init(const std::vector<Genome>& genome, const ProblemInstance& cfg); //it's constructor
+	void init(const std::vector<Genome>& genome, const ProblemInstance& cfg);
 
 	/*function for colors*/	
 	void update_complement_color(const std::vector<Mcolor>& colors);
-
-	/*inline bool is_have_complement_color(const Mcolor& color) const { 
-		CColorM.find(color) != CColorM.end()
-	} */
 
 	inline Mcolor get_complement_color(const Mcolor& color) const { 
 		assert(CColorM.find(color) != CColorM.end());
@@ -78,10 +70,16 @@ struct MBGraph {
 	} 
 
 	/*function for graphs*/
-	mularcs_t get_adjacent_multiedges(const vertex_t& u) const; 
-	//multimularcs_t get_adjacent_multiedges_v2(const vertex_t& u) const;
-	multimularcs_t get_adjacent_multiedges_with_split(const vertex_t& u) const; 
+	inline void add_edge(size_t index, const std::string& first, const std::string& second) { 
+		local_graph[index].insert(first, second);
+	}
 
+	inline void erase_edge(size_t index, const std::string& first, const std::string& second) { 
+		return local_graph[index].erase(first, second);
+	} 
+	
+	mularcs_t get_adjacent_multiedges(const vertex_t& u) const; 
+	multimularcs_t get_adjacent_multiedges_with_split(const vertex_t& u) const; 
 	std::map<std::pair<Mcolor, Mcolor>, size_t> get_count_Hsubgraph() const; 
 
 	inline bool is_simple_vertice(const mularcs_t& adj_edges) const {
@@ -103,38 +101,45 @@ struct MBGraph {
 		return false; 
 	} 
 
-	inline size_t size_graph() const { 
-		return LG.size();
-	} 
-
-	inline partgraph_t get_obverce_graph() const { //it's big function. and use only gen_dist 
-		return obverse_edges;
-	}  
-
-	inline vertex_t get_adj_vertex(const vertex_t& v) const {
-		assert(obverse_edges.find(v) != obverse_edges.end());
-		return obverse_edges.find(v)->second;
-	} 
-
- 	inline std::set<std::string>::const_iterator begin_vertices() const { 
+	inline std::set<std::string>::const_iterator begin_vertices() const { 
 		return vertex_set.cbegin();
 	} 
 	
 	inline std::set<std::string>::const_iterator end_vertices() const { 
 		return vertex_set.cend();
+	}
+
+	inline size_t size_graph() const { 
+		return local_graph.size();
 	} 
 
-	inline partgraph_t::const_iterator begin_partgraph(size_t index) const { 
-		return LG[index].cbegin();
+	inline bool is_there_edge(size_t index, const std::string& first) const { 
+		return local_graph[index].defined(first);		
+	}
+
+	inline vertex_t get_adj_vertex(const vertex_t& v) const {
+		assert(obverse_edges.find(v) != obverse_edges.end());
+		return obverse_edges.find(v)->second;
+	} 
+ 
+	inline std::string get_adj_vertex(size_t index, const std::string& first) const { 
+		return local_graph[index][first];
+	} 	 
+	
+	inline partgraph_t get_local_graph(size_t index) const { 
+		return local_graph[index];
 	} 
 	
-	inline partgraph_t::const_iterator end_partgraph(size_t index) const { 
-		return LG[index].cend(); 
+	inline partgraph_t get_obverce_graph() const {
+		return obverse_edges;
+	}  
+	
+	inline std::vector<partgraph_t>::const_iterator begin_local_graphs() const { 
+		return local_graph.cbegin();
 	} 
-
-	/************Other**************/
-	inline void erase_vertex_in_graph(const vertex_t& vertex) { 
-		obverse_edges.erase(vertex);
+	
+	inline std::vector<partgraph_t>::const_iterator end_local_graphs() const { 
+		return local_graph.cend(); 
 	} 
 private:
 	void parsing_tree(const std::vector<Genome>& genomes, const ProblemInstance& cfg);
@@ -142,19 +147,19 @@ private:
 
 	std::set<Mcolor> split_color(const Mcolor& Q) const;
 	
-	partgraph_t add_edges(const Genome& genome, const std::unordered_set<orf_t>& blocks) const;
 	void build_graph(const std::vector<Genome>& genomes); 	
+	void add_edges(size_t index, const Genome& genome, const std::unordered_set<orf_t>& blocks);
 private:
-	//edges
+	std::set<std::string> vertex_set;  // set of vertices //hash set? 
 	partgraph_t obverse_edges; //OBverse relation 
-	std::set<std::string> vertex_set;  // set of vertices //rename and take private and hash set
-
+	std::vector<partgraph_t> local_graph; // local graphs of each color //rename and take private 	
+		
 	//color
 	sym_map<Mcolor> CColorM; //complementary multicolor
-	std::set<Mcolor> all_T_color;	//all T-consistent colors	
+	std::set<Mcolor> all_T_color;	//all T-consistent colors
+
+	typedef sym_multi_hashmap<vertex_t> multi_hashmap;	
 public:
-	std::vector<partgraph_t> LG; // local graphs of each color //rename and take private 	
-	
 	std::set<Mcolor> DiColor;   // directed colors
 	std::vector<Mcolor> TColor; // colors corresponding to ancestral genomes. nodes in tree
 	std::set<Mcolor> DiColorUnsafe; //stage 4 wtf

@@ -230,15 +230,13 @@ void printchr(const std::string& outname, const std::set<std::pair<path_t, bool>
 	out.close();
 }
 
-
-
 // fill in OP container with endpoints of q-obverse paths,
 // starting and ending at OP
 void get_obverse_paths(map< vertex_t, set<vertex_t> >& OP, const Mcolor Q) {
     map< vertex_t, set<int> > processed;
 
     for(auto iq = Q.cbegin(); iq != Q.cend(); ++iq) {
-        const partgraph_t& PG = MBG.LG[iq->first];
+        const partgraph_t& PG = MBG.get_local_graph(iq->first);
 
 	for(auto ip = OP.begin(); ip != OP.end(); ++ip) {
 
@@ -266,189 +264,6 @@ void get_obverse_paths(map< vertex_t, set<vertex_t> >& OP, const Mcolor Q) {
 	}
     }
 }
-
-// Save .dot file and output statistics of synteny blocks representing breakpoints
-void save_dot(const ProblemInstance& cfg, size_t stage, bool outbad = false) {
-  std::string dotname = cfg.get_graphname() + toString(stage) + ".dot";
-  std::ofstream dot(dotname.c_str());
-
-  dot << "graph {" << std::endl;
-  if (!cfg.get_colorscheme().empty()) { 
-    dot << "edge [colorscheme=" << cfg.get_colorscheme() << "];" << std::endl;
-  } 
-
-  int infv = 0;
-  size_t ncls = 0;
-  std::unordered_set<vertex_t> mark; // vertex set
-  for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {
-    const std::string& x = *is;
-
-    //multimularcs_t Mx = MBG.get_adjacent_multiedges_v2(x);
-    mularcs_t Mx = MBG.get_adjacent_multiedges(x);
-
-    if (Mx.size() == 1) { 
-      continue; // trivial cycle
-    } 
-
-    for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
-      const std::string& y = im->first;
-
-      if (mark.find(y) != mark.end()) { 
-	continue; // already output
-      } 
-
-      const Mcolor& C = im->second;
-      for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
-       	/* ************** output edge (x,y) **************** */
-#ifndef VERSION2
-	dot << "\t\"" << x << "\"\t--\t\"";
-	if (y == Infty) {
-	  if (ic == C.cbegin()) { 
-	    --infv;
-	  } 
-	  dot << infv << "\"\t[len=0.75,";
-	} else { 
-	  dot << y << "\"\t[";
-	} 
-	dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;
-#else 
-	if (y != Infty) { 
-	  dot << "\t\"" << x << "\"\t--\t\"";
-	  dot << y << "\"\t[";
-	  dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;
-	} 
-#endif
-      }
-    }
-    mark.insert(x);
-  }
-
-#ifndef VERSION2
-  for(int i = infv; i < 0; ++i) {
-    dot << "\t\"" << i << "\"\t[shape=point,color=black];" << std::endl;
-  }
-#endif
-
-  dot << "}" << std::endl;
-  dot.close();
-}
-
-void save_components(const ProblemInstance& cfg, size_t stage) { 
-  std::string dotname = cfg.get_graphname() + toString(stage);
-
-  equivalence<vertex_t> CC; // connected components
-  		
-  for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {
-    CC.addrel(*is, *is);
-  } 
-  
-  for(size_t i = 0; i < MBG.size_graph(); ++i) {
-    for(auto il = MBG.LG[i].cbegin(); il != MBG.LG[i].cend(); ++il) {
-      CC.addrel(il->first, il->second);
-    }
-  }
-
-  CC.update();    
-  /*for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {    
-    mularcs_t M = MBG.get_adjacent_multiedges(*is);
-
-    for(auto im = M.cbegin(); im != M.cend(); ++im) {    
-	CC.addrel(*is, im->first);
-    }
-  }
-  
-  CC.update();*/
-  
-  std::map<std::string, std::set<std::string> > components;
-  CC.get_eclasses(components);
-    
-  std::cerr << components.size() << std::endl;
-
-  size_t i = 0; 
-  for(auto it = components.cbegin(); it != components.cend(); ++it) { 
-    const std::set<std::string>& current = it->second;
-    if (current.size() <= 7) {
-      continue;
-    }
-
-    std::cerr << current.size() << std::endl; 
-  
-    std::string namefile = dotname + "_" + toString(++i) + ".dot"; 
-    std::ofstream dot(namefile.c_str());
-
-    dot << "graph {" << std::endl;
-    if (!cfg.get_colorscheme().empty()) { 
-      dot << "edge [colorscheme=" << cfg.get_colorscheme() << "];" << std::endl;
-    } 
-
-    std::unordered_set<vertex_t> mark; // vertex set
-    for(auto is = current.cbegin(); is != current.cend(); ++is) {
-      const std::string& x = *is;
-  
-      if (x == Infty) { 
-	continue;
-      } 
-
-      mularcs_t Mx = MBG.get_adjacent_multiedges(x);
-
-      if (Mx.size() == 1) { 
-	continue; // trivial cycle
-      } 
-      
-      for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
-	const std::string& y = im->first;
-	
-	if (mark.find(y) != mark.end()) { 
-	  continue; // already output
-	} 
-
-	const Mcolor& C = im->second;
-	for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
-	  if (y != Infty) { 
-	    dot << "\t\"" << x << "\"\t--\t\"";
-	    dot << y << "\"\t[";
-	    dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;
-	  } 
-	}
-      }
-      mark.insert(x);
-    }
-
-    dot << "}" << std::endl;
-    dot.close();
-  } 
-
-} 
-
-/*
-canformQ(x,Q) говорит, можно ли из мультицветов мультиребер инцидентных вершине x образовать мультицвет Q.
-*/
-/* 
-can incident multiedges of x form multicolor Q (current don't check T-consistent formation)
-if return false, then Q cannot be formed
-if true - who knows...
-*/
-bool canformQoo = true; // safe choice, at later stages may change to false
-
-bool canformQ(const std::string& x, const Mcolor& Q) {
-    if (x == Infty) {
-	return canformQoo;
-    }
-
-    // color Q can be formed if some it adjacent multicolors form a partition of Q
-    // OR 
-    // if every intersection Q \cap QQ = \emptyset or QQ.
-
-    multimularcs_t M = MBG.get_adjacent_multiedges_with_split(x);
-    for(auto im = M.cbegin(); im != M.cend(); ++im) { 
-	Mcolor C(Q, im->second, Mcolor::Intersection); 
-	if (C.size() > 0 && C.size() < im->second.size()) { 
-		return false;
-	} 
-    }
-    return true;
-}
-
 
 /* Given a non-linear genome PG of a multicolor Q and a transformation into a linear genome,
  * find linearizing fissions in the transformation, move them to beginning, and apply to PG
@@ -658,7 +473,6 @@ transform_t decircularize(partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
     return D;
 }
 
-
 /*
 Метод собирает статистику после шага. 
 Обновляет complement цвета в графе. 
@@ -669,7 +483,8 @@ void save_information(writer::Wstats& wstats, size_t stage, const ProblemInstanc
   MBG.update_complement_color(st.get_new_color());
   auto p = st.get_compl_stat(graph);
   wstats.print_all_statistics(stage, st, cfg, graph);
-  save_dot(cfg, stage, flag);
+  writer::Wdots dots;
+  dots.save_dot(cfg, stage);
 } 
 
 void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
@@ -685,17 +500,22 @@ void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
     isChanged = false; 
 
     if ((cfg.get_stages() >= 1) && !isChanged) {
-      isChanged = stage1(graph);
+      Stage1 st1(graph);
+      isChanged = st1.stage1();
+      graph = st1.get_graph();	
+
       //if (!isChanged) { isChanged = ConvPhylTreeAll(MBG,26); }  // cut hanging free ends  
 
       if (print_dots[1] && !isChanged) {
-	print_dots[1] = false;    		
+	print_dots[1] = false;    	
 	save_information(write_stats, 1, cfg, graph);		
       }
+
     }
 
     if ((cfg.get_stages() >= 2) && !isChanged) {
-      isChanged = ConvPhylTreeAll(graph, 2); 
+      Stage2 st2;//(canformQoo);
+      isChanged = st2.stage2(graph);
 
       if (print_dots[2] && !isChanged) {
 	print_dots[2] = false;
@@ -725,13 +545,7 @@ void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
     if ((cfg.get_stages() >= 4) && !isChanged) {
       outlog << "Stage: 4" << std::endl;
 
-      outlog << "SplitBadColors is ON" << std::endl;
-      graph.SplitBadColors = true; //FIXME
-
-      isChanged = ConvPhylTreeAll(graph, 2);
-
-      graph.SplitBadColors = false;
-      outlog << "SplitBadColors is OFF" << std::endl;
+      isChanged = stage4(graph);
 
       if (print_dots[4] && !isChanged) {
 	print_dots[4] = false;
@@ -761,16 +575,18 @@ void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
 
   }	
 
-
-  save_dot(cfg, 99, true);
+  writer::Wdots dot; 
+  dot.save_dot(cfg, 99);
 
 #ifndef VERSION2
   write_stats.print_fair_edges(graph);
   write_stats.histStat();
 #else 
-  save_components(cfg, 5);
+  writer::Wdots components;
+  components.save_components(cfg, 5);
 #endif
 } 
+
 
 ////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[]) {
@@ -832,10 +648,10 @@ int main(int argc, char* argv[]) {
 		std::string target = PI.get_target();
 	    for(int i = 0; i < target.size(); ++i) {
 		int j = genome_match::get_number(target.substr(i, 1));//PI.get_number_genome_to_name(target.substr(i, 1));
-		if( MBG.LG[j].defined(x) ) {
+		if( MBG.is_there_edge(j, x) ) {
 		    def++;
-		    if( y==Infty ) y=MBG.LG[j][x];
-		    if( y!=MBG.LG[j][x] ) good = false;
+		    if( y==Infty ) y = MBG.get_adj_vertex(j, x);
+		    if( y != MBG.get_adj_vertex(j, x) ) good = false;
 		}
 	    }
 	    if( good && def == target.size() && y!=Infty ) {
@@ -931,9 +747,9 @@ bool RecoverGenomes(const transform_t& tr) {
 
     size_t NC = MBG.DiColor.size();
 
-    for(int i=0;i<MBG.size_graph()-1;++i) {
-	if( MBG.LG[i]!=MBG.LG[i+1] ) {
-	    cout << "T-transformation is not complete. Cannot reconstruct genomes." << endl;
+    for(int i=0; i < MBG.size_graph() - 1; ++i) {
+	if( MBG.get_local_graph(i) != MBG.get_local_graph(i + 1)) {//FIXME
+	    std::cout << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl;
 	    return false;
 	}
     }
@@ -941,7 +757,9 @@ bool RecoverGenomes(const transform_t& tr) {
     RG.clear(); RG.resize(NC);
     RT.clear(); RT.resize(NC);
 
-    for(int i=0;i<NC;++i) RG[i]=MBG.LG[0];
+    for(int i=0; i < NC; ++i) { 
+	RG[i] = MBG.get_local_graph(0);
+    } 
 
 
     // track changes in the number of chromosomes
@@ -1119,7 +937,7 @@ bool ConvPhylTreeAll(MBGraph& MBG, int stage) {
 
 				Mcolor T = Q;
 				for(size_t i = 0; i < MBG.size_graph(); ++i) {
-					if( MBG.LG[i].defined(p.first) && MBG.LG[i][p.first]==t.first ) {
+					if( MBG.get_local_graph(i).defined(p.first) && MBG.get_local_graph(i)[p.first]==t.first ) {
 				   	 T.insert(i);
 					}
 				} 
@@ -1314,16 +1132,13 @@ bool ConvPhylTreeAll(MBGraph& MBG, int stage) {
 			Mcolor C(Q, Mx[Infty], Mcolor::Union);
 			if (!MBG.is_T_consistent_color(C)) continue;
 			for(auto iq = Mx[Infty].begin(); iq!=Mx[Infty].end(); ++iq) {
-			    MBG.LG[iq->first].insert(x,y);
+			    MBG.add_edge(iq->first, x, y);
 			}
 			outlog << "Stage 22: fusion " << x << " + " << y << std::endl;
 			nf++;
 			break;
 		    }
 		    
-		    
-		    
-
 		    auto Cx = Mx.cend();
 		    for(auto jm = Mx.cbegin();jm!=Mx.cend();++jm) {
 			if( !MBG.is_T_consistent_color(jm->second) ) continue;
@@ -1351,121 +1166,6 @@ bool ConvPhylTreeAll(MBGraph& MBG, int stage) {
 	    		outlog << "Stage 22: fusion " << x << " + " << y << endl;
 	    		break;
 	    	    }
-		}
-	    }
-
-		    
-
-
-	    if( stage==2 ) {
-/*
-		bool xgood = true;
-		for(map< string, set<int> >::const_iterator im = M.begin();im!=M.end();++im) {
-		    if( !member(Color, im->second) ) xgood = false;
-		}
-		if( !xgood ) continue;
-*/
-
-#ifdef VERSION2
-if (!MBG.is_fair_vertice(M)) { 
-	continue; 
-} 
-#endif
-		for(auto im = M.begin(); im != M.end(); ++im) {
-			const std::string& y = im->first;
-
-			const Mcolor& Q = im->second; // color of central edge
-
-			if (y == Infty || Q.size() == MBG.size_graph()) { 
-				continue;
-			} 
-
-			multimularcs_t Cx = MBG.get_adjacent_multiedges_with_split(x);
-			multimularcs_t Cy = MBG.get_adjacent_multiedges_with_split(y);
-#ifdef VERSION2
-if (!MBG.is_fair_vertice(MBG.get_adjacent_multiedges(y))) { 
-	continue;
-} 
-#endif
-//if( MBG.get_adjacent_multiedges(y).size()!=3 ) continue;
-
-        		outlog << "Testing mobility of edge " << x << "-" << y << " " << genome_match::mcolor_to_name(Q) << " ";
-
-			// test "mobility" of central edge
-			// can it be ever find neighboring edge of the same multicolor
-			bool mobilQ = false;
-
-//here 
-			for(auto jc = Cx.cbegin(); jc!= Cx.cend(); ++jc) {
-				if (jc->first != y) { continue; } // not a cental sub-edge
-
-				const Mcolor& QQ = jc->second; // color of central sub-edge (QQ is sub-multicolor of Q)
-	                        if (!member(MBG.DiColor, QQ)) { continue; } 
-
-
-				for(auto ix = Cx.begin(); ix != Cx.end(); ++ix) { 
-					if (ix->first == y  /*|| ix->first == Infty*/ ) { continue; } 
-
-					if (canformQ(ix->first, QQ)) {
-						outlog << "MOBIL: " << x << "-" << ix->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
-						mobilQ = true;
-						break;
-					}
-				}
-	
-				if (mobilQ) { 
-					break;
-				} 
-    
-				for(auto iy = Cy.cbegin(); iy != Cy.cend(); ++iy) { 
-					if (iy->first == x  /*|| iy->first == Infty*/ ) { continue; } 
-			    		if (canformQ(iy->first, QQ)) {
-						outlog << "MOBIL: " << y << "-" << iy->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
-						mobilQ = true;
-						break;
-			    		}
-				}
-
-				if (mobilQ) { 
-					break;
-				} 
-		    	}
-
-			if (mobilQ) continue;
-
-			outlog << "NOT MOBIL" << std::endl;
-
-			bool found = false;
-
-			for (auto ix = Cx.cbegin(); ix != Cx.cend(); ++ix) { 
-				if (ix->first == y) continue;
-				const Mcolor& QQ = ix->second;
-
-				outlog << " Sub-multiedge " << genome_match::mcolor_to_name(ix->second) << std::endl;
-
-				vertex_t temp = "";   
-				for(auto iy = Cy.cbegin(); iy != Cy.cend(); ++iy) { 
-					if (iy->second == ix->second) { 	
-						temp = iy->first;
-						break; 
-					} 
-				} 
-
-				if (!member(MBG.DiColor, QQ) || temp.empty()) continue; 
-
-				/*
-				Mcolor C(Q, QQ, Mcolor::Union);
-				// TODO: graph on central edges
-				//if( !MBG.is_T_consistent_color(C) ) continue; // do not create T-consistent color
-	                        */
-
-				if(TwoBreak(x, ix->first, y, temp, QQ).apply(MBG, true)) {
-	                        	found = true;
-					++nf;
-				}
-			}
-
-			if (found) { break; } 
 		}
 	    }
 

@@ -6,8 +6,7 @@ std::ofstream outlog("/dev/null");
 bool MBGraph::SplitBadColors = false;
 
 ///////////////////////////////////////////////////////////////
-partgraph_t MBGraph::add_edges(const Genome& genome, const std::unordered_set<orf_t>& blocks) const {
-	partgraph_t graph;
+void MBGraph::add_edges(size_t index, const Genome& genome, const std::unordered_set<orf_t>& blocks) {
 	std::string first_vertex; //in chromosome
 	std::string current_vertex; // is rightmost vertex of the previous block
         std::string prev_chr;
@@ -16,14 +15,14 @@ partgraph_t MBGraph::add_edges(const Genome& genome, const std::unordered_set<or
 		if (blocks.find(iter->second) != blocks.end()) { 
 			if (iter->first.first == prev_chr) {
 				if (genome.get_sign(iter->second) > 0) {
-					graph.insert(current_vertex, iter->second + "t");
+					local_graph[index].insert(current_vertex, iter->second + "t");
 				} else {
-					graph.insert(current_vertex, iter->second + "h");
+					local_graph[index].insert(current_vertex, iter->second + "h");
 				}
 			} else { 
 				// new chromosome detected				
 				if (!first_vertex.empty() && genome.isCircular(prev_chr)) {
-					graph.insert(first_vertex, current_vertex);
+					local_graph[index].insert(first_vertex, current_vertex);
 				}
 
 				if (genome.get_sign(iter->second) > 0) { 
@@ -43,10 +42,8 @@ partgraph_t MBGraph::add_edges(const Genome& genome, const std::unordered_set<or
 	}
 
 	if (!first_vertex.empty() && genome.isCircular(prev_chr)) {
-		graph.insert(first_vertex, current_vertex);
+		local_graph[index].insert(first_vertex, current_vertex);
 	}
-
-	return graph;
 }
 
 Mcolor MBGraph::add_tree(const std::string& tree, std::vector<std::string>& output) {
@@ -109,7 +106,6 @@ Mcolor MBGraph::add_tree(const std::string& tree, std::vector<std::string>& outp
 */
 void MBGraph::init(const std::vector<Genome>& genomes, const ProblemInstance& cfg) {
 	build_graph(genomes);
-
 	parsing_tree(genomes, cfg);
 
 	if (!cfg.get_target().empty()) { 
@@ -217,7 +213,7 @@ std::map<std::pair<Mcolor, Mcolor>, size_t> MBGraph::get_count_Hsubgraph() const
 
 /*build Obverse edge, vertex set and add all edges*/
 void MBGraph::build_graph(const std::vector<Genome>& genomes) { 
-	LG.resize(genomes.size());
+	local_graph.resize(genomes.size());
 	std::unordered_set<orf_t> blocks; 
 
 	for(size_t i = 0; i < genomes.size(); ++i) { 
@@ -236,7 +232,7 @@ void MBGraph::build_graph(const std::vector<Genome>& genomes) {
 #endif
 
 	for(size_t i = 0; i < genomes.size(); ++i) {
-		LG[i] = add_edges(genomes[i], blocks);
+		add_edges(i, genomes[i], blocks);
 	}	
 } 
 
@@ -287,8 +283,8 @@ mularcs_t MBGraph::get_adjacent_multiedges(const vertex_t& u) const {
 
 	mularcs_t output;
 	for (int i = 0; i < size_graph(); ++i) {
-		if (LG[i].defined(u)) { 
-			std::pair<multi_hashmap::const_iterator, multi_hashmap::const_iterator> iters = LG[i].equal_range(u);
+		if (local_graph[i].defined(u)) { 
+			std::pair<multi_hashmap::const_iterator, multi_hashmap::const_iterator> iters = local_graph[i].equal_range(u);
 			for (auto it = iters.first; it != iters.second; ++it) { 
 				if (output.find(it->second) != output.end()) { 
 					output.find(it->second)->second.insert(i);

@@ -1,6 +1,6 @@
 #include "Stage1.h"
 
-size_t process_simple_path(path_t path, MBGraph& graph) {
+size_t Stage1::process_simple_path(/*path_t& path, MBGraph& graph*/) {
   size_t nr = 0;
 
   if (path.size() >= 4 || (path.size() == 3 && *path.begin() == *path.rbegin())) {
@@ -133,7 +133,7 @@ size_t process_simple_path(path_t path, MBGraph& graph) {
   return 0;
 }
 
-vertex_t find_simple_path(path_t& path, const MBGraph& graph, std::unordered_set<vertex_t>& processed, const vertex_t& prev, const vertex_t& cur, bool is_next) { 
+vertex_t Stage1::find_simple_path(/*path_t& path, MBGraph& graph, std::unordered_set<vertex_t>& processed,*/ const vertex_t& prev, const vertex_t& cur, bool is_next) { 
   std::string previous  = prev;
   std::string current = cur;
 
@@ -149,7 +149,6 @@ vertex_t find_simple_path(path_t& path, const MBGraph& graph, std::unordered_set
     } 
     processed.insert(current);
 
-    //multimularcs_t new_edges = graph.get_adjacent_multiedges_v2(current);
     mularcs_t new_edges = graph.get_adjacent_multiedges(current);
     new_edges.erase(previous);
 
@@ -164,8 +163,7 @@ vertex_t find_simple_path(path_t& path, const MBGraph& graph, std::unordered_set
   return current;
 } 
 
-// Stage 1: loop over vertices    
-bool stage1(MBGraph& graph) {
+bool Stage1::stage1(/*MBGraph& graph*/) {
   bool symplified = false; 
   size_t nr = 0; // number of rearrangements 
 
@@ -179,8 +177,12 @@ bool stage1(MBGraph& graph) {
 	continue; 
       } 
 
-      path_t path ({*is});
-      std::unordered_set<vertex_t> processed ({*is, Infty}); // we count oo as already processed
+      path.clear(); 
+      path.push_back(*is);
+
+      processed.clear(); 
+      processed.insert(*is); 
+      processed.insert(Infty); // we count oo as already processed
 
       for(auto im = current.begin(); im != current.end(); ++im) {
 	if (!graph.is_T_consistent_color(im->second)) { 
@@ -188,13 +190,13 @@ bool stage1(MBGraph& graph) {
 	} 
 	
 	bool is_next = (im == current.begin()); 
-	std::string current = find_simple_path(path, graph, processed, *is, im->first, is_next);
+	std::string current = find_simple_path(/*path, graph, processed,*/ *is, im->first, is_next);
 
 	if (current == *is) { 
 	  break; // got a cycle from x to x, cannot extend it 
 	}  		    
       }
-      nr += process_simple_path(path, graph);
+      nr += process_simple_path(/*path, graph*/);
     } 
 
     if (nr != 0) { 

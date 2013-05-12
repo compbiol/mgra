@@ -5,14 +5,21 @@
 #include <vector>
 #include <fstream>
 
+#include "mpbgraph.h"
+#include "mcolor.h"
+#include "genome.h"
+#include "pconf.h"
+
 namespace writer {
 struct Wdots { 
-	Wdots(std::string name_file);
-
-	void save_dot(bool flag);
-	void write_legend_dot(const std::vector<Genome>& genomes, const std::vector<std::string>& output); 
-private: 
-	std::ofstream output;
+	//Wdots(std::string name_file);
+	
+	// Save .dot file and output statistics of synteny blocks representing breakpoints
+	void save_dot(const ProblemInstance& cfg, size_t stage);
+	void save_components(const ProblemInstance& cfg, size_t stage);
+	void write_legend_dot(size_t size_genomes, const std::vector<std::string>& info);//write_legend_dot(const std::vector<Genome>& genomes, const std::vector<std::string>& output); 
+//private: 
+	//std::ofstream output;
 }; 
 } 
 

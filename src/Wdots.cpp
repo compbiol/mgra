@@ -1,10 +1,148 @@
 #include "Wdots.h"
 
-writer::Wdots::Wdots(std::string name_file) { 
-	output.open(name_file); 
+void writer::Wdots::save_dot(const ProblemInstance& cfg, size_t stage) { 
+  std::string dotname = cfg.get_graphname() + toString(stage) + ".dot";
+  std::ofstream dot(dotname.c_str());
+
+  dot << "graph {" << std::endl;
+  if (!cfg.get_colorscheme().empty()) { 
+    dot << "edge [colorscheme=" << cfg.get_colorscheme() << "];" << std::endl;
+  } 
+
+  int infv = 0;
+  size_t ncls = 0;
+  std::unordered_set<vertex_t> mark; // vertex set
+  for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {
+    const std::string& x = *is;
+
+    //multimularcs_t Mx = MBG.get_adjacent_multiedges_v2(x);
+    mularcs_t Mx = MBG.get_adjacent_multiedges(x);
+
+    if (Mx.size() == 1) { 
+      continue; // trivial cycle
+    } 
+
+    for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
+      const std::string& y = im->first;
+
+      if (mark.find(y) != mark.end()) { 
+	continue; // already output
+      } 
+
+      const Mcolor& C = im->second;
+      for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
+       	/* ************** output edge (x,y) **************** */
+#ifndef VERSION2
+	dot << "\t\"" << x << "\"\t--\t\"";
+	if (y == Infty) {
+	  if (ic == C.cbegin()) { 
+	    --infv;
+	  } 
+	  dot << infv << "\"\t[len=0.75,";
+	} else { 
+	  dot << y << "\"\t[";
+	} 
+	dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;
+#else 
+	if (y != Infty) { 
+	  dot << "\t\"" << x << "\"\t--\t\"";
+	  dot << y << "\"\t[";
+	  dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;
+	} 
+#endif
+      }
+    }
+    mark.insert(x);
+  }
+
+#ifndef VERSION2
+  for(int i = infv; i < 0; ++i) {
+    dot << "\t\"" << i << "\"\t[shape=point,color=black];" << std::endl;
+  }
+#endif
+
+  dot << "}" << std::endl;
+  dot.close();
+} 
+
+void writer::Wdots::save_components(const ProblemInstance& cfg, size_t stage) { 
+  std::string dotname = cfg.get_graphname() + toString(stage);
+
+  equivalence<vertex_t> CC; // connected components
+  		
+  for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {
+    CC.addrel(*is, *is);
+  } 
+  
+  for(auto lc = MBG.begin_local_graphs(); lc != MBG.end_local_graphs(); ++lc) { 
+    for(auto il = lc->cbegin(); il != lc->cend(); ++il) {
+      CC.addrel(il->first, il->second);
+    }
+  }
+
+  CC.update();    
+  
+  std::map<std::string, std::set<std::string> > components;
+  CC.get_eclasses(components);
+  
+  size_t i = 0; 
+  for(auto it = components.cbegin(); it != components.cend(); ++it) { 
+    const std::set<std::string>& current = it->second;
+    if (current.size() <= 7) {
+      continue;
+    }
+
+    //std::cerr << current.size() << std::endl; 
+  
+    std::string namefile = dotname + "_" + toString(++i) + ".dot"; 
+    std::ofstream dot(namefile.c_str());
+
+    dot << "graph {" << std::endl;
+    if (!cfg.get_colorscheme().empty()) { 
+      dot << "edge [colorscheme=" << cfg.get_colorscheme() << "];" << std::endl;
+    } 
+
+    std::unordered_set<vertex_t> mark; // vertex set
+    for(auto is = current.cbegin(); is != current.cend(); ++is) {
+      const std::string& x = *is;
+  
+      if (x == Infty) { 
+	continue;
+      } 
+
+      mularcs_t Mx = MBG.get_adjacent_multiedges(x);
+
+      if (Mx.size() == 1) { 
+	continue; // trivial cycle
+      } 
+      
+      for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
+	const std::string& y = im->first;
+	
+	if (mark.find(y) != mark.end()) { 
+	  continue; // already output
+	} 
+
+	const Mcolor& C = im->second;
+	for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
+	  if (y != Infty) { 
+	    dot << "\t\"" << x << "\"\t--\t\"";
+	    dot << y << "\"\t[";
+	    dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;
+	  } 
+	}
+      }
+      mark.insert(x);
+    }
+
+    dot << "}" << std::endl;
+    dot.close();
+  } 
 } 
 
 void writer::Wdots::write_legend_dot(size_t size_genomes, const std::vector<std::string>& info) { 
+    	std::ofstream output("legend.dot");
+
 	output << "digraph Legend {" << std::endl;
 	output << "\tnode [style=filled];" << std::endl;
 
@@ -19,6 +157,11 @@ void writer::Wdots::write_legend_dot(size_t size_genomes, const std::vector<std:
 	output << "}" << std::endl;
 	output.close();
 } 
+
+
+/*writer::Wdots::Wdots(std::string name_file) { 
+	output.open(name_file); 
+} */
 
 #if 0 
 // Save .dot file and output statistics of synteny blocks representing breakpoints

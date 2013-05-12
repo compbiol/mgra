@@ -7,7 +7,7 @@ bool TwoBreak::islinear(MBGraph& M) const {
 
     apply(M);
 
-    for(int i=0; i < 2; ++i) {
+    for(int i = 0; i < 2; ++i) {
 	vertex_t x;
 	if( i==0 ) x = OldArc[0].first;
         else x = OldArc[0].second;
@@ -16,7 +16,7 @@ bool TwoBreak::islinear(MBGraph& M) const {
 
 	for(auto ic = MultiColor.cbegin(); ic != MultiColor.cend(); ++ic) {
 
-	    const partgraph_t& PG = M.LG[ic->first];
+	    const partgraph_t& PG = M.get_local_graph(ic->first);
 	    bool circular = false;
 
 	    for(std::string y = M.get_adj_vertex(x); PG.defined(y);) {
@@ -31,7 +31,7 @@ bool TwoBreak::islinear(MBGraph& M) const {
 	    }
 		
 	    if( !circular && PG.defined(x) ) {
-		for(string y = x;PG.defined(y);) {
+		for(string y = x; PG.defined(y);) {
 		    y = PG[y];
 
 		    if(y!=x) y = M.get_adj_vertex(y);
@@ -70,16 +70,16 @@ bool TwoBreak::apply(MBGraph& M, bool record) const {
   for(auto ic = MultiColor.cbegin(); ic != MultiColor.cend(); ++ic) {
     for(size_t i = 0; i < 2; ++i) {
       if(OldArc[i].first != Infty && OldArc[i].second != Infty) {
-	M.LG[ic->first].erase(OldArc[i].first, OldArc[i].second);
+	M.erase_edge(ic->first, OldArc[i].first, OldArc[i].second);
       } 
     }
 
       	    if(OldArc[0].first != Infty && OldArc[1].first != Infty) {
-	        M.LG[ic->first].insert(OldArc[0].first, OldArc[1].first);
+	        M.add_edge(ic->first, OldArc[0].first, OldArc[1].first);
 	    }
 
       	    if(OldArc[0].second != Infty && OldArc[1].second != Infty) {
-	        M.LG[ic->first].insert(OldArc[0].second, OldArc[1].second);
+	        M.add_edge(ic->first, OldArc[0].second, OldArc[1].second);
 	    }
 	}
 	return true;

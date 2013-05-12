@@ -2,21 +2,34 @@
 #define STAGE1_H_
 
 #include <list>
-#include <string>
 #include <set>
+#include <string>
 
 #include "mpbgraph.h"
 #include "2break.h"
 
-
 typedef std::list<vertex_t> path_t;
 
-size_t process_simple_path(path_t path, MBGraph& graph);
+//add graph - shared_ptr, create template_class.
+struct Stage1 { 
+	// Stage 1: loop over vertices   
+	Stage1(MBGraph& gr)
+	: graph(gr) { 
+	} 
 
-vertex_t find_simple_path(path_t& path, const MBGraph& graph, std::unordered_set<vertex_t>& processed, const vertex_t& prev, const vertex_t& cur, bool is_next); 
-
-// Stage 1: loop over vertices    
-bool stage1(MBGraph& graph); 
+	bool stage1(/*MBGraph& graph*/); 
+	
+	MBGraph get_graph() {
+		return graph;
+ 	}
+private: 
+	size_t process_simple_path(/*path_t& path, MBGraph& graph*/);	
+	vertex_t find_simple_path(/*path_t& path, MBGraph& graph,*/ const vertex_t& prev, const vertex_t& cur, bool is_next); 
+private: 
+	path_t path;
+	std::unordered_set<vertex_t> processed;
+	MBGraph graph;
+};
 
 
 #endif

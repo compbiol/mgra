@@ -31,8 +31,8 @@ void writer::Wstats::print_connected_components(const MBGraph& MBG) {
 		C.addrel(*is, *is);
 	} 
 
-	for(size_t i = 0; i < MBG.size_graph(); ++i) {
-		for(auto il = MBG.LG[i].cbegin(); il != MBG.LG[i].cend(); ++il) {
+	for(auto lc = MBG.begin_local_graphs(); lc != MBG.end_local_graphs(); ++lc) { 
+		for(auto il = lc->cbegin(); il != lc->cend(); ++il) {
 			C.addrel(il->first, il->second);
 		}
 	}
@@ -203,7 +203,7 @@ void writer::Wstats::print_estimated_dist(size_t stage, const ProblemInstance& c
 		
 		for(size_t j = 0; j < graph.size_graph(); ++j) {
 			if (j > i) {
-				ofstat << genome_dist(MBG.LG[i], MBG.LG[j], MBG.get_obverce_graph())[2]; //FIXME
+				ofstat << genome_dist(MBG.get_local_graph(i), MBG.get_local_graph(j), MBG.get_obverce_graph())[2]; //FIXME
 			}
 
 			if (j == graph.size_graph() - 1) { 

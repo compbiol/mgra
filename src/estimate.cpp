@@ -59,26 +59,6 @@ std::vector<std::string> Statistics::get_compl_stat() const {
   return output;
 } 
 
-void Statistics::count_weak_simple_vertex() { 
-  size_t irreg_count = 0;
-  size_t count = 0; 
-
-  for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-    mularcs_t Mx = graph.get_adjacent_multiedges(*it);
-    
-    if (Mx.size() == 2) { 
-      if (Mx.cbegin()->first == Infty || Mx.crbegin()->first == Infty) { 
-	++irreg_count; 
-      } else { 
-	++count;
-      } 
-    } 
-  } 
-
-  std::cerr << "Regular vertex: " << count << std::endl;
-  std::cerr << "Irregular vertex: " << irreg_count << std::endl;
-} 
-
 std::vector<std::string> Statistics::get_no_compl_stat() const { 
   std::multimap<size_t, std::string> answer;
 
@@ -110,6 +90,26 @@ std::vector<Mcolor> Statistics::get_new_color() const {
     output.push_back(im->first);
   }  
   return output;	
+} 
+
+void Statistics::count_weak_simple_vertex() { 
+  size_t irreg_count = 0;
+  size_t count = 0; 
+
+  for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
+    mularcs_t Mx = graph.get_adjacent_multiedges(*it);
+    
+    if (Mx.size() == 2) { 
+      if (Mx.cbegin()->first == Infty || Mx.crbegin()->first == Infty) { 
+	++irreg_count; 
+      } else { 
+	++count;
+      } 
+    } 
+  } 
+
+  std::cerr << "Regular vertex: " << count << std::endl;
+  std::cerr << "Irregular vertex: " << irreg_count << std::endl;
 } 
 
 void Statistics::count_compl_multiedges() {
@@ -179,6 +179,44 @@ void Statistics::count_not_compl_multiedges() {
       } 
     } 				 
   } 	
+} 
+
+std::map<std::pair<Mcolor, Mcolor>, size_t> Statistics::get_Hsubgraph() { 
+  std::unordered_set<vertex_t> processed;
+	
+  for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
+    mularcs_t Mx = graph.get_adjacent_multiedges(*is);
+
+    if (graph.is_fair_vertice(Mx)) { 
+      for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
+	if (im->first == Infty || processed.find(im->first) != processed.end()) { 
+	  continue; 
+	} 
+
+	mularcs_t My = graph.get_adjacent_multiedges(im->first);
+			
+	if (graph.is_fair_vertice(My)) {
+	  mularcs_t Mx0 = Mx;
+	  
+	  Mx0.erase(im->first);
+	  My.erase(*is);
+	  
+	  //Mcolor Q1 = Mx0.begin()->second;
+	  //Mcolor Q2 = Mx0.rbegin()->second;
+	  if ((Mx0.begin()->second == My.begin()->second) || (Mx0.rbegin()->second == My.begin()->second)) {
+	    Mcolor QQ1 = graph.get_min_complement_color(Mx0.begin()->second);
+	    Mcolor QQ2 = graph.get_min_complement_color(Mx0.rbegin()->second);	    
+	    ++Hcount[std::make_pair(QQ1, QQ2)];
+	    ++Hcount[std::make_pair(QQ2, QQ1)];
+	    //Hmid[std::make_pair(QQ2, QQ1)] = MBG.is_T_consistent_color(im->second);
+	  }
+	} 
+      } 
+    }
+    processed.insert(*is);
+  }
+
+   return Hcount;	
 } 
 
 void Statistics::count_cycles() { 

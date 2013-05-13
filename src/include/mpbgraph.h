@@ -88,8 +88,7 @@ struct MBGraph {
 
 	mularcs_t get_adjacent_multiedges(const vertex_t& u) const; 
 	multimularcs_t get_adjacent_multiedges_with_split(const vertex_t& u) const; 
-	std::map<std::pair<Mcolor, Mcolor>, size_t> get_count_Hsubgraph() const; 
-
+	
 	inline bool is_simple_vertice(const mularcs_t& adj_edges) const {
 		if (adj_edges.size() == 2 && adj_edges.begin()->second.is_good_multiedge() && adj_edges.rbegin()->second.is_good_multiedge()) { 
 			return true; 
@@ -172,7 +171,6 @@ private:
 public:
 	std::set<Mcolor> DiColor;   // directed colors
 	std::vector<Mcolor> TColor; // colors corresponding to ancestral genomes. nodes in tree
-	std::set<Mcolor> DiColorUnsafe; //stage 4 wtf
 
 	const Mcolor& CColor(const Mcolor& S);
 

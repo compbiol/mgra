@@ -4,7 +4,7 @@ writer::Wstats::Wstats(std::string name_file): write_parametres(5) {
 	ofstat.open(name_file); 
 } 
 
-void writer::Wstats::print_all_statistics(int stage, const Statistics& info, const ProblemInstance& cfg, const MBGraph& graph) { 
+void writer::Wstats::print_all_statistics(int stage, Statistics& info, const ProblemInstance& cfg, const MBGraph& graph) { 
 	if (stage == 0) { 
 		println("Initial graph:");
 	}  else { 
@@ -17,7 +17,7 @@ void writer::Wstats::print_all_statistics(int stage, const Statistics& info, con
 #ifndef VERSION2
 	print_estimated_dist(stage, cfg, graph);
 #endif
-	print_fair_edges(graph);
+	print_fair_edges(graph, info);
 	print_not_compl_characters(info.get_no_compl_stat()); 
 } 
 
@@ -70,11 +70,11 @@ void writer::Wstats::histStat() { //FIXME
 	ofstat << std::endl;
 }
 ////////////////////////////////////////////////////////
-void writer::Wstats::print_fair_edges(const MBGraph& MBG) {
+void writer::Wstats::print_fair_edges(const MBGraph& MBG, Statistics& info) {
 	// output H-subgraphs count
 	ofstat << std::endl << "% Fair multi-edges count: " << std::endl << std::endl;
 
-	std::map<std::pair<Mcolor, Mcolor>, size_t> Hcount = MBG.get_count_Hsubgraph();
+	std::map<std::pair<Mcolor, Mcolor>, size_t> Hcount = info.get_Hsubgraph();
 	std::list<Mcolor> HCrow; 	//the set of multicolors that appear in H-subraphs
 
 #ifndef HG_TONLY // adding other colors
@@ -115,7 +115,7 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG) {
 		if (MBG.is_T_consistent_color(*Q1)) {
 			ofstat << "\\bf ";
 		} 
-		ofstat <<   genome_match::mcolor_to_name(*Q1) << "+}$"; 
+		ofstat << genome_match::mcolor_to_name(*Q1) << "+}$"; 
 
 		for(auto Q2 = HCrow.cbegin(); Q2 != HCrow.cend(); ++Q2) {
 			ofstat << " & ";

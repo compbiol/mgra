@@ -21,8 +21,8 @@ struct Wstats {
 		ofstat << str << std::endl;
 	} 
 
-	void print_all_statistics(int stage, const Statistics& info, const ProblemInstance& cfg, const MBGraph& graph); 
-	void print_fair_edges(const MBGraph& MBG);
+	void print_all_statistics(int stage, Statistics& info, const ProblemInstance& cfg, const MBGraph& graph); 
+	void print_fair_edges(const MBGraph& MBG, Statistics& info);
 	void histStat(); 
 
 	const size_t write_parametres;

@@ -145,7 +145,8 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
   write_dots.save_dot(graph, cfg, 99);
 
 #ifndef VERSION2
-  write_stats.print_fair_edges(graph);
+  Statistics st(graph);
+  write_stats.print_fair_edges(graph, st);
   write_stats.histStat();
 #else 
   write_dots.save_components(graph, cfg, 5);
@@ -157,7 +158,7 @@ void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance& c
   Statistics st(graph); 
 
   graph.update_complement_color(st.get_new_color());
-
+  
   auto p = st.get_compl_stat();
   write_stats.print_all_statistics(stage, st, cfg, graph);
   write_dots.save_dot(graph, cfg, stage);

@@ -19,9 +19,11 @@ struct Statistics {
   std::vector<std::string> get_no_compl_stat() const;	
   std::vector<Mcolor> get_new_color() const;
 
+  std::map<std::pair<Mcolor, Mcolor>, size_t> get_Hsubgraph(); //count H-subgraph for stage2 
+
 private:
   void count_weak_simple_vertex(); 
-  void count_compl_multiedges(); 
+  void count_compl_multiedges(); //count good edges for stage1
   void count_not_compl_multiedges(); 
   void count_cycles();
   void count_chromosomes();
@@ -43,12 +45,13 @@ private:
 
   //edges
   std::map<Mcolor, size_t> not_compl_multiedges_count;	// not complement multiedges[S] = # multiedges of not complement multicolor S,
-  std::map<Mcolor, size_t> compl_multiedges_count; 		// multiedges_count[S] = # multiedges of multicolor S.
+  std::map<Mcolor, size_t> compl_multiedges_count; 	// multiedges_count[S] = # multiedges of multicolor S.
   std::map<Mcolor, size_t> good_multiedges_count; 	// good_multiedges_count[S] = # good multiedges of multicolor S. 
   std::map<Mcolor, size_t> good_irrer_multiedges_count;	// ME[S] = # good irregular multiedges of multicolor S.
   std::map<Mcolor, size_t> simple_multiedges_count;	// ME[S] = # simple multiedges of multicolor S.
 
   std::map<std::pair<Mcolor, Mcolor>, size_t> Hcount; // count H-subgraphs
+  //std::map<std::pair<Mcolor, Mcolor>, bool> Hmid;   // middle edge is T-consistent?
 	
   //cycles
   std::map<Mcolor, size_t> simple_cycle_count; 		// cycle of simple vertices

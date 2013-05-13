@@ -166,46 +166,6 @@ MBGraph::MBGraph(const std::vector<Genome>& genomes, const ProblemInstance& cfg)
 }
 
 /***********************Good**********************************/
-std::map<std::pair<Mcolor, Mcolor>, size_t> MBGraph::get_count_Hsubgraph() const { 
-  std::map<std::pair<Mcolor, Mcolor>, size_t> Hcount; // count H-subgraphs
-  //std::map<std::pair<Mcolor, Mcolor>, bool> Hmid; // middle edge is T-consistent?
-  std::unordered_set<vertex_t> vertices;  // vertex set
-	
-  for(auto is = begin_vertices(); is != end_vertices(); ++is) {
-    mularcs_t Mx = get_adjacent_multiedges(*is);
-
-    if (is_fair_vertice(Mx)) { 
-      for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
-	if (im->first == Infty || vertices.find(im->first) != vertices.end()) { 
-	  continue; 
-	} 
-
-	mularcs_t My = get_adjacent_multiedges(im->first);
-			
-	if (is_fair_vertice(My)) {
-	  mularcs_t Mx0 = Mx;
-	  
-	  Mx0.erase(im->first);
-	  My.erase(*is);
-	  
-	  //Mcolor Q1 = Mx0.begin()->second;
-	  //Mcolor Q2 = Mx0.rbegin()->second;
-	  if ((Mx0.begin()->second == My.begin()->second) || (Mx0.rbegin()->second == My.begin()->second)) {
-	    Mcolor QQ1 = get_min_complement_color(Mx0.begin()->second);
-	    Mcolor QQ2 = get_min_complement_color(Mx0.rbegin()->second);	    
-	    ++Hcount[std::make_pair(QQ1, QQ2)];
-	    ++Hcount[std::make_pair(QQ2, QQ1)];
-	    //Hmid[std::make_pair(QQ2, QQ1)] = MBG.is_T_consistent_color(im->second);
-	  }
-	} 
-      } 
-    }
-    vertices.insert(*is);
-  }
-	
-  return Hcount;
-} 
-
 /*build Obverse edge, vertex set and add all edges*/
 void MBGraph::build_graph(const std::vector<Genome>& genomes) { 
 	local_graph.resize(genomes.size());

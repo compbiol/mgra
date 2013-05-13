@@ -48,9 +48,28 @@ struct MBGraph {
 	MBGraph(const std::vector<Genome>& genome, const ProblemInstance& cfg);
 
 	/*function for colors*/	
+	inline bool is_complement_color(const Mcolor& Q, const Mcolor& Q1) { 
+		if (!is_T_consistent_color(Q) || !Q.is_good_multiedge()) { 
+			return false; 
+		} 
+
+		if (!is_T_consistent_color(Q1) || !Q1.is_good_multiedge()) { 
+			return false; 
+		} 
+
+		if (get_complement_color(Q) == Q1) { 
+			return true; 
+		} 
+
+		return false;
+	} 
+
 	void update_complement_color(const std::vector<Mcolor>& colors);
 
 	inline Mcolor get_complement_color(const Mcolor& color) const { 
+		if (CColorM.find(color) == CColorM.end()) { 
+			std::cerr << "Problem with " << genome_match::mcolor_to_name(color) << std::endl;
+		}
 		assert(CColorM.find(color) != CColorM.end());
 		return CColorM.find(color)->second;
 	} 

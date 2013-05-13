@@ -127,10 +127,6 @@ void Statistics::count_compl_multiedges() {
     } 
 	
     for(auto im = current.cbegin(); im != current.cend(); ++im) {
-      if (!im->second.is_good_multiedge()) { 
-	continue; 
-      } 
-
       ++compl_multiedges_count[im->second];   // count two times, because same underected edge (u, v) and (v, u)
 			
       if (graph.is_simple_vertice(current)) {

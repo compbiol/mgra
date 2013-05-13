@@ -15,6 +15,10 @@ bool Algorithm<graph_t>::stage1() {
 	continue; 
       } 
 
+      if (!graph.is_complement_color(current.cbegin()->second, current.crbegin()->second)) { 	
+	continue;
+      } 
+
       path_t path({*is});
 
       std::unordered_set<vertex_t> processed({*is, Infty}); // we count oo as already processed

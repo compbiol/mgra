@@ -32,7 +32,6 @@ using namespace std;
 
 #include "utility/equivalence.h"
 #include "utility/sym_multi_hashmap.h"
-#include "utility/sym_hashmap.h"
 #include "utility/sym_map.h"
 
 #define member(S,x) ((S).find(x)!=(S).end())
@@ -41,12 +40,12 @@ extern std::ofstream outlog;
 const std::string Infty = "oo";
 
 typedef std::string vertex_t;
-typedef sym_multi_hashmap<vertex_t> partgraph_t; //s graph represented in list of edges/ but not
+typedef sym_multi_hashmap<vertex_t> partgraph_t;
 typedef std::map <vertex_t, Mcolor> mularcs_t;
 typedef std::multimap <vertex_t, Mcolor> multimularcs_t;
 
 struct MBGraph {
-	void init(const std::vector<Genome>& genome, const ProblemInstance& cfg);
+	MBGraph(const std::vector<Genome>& genome, const ProblemInstance& cfg);
 
 	/*function for colors*/	
 	void update_complement_color(const std::vector<Mcolor>& colors);

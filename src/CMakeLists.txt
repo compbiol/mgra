@@ -16,8 +16,8 @@ set(MGRA_SOURCE mgra.cpp
 	estimate.cpp
 	mcolor.cpp
 	2break.cpp
-	Stage1.cpp
-	Stage2.cpp
+	#Stage1.cpp
+	#Stage2.cpp
 	Stage3.cpp
    )
 

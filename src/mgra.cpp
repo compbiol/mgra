@@ -495,13 +495,14 @@ void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
   std::array<bool, 5> print_dots;
   print_dots.fill(true);
   bool process_compl = true; 
-  bool isChanged = true; 
+  bool isChanged = true;
+  bool canformQ = true; 
 
   while(isChanged) {
     isChanged = false; 
 
     if ((cfg.get_stages() >= 1) && !isChanged) {
-      Stage1 st1(graph);
+      Stage1<MBGraph> st1(graph);
       isChanged = st1.stage1();
       graph = st1.get_graph();	
 
@@ -515,9 +516,10 @@ void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
     }
 
     if ((cfg.get_stages() >= 2) && !isChanged) {
-      Stage2 st2;//(canformQoo);
-      isChanged = st2.stage2(graph);
+      Stage2<MBGraph> st2(graph, canformQ);
+      isChanged = st2.stage2();
 
+      graph = st2.get_graph();
       if (print_dots[2] && !isChanged) {
 	print_dots[2] = false;
 	save_information(write_stats, 2, cfg, graph);		    
@@ -529,9 +531,9 @@ void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
 
       isChanged = stage3(graph);
     
-      if (canformQoo && !isChanged) {
+      if (canformQ && !isChanged) {
 	isChanged = true;
-	canformQoo = false; // more flexible
+	canformQ = false; // more flexible
       }    
 
       if (print_dots[3] && !isChanged) {
@@ -543,7 +545,7 @@ void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
     if ((cfg.get_stages() >= 4) && !isChanged) {
       outlog << "Stage: 4" << std::endl;
 
-      isChanged = stage4(graph);
+      isChanged = stage4(graph, canformQ);
 
       if (print_dots[4] && !isChanged) {
 	print_dots[4] = false;
@@ -608,9 +610,7 @@ int main(int argc, char* argv[]) {
   std::vector<Genome> genomes = reader::read_genomes(PI);
   genome_match::init_name_genomes(genomes);
 
-  MBGraph graph; 
-  graph.init(genomes, PI); //create constructor and not global variable
-
+  MBGraph graph(genomes, PI); 
   main_algorithm(PI, graph);
 
 #ifndef VERSION2  

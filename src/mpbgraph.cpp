@@ -98,11 +98,7 @@ Mcolor MBGraph::add_tree(const std::string& tree, std::vector<std::string>& outp
 	}
 }
 
-/*
-Этот метод инициализирует наш multi breakpoint graph. 
-Должен быть конструктором. 
-*/
-void MBGraph::init(const std::vector<Genome>& genomes, const ProblemInstance& cfg) {
+MBGraph::MBGraph(const std::vector<Genome>& genomes, const ProblemInstance& cfg) {
 	build_graph(genomes);
 	parsing_tree(genomes, cfg);
 

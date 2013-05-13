@@ -13,12 +13,12 @@ void writer::Wstats::print_all_statistics(int stage, const Statistics& info, con
 
 	print_complete_edges(graph);
 	print_connected_components(graph);
-	print_rear_characters(info.get_compl_stat(graph)); 
+	print_rear_characters(info.get_compl_stat()); 
 #ifndef VERSION2
 	print_estimated_dist(stage, cfg, graph);
 #endif
 	print_fair_edges(graph);
-	print_not_compl_characters(info.get_no_compl_stat(graph)); 
+	print_not_compl_characters(info.get_no_compl_stat()); 
 } 
 
 

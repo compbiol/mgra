@@ -158,7 +158,7 @@ void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance& c
 
   graph.update_complement_color(st.get_new_color());
 
-  auto p = st.get_compl_stat(graph);
+  auto p = st.get_compl_stat();
   write_stats.print_all_statistics(stage, st, cfg, graph);
   write_dots.save_dot(graph, cfg, stage);
 } 

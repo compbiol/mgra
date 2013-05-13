@@ -1,17 +1,18 @@
 #include "estimate.h"
 
-Statistics::Statistics(const MBGraph& graph) {  
-  count_compl_multiedges(graph);
-  count_not_compl_multiedges(graph);	
-  count_cycles(graph);
-  count_chromosomes(graph); 
+Statistics::Statistics(const MBGraph& gr)
+: graph(gr) {  
+  count_compl_multiedges();
+  count_not_compl_multiedges();	
+  count_cycles();
+  count_chromosomes(); 
 
 #ifdef VERSION2 
-  count_weak_simple_vertex(graph);
+  count_weak_simple_vertex();
 #endif
 }	      	
 
-std::vector<std::string> Statistics::get_compl_stat(const MBGraph& graph) const { 
+std::vector<std::string> Statistics::get_compl_stat() const { 
   std::multimap<size_t, std::string> answer;
 
   for(auto im = compl_multiedges_count.cbegin(); im != compl_multiedges_count.cend(); ++im) {
@@ -58,7 +59,7 @@ std::vector<std::string> Statistics::get_compl_stat(const MBGraph& graph) const 
   return output;
 } 
 
-void Statistics::count_weak_simple_vertex(const MBGraph& graph) { 
+void Statistics::count_weak_simple_vertex() { 
   size_t irreg_count = 0;
   size_t count = 0; 
 
@@ -78,7 +79,7 @@ void Statistics::count_weak_simple_vertex(const MBGraph& graph) {
   std::cerr << "Irregular vertex: " << irreg_count << std::endl;
 } 
 
-std::vector<std::string> Statistics::get_no_compl_stat(const MBGraph& graph) const { 
+std::vector<std::string> Statistics::get_no_compl_stat() const { 
   std::multimap<size_t, std::string> answer;
 
   for(auto im = not_compl_multiedges_count.cbegin(); im != not_compl_multiedges_count.cend(); ++im) {
@@ -111,7 +112,7 @@ std::vector<Mcolor> Statistics::get_new_color() const {
   return output;	
 } 
 
-void Statistics::count_compl_multiedges(const MBGraph& graph) {
+void Statistics::count_compl_multiedges() {
   std::unordered_set<std::string> processed;
 
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
@@ -161,7 +162,7 @@ void Statistics::count_compl_multiedges(const MBGraph& graph) {
   } 
 } 
 
-void Statistics::count_not_compl_multiedges(const MBGraph& graph) { 
+void Statistics::count_not_compl_multiedges() { 
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
     //multimularcs_t current = graph.get_adjacent_multiedges_v2(*it);
     mularcs_t current = graph.get_adjacent_multiedges(*it);  
@@ -180,7 +181,7 @@ void Statistics::count_not_compl_multiedges(const MBGraph& graph) {
   } 	
 } 
 
-void Statistics::count_cycles(const MBGraph& graph) { 
+void Statistics::count_cycles() { 
   std::unordered_set<std::string> processed;
 
   for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
@@ -234,7 +235,7 @@ void Statistics::count_cycles(const MBGraph& graph) {
   }
 } 
 
-void Statistics::count_chromosomes(const MBGraph& graph) { //FIXME
+void Statistics::count_chromosomes() { 
   circular_chr.resize(graph.size_graph());
   liniar_chr.resize(graph.size_graph());
   

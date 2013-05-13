@@ -85,6 +85,7 @@ struct MBGraph {
 			SplitBadColors = true; 
 		} 
 	} 	
+
 	mularcs_t get_adjacent_multiedges(const vertex_t& u) const; 
 	multimularcs_t get_adjacent_multiedges_with_split(const vertex_t& u) const; 
 	std::map<std::pair<Mcolor, Mcolor>, size_t> get_count_Hsubgraph() const; 
@@ -161,7 +162,7 @@ private:
 	partgraph_t obverse_edges; //OBverse relation 
 	std::vector<partgraph_t> local_graph; // local graphs of each color //rename and take private 	
 	
-	static bool SplitBadColors; //TAKE NON STATIC	
+	bool SplitBadColors; 
 	
 	//color
 	sym_map<Mcolor> CColorM; //complementary multicolor

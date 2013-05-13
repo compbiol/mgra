@@ -1,7 +1,6 @@
 #include "mpbgraph.h"
 
 std::ofstream outlog("/dev/null");
-bool MBGraph::SplitBadColors = false; //TAKE NON STATIC
 
 ///////////////////////////////////////////////////////////////
 void MBGraph::add_edges(size_t index, const Genome& genome, const std::unordered_set<orf_t>& blocks) {
@@ -98,7 +97,9 @@ Mcolor MBGraph::add_tree(const std::string& tree, std::vector<std::string>& outp
 	}
 }
 
-MBGraph::MBGraph(const std::vector<Genome>& genomes, const ProblemInstance& cfg) {
+MBGraph::MBGraph(const std::vector<Genome>& genomes, const ProblemInstance& cfg) 
+:SplitBadColors(false)
+{
 	build_graph(genomes);
 	parsing_tree(genomes, cfg);
 

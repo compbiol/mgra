@@ -13,18 +13,18 @@
 typedef std::string vertex_t;
 
 struct Statistics { 
-  Statistics(const MBGraph& graph); 
+  Statistics(const MBGraph& gr); 
 
-  std::vector<std::string> get_compl_stat(const MBGraph& graph) const;   
-  std::vector<std::string> get_no_compl_stat(const MBGraph& graph) const;	
+  std::vector<std::string> get_compl_stat() const;   
+  std::vector<std::string> get_no_compl_stat() const;	
   std::vector<Mcolor> get_new_color() const;
 
 private:
-  void count_weak_simple_vertex(const MBGraph& graph); 
-  void count_compl_multiedges(const MBGraph& graph); 
-  void count_not_compl_multiedges(const MBGraph& graph); 
-  void count_cycles(const MBGraph& graph);
-  void count_chromosomes(const MBGraph& graph);
+  void count_weak_simple_vertex(); 
+  void count_compl_multiedges(); 
+  void count_not_compl_multiedges(); 
+  void count_cycles();
+  void count_chromosomes();
 
   __attribute__((always_inline)) inline size_t calc_value(const std::map<Mcolor, size_t>& where, const Mcolor& what) const { 
     if (where.find(what) != where.end()) { 
@@ -34,6 +34,8 @@ private:
   } 
 
 private: 
+  const MBGraph& graph;
+
   //vertices
   std::unordered_map<size_t, size_t > multidegree_count; // multidegree_count[n] = # vertices of multidegree n. 
   std::map<Mcolor, size_t> simple_vertices_count;  	 // simple_vertices_count[min(S,!S)] = # simple vertices incident to S-colored
@@ -45,10 +47,12 @@ private:
   std::map<Mcolor, size_t> good_multiedges_count; 	// good_multiedges_count[S] = # good multiedges of multicolor S. 
   std::map<Mcolor, size_t> good_irrer_multiedges_count;	// ME[S] = # good irregular multiedges of multicolor S.
   std::map<Mcolor, size_t> simple_multiedges_count;	// ME[S] = # simple multiedges of multicolor S.
+
+  std::map<std::pair<Mcolor, Mcolor>, size_t> Hcount; // count H-subgraphs
 	
   //cycles
   std::map<Mcolor, size_t> simple_cycle_count; 		// cycle of simple vertices
-  std::map<Mcolor, size_t> special_cycle_count; 		// cycle of simple vertices and oo, of even length
+  std::map<Mcolor, size_t> special_cycle_count; 	// cycle of simple vertices and oo, of even length
 
   //chromosome
   std::vector<size_t> liniar_chr; 				

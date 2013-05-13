@@ -1,6 +1,6 @@
 #include "Wdots.h"
 
-void writer::Wdots::save_dot(const ProblemInstance& cfg, size_t stage) { 
+void writer::Wdots::save_dot(const MBGraph& graph, const ProblemInstance& cfg, size_t stage) { 
   std::string dotname = cfg.get_graphname() + toString(stage) + ".dot";
   std::ofstream dot(dotname.c_str());
 
@@ -12,11 +12,11 @@ void writer::Wdots::save_dot(const ProblemInstance& cfg, size_t stage) {
   int infv = 0;
   size_t ncls = 0;
   std::unordered_set<vertex_t> mark; // vertex set
-  for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {
+  for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
     const std::string& x = *is;
 
-    //multimularcs_t Mx = MBG.get_adjacent_multiedges_v2(x);
-    mularcs_t Mx = MBG.get_adjacent_multiedges(x);
+    //multimularcs_t Mx = graph.get_adjacent_multiedges_v2(x);
+    mularcs_t Mx = graph.get_adjacent_multiedges(x);
 
     if (Mx.size() == 1) { 
       continue; // trivial cycle
@@ -65,16 +65,16 @@ void writer::Wdots::save_dot(const ProblemInstance& cfg, size_t stage) {
   dot.close();
 } 
 
-void writer::Wdots::save_components(const ProblemInstance& cfg, size_t stage) { 
+void writer::Wdots::save_components(const MBGraph& graph, const ProblemInstance& cfg, size_t stage) { 
   std::string dotname = cfg.get_graphname() + toString(stage);
 
   equivalence<vertex_t> CC; // connected components
   		
-  for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {
+  for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
     CC.addrel(*is, *is);
   } 
   
-  for(auto lc = MBG.begin_local_graphs(); lc != MBG.end_local_graphs(); ++lc) { 
+  for(auto lc = graph.begin_local_graphs(); lc != graph.end_local_graphs(); ++lc) { 
     for(auto il = lc->cbegin(); il != lc->cend(); ++il) {
       CC.addrel(il->first, il->second);
     }
@@ -110,7 +110,7 @@ void writer::Wdots::save_components(const ProblemInstance& cfg, size_t stage) {
 	continue;
       } 
 
-      mularcs_t Mx = MBG.get_adjacent_multiedges(x);
+      mularcs_t Mx = graph.get_adjacent_multiedges(x);
 
       if (Mx.size() == 1) { 
 	continue; // trivial cycle
@@ -177,10 +177,10 @@ void writer::Wdots::save_dot(bool outbad = false, const set<string>& VV = EmptyS
 
     map<string,int> gen2chr;
     equivalence<string> SameColor;
-    set<string> Biff = MBG.VertexSet;
+    set<string> Biff = graph.VertexSet;
     set<string> noniso; // non-isolated vertices
     
-    for(set<string>::const_iterator is=MBG.VertexSet.begin();is!=MBG.VertexSet.end();++is) {
+    for(set<string>::const_iterator is=graph.VertexSet.begin();is!=graph.VertexSet.end();++is) {
 	const string& x = *is;
 	if( !member(Biff,x) ) continue;
 
@@ -191,17 +191,17 @@ void writer::Wdots::save_dot(bool outbad = false, const set<string>& VV = EmptyS
 	for(int i=0;i<chr.size();++i) if(chr[i]<'0'||chr[i]>'9') chr[i]=' ';
 	istringstream istr(chr); int cn; istr >> cn;
 	gen2chr[x] = cn;
-        gen2chr[MBG.OB[x]] = cn;
+        gen2chr[graph.OB[x]] = cn;
 
 #ifndef BPG_COMPRESSED
-	mularcs_t Mx = MBG.mularcs(x);
+	mularcs_t Mx = graph.mularcs(x);
 	if( Mx.size() == 1 ) Biff.erase(x);
     }
 #else
 
-	SameColor.addrel(x,MBG.OB[x]);
+	SameColor.addrel(x,graph.OB[x]);
 
-	mularcs_t Mx = MBG.mularcs(x);
+	mularcs_t Mx = graph.mularcs(x);
 #ifndef UNICOLCOMP
 	if( Mx.size() == 1 ) {
 	    const string& y = Mx.begin()->first;
@@ -229,10 +229,10 @@ void writer::Wdots::save_dot(bool outbad = false, const set<string>& VV = EmptyS
     int infv = 0;
     size_t ncls = 0;
     set< orf_t > V; // vertex set
-    for(set<string>::const_iterator is=MBG.VertexSet.begin();is!=MBG.VertexSet.end();++is) {
+    for(set<string>::const_iterator is=graph.VertexSet.begin();is!=graph.VertexSet.end();++is) {
 	const string& x = *is;
 
-	mularcs_t Mx = MBG.mularcs(x);
+	mularcs_t Mx = graph.mularcs(x);
 #ifndef FULL_BPG
 	if( Mx.size() == 1 ) continue; // trivial cycle
 #endif	
@@ -260,7 +260,7 @@ void writer::Wdots::save_dot(bool outbad = false, const set<string>& VV = EmptyS
 		}
 #endif
 
-		dot << "\t\"" << xt << "\"\t--\t\"" << xh << "\"\t[style=dashed,color=" << MBG.size_graph()+1 << "];" << endl;
+		dot << "\t\"" << xt << "\"\t--\t\"" << xh << "\"\t[style=dashed,color=" << graph.size_graph()+1 << "];" << endl;
 	    }
             // EQ.addrel(x,xh);
 #endif  // UNICOLCOMP
@@ -278,11 +278,11 @@ void writer::Wdots::save_dot(bool outbad = false, const set<string>& VV = EmptyS
 	    if( member(V,y) ) continue; // already output
 
 #if 0
-	    mularcs_t Mx1 = MBG.mularcs(x);
+	    mularcs_t Mx1 = graph.mularcs(x);
 	    Mx1.erase(Infty);
 	    if( Mx1.size() >= 3 ) continue;
 	    if( y!=Infty ) {
-		mularcs_t My = MBG.mularcs(y);
+		mularcs_t My = graph.mularcs(y);
 		My.erase(Infty);
 		if( My.size() >= 3 ) continue;
 		EQ.addrel(x,y);
@@ -459,7 +459,7 @@ void writer::Wdots::save_dot(bool outbad = false, const set<string>& VV = EmptyS
 	for(map<int,string>::const_iterator ib=B.begin();ib!=B.end();++ib) {
 	    const string& x = ib->second;
 	    outlog << x;
-	    for(int i=0;i<MBG.size_graph();++i) {
+	    for(int i=0;i<graph.size_graph();++i) {
 		outlog << " & " << (G[i].sign[x]>0?"+ ":"- ") << G[i].orf2cpan[x].first << ":" 
 		//<< G[i].orf2cpan[x].second.first << "-" << G[i].orf2cpan[x].second.second << " (" 
 		<< G[i].orf2cpan[x].second.second - G[i].orf2cpan[x].second.first; 

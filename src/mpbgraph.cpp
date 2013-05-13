@@ -1,8 +1,6 @@
 #include "mpbgraph.h"
 
-MBGraph MBG;
 std::ofstream outlog("/dev/null");
-
 bool MBGraph::SplitBadColors = false;
 
 ///////////////////////////////////////////////////////////////

@@ -20,8 +20,8 @@ bool stage3_1(MBGraph& graph) {
    outlog << "Stage 222: splitting into connected components" << std::endl;
 
    // go over all T-consistent multicolors
-   for(auto ic = MBG.DiColor.begin(); ic != MBG.DiColor.end(); ++ic) {
-     if (ic->size() == 0 || ic->size() == MBG.size_graph()) { 
+   for(auto ic = graph.DiColor.begin(); ic != graph.DiColor.end(); ++ic) {
+     if (ic->size() == 0 || ic->size() == graph.size_graph()) { 
        continue; // except empty and complete multicolor
      } 		
      const Mcolor& Q = *ic;
@@ -33,8 +33,8 @@ bool stage3_1(MBGraph& graph) {
        equivalence<vertex_t> CC; // connected components
        std::map<vertex_t, vertex_t> QQ; // multiedges of colors !Q (!*ic)
 		    
-       for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {    
-	 mularcs_t M = MBG.get_adjacent_multiedges(*is);
+       for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {    
+	 mularcs_t M = graph.get_adjacent_multiedges(*is);
 
 	 if (M.size() == 1) { 
 	   continue; // ignore complete multiedges
@@ -92,13 +92,13 @@ bool stage3_1(MBGraph& graph) {
 	     // let check what would happen with (be-)edge e=(p.first,t.first)
 
 	     Mcolor T = Q;
-	     for(size_t i = 0; i < MBG.size_graph(); ++i) {
-	       if( MBG.get_local_graph(i).defined(p.first) && MBG.get_local_graph(i)[p.first]==t.first ) {
+	     for(size_t i = 0; i < graph.size_graph(); ++i) {
+	       if( graph.get_local_graph(i).defined(p.first) && graph.get_local_graph(i)[p.first]==t.first ) {
 		 T.insert(i);
 	       }
 	     } 
 	     // if e is enriched to T-consistent color, great!
-	     if( T.size()>Q.size() && MBG.is_T_consistent_color(T) ) {
+	     if( T.size()>Q.size() && graph.is_T_consistent_color(T) ) {
 	       outlog << "perfect edge is found" << endl;
 	       q = t;
 	       found = true;
@@ -139,7 +139,7 @@ bool stage3_1(MBGraph& graph) {
 	   if( !found ) continue;
     
     
-	   if( ! TwoBreak(p, q, Q).apply(MBG, true) ) continue;
+	   if( ! TwoBreak(p, q, Q).apply(graph, true) ) continue;
 	   ++nr;
 			    
 	   outlog << "Stage 222.1: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
@@ -180,7 +180,7 @@ bool stage3_1(MBGraph& graph) {
 
 	   if( member(processed,CC[p.second]) || member(processed,CC[q.second]) || CC[p.second]!=CC[q.second] ) continue;
 
-	   if( ! TwoBreak(p,q,Q).apply(MBG,true) ) continue;
+	   if( ! TwoBreak(p,q,Q).apply(graph,true) ) continue;
 	   nr++;
 
 	   outlog << "Stage 222.2: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << endl;
@@ -224,9 +224,9 @@ bool stage3_2(MBGraph& graph) {
  do {
    nr = 0;
 
-   for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {
+   for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
      const string& x = *is;
-     mularcs_t Mx = MBG.get_adjacent_multiedges(x);
+     mularcs_t Mx = graph.get_adjacent_multiedges(x);
 
      bool next = false;
 
@@ -235,11 +235,11 @@ bool stage3_2(MBGraph& graph) {
        const std::string& y = im->first;
        const Mcolor& Q = im->second;
 
-       if (!member(MBG.DiColor, Q) || y==Infty) { 
+       if (!member(graph.DiColor, Q) || y==Infty) { 
 	 continue;
        }
 
-       mularcs_t My = MBG.get_adjacent_multiedges(y);
+       mularcs_t My = graph.get_adjacent_multiedges(y);
        My.erase(x);
 
        for(auto jm = My.begin(); jm != My.end(); ++jm) {
@@ -248,7 +248,7 @@ bool stage3_2(MBGraph& graph) {
 	   continue;
 	 } 
 	
-	 mularcs_t Cz = MBG.get_adjacent_multiedges(z);
+	 mularcs_t Cz = graph.get_adjacent_multiedges(z);
 
 	 vertex_t v = "";
 	 for (auto ir = Cz.cbegin(); ir != Cz.cend(); ++ir) {
@@ -264,7 +264,7 @@ bool stage3_2(MBGraph& graph) {
 
 	   outlog << "Stage 2222: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
 
-	   if (TwoBreak(p, q, Q).apply(MBG, true)) nr++;
+	   if (TwoBreak(p, q, Q).apply(graph, true)) nr++;
 
 	   next = true;
 

@@ -71,7 +71,7 @@ size_t Stage1::process_simple_path(/*path_t& path, MBGraph& graph*/) {
     
       Q = graph.get_adjacent_multiedges(*(++path.begin()))[*path.begin()];
     
-      outlog << genome_match::mcolor_to_name(Q) << " + " << genome_match::mcolor_to_name(MBG.CColor(Q)) << endl;
+      outlog << genome_match::mcolor_to_name(Q) << " + " << genome_match::mcolor_to_name(graph.CColor(Q)) << endl;
 
       if (member(graph.DiColor, Q)) { 
 	break;

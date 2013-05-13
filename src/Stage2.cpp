@@ -9,13 +9,13 @@ bool Stage2::stage2(MBGraph& graph) {
     nr = 0; 
     nf = 0;
 	
-    for(auto is = MBG.begin_vertices(); is!=MBG.end_vertices(); ++is) {  
+    for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
       const std::string& x = *is;
-      mularcs_t M = MBG.get_adjacent_multiedges(x);
+      mularcs_t M = graph.get_adjacent_multiedges(x);
   
   
 #ifdef VERSION2
-      if (!MBG.is_fair_vertice(M)) { 
+      if (!graph.is_fair_vertice(M)) { 
 	continue; 
       } 
 #endif
@@ -24,14 +24,14 @@ bool Stage2::stage2(MBGraph& graph) {
 
 	const Mcolor& Q = im->second; // color of central edge
 
-	if (y == Infty || Q.size() == MBG.size_graph()) { 
+	if (y == Infty || Q.size() == graph.size_graph()) { 
 	  continue;
 	} 
 
-	multimularcs_t Cx = MBG.get_adjacent_multiedges_with_split(x);
-	multimularcs_t Cy = MBG.get_adjacent_multiedges_with_split(y);
+	multimularcs_t Cx = graph.get_adjacent_multiedges_with_split(x);
+	multimularcs_t Cy = graph.get_adjacent_multiedges_with_split(y);
 #ifdef VERSION2
-	if (!MBG.is_fair_vertice(MBG.get_adjacent_multiedges(y))) { 
+	if (!graph.is_fair_vertice(graph.get_adjacent_multiedges(y))) { 
 	  continue;
 	} 
 #endif
@@ -48,13 +48,13 @@ bool Stage2::stage2(MBGraph& graph) {
 	  if (jc->first != y) { continue; } // not a cental sub-edge
 
 	  const Mcolor& QQ = jc->second; // color of central sub-edge (QQ is sub-multicolor of Q)
-	  if (!member(MBG.DiColor, QQ)) { continue; } 
+	  if (!member(graph.DiColor, QQ)) { continue; } 
 
 
 	  for(auto ix = Cx.begin(); ix != Cx.end(); ++ix) { 
 	    if (ix->first == y  /*|| ix->first == Infty*/ ) { continue; } 
 
-	    if (canformQ(ix->first, QQ)) {
+	    if (canformQ(graph, ix->first, QQ)) {
 	      outlog << "MOBIL: " << x << "-" << ix->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
 	      mobilQ = true;
 	      break;
@@ -67,7 +67,7 @@ bool Stage2::stage2(MBGraph& graph) {
     
 	  for(auto iy = Cy.cbegin(); iy != Cy.cend(); ++iy) { 
 	    if (iy->first == x  /*|| iy->first == Infty*/ ) { continue; } 
-	    if (canformQ(iy->first, QQ)) {
+	    if (canformQ(graph, iy->first, QQ)) {
 	      outlog << "MOBIL: " << y << "-" << iy->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
 	      mobilQ = true;
 	      break;
@@ -99,7 +99,7 @@ bool Stage2::stage2(MBGraph& graph) {
 	    } 
 	  } 
 
-	  if (!member(MBG.DiColor, QQ) || temp.empty()) continue; 
+	  if (!member(graph.DiColor, QQ) || temp.empty()) continue; 
 
 	  /*
 	    Mcolor C(Q, QQ, Mcolor::Union);
@@ -107,7 +107,7 @@ bool Stage2::stage2(MBGraph& graph) {
 	    //if( !MBG.is_T_consistent_color(C) ) continue; // do not create T-consistent color
 	    */
 
-	  if(TwoBreak(x, ix->first, y, temp, QQ).apply(MBG, true)) {
+	  if(TwoBreak(x, ix->first, y, temp, QQ).apply(graph, true)) {
 	    found = true;
 	    ++nf;
 	  }
@@ -133,7 +133,7 @@ if return false, then Q cannot be formed
 if true - who knows...
 */
 bool canformQoo  = true; 
-bool canformQ(const std::string& x, const Mcolor& Q) {
+bool canformQ(const MBGraph& graph, const std::string& x, const Mcolor& Q) {
     if (x == Infty) {
 	return canformQoo;
     }
@@ -142,7 +142,7 @@ bool canformQ(const std::string& x, const Mcolor& Q) {
     // OR 
     // if every intersection Q \cap QQ = \emptyset or QQ.
 
-    multimularcs_t M = MBG.get_adjacent_multiedges_with_split(x);
+    multimularcs_t M = graph.get_adjacent_multiedges_with_split(x);
     for(auto im = M.cbegin(); im != M.cend(); ++im) { 
 	Mcolor C(Q, im->second, Mcolor::Intersection); 
 	if (C.size() > 0 && C.size() < im->second.size()) { 

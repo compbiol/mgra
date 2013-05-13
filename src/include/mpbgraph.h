@@ -27,7 +27,6 @@
 #include <unordered_set>
 using namespace std;
 
-#include "Wdots.h"
 #include "genome_match.h"
 #include "structures/Tree.h"
 
@@ -174,5 +173,4 @@ public:
 	bool AreAdjacentBranches(const Mcolor&, const Mcolor&) const;
 };
 
-extern MBGraph MBG; //deel
 #endif

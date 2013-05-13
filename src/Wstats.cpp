@@ -203,7 +203,7 @@ void writer::Wstats::print_estimated_dist(size_t stage, const ProblemInstance& c
 		
 		for(size_t j = 0; j < graph.size_graph(); ++j) {
 			if (j > i) {
-				ofstat << genome_dist(MBG.get_local_graph(i), MBG.get_local_graph(j), MBG.get_obverce_graph())[2]; //FIXME
+				ofstat << genome_dist(graph.get_local_graph(i), graph.get_local_graph(j), graph.get_obverce_graph())[2]; //FIXME
 			}
 
 			if (j == graph.size_graph() - 1) { 

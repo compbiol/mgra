@@ -7,7 +7,7 @@
 #include "2break.h"
 
 extern bool canformQoo; // safe choice, at later stages may change to false
-bool canformQ(const std::string& x, const Mcolor& Q);
+bool canformQ(const MBGraph& graph, const std::string& x, const Mcolor& Q);
 
 struct Stage2 { 
 	/*Stage2(bool canform)

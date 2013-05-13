@@ -32,6 +32,7 @@ using namespace std;
 #include "reader.h"
 #include "algo/Algorithm.h"
 #include "writer/Wstats.h"
+#include "writer/Wdots.h"
 
 bool ConvPhylTreeAll(MBGraph&, int Stage);
 
@@ -51,17 +52,17 @@ std::map<std::string, size_t> BL;  // block -> length FIXME
 vector<partgraph_t> RG; // recovered genomes
 vector<transform_t> RT; // and transformations
 
-bool RecoverGenomes(const transform_t&);
+bool RecoverGenomes(MBGraph&, const transform_t&);
 set <vertex_t> getchrset;
 
-std::pair<path_t, bool> getchr(const partgraph_t& PG, const std::string& x) {
+std::pair<path_t, bool> getchr(const MBGraph& graph, const partgraph_t& PG, const std::string& x) {
     path_t path;
     bool circular = false;
 
     getchrset.clear();
     getchrset.insert(x);
 
-    for(vertex_t y = MBG.get_adj_vertex(x); ; ) {
+    for(vertex_t y = graph.get_adj_vertex(x); ; ) {
 	if( member(getchrset,y) ) {
 	    circular = true;
 	    break; // circ
@@ -89,7 +90,7 @@ std::pair<path_t, bool> getchr(const partgraph_t& PG, const std::string& x) {
 	}
 	getchrset.insert(y);
 
-	y = MBG.get_adj_vertex(y);
+	y = graph.get_adj_vertex(y);
     }
 
     if( !circular && PG.defined(x) ) {
@@ -97,7 +98,7 @@ std::pair<path_t, bool> getchr(const partgraph_t& PG, const std::string& x) {
 	    y = PG[y];
 	    getchrset.insert(y);
 
-	    y = MBG.get_adj_vertex(y);
+	    y = graph.get_adj_vertex(y);
 	    getchrset.insert(y);
 	    {
 		string xx = y;
@@ -117,20 +118,20 @@ std::pair<path_t, bool> getchr(const partgraph_t& PG, const std::string& x) {
 
 
 list< set<vertex_t> > pg_empty;
-void splitchr(const partgraph_t& PG, set< pair<path_t,bool> >& AllChr, const bool Xonly = false, list< set<vertex_t> >& CircChr = pg_empty) {
+void splitchr(const MBGraph& graph, const partgraph_t& PG, set< pair<path_t,bool> >& AllChr, const bool Xonly = false, list< set<vertex_t> >& CircChr = pg_empty) {
 
-    if( &CircChr != &pg_empty ) CircChr.clear();
+    if (&CircChr != &pg_empty) { 
+	CircChr.clear();
+    } 
     AllChr.clear();
+    std::set<orf_t> processed;
 
-    set<orf_t> processed;
-
-    for(auto is=MBG.begin_vertices();is!=MBG.end_vertices();++is) {
-
+    for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
 	const string& x = *is;
 	
 	if( member(processed,x) ) continue;
        
-        pair< path_t, bool > pathb = getchr(PG,x);
+        pair< path_t, bool > pathb = getchr(graph, PG, x);
 
 	AllChr.insert( pathb );
 
@@ -142,10 +143,10 @@ void splitchr(const partgraph_t& PG, set< pair<path_t,bool> >& AllChr, const boo
     }
 }
 
-pair<size_t,size_t> numchr(const partgraph_t& PG) {
+std::pair<size_t, size_t> numchr(const MBGraph& graph, const partgraph_t& PG) {
     set< pair<path_t,bool> > AllChr;
     list< set<vertex_t> > CircChr;
-    splitchr(PG,AllChr,false,CircChr);
+    splitchr(graph, PG, AllChr, false, CircChr);
     return make_pair(AllChr.size(),CircChr.size());
 }
 
@@ -232,11 +233,11 @@ void printchr(const std::string& outname, const std::set<std::pair<path_t, bool>
 
 // fill in OP container with endpoints of q-obverse paths,
 // starting and ending at OP
-void get_obverse_paths(map< vertex_t, set<vertex_t> >& OP, const Mcolor Q) {
+void get_obverse_paths(const MBGraph& graph, map< vertex_t, set<vertex_t> >& OP, const Mcolor Q) {
     map< vertex_t, set<int> > processed;
 
     for(auto iq = Q.cbegin(); iq != Q.cend(); ++iq) {
-        const partgraph_t& PG = MBG.get_local_graph(iq->first);
+        const partgraph_t& PG = graph.get_local_graph(iq->first);
 
 	for(auto ip = OP.begin(); ip != OP.end(); ++ip) {
 
@@ -244,7 +245,7 @@ void get_obverse_paths(map< vertex_t, set<vertex_t> >& OP, const Mcolor Q) {
 
 	    if( x==Infty || member(processed[x], iq->first) ) continue;
 
-	    for(vertex_t y = MBG.get_adj_vertex(ip->first); PG.defined(y);) {
+	    for(vertex_t y = graph.get_adj_vertex(ip->first); PG.defined(y);) {
 		if( member(OP,y) ) {
 		    ip->second.insert(y);
 		    OP[y].insert(x);
@@ -258,7 +259,7 @@ void get_obverse_paths(map< vertex_t, set<vertex_t> >& OP, const Mcolor Q) {
 		    break;
 		}
 
-		y = MBG.get_adj_vertex(y);
+		y = graph.get_adj_vertex(y);
 	    }
 	    processed[x].insert(iq->first);
 	}
@@ -272,12 +273,12 @@ void get_obverse_paths(map< vertex_t, set<vertex_t> >& OP, const Mcolor Q) {
  * We replace PG with PG' and return the transformation PG -> PG'
  * Transformation may contain only multicolors Q' with Q'\cap Q = 0 or Q.
 */
-transform_t decircularize(partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
+transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
 
     // decircularizing sub-transform that is removed
     transform_t D;
 
-    size_t CircSize = numchr(PG).second;
+    size_t CircSize = numchr(graph, PG).second;
     if( CircSize == 0 ) return D;
 
     outlog << "Eliminating " << CircSize << " circular chromosomes in " << genome_match::mcolor_to_name(Q) << endl;
@@ -320,7 +321,7 @@ transform_t decircularize(partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
 
 	it->applySingle(T);
 
-        size_t ccsize = numchr(T).second;
+        size_t ccsize = numchr(graph, T).second;
 
 	//bool hotfix = ( it->OldArc[0] == arc_t("770h","770t") );
 
@@ -426,7 +427,7 @@ transform_t decircularize(partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
 		if( !C.empty() ) {
 		    kt->revertSingle(T);
 
-		    ccsize = numchr(T).second;
+		    ccsize = numchr(graph, T).second;
 		}
 	    }
 
@@ -449,7 +450,7 @@ transform_t decircularize(partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
 
 	    TG.erase(TG.begin());
 
-	    CircSize = numchr(PG).second;
+	    CircSize = numchr(graph, PG).second;
 
 	    if( CircSize==0 ) break;
 
@@ -480,11 +481,11 @@ transform_t decircularize(partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
 */
 void save_information(writer::Wstats& wstats, size_t stage, const ProblemInstance& cfg, MBGraph& graph, bool flag = false) { 
   Statistics st(graph); 
-  MBG.update_complement_color(st.get_new_color());
+  graph.update_complement_color(st.get_new_color());
   auto p = st.get_compl_stat(graph);
   wstats.print_all_statistics(stage, st, cfg, graph);
   writer::Wdots dots;
-  dots.save_dot(cfg, stage);
+  dots.save_dot(graph, cfg, stage);
 } 
 
 void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
@@ -573,14 +574,14 @@ void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
   }	
 
   writer::Wdots dot; 
-  dot.save_dot(cfg, 99);
+  dot.save_dot(graph, cfg, 99);
 
 #ifndef VERSION2
   write_stats.print_fair_edges(graph);
   write_stats.histStat();
 #else 
   writer::Wdots components;
-  components.save_components(cfg, 5);
+  components.save_components(graph, cfg, 5);
 #endif
 } 
 
@@ -607,9 +608,10 @@ int main(int argc, char* argv[]) {
   std::vector<Genome> genomes = reader::read_genomes(PI);
   genome_match::init_name_genomes(genomes);
 
-  MBG.init(genomes, PI); //create constructor and not global variable
+  MBGraph graph; 
+  graph.init(genomes, PI); //create constructor and not global variable
 
-  main_algorithm(PI, MBG);
+  main_algorithm(PI, graph);
 
 #ifndef VERSION2  
   if (!PI.get_target().empty()) {
@@ -621,12 +623,12 @@ int main(int argc, char* argv[]) {
 	    H.push_front(ih->inverse());
 	}
 	for(int i=0;i<N;++i) {
-	    transform_t T = decircularize(MBG.LG[i],H,TColor[i]); // assume that TColor[i] = { i }
+	    transform_t T = decircularize(graph, graph.LG[i],H,TColor[i]); // assume that TColor[i] = { i }
     
 	    // move to adjacent branches
 	    for(transform_t::const_iterator it = T.begin(); it!=T.end(); ++it) {
 		for(int j=0;j<N;++j) if( j!=i && member(it->MultiColor,j) ) {
-                    it->applySingle(MBG.LG[j]);
+                    it->applySingle(graph.LG[j]);
 		}
 	    }
 	}
@@ -635,7 +637,7 @@ int main(int argc, char* argv[]) {
 	partgraph_t PG;
 
 	//ofstream cf("st1comp.res");
-	for(auto is=MBG.begin_vertices();is!=MBG.end_vertices();++is) {
+	for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
 	    const string& x = *is;
 	    if( PG.defined(x) ) continue;
 
@@ -645,10 +647,10 @@ int main(int argc, char* argv[]) {
 		std::string target = PI.get_target();
 	    for(int i = 0; i < target.size(); ++i) {
 		int j = genome_match::get_number(target.substr(i, 1));//PI.get_number_genome_to_name(target.substr(i, 1));
-		if( MBG.is_there_edge(j, x) ) {
+		if (graph.is_there_edge(j, x)) {
 		    def++;
-		    if( y==Infty ) y = MBG.get_adj_vertex(j, x);
-		    if( y != MBG.get_adj_vertex(j, x) ) good = false;
+		    if( y==Infty ) y = graph.get_adj_vertex(j, x);
+		    if( y != graph.get_adj_vertex(j, x) ) good = false;
 		}
 	    }
 	    if( good && def == target.size() && y!=Infty ) {
@@ -659,43 +661,43 @@ int main(int argc, char* argv[]) {
 	//cf.close();
 
 	set< pair<path_t,bool> > GN;
-	splitchr(PG, GN);
+	splitchr(graph, PG, GN);
 	printchr(PI.get_target(), GN, PI.get_target().empty());
 
 	//for(int i=0;i<N;++i) {
 	//    set< pair<path_t,bool> > GN;
-	//    splitchr(MBG.LG[i], GN);
+	//    splitchr(graph.LG[i], GN);
 	//    printchr(sname[i].substr(0,1) + "_m",GN, PI.get_target().empty());
 	//}
 
 
     } else {  /* empty target */
 
-	const size_t NC = MBG.DiColor.size();
+	const size_t NC = graph.DiColor.size();
     
 	RG.resize(NC);
 	RT.resize(NC);
     
-	if( !RecoverGenomes(TwoBreak::History) ) exit(1);
+	if( !RecoverGenomes(graph, TwoBreak::History) ) exit(1);
     
 	// T-transformation complete, we procede with recovering the ancestral genomes
     
 	outlog << "Initial 2-break distances from the root X: " << std::endl;
 	for(int i = 0; i < NC; ++i) {
-	    outlog << genome_match::mcolor_to_name(MBG.TColor[i]) << ":\t" << RT[i].size() << std::endl;
+	    outlog << genome_match::mcolor_to_name(graph.TColor[i]) << ":\t" << RT[i].size() << std::endl;
 	}
     
 	// FIXME: check that the order in which circular chromosomes are eliminated
     
 	for(int i = 0; i < NC; ++i) {
     
-	    transform_t T = decircularize(RG[i],RT[i],MBG.TColor[i]);
+	    transform_t T = decircularize(graph, RG[i], RT[i], graph.TColor[i]);
     
 	    // move to adjacent branches
 	    for(transform_t::const_iterator it = T.begin(); it!=T.end(); ++it) {
 		for(int j=0;j<NC;++j) {
-		    if( j!=i && includes( MBG.TColor[i].begin(), MBG.TColor[i].end(), MBG.TColor[j].begin(), MBG.TColor[j].end() ) 
-			&& MBG.AreAdjacentBranches(MBG.TColor[i],MBG.TColor[j]) ) {
+		    if( j!=i && includes( graph.TColor[i].begin(), graph.TColor[i].end(), graph.TColor[j].begin(), graph.TColor[j].end() ) 
+			&& graph.AreAdjacentBranches(graph.TColor[i],graph.TColor[j]) ) {
 			RT[j].push_back(*it);
 		    }
 		}
@@ -704,18 +706,18 @@ int main(int argc, char* argv[]) {
     
 	outlog << "Final 2-break distances from the root X: " << endl;
 	for(int i = 0; i < NC; ++i) {
-	    outlog << genome_match::mcolor_to_name(MBG.TColor[i]) << ":\t" << RT[i].size() << endl;
+	    outlog << genome_match::mcolor_to_name(graph.TColor[i]) << ":\t" << RT[i].size() << endl;
 	}
     
 	for(int i = 0;i < NC; ++i) {
     	    std::set<std::pair<path_t, bool> > GN;
-	    splitchr(RG[i], GN);
-	    printchr(genome_match::mcolor_to_name(MBG.TColor[i]),GN, PI.get_target().empty());
+	    splitchr(graph, RG[i], GN);
+	    printchr(genome_match::mcolor_to_name(graph.TColor[i]),GN, PI.get_target().empty());
     
 	    //splitchr(RG[i], GN, true);
-	    //printchr(genome_match::mcolor_to_name(MBG.TColor[i]) + "_x",GN, PI.get_target().empty());
+	    //printchr(genome_match::mcolor_to_name(graph.TColor[i]) + "_x",GN, PI.get_target().empty());
     
-		std::ofstream tr( (genome_match::mcolor_to_name(MBG.TColor[i]) + ".trs").c_str() );
+		std::ofstream tr( (genome_match::mcolor_to_name(graph.TColor[i]) + ".trs").c_str() );
 		for(transform_t::const_iterator it=RT[i].begin();it!=RT[i].end();++it) {
 			tr << it->OldArc[0].first << " " << it->OldArc[0].second << "\t" << it->OldArc[1].first << " " << it->OldArc[1].second << "\t" << genome_match::mcolor_to_name(it->MultiColor) << endl;
 		}
@@ -730,7 +732,7 @@ int main(int argc, char* argv[]) {
 
 
 ///////////////////////////////////////////////////////////////////////////
-bool RecoverGenomes(const transform_t& tr) {
+bool RecoverGenomes(MBGraph& graph, const transform_t& tr) {
 
     /*
     for(int i=0;i<N;++i) {
@@ -742,10 +744,10 @@ bool RecoverGenomes(const transform_t& tr) {
     }
     */
 
-    size_t NC = MBG.DiColor.size();
+    size_t NC = graph.DiColor.size();
 
-    for(int i=0; i < MBG.size_graph() - 1; ++i) {
-	if( MBG.get_local_graph(i) != MBG.get_local_graph(i + 1)) {//FIXME
+    for(int i=0; i < graph.size_graph() - 1; ++i) {
+	if( graph.get_local_graph(i) != graph.get_local_graph(i + 1)) {//FIXME
 	    std::cout << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl;
 	    return false;
 	}
@@ -755,7 +757,7 @@ bool RecoverGenomes(const transform_t& tr) {
     RT.clear(); RT.resize(NC);
 
     for(int i=0; i < NC; ++i) { 
-	RG[i] = MBG.get_local_graph(0);
+	RG[i] = graph.get_local_graph(0);
     } 
 
 
@@ -772,26 +774,26 @@ bool RecoverGenomes(const transform_t& tr) {
 
 	for(size_t i = 0; i < NC; ++i) {
 
-	    if (!Q.includes(MBG.TColor[i])) { 
+	    if (!Q.includes(graph.TColor[i])) { 
 		continue;
 	    } 
 
             // TColor[i] is subset of Q
 
             size_t nchr_old = 0;
-	    if (Q == MBG.TColor[i]) {
-		nchr_old = numchr(RG[i]).first;
+	    if (Q == graph.TColor[i]) {
+		nchr_old = numchr(graph, RG[i]).first;
 	    }
 
 
 	    it->revertSingle(RG[i]);
 
-	    if( Q==MBG.TColor[i] ) {
-		outlog << " " << genome_match::mcolor_to_name(MBG.TColor[i]);
+	    if( Q==graph.TColor[i] ) {
+		outlog << " " << genome_match::mcolor_to_name(graph.TColor[i]);
 		RT[i].push_front(*it);
 	    }
 
-	    if( Q == MBG.TColor[i] ) {
+	    if( Q == graph.TColor[i] ) {
 
 		bool samechr = true;
 
@@ -801,7 +803,7 @@ bool RecoverGenomes(const transform_t& tr) {
 		if( it->OldArc[1].first != Infty ) Vert.insert( it->OldArc[1].first );
 		if( it->OldArc[1].second != Infty ) Vert.insert( it->OldArc[1].second );
     
-		getchr(RG[i],*Vert.begin());
+		getchr(graph, RG[i],*Vert.begin());
     
 		for(set<string>::const_iterator iv=++Vert.begin();iv!=Vert.end();++iv) {
 		    if( !member(getchrset,*iv) ) {
@@ -810,7 +812,7 @@ bool RecoverGenomes(const transform_t& tr) {
 		    }
 		}
 
-		size_t nchr_new = numchr(RG[i]).first;
+		size_t nchr_new = numchr(graph, RG[i]).first;
 		if( nchr_new != nchr_old ) {
 		    ++RTF[i][2];
 		}
@@ -828,7 +830,7 @@ bool RecoverGenomes(const transform_t& tr) {
     vector< size_t > tot(3);
     outlog << "% Number of reversals / translocations / fissions+fusions: " << endl;
     for(size_t j = 0; j < NC; ++j) {
-	outlog << genome_match::mcolor_to_name(MBG.TColor[j]) << "+" << genome_match::mcolor_to_name(MBG.CColor(MBG.TColor[j])) << "\t&\t" << RTF[j][0] << " & " << RTF[j][1] << " & " << RTF[j][2]
+	outlog << genome_match::mcolor_to_name(graph.TColor[j]) << "+" << genome_match::mcolor_to_name(graph.CColor(graph.TColor[j])) << "\t&\t" << RTF[j][0] << " & " << RTF[j][1] << " & " << RTF[j][2]
 	    << " &\t" << RTF[j][0]+RTF[j][1]+RTF[j][2] << " \\\\" << endl;
         outlog << "\\hline" << endl;
 	tot[0] += RTF[j][0];
@@ -843,7 +845,7 @@ bool RecoverGenomes(const transform_t& tr) {
 // Given a set of partial BP-graphs (genomes), convolve them
 // IG gives a list of genomes for which we need to reconstruct a common ancestor
 // return true if LG was modified
-bool ConvPhylTreeAll(MBGraph& MBG, int stage) {
+bool ConvPhylTreeAll(MBGraph& graph, int stage) {
     bool simplified = false;
     size_t nr = 0; // number of rearrangements, 
     size_t nf = 0; // number of fussions/fissions
@@ -855,9 +857,9 @@ bool ConvPhylTreeAll(MBGraph& MBG, int stage) {
 	nr = 0; 
 	nf = 0;
 
-	for(auto is = MBG.begin_vertices(); is!=MBG.end_vertices(); ++is) {  
+	for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
 	     const std::string& x = *is;
-	     mularcs_t M = MBG.get_adjacent_multiedges(x);
+	     mularcs_t M = graph.get_adjacent_multiedges(x);
 	    // generalized reliable simple path
 		    if( stage==22 && M.size()>=2 ) {
 			for(auto im = M.begin();im!=M.end();++im) {
@@ -866,16 +868,16 @@ bool ConvPhylTreeAll(MBGraph& MBG, int stage) {
 	
 	                  if( y==Infty ) continue;
 	                    
-			  mularcs_t My = MBG.get_adjacent_multiedges(y);
+			  mularcs_t My = graph.get_adjacent_multiedges(y);
 			  My.erase(x);
      			  mularcs_t Mx = M;
 		    Mx.erase(y);
 
-		    if( member(Mx,Infty) && member(My,Infty) && Mx[Infty]==My[Infty] && MBG.is_T_consistent_color(Mx[Infty]) ) {
+		    if( member(Mx,Infty) && member(My,Infty) && Mx[Infty]==My[Infty] && graph.is_T_consistent_color(Mx[Infty]) ) {
 			Mcolor C(Q, Mx[Infty], Mcolor::Union);
-			if (!MBG.is_T_consistent_color(C)) continue;
+			if (!graph.is_T_consistent_color(C)) continue;
 			for(auto iq = Mx[Infty].begin(); iq!=Mx[Infty].end(); ++iq) {
-			    MBG.add_edge(iq->first, x, y);
+			    graph.add_edge(iq->first, x, y);
 			}
 			outlog << "Stage 22: fusion " << x << " + " << y << std::endl;
 			nf++;
@@ -884,9 +886,9 @@ bool ConvPhylTreeAll(MBGraph& MBG, int stage) {
 		    
 		    auto Cx = Mx.cend();
 		    for(auto jm = Mx.cbegin();jm!=Mx.cend();++jm) {
-			if( !MBG.is_T_consistent_color(jm->second) ) continue;
+			if( !graph.is_T_consistent_color(jm->second) ) continue;
 			Mcolor C(Q, jm->second, Mcolor::Union);
-			if (MBG.is_T_consistent_color(C)) {
+			if (graph.is_T_consistent_color(C)) {
 			    if( Cx!=Mx.end() ) { Cx=Mx.end(); break; }
 			    Cx = jm;
 			}
@@ -895,9 +897,9 @@ bool ConvPhylTreeAll(MBGraph& MBG, int stage) {
 		    
 		    auto Cy = My.cend();
 		    for(auto jm = My.cbegin(); jm != My.cend(); ++jm) {
-			if( !MBG.is_T_consistent_color(jm->second) ) continue;
+			if( !graph.is_T_consistent_color(jm->second) ) continue;
 			Mcolor C(Q, jm->second, Mcolor::Union);
-			if( MBG.is_T_consistent_color(C) ) {
+			if( graph.is_T_consistent_color(C) ) {
 			    if( Cy!=My.end() ) { Cy=My.end(); break; }
 			    Cy = jm;
 			}
@@ -905,7 +907,7 @@ bool ConvPhylTreeAll(MBGraph& MBG, int stage) {
 	    	    if( Cy == My.end() ) continue;
 	    	    
 	    	    if( Cx->second == Cy->second ) {
-                        if( TwoBreak(x,Cx->first,y,Cy->first,Cx->second).apply(MBG,true) ) nr++;
+                        if( TwoBreak(x,Cx->first,y,Cy->first,Cx->second).apply(graph,true) ) nr++;
 	    		outlog << "Stage 22: fusion " << x << " + " << y << endl;
 	    		break;
 	    	    }
@@ -925,10 +927,10 @@ bool ConvPhylTreeAll(MBGraph& MBG, int stage) {
                     y = M.begin()->first;
 		    Q2 = M.begin()->second;
 		}
-		if( !member(MBG.DiColor,Q1) && member(MBG.DiColor,Q2) /* && !member(MBG.get_adjacent_multiedges(y),Infty) */ ) {
-		//if( member(DiColor,Q2) && !member(MBG.get_adjacent_multiedges(y),Infty) ) {
+		if( !member(graph.DiColor,Q1) && member(graph.DiColor,Q2) /* && !member(graph.get_adjacent_multiedges(y),Infty) */ ) {
+		//if( member(DiColor,Q2) && !member(graph.get_adjacent_multiedges(y),Infty) ) {
 		    outlog << "Unhanging fission:" << endl;
-		    if( TwoBreak(x,y,Infty,Infty,Q2).apply(MBG,true) ) nf++;
+		    if( TwoBreak(x,y,Infty,Infty,Q2).apply(graph,true) ) nf++;
 		}
 	    }
 	}

@@ -42,8 +42,8 @@ private:
 	//Stage 4: process H-subgraph with split bad color
 
 	//Not uses stage: 
-	bool cut_free_ends();
-	//bool  
+	bool cut_free_ends(); 
+	bool find_reliable_path(); 
 private:
 	//Save information
 	void save_information(size_t stage, const ProblemInstance& cfg);

@@ -474,120 +474,6 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
     return D;
 }
 
-/*
-Метод собирает статистику после шага. 
-Обновляет complement цвета в графе. 
-Распечатывает эту статистику в файл stat.txt
-*/
-void save_information(writer::Wstats& wstats, size_t stage, const ProblemInstance& cfg, MBGraph& graph, bool flag = false) { 
-  Statistics st(graph); 
-  graph.update_complement_color(st.get_new_color());
-  auto p = st.get_compl_stat(graph);
-  wstats.print_all_statistics(stage, st, cfg, graph);
-  writer::Wdots dots;
-  dots.save_dot(graph, cfg, stage);
-} 
-
-void main_algorithm(const ProblemInstance& cfg, MBGraph& graph) {
-  writer::Wstats write_stats("stats.txt");
-  save_information(write_stats, 0, cfg, graph, false);
-	
-  std::array<bool, 5> print_dots;
-  print_dots.fill(true);
-  bool process_compl = true; 
-  bool isChanged = true;
-  bool canformQ = true; 
-
-  while(isChanged) {
-    isChanged = false; 
-
-    if ((cfg.get_stages() >= 1) && !isChanged) {
-      Stage1<MBGraph> st1(graph);
-      isChanged = st1.stage1();
-      graph = st1.get_graph();	
-
-      //if (!isChanged) { isChanged = ConvPhylTreeAll(MBG,26); }  // cut hanging free ends  
-
-      if (print_dots[1] && !isChanged) {
-	print_dots[1] = false;    	
-	save_information(write_stats, 1, cfg, graph);		
-      }
-
-    }
-
-    if ((cfg.get_stages() >= 2) && !isChanged) {
-      Stage2<MBGraph> st2(graph, canformQ);
-      isChanged = st2.stage2();
-
-      graph = st2.get_graph();
-      if (print_dots[2] && !isChanged) {
-	print_dots[2] = false;
-	save_information(write_stats, 2, cfg, graph);		    
-      }
-    }
-
-    if ((cfg.get_stages() >= 3) && !isChanged) {     // STAGE 3, somewhat unreliable
-      outlog << "Stage: 3" << std::endl;
-
-      isChanged = stage3(graph);
-    
-      if (canformQ && !isChanged) {
-	isChanged = true;
-	canformQ = false; // more flexible
-      }    
-
-      if (print_dots[3] && !isChanged) {
-	print_dots[3] = false;
-	save_information(write_stats, 3, cfg, graph, true);
-      }
-    }
-
-    if ((cfg.get_stages() >= 4) && !isChanged) {
-      outlog << "Stage: 4" << std::endl;
-
-      isChanged = stage4(graph, canformQ);
-
-      if (print_dots[4] && !isChanged) {
-	print_dots[4] = false;
-	save_information(write_stats, 4, cfg, graph, true);
-      }
-    }
-
-#ifndef VERSION2
-    if (process_compl && !cfg.get_completion().empty() && !isChanged) {     
-      outlog << "Manual Completion Stage" << std::endl;
-
-      auto completion = cfg.get_completion();
-      for(auto il = completion.begin(); il != completion.end(); ++il) {
-	TwoBreak t;
-	t.OldArc[0].first = (*il)[0];
-	t.OldArc[0].second = (*il)[1];
-	t.OldArc[1].first = (*il)[2];
-	t.OldArc[1].second = (*il)[3];
-	t.MultiColor = genome_match::name_to_mcolor((*il)[4]);
-
-	t.apply(graph, true);
-      }
-      process_compl = false;
-      isChanged = true;
-    } 
-#endif
-
-  }	
-
-  writer::Wdots dot; 
-  dot.save_dot(graph, cfg, 99);
-
-#ifndef VERSION2
-  write_stats.print_fair_edges(graph);
-  write_stats.histStat();
-#else 
-  writer::Wdots components;
-  components.save_components(graph, cfg, 5);
-#endif
-} 
-
-
 ////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[]) {
   std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) ver. 1.1" << std::endl;
@@ -611,7 +497,11 @@ int main(int argc, char* argv[]) {
   genome_match::init_name_genomes(genomes);
 
   MBGraph graph(genomes, PI); 
-  main_algorithm(PI, graph);
+
+  Algorithm<MBGraph> main_algo(graph);
+  main_algo.main_algorithm(PI); 
+  graph = main_algo.get_graph(); 
+  //main_algorithm(PI, graph);
 
 #ifndef VERSION2  
   if (!PI.get_target().empty()) {

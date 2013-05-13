@@ -1,39 +1,14 @@
 #ifndef STAGE_2_H_ 
 #define STAGE_2_H_ 
 
-#include <string>
-
-#include "mpbgraph.h"
-#include "2break.h"
-
+/*
+canformQ(x,Q) говорит, можно ли из мультицветов мультиребер инцидентных вершине x образовать мультицвет Q.
+can incident multiedges of x form multicolor Q (current don't check T-consistent formation)
+if return false, then Q cannot be formed
+if true - who knows...
+*/
 template<class graph_t>
-struct Stage2 { 
-	Stage2(graph_t& gr, bool canformQ)
-	: graph(gr)
-	, canformQoo(canformQ) 
-	{ 
-	}
-
-	bool stage2();
-
-	/*
-	canformQ(x,Q) говорит, можно ли из мультицветов мультиребер инцидентных вершине x образовать мультицвет Q.
-	can incident multiedges of x form multicolor Q (current don't check T-consistent formation)
-	if return false, then Q cannot be formed
-	if true - who knows...
-	*/
-	bool canformQ(const std::string& x, const Mcolor& Q);
-
-	graph_t get_graph() { 
-		return graph; 
-	} 
-private:
-	graph_t graph;
-	bool canformQoo;  // safe choice, at later stages may change to false		 
-}; 	
-
-template<class graph_t>
-bool Stage2<graph_t>::canformQ(const std::string& x, const Mcolor& Q) {
+bool Algorithm<graph_t>::canformQ(const std::string& x, const Mcolor& Q) const {
     if (x == Infty) {
 	return canformQoo;
     }
@@ -53,7 +28,7 @@ bool Stage2<graph_t>::canformQ(const std::string& x, const Mcolor& Q) {
 }
 
 template<class graph_t> 
-bool Stage2<graph_t>::stage2() { 
+bool Algorithm<graph_t>::stage2() { 
   bool symplified = false; 
   size_t nr = 0; // number of rearrangements 
   size_t nf = 0; // number of fussions/fissions
@@ -177,5 +152,4 @@ bool Stage2<graph_t>::stage2() {
   return symplified;
 } 
  
-
 #endif

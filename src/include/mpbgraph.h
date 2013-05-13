@@ -75,7 +75,16 @@ struct MBGraph {
 	inline void erase_edge(size_t index, const std::string& first, const std::string& second) { 
 		return local_graph[index].erase(first, second);
 	} 
-	
+
+	inline void split_bad_color_on_off() { 
+		if (SplitBadColors) { 
+			outlog << "SplitBadColors is OFF" << std::endl;
+			SplitBadColors = false; 
+		} else {
+			outlog << "SplitBadColors is ON" << std::endl; 
+			SplitBadColors = true; 
+		} 
+	} 	
 	mularcs_t get_adjacent_multiedges(const vertex_t& u) const; 
 	multimularcs_t get_adjacent_multiedges_with_split(const vertex_t& u) const; 
 	std::map<std::pair<Mcolor, Mcolor>, size_t> get_count_Hsubgraph() const; 
@@ -151,7 +160,9 @@ private:
 	std::set<std::string> vertex_set;  // set of vertices //hash set? 
 	partgraph_t obverse_edges; //OBverse relation 
 	std::vector<partgraph_t> local_graph; // local graphs of each color //rename and take private 	
-		
+	
+	static bool SplitBadColors; //TAKE NON STATIC	
+	
 	//color
 	sym_map<Mcolor> CColorM; //complementary multicolor
 	std::set<Mcolor> all_T_color;	//all T-consistent colors
@@ -161,8 +172,6 @@ public:
 	std::set<Mcolor> DiColor;   // directed colors
 	std::vector<Mcolor> TColor; // colors corresponding to ancestral genomes. nodes in tree
 	std::set<Mcolor> DiColorUnsafe; //stage 4 wtf
-
-	static bool SplitBadColors;
 
 	const Mcolor& CColor(const Mcolor& S);
 

@@ -1,7 +1,7 @@
 #include "mpbgraph.h"
 
 std::ofstream outlog("/dev/null");
-bool MBGraph::SplitBadColors = false;
+bool MBGraph::SplitBadColors = false; //TAKE NON STATIC
 
 ///////////////////////////////////////////////////////////////
 void MBGraph::add_edges(size_t index, const Genome& genome, const std::unordered_set<orf_t>& blocks) {

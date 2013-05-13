@@ -1,40 +1,8 @@
 #ifndef STAGE1_H_
 #define STAGE1_H_
 
-#include <list>
-#include <set>
-#include <string>
-
-#include "mpbgraph.h"
-#include "2break.h"
-
-typedef std::list<vertex_t> path_t;
-
-//add graph - shared_ptr
-
-//Stage 1: loop over vertices  
 template<class graph_t>
-struct Stage1 {  
-	Stage1(graph_t& gr)
-	: graph(gr) { 
-	} 
-
-	bool stage1(); 
-	
-	graph_t get_graph() {
-		return graph;
- 	}
-private: 
-	size_t process_simple_path();	
-	vertex_t find_simple_path(const vertex_t& prev, const vertex_t& cur, bool is_next); 
-private: 
-	path_t path;
-	std::unordered_set<vertex_t> processed;
-	graph_t graph;
-};
-
-template<class graph_t>
-bool Stage1<graph_t>::stage1() {
+bool Algorithm<graph_t>::stage1() {
   bool symplified = false; 
   size_t num_rear = 0; // number of rearrangements 
 
@@ -47,12 +15,9 @@ bool Stage1<graph_t>::stage1() {
 	continue; 
       } 
 
-      path.clear(); 
-      path.push_back(*is);
+      path_t path({*is});
 
-      processed.clear(); 
-      processed.insert(*is); 
-      processed.insert(Infty); // we count oo as already processed
+      std::unordered_set<vertex_t> processed({*is, Infty}); // we count oo as already processed
 
       for(auto im = current.begin(); im != current.end(); ++im) {
 	if (!graph.is_T_consistent_color(im->second)) { 
@@ -60,13 +25,13 @@ bool Stage1<graph_t>::stage1() {
 	} 
 	
 	bool is_next = (im == current.begin()); 
-	std::string current = find_simple_path(*is, im->first, is_next);
+	std::string current = find_simple_path(path, processed, *is, im->first, is_next);
 
 	if (current == *is) { 
 	  break; // got a cycle from x to x, cannot extend it 
 	}  		    
       }
-      num_rear += process_simple_path();
+      num_rear += process_simple_path(path);
     } 
 
     if (num_rear != 0) { 
@@ -78,7 +43,7 @@ bool Stage1<graph_t>::stage1() {
 } 
 
 template<class graph_t>
-vertex_t Stage1<graph_t>::find_simple_path(const vertex_t& prev, const vertex_t& cur, bool is_next) { 
+vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<vertex_t>& processed, const vertex_t& prev, const vertex_t& cur, bool is_next) { 
   std::string previous  = prev;
   std::string current = cur;
 
@@ -110,7 +75,7 @@ vertex_t Stage1<graph_t>::find_simple_path(const vertex_t& prev, const vertex_t&
 } 
 
 template<class graph_t>
-size_t Stage1<graph_t>::process_simple_path() {
+size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
   size_t nr = 0;
 
   if (path.size() >= 4 || (path.size() == 3 && *path.begin() == *path.rbegin())) {

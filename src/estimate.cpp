@@ -4,9 +4,7 @@ Statistics::Statistics(const MBGraph& gr)
 : graph(gr) {  
   count_compl_multiedges();
   count_not_compl_multiedges();	
-  count_cycles();
-  count_chromosomes(); 
-
+  count_chromosomes();  
 #ifdef VERSION2 
   count_weak_simple_vertex();
 #endif
@@ -63,7 +61,7 @@ std::vector<std::string> Statistics::get_no_compl_stat() const {
   std::multimap<size_t, std::string> answer;
 
   for(auto im = not_compl_multiedges_count.cbegin(); im != not_compl_multiedges_count.cend(); ++im) {
-    size_t vm1 = im->second / 2;
+    size_t vm1 = im->second;
 		
     std::ostringstream os;
   
@@ -120,13 +118,17 @@ void Statistics::count_compl_multiedges() {
     mularcs_t current = graph.get_adjacent_multiedges(*it); //current is list with adjacent multiedges
 
     ++multidegree_count[current.size()]; //current.size - is degree vertex *it
-	
+
     if (graph.is_simple_vertice(current)) {  //we define simple vertices as a regular vertex of multidegree 2. 
       processed.insert(*it);
       ++simple_vertices_count[std::min(current.begin()->second, current.rbegin()->second)]; //simple vertices because degree 2.
-    } 
-	
+    }
+
     for(auto im = current.cbegin(); im != current.cend(); ++im) {
+      if (!im->second.is_good_multiedge()) {  /*|| !graph.is_T_consistent_color(im->second)) { */
+	continue;
+      } 
+
       ++compl_multiedges_count[im->second];   // count two times, because same underected edge (u, v) and (v, u)
 			
       if (graph.is_simple_vertice(current)) {
@@ -159,15 +161,33 @@ void Statistics::count_compl_multiedges() {
 } 
 
 void Statistics::count_not_compl_multiedges() { 
+  //std::cerr << "new work" << std::endl;
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
     //multimularcs_t current = graph.get_adjacent_multiedges_v2(*it);
     mularcs_t current = graph.get_adjacent_multiedges(*it);  
+
+	/*if (*it == "107t") { 
+		std::cerr << "COLORS for 107t: " << std::endl;
+	    for (auto jm = current.cbegin(); jm != current.cend(); ++jm) {
+		std::cerr << genome_match::mcolor_to_name(jm->second) << " " << jm->first <<std::endl;
+		} 
+
+	}
+	if (*it == "55h") { 
+		std::cerr << "COLORS for 55h: " << std::endl;
+	    for (auto jm = current.cbegin(); jm != current.cend(); ++jm) {
+		std::cerr << genome_match::mcolor_to_name(jm->second) << " " << jm->first <<std::endl;
+		} 
+
+	}*/
+
 
     for (auto jt = current.cbegin(); jt != current.cend(); ++jt) {
       if (jt->second.is_good_multiedge()) {
 	continue; 
       } 
-
+	
+	//std::cerr << genome_match::mcolor_to_name(jt->second) << " " << *it << " " << jt->first << " " << current.size() << std::endl;
       ++not_compl_multiedges_count[jt->second]; 
 
       if (jt->first == Infty) { 
@@ -225,7 +245,7 @@ void Statistics::count_cycles() {
 
     //multimularcs_t Mx = graph.get_adjacent_multiedges_v2(*is);
     mularcs_t Mx = graph.get_adjacent_multiedges(*is); 
-    if (!graph.is_simple_vertice(Mx)) { 
+    if (!graph.is_complement_color(Mx)) { 
       continue;
     } 
 

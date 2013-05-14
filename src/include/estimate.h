@@ -15,6 +15,10 @@ typedef std::string vertex_t;
 struct Statistics { 
   Statistics(const MBGraph& gr); 
 
+  inline void count_other() {
+    count_cycles();
+  }
+ 
   std::vector<std::string> get_compl_stat() const;   
   std::vector<std::string> get_no_compl_stat() const;	
   std::vector<Mcolor> get_new_color() const;

@@ -472,7 +472,7 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
 
 ////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[]) {
-  std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) ver. 1.1" << std::endl;
+  std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) ver. 1.5" << std::endl;
   std::cout << "(c) 2008,12 by Max Alekseyev <maxal@cse.sc.edu>" << std::endl;
   std::cout << "Distributed under GNU GENERAL PUBLIC LICENSE license." << std::endl;
   std::cout << std::endl;

@@ -47,13 +47,20 @@ typedef std::multimap <vertex_t, Mcolor> multimularcs_t;
 struct MBGraph {
 	MBGraph(const std::vector<Genome>& genome, const ProblemInstance& cfg);
 
-	/*function for colors*/	
-	inline bool is_complement_color(const Mcolor& Q, const Mcolor& Q1) { 
-		if (!is_T_consistent_color(Q) || !Q.is_good_multiedge()) { 
+	/*function for mularcs_t*/
+	inline bool is_complement_color(const mularcs_t& adj_edges) const { 
+		if (is_simple_vertice(adj_edges) && get_complement_color(adj_edges.cbegin()->second) == adj_edges.crbegin()->second)  { 
+			return true; 
+		} 
+		return false; 
+	} 
+
+	inline bool is_good_color(const Mcolor& Q, const Mcolor& Q1) { 
+		if (!is_T_consistent_color(Q)) { 
 			return false; 
 		} 
 
-		if (!is_T_consistent_color(Q1) || !Q1.is_good_multiedge()) { 
+		if (!is_T_consistent_color(Q1)) { 
 			return false; 
 		} 
 
@@ -64,12 +71,29 @@ struct MBGraph {
 		return false;
 	} 
 
+	inline bool is_simple_vertice(const mularcs_t& adj_edges) const {
+		if (adj_edges.size() == 2 && adj_edges.begin()->second.is_good_multiedge() && adj_edges.rbegin()->second.is_good_multiedge()) { 
+			return true; 
+		} 
+		return false; 
+	}  
+
+	inline bool is_fair_vertice(const mularcs_t& adj_edges) const {
+		if (adj_edges.size() == 3) {
+			for(auto it = adj_edges.cbegin(); it != adj_edges.cend(); ++it) {
+				if (!it->second.is_good_multiedge()) { 
+					return false;
+				}  
+			} 
+			return true; 
+		}  
+		return false; 
+	} 
+
+	/*function for colors*/	
 	void update_complement_color(const std::vector<Mcolor>& colors);
 
 	inline Mcolor get_complement_color(const Mcolor& color) const { 
-		if (CColorM.find(color) == CColorM.end()) { 
-			std::cerr << "Problem with " << genome_match::mcolor_to_name(color) << std::endl;
-		}
 		assert(CColorM.find(color) != CColorM.end());
 		return CColorM.find(color)->second;
 	} 
@@ -108,25 +132,6 @@ struct MBGraph {
 	mularcs_t get_adjacent_multiedges(const vertex_t& u) const; 
 	multimularcs_t get_adjacent_multiedges_with_split(const vertex_t& u) const; 
 	
-	inline bool is_simple_vertice(const mularcs_t& adj_edges) const {
-		if (adj_edges.size() == 2 && adj_edges.begin()->second.is_good_multiedge() && adj_edges.rbegin()->second.is_good_multiedge()) { 
-			return true; 
-		} 
-		return false; 
-	}  
-
-	inline bool is_fair_vertice(const mularcs_t& adj_edges) const {
-		if (adj_edges.size() == 3) {
-			for(auto it = adj_edges.cbegin(); it != adj_edges.cend(); ++it) {
-				if (!it->second.is_good_multiedge()) { 
-					return false;
-				}  
-			} 
-			return true; 
-		}  
-		return false; 
-	} 
-
 	inline std::set<std::string>::const_iterator begin_vertices() const { 
 		return vertex_set.cbegin();
 	} 

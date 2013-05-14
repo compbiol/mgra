@@ -69,6 +69,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
     isChanged = false; 
 
     if ((cfg.get_stages() >= 1) && !isChanged) {
+      outlog << "Stage: 1" << std::endl;
       isChanged = stage1();	
 
       if (print_dots[1] && !isChanged) {
@@ -79,6 +80,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
     }
 
     if ((cfg.get_stages() >= 2) && !isChanged) {
+      outlog << "Stage: 2" << std::endl;
       isChanged = stage2();
 
       if (print_dots[2] && !isChanged) {
@@ -135,6 +137,10 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 
 	t.apply(graph, true);
       }
+
+      Statistics st(graph); 
+      graph.update_complement_color(st.get_new_color());
+
       process_compl = false;
       isChanged = true;
     } 
@@ -147,18 +153,20 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 #ifndef VERSION2
   Statistics st(graph);
   write_stats.print_fair_edges(graph, st);
-  write_stats.histStat();
 #else 
   write_dots.save_components(graph, cfg, 5);
 #endif
+
+write_stats.histStat();
 }  
 
 template<class graph_t>
 void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance& cfg) { 
   Statistics st(graph); 
-
+ 
   graph.update_complement_color(st.get_new_color());
-  
+
+  st.count_other();   
   auto p = st.get_compl_stat();
   write_stats.print_all_statistics(stage, st, cfg, graph);
   write_dots.save_dot(graph, cfg, stage);

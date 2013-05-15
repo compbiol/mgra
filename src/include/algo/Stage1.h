@@ -19,30 +19,12 @@ bool Algorithm<graph_t>::stage1() {
 	continue;
       } 
 
-	
-
       path_t path({*is});
-
-	//55h 107t is not valid
-	//ACDDE 107t 55h 10
-	//ABBBBCDDE 55h 107t 8
 
       std::unordered_set<vertex_t> processed({*is, Infty}); // we count oo as already processed
 
       for(auto im = current.begin(); im != current.end(); ++im) {	
 	bool is_next = (im == current.begin()); 
-	/*if (*is == "137h" || *is == "936t" ||  *is == "95h" || *is == "55h" || *is == "107t") { 
-		std::cerr << "OLOLOLO_" << *is << std::endl;
-	} 
-
-	if (im->first == "137h" || im->first == "936t" ||  im->first == "95h" || im->first == "55h") { 
-		std::cerr << "OLOLOLO " << im->first << std::endl;
-	} */
-#ifdef VERSION2
-	if (im->first != Infty && !graph.is_simple_vertice(graph.get_adjacent_multiedges(im->first))) {
-		continue; 
-	} 
-#endif
 
 	std::string current = find_simple_path(path, processed, *is, im->first, is_next);
 
@@ -67,6 +49,12 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
   std::string current = cur;
 
   while (true) {
+    //FIXME: is_duplication_vertice work is a long while. And uses iff prevent duplication vertex. x -> ... -> y -> z -> t , 
+    //if z - end path and edge colors z->t, y->z  complimentary, but t - is duplication vertex and 2-break down all colors.       
+    if (current != Infty && graph.is_duplication_vertice(graph.get_adjacent_multiedges(current))) { 
+	break;
+    } 
+
     if (is_next) { 
       path.push_front(current);
     } else { 
@@ -86,14 +74,6 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
     if (!(new_edges.size() == 1) || !(graph.is_good_color(new_edges.begin()->second, previous_color))) { 
       break;
     } 
-
-    /*if (current == "137h" || current == "936t" ||  current == "95h") { 
-	std::cerr << "OLOLOLO1 " << current << std::endl;
-    } 
-
-	if (previous == "137h" || previous == "936t" || previous == "95h") { 
-		std::cerr << "OLOLOLO2" << previous << std::endl;
-	}*/ 
 	
     previous = current;
     current = new_edges.begin()->first;
@@ -104,15 +84,6 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
 
 template<class graph_t>
 size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
-   /*for(auto ip = path.begin(); ip != path.end(); ++ip) {
-       if (*ip == "137h" || *ip == "936t" || *ip == "95h") { 
-	std::cerr << "In process path " << *ip << std::endl;
-	} 
-	if( *ip == "55h") { 
-	std::cerr << "Problem vertex is here " << std::endl;
-	} 
-    }*/ 
-
   size_t nr = 0;
 
   if (path.size() >= 4 || (path.size() == 3 && *path.begin() == *path.rbegin())) {

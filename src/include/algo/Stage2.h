@@ -47,6 +47,7 @@ bool Algorithm<graph_t>::stage2() {
 	continue; 
       } 
 #endif
+
       for(auto im = M.begin(); im != M.end(); ++im) {
 	const std::string& y = im->first;
 
@@ -58,6 +59,7 @@ bool Algorithm<graph_t>::stage2() {
 
 	multimularcs_t Cx = graph.get_adjacent_multiedges_with_split(x);
 	multimularcs_t Cy = graph.get_adjacent_multiedges_with_split(y);
+
 #ifdef VERSION2
 	if (!graph.is_fair_vertice(graph.get_adjacent_multiedges(y))) { 
 	  continue;

@@ -53,7 +53,7 @@ bool TwoBreak::islinear(MBGraph& M) const {
     return true;
 }
 
-bool TwoBreak::apply(MBGraph& M, bool record) const {
+bool TwoBreak::apply(MBGraph& M, bool record) const  {
    if (record) {
 	outlog << " " << *this << " ";
 

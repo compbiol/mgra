@@ -55,7 +55,7 @@ struct MBGraph {
 		return false; 
 	} 
 
-	inline bool is_good_color(const Mcolor& Q, const Mcolor& Q1) { 
+	inline bool is_good_color(const Mcolor& Q, const Mcolor& Q1) const { 
 		if (!is_T_consistent_color(Q)) { 
 			return false; 
 		} 
@@ -75,6 +75,22 @@ struct MBGraph {
 		if (adj_edges.size() == 2 && adj_edges.begin()->second.is_good_multiedge() && adj_edges.rbegin()->second.is_good_multiedge()) { 
 			return true; 
 		} 
+		return false; 
+	}  
+
+	inline bool is_duplication_vertice(const mularcs_t& adj_edges) const {	
+		for(auto im = adj_edges.cbegin(); im != adj_edges.cend(); ++im) { 
+			for(auto it = adj_edges.cbegin(); it != adj_edges.cend(); ++it) {
+				if (*im == *it) { 
+					continue;
+				} 
+
+				Mcolor color(im->second, it->second, Mcolor::Intersection);
+				if (!color.empty()) { 
+					return true; 
+				} 
+			} 
+		}  
 		return false; 
 	}  
 

@@ -26,6 +26,7 @@ struct Statistics {
   std::map<std::pair<Mcolor, Mcolor>, size_t> get_Hsubgraph(); //count H-subgraph for stage2 
 
 private:
+  void count_some_statistics();
   void count_weak_simple_vertex(); 
   void count_compl_multiedges(); //count good edges for stage1
   void count_not_compl_multiedges(); 

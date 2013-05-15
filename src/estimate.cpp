@@ -5,7 +5,9 @@ Statistics::Statistics(const MBGraph& gr)
   count_compl_multiedges();
   count_not_compl_multiedges();	
   count_chromosomes();  
+	
 #ifdef VERSION2 
+  //count_some_statistics();
   count_weak_simple_vertex();
 #endif
 }	      	
@@ -91,23 +93,55 @@ std::vector<Mcolor> Statistics::get_new_color() const {
 } 
 
 void Statistics::count_weak_simple_vertex() { 
-  size_t irreg_count = 0;
   size_t count = 0; 
 
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
     mularcs_t Mx = graph.get_adjacent_multiedges(*it);
-    
-    if (Mx.size() == 2) { 
-      if (Mx.cbegin()->first == Infty || Mx.crbegin()->first == Infty) { 
-	++irreg_count; 
-      } else { 
+
+    if (graph.is_duplication_vertice(Mx)) { 
 	++count;
-      } 
     } 
   } 
 
-  std::cerr << "Regular vertex: " << count << std::endl;
-  std::cerr << "Irregular vertex: " << irreg_count << std::endl;
+  std::cerr << "Duplication vertex: " << count << std::endl;
+} 
+
+void Statistics::count_some_statistics() { 
+  std::map<std::pair<Mcolor, Mcolor>, size_t> count_vertex;
+  
+  for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
+    mularcs_t Mx = graph.get_adjacent_multiedges(*it);
+    
+    if (Mx.size() == 2) { 
+	if (Mx.cbegin()->second < Mx.crbegin()->second) {
+		++count_vertex[std::make_pair(Mx.cbegin()->second, Mx.crbegin()->second)];
+	} else { 
+		++count_vertex[std::make_pair(Mx.crbegin()->second, Mx.cbegin()->second)];	
+	} 
+    }
+
+    Mx.erase(Infty);
+
+    if (Mx.size() == 2) { 
+	if (Mx.cbegin()->second < Mx.crbegin()->second) {
+		++count_vertex[std::make_pair(Mx.cbegin()->second, Mx.crbegin()->second)];
+	} else { 
+		++count_vertex[std::make_pair(Mx.crbegin()->second, Mx.cbegin()->second)];	
+	} 
+    } 
+  } 
+
+  std::multimap<size_t, std::pair<Mcolor, Mcolor> > edges; 
+
+  for(auto it = count_vertex.cbegin(); it != count_vertex.cend(); ++it) { 
+	edges.insert(std::make_pair(it->second, it->first));
+  } 
+
+  std::ofstream ofstat("new_stat.txt");
+  for(auto it = edges.crbegin(); it != edges.crend(); ++it) { 
+	ofstat << "{" << genome_match::mcolor_to_name(it->second.first) << "+" << genome_match::mcolor_to_name(it->second.second) << "} " << it->first << std::endl; 
+  } 
+  ofstat.close();
 } 
 
 void Statistics::count_compl_multiedges() {
@@ -161,33 +195,14 @@ void Statistics::count_compl_multiedges() {
 } 
 
 void Statistics::count_not_compl_multiedges() { 
-  //std::cerr << "new work" << std::endl;
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
     //multimularcs_t current = graph.get_adjacent_multiedges_v2(*it);
     mularcs_t current = graph.get_adjacent_multiedges(*it);  
-
-	/*if (*it == "107t") { 
-		std::cerr << "COLORS for 107t: " << std::endl;
-	    for (auto jm = current.cbegin(); jm != current.cend(); ++jm) {
-		std::cerr << genome_match::mcolor_to_name(jm->second) << " " << jm->first <<std::endl;
-		} 
-
-	}
-	if (*it == "55h") { 
-		std::cerr << "COLORS for 55h: " << std::endl;
-	    for (auto jm = current.cbegin(); jm != current.cend(); ++jm) {
-		std::cerr << genome_match::mcolor_to_name(jm->second) << " " << jm->first <<std::endl;
-		} 
-
-	}*/
-
-
     for (auto jt = current.cbegin(); jt != current.cend(); ++jt) {
       if (jt->second.is_good_multiedge()) {
 	continue; 
       } 
-	
-	//std::cerr << genome_match::mcolor_to_name(jt->second) << " " << *it << " " << jt->first << " " << current.size() << std::endl;
+
       ++not_compl_multiedges_count[jt->second]; 
 
       if (jt->first == Infty) { 

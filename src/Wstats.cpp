@@ -4,7 +4,7 @@ writer::Wstats::Wstats(std::string name_file): write_parametres(5) {
 	ofstat.open(name_file); 
 } 
 
-void writer::Wstats::print_all_statistics(int stage, Statistics& info, const ProblemInstance& cfg, const MBGraph& graph) { 
+void writer::Wstats::print_all_statistics(int stage, Statistics<MBGraph>& info, const ProblemInstance& cfg, const MBGraph& graph) { 
 	if (stage == 0) { 
 		println("Initial graph:");
 	}  else { 
@@ -70,7 +70,7 @@ void writer::Wstats::histStat() { //FIXME
 	ofstat << std::endl;
 }
 ////////////////////////////////////////////////////////
-void writer::Wstats::print_fair_edges(const MBGraph& MBG, Statistics& info) {
+void writer::Wstats::print_fair_edges(const MBGraph& MBG, Statistics<MBGraph>& info) {
 	// output H-subgraphs count
 	ofstat << std::endl << "% Fair multi-edges count: " << std::endl << std::endl;
 

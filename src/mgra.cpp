@@ -493,11 +493,10 @@ int main(int argc, char* argv[]) {
   genome_match::init_name_genomes(genomes);
 
   MBGraph graph(genomes, PI); 
-
   Algorithm<MBGraph> main_algo(graph);
   main_algo.main_algorithm(PI); 
   graph = main_algo.get_graph(); 
-
+ 
 #ifndef VERSION2  
   if (!PI.get_target().empty()) {
 

@@ -40,33 +40,34 @@ bool Algorithm<graph_t>::stage2() {
     for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
       const std::string& x = *is;
       mularcs_t M = graph.get_adjacent_multiedges(x);
-  
-  
-#ifdef VERSION2
-      if (!graph.is_fair_vertice(M)) { 
-	continue; 
-      } 
-#endif
+    
+//#ifdef VERSION2
+//     if (!graph.is_fair_vertice(M)) { 
+//	continue; 
+//      } 
+//#endif
 
+      multimularcs_t Cx = graph.get_adjacent_multiedges_with_split(x);
+	
       for(auto im = M.begin(); im != M.end(); ++im) {
 	const std::string& y = im->first;
-
 	const Mcolor& Q = im->second; // color of central edge
 
 	if (y == Infty || Q.size() == graph.size_graph()) { 
 	  continue;
 	} 
 
-	multimularcs_t Cx = graph.get_adjacent_multiedges_with_split(x);
 	multimularcs_t Cy = graph.get_adjacent_multiedges_with_split(y);
 
 #ifdef VERSION2
-	if (!graph.is_fair_vertice(graph.get_adjacent_multiedges(y))) { 
+	if (graph.is_duplication_vertice(graph.get_adjacent_multiedges(y))) { 
 	  continue;
 	} 
 #endif
-	//if( MBG.get_adjacent_multiedges(y).size()!=3 ) continue;
-
+	/*if(graph.get_adjacent_multiedges(y).size() != 3) {
+		continue;
+	} 
+*/
 	outlog << "Testing mobility of edge " << x << "-" << y << " " << genome_match::mcolor_to_name(Q) << " ";
 
 	// test "mobility" of central edge
@@ -75,10 +76,14 @@ bool Algorithm<graph_t>::stage2() {
 
 	//here 
 	for(auto jc = Cx.cbegin(); jc!= Cx.cend(); ++jc) {
-	  if (jc->first != y) { continue; } // not a cental sub-edge
+	  if (jc->first != y) { 
+		continue; 
+	  } // not a cental sub-edge
 
 	  const Mcolor& QQ = jc->second; // color of central sub-edge (QQ is sub-multicolor of Q)
-	  if (!member(graph.DiColor, QQ)) { continue; } 
+	  if (!member(graph.DiColor, QQ)) { 
+		continue;
+	  } 
 
 
 	  for(auto ix = Cx.begin(); ix != Cx.end(); ++ix) { 
@@ -146,6 +151,7 @@ bool Algorithm<graph_t>::stage2() {
 	if (found) { break; } 
       }
     } 
+
     if (nr != 0 || nf != 0) { 
       symplified = true;
     } 

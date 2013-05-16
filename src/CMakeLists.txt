@@ -13,7 +13,7 @@ set(MGRA_SOURCE mgra.cpp
 	gen_dist.cpp
 	Wstats.cpp
 	Wdots.cpp
-	estimate.cpp
+	#estimate.cpp
 	mcolor.cpp
 	2break.cpp
    )
@@ -27,7 +27,7 @@ set (OPTIMIZE_FLAG " -std=c++0x -O2 -pipe -finline-functions -finline-limit=1000
 include_directories(${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/include/writer ${PROJECT_SOURCE_DIR}/include/algo) 
 
 if (CMAKE_COMPILER_IS_GNUCXX)	
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${DEBUG}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG}")# ${DEBUG}")
 else (CMAKE_COMPILER_IS_GNUCXX)
 	message (FATAL_ERROR ${ERR_NO_UNIX})
 endif (CMAKE_COMPILER_IS_GNUCXX)

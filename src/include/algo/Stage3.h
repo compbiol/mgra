@@ -13,7 +13,7 @@ bool simplified = false;
 
    // go over all T-consistent multicolors
    for(auto ic = graph.DiColor.begin(); ic != graph.DiColor.end(); ++ic) {
-     if (ic->size() == 0 || ic->size() == graph.size_graph()) { 
+     if (ic->size() == 0 || ic->size() == graph.size_graph()) { //FIXME. size() == 0
        continue; // except empty and complete multicolor
      } 		
      const Mcolor& Q = *ic;

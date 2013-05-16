@@ -138,7 +138,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 	t.apply(graph, true);
       }
 
-      Statistics st(graph); 
+      Statistics<graph_t> st(graph); 
       graph.update_complement_color(st.get_new_color());
 
       process_compl = false;
@@ -151,18 +151,18 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
   write_dots.save_dot(graph, cfg, 99);
 
 #ifndef VERSION2
-  Statistics st(graph);
+  Statistics<graph_t> st(graph);
   write_stats.print_fair_edges(graph, st);
 #else 
   write_dots.save_components(graph, cfg, 5);
 #endif
 
-write_stats.histStat();
+  write_stats.histStat();
 }  
 
 template<class graph_t>
 void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance& cfg) { 
-  Statistics st(graph); 
+  Statistics<MBGraph> st(graph); 
  
   graph.update_complement_color(st.get_new_color());
 

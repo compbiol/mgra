@@ -96,7 +96,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 
     if (path.size() % 2 && (*path.begin() != *path.rbegin())) {
       outlog << "... ";
-      if (!member(graph.DiColor, graph.get_adjacent_multiedges(*(++path.begin()))[*path.begin()] ) ) {
+      if (!member(graph.colors.DiColor, graph.get_adjacent_multiedges(*(++path.begin()))[*path.begin()] ) ) {
 	path.erase(path.begin());
 	outlog << "left";
       } else {
@@ -118,7 +118,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  outlog << "ERROR: Semi-cycle w/o infinity!" << std::endl;
 	  exit(1);
 	}
-	if (member(graph.DiColor, graph.get_adjacent_multiedges(*(++path.begin()))[*path.begin()]) ) {
+	if (member(graph.colors.DiColor, graph.get_adjacent_multiedges(*(++path.begin()))[*path.begin()]) ) {
 	  outlog << "... semi-cycle, fusion applied" << std::endl;
 	  const std::string& x0 = *(++path.begin());
 	  const std::string& y0 = *(++path.rbegin());
@@ -154,9 +154,9 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     
       Q = graph.get_adjacent_multiedges(*(++path.begin()))[*path.begin()];
     
-      outlog << genome_match::mcolor_to_name(Q) << " + " << genome_match::mcolor_to_name(graph.CColor(Q)) << endl;
+      outlog << genome_match::mcolor_to_name(Q) << " + " << genome_match::mcolor_to_name(graph.colors.CColor(Q)) << endl;
 
-      if (member(graph.DiColor, Q)) { 
+      if (member(graph.colors.DiColor, Q)) { 
 	break;
       } 
 
@@ -185,7 +185,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
       }
     }
 
-    Mcolor Qrep = graph.CColorRep(Q);
+    Mcolor Qrep = graph.colors.CColorRep(Q);
 
     // x1 -- x2 -- x3 -- ... -- x2k
     // results in:

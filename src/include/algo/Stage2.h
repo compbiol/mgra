@@ -74,7 +74,7 @@ bool Algorithm<graph_t>::stage2() {
 	  } // not a cental sub-edge
 
 	  const Mcolor& QQ = jc->second; // color of central sub-edge (QQ is sub-multicolor of Q)
-	  if (!member(graph.DiColor, QQ)) { 
+	  if (!member(graph.colors.DiColor, QQ)) { 
 		continue;
 	  } 
 
@@ -130,7 +130,7 @@ bool Algorithm<graph_t>::stage2() {
 	    } 
 	  } 
 
-	  if (!member(graph.DiColor, QQ) || temp.empty()) continue; 
+	  if (!member(graph.colors.DiColor, QQ) || temp.empty()) continue; 
 
 	  /*
 	    Mcolor C(Q, QQ, Mcolor::Union);

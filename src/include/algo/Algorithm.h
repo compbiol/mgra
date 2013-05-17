@@ -139,7 +139,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
       }
 
       Statistics<graph_t> st(graph); 
-      graph.update_complement_color(st.get_new_color());
+      graph.colors.update_complement_color(st.get_new_color());
 
       process_compl = false;
       isChanged = true;
@@ -164,7 +164,7 @@ template<class graph_t>
 void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance& cfg) { 
   Statistics<MBGraph> st(graph); 
  
-  graph.update_complement_color(st.get_new_color());
+  graph.colors.update_complement_color(st.get_new_color());
 
   st.count_other();   
   auto p = st.get_compl_stat();

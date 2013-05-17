@@ -557,7 +557,7 @@ int main(int argc, char* argv[]) {
 
     } else {  /* empty target */
 
-	const size_t NC = graph.DiColor.size();
+	const size_t NC = graph.colors.DiColor.size();
     
 	RG.resize(NC);
 	RT.resize(NC);
@@ -568,20 +568,20 @@ int main(int argc, char* argv[]) {
     
 	outlog << "Initial 2-break distances from the root X: " << std::endl;
 	for(int i = 0; i < NC; ++i) {
-	    outlog << genome_match::mcolor_to_name(graph.TColor[i]) << ":\t" << RT[i].size() << std::endl;
+	    outlog << genome_match::mcolor_to_name(graph.colors.TColor[i]) << ":\t" << RT[i].size() << std::endl;
 	}
     
 	// FIXME: check that the order in which circular chromosomes are eliminated
     
 	for(int i = 0; i < NC; ++i) {
     
-	    transform_t T = decircularize(graph, RG[i], RT[i], graph.TColor[i]);
+	    transform_t T = decircularize(graph, RG[i], RT[i], graph.colors.TColor[i]);
     
 	    // move to adjacent branches
 	    for(transform_t::const_iterator it = T.begin(); it!=T.end(); ++it) {
 		for(int j=0;j<NC;++j) {
-		    if( j!=i && includes( graph.TColor[i].begin(), graph.TColor[i].end(), graph.TColor[j].begin(), graph.TColor[j].end() ) 
-			&& graph.AreAdjacentBranches(graph.TColor[i],graph.TColor[j]) ) {
+		    if( j!=i && includes( graph.colors.TColor[i].begin(), graph.colors.TColor[i].end(), graph.colors.TColor[j].begin(), graph.colors.TColor[j].end() ) 
+			&& graph.AreAdjacentBranches(graph.colors.TColor[i],graph.colors.TColor[j]) ) {
 			RT[j].push_back(*it);
 		    }
 		}
@@ -590,18 +590,18 @@ int main(int argc, char* argv[]) {
     
 	outlog << "Final 2-break distances from the root X: " << endl;
 	for(int i = 0; i < NC; ++i) {
-	    outlog << genome_match::mcolor_to_name(graph.TColor[i]) << ":\t" << RT[i].size() << endl;
+	    outlog << genome_match::mcolor_to_name(graph.colors.TColor[i]) << ":\t" << RT[i].size() << endl;
 	}
     
 	for(int i = 0;i < NC; ++i) {
     	    std::set<std::pair<path_t, bool> > GN;
 	    splitchr(graph, RG[i], GN);
-	    printchr(genome_match::mcolor_to_name(graph.TColor[i]),GN, PI.get_target().empty());
+	    printchr(genome_match::mcolor_to_name(graph.colors.TColor[i]),GN, PI.get_target().empty());
     
 	    //splitchr(RG[i], GN, true);
 	    //printchr(genome_match::mcolor_to_name(graph.TColor[i]) + "_x",GN, PI.get_target().empty());
     
-		std::ofstream tr( (genome_match::mcolor_to_name(graph.TColor[i]) + ".trs").c_str() );
+		std::ofstream tr( (genome_match::mcolor_to_name(graph.colors.TColor[i]) + ".trs").c_str() );
 		for(transform_t::const_iterator it=RT[i].begin();it!=RT[i].end();++it) {
 			tr << it->OldArc[0].first << " " << it->OldArc[0].second << "\t" << it->OldArc[1].first << " " << it->OldArc[1].second << "\t" << genome_match::mcolor_to_name(it->MultiColor) << endl;
 		}
@@ -628,7 +628,7 @@ bool RecoverGenomes(MBGraph& graph, const transform_t& tr) {
     }
     */
 
-    size_t NC = graph.DiColor.size();
+    size_t NC = graph.colors.DiColor.size();
 
     for(int i=0; i < graph.size_graph() - 1; ++i) {
 	if( graph.get_local_graph(i) != graph.get_local_graph(i + 1)) {//FIXME
@@ -658,26 +658,26 @@ bool RecoverGenomes(MBGraph& graph, const transform_t& tr) {
 
 	for(size_t i = 0; i < NC; ++i) {
 
-	    if (!Q.includes(graph.TColor[i])) { 
+	    if (!Q.includes(graph.colors.TColor[i])) { 
 		continue;
 	    } 
 
             // TColor[i] is subset of Q
 
             size_t nchr_old = 0;
-	    if (Q == graph.TColor[i]) {
+	    if (Q == graph.colors.TColor[i]) {
 		nchr_old = numchr(graph, RG[i]).first;
 	    }
 
 
 	    it->revertSingle(RG[i]);
 
-	    if( Q==graph.TColor[i] ) {
-		outlog << " " << genome_match::mcolor_to_name(graph.TColor[i]);
+	    if( Q==graph.colors.TColor[i] ) {
+		outlog << " " << genome_match::mcolor_to_name(graph.colors.TColor[i]);
 		RT[i].push_front(*it);
 	    }
 
-	    if( Q == graph.TColor[i] ) {
+	    if( Q == graph.colors.TColor[i] ) {
 
 		bool samechr = true;
 
@@ -714,7 +714,7 @@ bool RecoverGenomes(MBGraph& graph, const transform_t& tr) {
     vector< size_t > tot(3);
     outlog << "% Number of reversals / translocations / fissions+fusions: " << endl;
     for(size_t j = 0; j < NC; ++j) {
-	outlog << genome_match::mcolor_to_name(graph.TColor[j]) << "+" << genome_match::mcolor_to_name(graph.CColor(graph.TColor[j])) << "\t&\t" << RTF[j][0] << " & " << RTF[j][1] << " & " << RTF[j][2]
+	outlog << genome_match::mcolor_to_name(graph.colors.TColor[j]) << "+" << genome_match::mcolor_to_name(graph.colors.CColor(graph.colors.TColor[j])) << "\t&\t" << RTF[j][0] << " & " << RTF[j][1] << " & " << RTF[j][2]
 	    << " &\t" << RTF[j][0]+RTF[j][1]+RTF[j][2] << " \\\\" << endl;
         outlog << "\\hline" << endl;
 	tot[0] += RTF[j][0];

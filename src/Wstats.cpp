@@ -101,7 +101,7 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, Statistics<MBGraph>& i
 
 	for(auto ic = HCrow.cbegin(); ic != HCrow.cend(); ++ic) {
 		ofstat << " & ${";
-		if (MBG.is_T_consistent_color(*ic)) {
+		if (MBG.colors.is_T_consistent_color(*ic)) {
 			ofstat << "\\bf ";
 		} 
 		ofstat <<  genome_match::mcolor_to_name(*ic) << "+}$";
@@ -112,7 +112,7 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, Statistics<MBGraph>& i
 
 	for(auto Q1 = HCrow.cbegin(); Q1 != HCrow.cend(); ++Q1) {
 		ofstat << "${";
-		if (MBG.is_T_consistent_color(*Q1)) {
+		if (MBG.colors.is_T_consistent_color(*Q1)) {
 			ofstat << "\\bf ";
 		} 
 		ofstat << genome_match::mcolor_to_name(*Q1) << "+}$"; 

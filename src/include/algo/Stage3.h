@@ -12,7 +12,7 @@ bool simplified = false;
    outlog << "Stage 222: splitting into connected components" << std::endl;
 
    // go over all T-consistent multicolors
-   for(auto ic = graph.DiColor.begin(); ic != graph.DiColor.end(); ++ic) {
+   for(auto ic = graph.colors.DiColor.begin(); ic != graph.colors.DiColor.end(); ++ic) {
      if (ic->size() == 0 || ic->size() == graph.size_graph()) { //FIXME. size() == 0
        continue; // except empty and complete multicolor
      } 		
@@ -90,7 +90,7 @@ bool simplified = false;
 	       }
 	     } 
 	     // if e is enriched to T-consistent color, great!
-	     if( T.size()>Q.size() && graph.is_T_consistent_color(T) ) {
+	     if( T.size()>Q.size() && graph.colors.is_T_consistent_color(T) ) {
 	       outlog << "perfect edge is found" << endl;
 	       q = t;
 	       found = true;
@@ -228,7 +228,7 @@ bool Algorithm<graph_t>::stage3_2() {
        const std::string& y = im->first;
        const Mcolor& Q = im->second;
 
-       if (!member(graph.DiColor, Q) || y==Infty) { 
+       if (!member(graph.colors.DiColor, Q) || y==Infty) { 
 	 continue;
        }
 

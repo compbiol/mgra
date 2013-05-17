@@ -13,7 +13,6 @@ set(MGRA_SOURCE mgra.cpp
 	gen_dist.cpp
 	Wstats.cpp
 	Wdots.cpp
-	#estimate.cpp
 	mcolor.cpp
 	2break.cpp
    )

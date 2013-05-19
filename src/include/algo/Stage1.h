@@ -11,7 +11,7 @@ bool Algorithm<graph_t>::stage1() {
     for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
       Mularcs current = graph.get_adjacent_multiedges(*is);
 
-      if (!graph.is_simple_vertice(current)) { 
+      if (!current.is_simple_vertice()) { 
 	continue; 
       } 
 

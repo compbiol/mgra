@@ -52,7 +52,7 @@ struct MBGraph {
 
 	/*function for Mularcs*/
 	inline bool is_complement_color(const Mularcs& adj_edges) const { 
-		if (is_simple_vertice(adj_edges) && colors.get_complement_color(adj_edges.cbegin()->second) == adj_edges.crbegin()->second)  { 
+		if (adj_edges.is_simple_vertice() && colors.get_complement_color(adj_edges.cbegin()->second) == adj_edges.crbegin()->second)  { 
 			return true; 
 		} 
 		return false; 
@@ -73,13 +73,6 @@ struct MBGraph {
 
 		return false;
 	} 
-
-	inline bool is_simple_vertice(const Mularcs& adj_edges) const {
-		if (adj_edges.size() == 2 && adj_edges.cbegin()->second.is_good_multiedge() && adj_edges.crbegin()->second.is_good_multiedge()) { 
-			return true; 
-		} 
-		return false; 
-	}  
 
 	inline bool is_duplication_vertice(const Mularcs& adj_edges) const {	
 		for(auto im = adj_edges.cbegin(); im != adj_edges.cend(); ++im) { 

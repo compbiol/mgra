@@ -226,7 +226,7 @@ void Statistics<graph_t>::count_compl_multiedges() {
 
     ++multidegree_count[current.size()]; //current.size - is degree vertex *it
 
-    if (graph.is_simple_vertice(current)) {  //we define simple vertices as a regular vertex of multidegree 2. 
+    if (current.is_simple_vertice()) {  //we define simple vertices as a regular vertex of multidegree 2. 
       processed.insert(*it);
       ++simple_vertices_count[std::min(current.cbegin()->second, current.crbegin()->second)]; //simple vertices because degree 2.
     }
@@ -238,7 +238,7 @@ void Statistics<graph_t>::count_compl_multiedges() {
 
       ++compl_multiedges_count[im->second];   // count two times, because same underected edge (u, v) and (v, u)
 			
-      if (graph.is_simple_vertice(current)) {
+      if (current.is_simple_vertice()) {
 	++good_multiedges_count[im->second]; //good if one vertices have degree 2
 	
 	if (im->first == Infty) { 
@@ -348,7 +348,7 @@ void Statistics<graph_t>::count_cycles() {
       processed.insert(current);
       //multiMularcs My = graph.get_adjacent_multiedges_v2(current);
       Mularcs My = graph.get_adjacent_multiedges(current);
-      if (!graph.is_simple_vertice(My)) {
+      if (!My.is_simple_vertice()) {
 	break;
       }
 

@@ -152,9 +152,9 @@ void writer::Wstats::print_complete_edges(const MBGraph& graph) {
 	ofstat << "... complete multiedges:";
 	for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
 		//multimularcs_t M = graph.get_adjacent_multiedges_v2(*it);
-		mularcs_t M = graph.get_adjacent_multiedges(*it);
-		if (M.size() == 1 && M.begin()->second.size() == graph.size_graph() && (*it < M.begin()->first || M.begin()->first == Infty)) {
-			ofstat << " " << *it << "~" << M.begin()->first;
+		Mularcs M = graph.get_adjacent_multiedges(*it);
+		if (M.size() == 1 && M.cbegin()->second.size() == graph.size_graph() && (*it < M.cbegin()->first || M.cbegin()->first == Infty)) {
+			ofstat << " " << *it << "~" << M.cbegin()->first;
 			++nc;
 		}
     	}

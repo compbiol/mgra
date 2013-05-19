@@ -11,17 +11,17 @@ bool Algorithm<graph_t>::cut_free_ends() {
 	nf = 0;
 	for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
 		const std::string& x = *is;
-		mularcs_t M = graph.get_adjacent_multiedges(x);
+		Mularcs M = graph.get_adjacent_multiedges(x);
 	 
-		const Mcolor& Q1 = M[Infty];
+		const Mcolor& Q1 = M.find(Infty)->second;
                 vertex_t y;
 		Mcolor Q2;
-		if( M.begin()->first == Infty) {
-                    y = M.rbegin()->first;
-		    Q2 = M.rbegin()->second;
+		if( M.cbegin()->first == Infty) {
+                    y = M.crbegin()->first;
+		    Q2 = M.crbegin()->second;
 		} else {
-                    y = M.begin()->first;
-		    Q2 = M.begin()->second;
+                    y = M.cbegin()->first;
+		    Q2 = M.cbegin()->second;
 		}
 		if( !member(graph.DiColor,Q1) && member(graph.DiColor,Q2) /* && !member(graph.get_adjacent_multiedges(y),Infty) */ ) {
 		//if( member(DiColor,Q2) && !member(graph.get_adjacent_multiedges(y),Infty) ) {
@@ -47,24 +47,25 @@ bool Algorithm<graph_t>::find_reliable_path() {
 
 	for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
 	     const std::string& x = *is;
-	     mularcs_t M = graph.get_adjacent_multiedges(x);
+	     Mularcs M = graph.get_adjacent_multiedges(x);
 	    // generalized reliable simple path	
 	    if (M.size()>=2 ) {
-			for(auto im = M.begin();im!=M.end();++im) {
+			for(auto im = M.cbegin();im!=M.cend();++im) {
 			  const std::string& y = im->first;
    		          const Mcolor& Q = im->second;
 	
 	                  if( y==Infty ) continue;
 	                    
-			  mularcs_t My = graph.get_adjacent_multiedges(y);
+			  Mularcs My = graph.get_adjacent_multiedges(y);
 			  My.erase(x);
-     			  mularcs_t Mx = M;
+     			  Mularcs Mx = M;
 			  Mx.erase(y);
 
-		    if( member(Mx,Infty) && member(My,Infty) && Mx[Infty]==My[Infty] && graph.is_T_consistent_color(Mx[Infty]) ) {
-			Mcolor C(Q, Mx[Infty], Mcolor::Union);
+		    if((Mx.find(Infty) != Mx.cend()) && (My.find(Infty) != My.cend()) && (Mx.find(Infty)->second == My.find(Infty)->second) 
+			&& graph.is_T_consistent_color(Mx.find(Infty)->second) ) {
+			Mcolor C(Q, Mx.find(Infty)->second, Mcolor::Union);
 			if (!graph.is_T_consistent_color(C)) continue;
-			for(auto iq = Mx[Infty].begin(); iq!=Mx[Infty].end(); ++iq) {
+			for(auto iq = Mx.find(Infty)->second.cbegin(); iq!=Mx.find(Infty)->second.cend(); ++iq) {
 			    graph.add_edge(iq->first, x, y);
 			}
 			outlog << "Stage 22: fusion " << x << " + " << y << std::endl;
@@ -77,22 +78,22 @@ bool Algorithm<graph_t>::find_reliable_path() {
 			if( !graph.is_T_consistent_color(jm->second) ) continue;
 			Mcolor C(Q, jm->second, Mcolor::Union);
 			if (graph.is_T_consistent_color(C)) {
-			    if( Cx!=Mx.end() ) { Cx=Mx.end(); break; }
+			    if( Cx!=Mx.cend() ) { Cx=Mx.cend(); break; }
 			    Cx = jm;
 			}
 	    	    }
-	    	    if( Cx == Mx.end() ) continue;
+	    	    if( Cx == Mx.cend() ) continue;
 		    
 		    auto Cy = My.cend();
 		    for(auto jm = My.cbegin(); jm != My.cend(); ++jm) {
 			if( !graph.is_T_consistent_color(jm->second) ) continue;
 			Mcolor C(Q, jm->second, Mcolor::Union);
 			if( graph.is_T_consistent_color(C) ) {
-			    if( Cy!=My.end() ) { Cy=My.end(); break; }
+			    if( Cy!=My.cend() ) { Cy=My.cend(); break; }
 			    Cy = jm;
 			}
 	    	    }
-	    	    if( Cy == My.end() ) continue;
+	    	    if( Cy == My.cend() ) continue;
 	    	    
 	    	    if( Cx->second == Cy->second ) {
                         if( TwoBreak(x,Cx->first,y,Cy->first,Cx->second).apply(graph,true) ) nr++;

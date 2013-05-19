@@ -9,7 +9,7 @@ bool Algorithm<graph_t>::stage1() {
   do {
     num_rear = 0; 
     for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
-      mularcs_t current = graph.get_adjacent_multiedges(*is);
+      Mularcs current = graph.get_adjacent_multiedges(*is);
 
       if (!graph.is_simple_vertice(current)) { 
 	continue; 
@@ -23,8 +23,8 @@ bool Algorithm<graph_t>::stage1() {
 
       std::unordered_set<vertex_t> processed({*is, Infty}); // we count oo as already processed
 
-      for(auto im = current.begin(); im != current.end(); ++im) {	
-	bool is_next = (im == current.begin()); 
+      for(auto im = current.cbegin(); im != current.cend(); ++im) {	
+	bool is_next = (im == current.cbegin()); 
 
 	std::string current = find_simple_path(path, processed, *is, im->first, is_next);
 
@@ -67,16 +67,16 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
  
     processed.insert(current);
 
-    mularcs_t new_edges = graph.get_adjacent_multiedges(current);
+    Mularcs new_edges = graph.get_adjacent_multiedges(current);
     Mcolor previous_color = new_edges.find(previous)->second;
     new_edges.erase(previous);
 
-    if (!(new_edges.size() == 1) || !(graph.is_good_color(new_edges.begin()->second, previous_color))) { 
+    if (!(new_edges.size() == 1) || !(graph.is_good_color(new_edges.cbegin()->second, previous_color))) { 
       break;
     } 
 	
     previous = current;
-    current = new_edges.begin()->first;
+    current = new_edges.cbegin()->first;
   }
 
   return current;
@@ -96,7 +96,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 
     if (path.size() % 2 && (*path.begin() != *path.rbegin())) {
       outlog << "... ";
-      if (!member(graph.colors.DiColor, graph.get_adjacent_multiedges(*(++path.begin()))[*path.begin()] ) ) {
+      if (!member(graph.colors.DiColor, graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin())) ) { //FIXME
 	path.erase(path.begin());
 	outlog << "left";
       } else {
@@ -118,12 +118,12 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  outlog << "ERROR: Semi-cycle w/o infinity!" << std::endl;
 	  exit(1);
 	}
-	if (member(graph.colors.DiColor, graph.get_adjacent_multiedges(*(++path.begin()))[*path.begin()]) ) {
+	if (member(graph.colors.DiColor, graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin()))) { //FIXME
 	  outlog << "... semi-cycle, fusion applied" << std::endl;
 	  const std::string& x0 = *(++path.begin());
 	  const std::string& y0 = *(++path.rbegin());
     
-	  TwoBreak t(Infty, x0, Infty, y0, graph.get_adjacent_multiedges(x0)[Infty]);
+	  TwoBreak t(Infty, x0, Infty, y0, graph.get_adjacent_multiedges(x0).get_multicolor(Infty)); //FIXME
 	  if(t.apply(graph, true)) {
 	    path.erase(--path.end());
 	    *path.begin() = y0;
@@ -134,7 +134,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  const std::string y0 = *(++path.rbegin());
 	  const std::string y1 = *(++++path.rbegin());
 
-	  if (TwoBreak(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0)[y1]).apply(graph, true)) {
+	  if (TwoBreak(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0).get_multicolor(y1)).apply(graph, true)) { //FIXME
 	    ++nr;
 	    path.erase(--path.end());
 	    *path.rbegin() = Infty;
@@ -152,7 +152,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
       // multicolor of (z1,z2). N.B.: x2 is NOT oo
       outlog << "... multicolors of first and second multiedges: ";
     
-      Q = graph.get_adjacent_multiedges(*(++path.begin()))[*path.begin()];
+      Q = graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
     
       outlog << genome_match::mcolor_to_name(Q) << " + " << genome_match::mcolor_to_name(graph.colors.CColor(Q)) << endl;
 

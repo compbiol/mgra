@@ -15,8 +15,8 @@ void writer::Wdots::save_dot(const MBGraph& graph, const ProblemInstance& cfg, s
   for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
     const std::string& x = *is;
 
-    //multimularcs_t Mx = graph.get_adjacent_multiedges_v2(x);
-    mularcs_t Mx = graph.get_adjacent_multiedges(x);
+    //multiMularcs Mx = graph.get_adjacent_multiedges_v2(x);
+    Mularcs Mx = graph.get_adjacent_multiedges(x);
 
     if (Mx.size() == 1) { 
       continue; // trivial cycle
@@ -110,7 +110,7 @@ void writer::Wdots::save_components(const MBGraph& graph, const ProblemInstance&
 	continue;
       } 
 
-      mularcs_t Mx = graph.get_adjacent_multiedges(x);
+      Mularcs Mx = graph.get_adjacent_multiedges(x);
 
       if (Mx.size() == 1) { 
 	continue; // trivial cycle
@@ -194,19 +194,19 @@ void writer::Wdots::save_dot(bool outbad = false, const set<string>& VV = EmptyS
         gen2chr[graph.OB[x]] = cn;
 
 #ifndef BPG_COMPRESSED
-	mularcs_t Mx = graph.mularcs(x);
+	Mularcs Mx = graph.mularcs(x);
 	if( Mx.size() == 1 ) Biff.erase(x);
     }
 #else
 
 	SameColor.addrel(x,graph.OB[x]);
 
-	mularcs_t Mx = graph.mularcs(x);
+	Mularcs Mx = graph.mularcs(x);
 #ifndef UNICOLCOMP
 	if( Mx.size() == 1 ) {
 	    const string& y = Mx.begin()->first;
 #else
-	for(mularcs_t::const_iterator im=Mx.begin();im!=Mx.end();++im) {
+	for(Mularcs::const_iterator im=Mx.begin();im!=Mx.end();++im) {
 	    const string& y = im->first;
 #endif
 	    if( y==Infty || (member(gen2chr,y) && gen2chr[y]==cn) ) {
@@ -232,7 +232,7 @@ void writer::Wdots::save_dot(bool outbad = false, const set<string>& VV = EmptyS
     for(set<string>::const_iterator is=graph.VertexSet.begin();is!=graph.VertexSet.end();++is) {
 	const string& x = *is;
 
-	mularcs_t Mx = graph.mularcs(x);
+	Mularcs Mx = graph.mularcs(x);
 #ifndef FULL_BPG
 	if( Mx.size() == 1 ) continue; // trivial cycle
 #endif	
@@ -272,17 +272,17 @@ void writer::Wdots::save_dot(bool outbad = false, const set<string>& VV = EmptyS
 
 	//if( Mx.size()==N ) continue;
 
-	for(mularcs_t::const_iterator im=Mx.begin();im!=Mx.end();++im) {
+	for(Mularcs::const_iterator im=Mx.begin();im!=Mx.end();++im) {
 	    const string& y = im->first;
 
 	    if( member(V,y) ) continue; // already output
 
 #if 0
-	    mularcs_t Mx1 = graph.mularcs(x);
+	    Mularcs Mx1 = graph.mularcs(x);
 	    Mx1.erase(Infty);
 	    if( Mx1.size() >= 3 ) continue;
 	    if( y!=Infty ) {
-		mularcs_t My = graph.mularcs(y);
+		Mularcs My = graph.mularcs(y);
 		My.erase(Infty);
 		if( My.size() >= 3 ) continue;
 		EQ.addrel(x,y);

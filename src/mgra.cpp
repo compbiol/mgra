@@ -31,6 +31,7 @@ using namespace std;
 
 #include "reader.h"
 #include "algo/Algorithm.h"
+#include "mpbgraph.h"
 
 #ifdef REMOVE_SHORT_BLOCKS
 #define HAVE_BLOCK_LENGTH

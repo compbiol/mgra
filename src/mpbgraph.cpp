@@ -73,28 +73,28 @@ MBGraph::MBGraph(const std::vector<Genome>& genomes, const ProblemInstance& cfg)
 /*
 Метод возвращает список смежных ребер вершине u, вида (индекс_вершины, цвет ребра) 
 */
-mularcs_t MBGraph::get_adjacent_multiedges(const vertex_t& u) const { 
+Mularcs MBGraph::get_adjacent_multiedges(const vertex_t& u) const { 
 	if (u == Infty) {
 		std::cerr << "mularcs ERROR: Infinite input" << std::endl;
 		exit(1);
 	}
 
-	mularcs_t output;
+	Mularcs output;
 	for (int i = 0; i < size_graph(); ++i) {
 		if (local_graph[i].defined(u)) { 
 			std::pair<multi_hashmap::const_iterator, multi_hashmap::const_iterator> iters = local_graph[i].equal_range(u);
 			for (auto it = iters.first; it != iters.second; ++it) { 
-				if (output.find(it->second) != output.end()) { 
+				if (output.find(it->second) != output.cend()) { 
 					output.find(it->second)->second.insert(i);
 				} else { 
-					output.insert(std::make_pair(it->second, Mcolor(i)));	
+					output.insert(it->second, Mcolor(i));	
 				} 
 			}
 		} else { 
-			if (output.find(Infty) != output.end()) { 
+			if (output.find(Infty) != output.cend()) { 
 				output.find(Infty)->second.insert(i);
 			} else { 
-				output.insert(std::make_pair(Infty, Mcolor(i)));
+				output.insert(Infty, Mcolor(i));
 			} 
 		} 
 	}
@@ -106,10 +106,10 @@ mularcs_t MBGraph::get_adjacent_multiedges(const vertex_t& u) const {
 но если splitBadColor = true то еще и режет его 
 */
 multimularcs_t MBGraph::get_adjacent_multiedges_with_split(const vertex_t& u) const { 
-	mularcs_t edges = get_adjacent_multiedges(u);
+	Mularcs edges = get_adjacent_multiedges(u);
 
 	multimularcs_t output; 
-	for(auto im = edges.begin(); im != edges.end(); ++im) {
+	for(auto im = edges.cbegin(); im != edges.cend(); ++im) {
 		if (SplitBadColors && !member(colors.DiColor, im->second) && im->second.size() < size_graph()) {
 			auto C = split_color(im->second);
 			for(auto ic = C.begin(); ic != C.end(); ++ic) {

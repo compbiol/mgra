@@ -26,7 +26,7 @@ bool simplified = false;
        std::map<vertex_t, vertex_t> QQ; // multiedges of colors !Q (!*ic)
 		    
        for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {    
-	 mularcs_t M = graph.get_adjacent_multiedges(*is);
+	 Mularcs M = graph.get_adjacent_multiedges(*is);
 
 	 if (M.size() == 1) { 
 	   continue; // ignore complete multiedges
@@ -219,11 +219,11 @@ bool Algorithm<graph_t>::stage3_2() {
 
    for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
      const string& x = *is;
-     mularcs_t Mx = graph.get_adjacent_multiedges(x);
+     Mularcs Mx = graph.get_adjacent_multiedges(x);
 
      bool next = false;
 
-     for(auto im = Mx.begin(); im!=Mx.end(); ++im) {
+     for(auto im = Mx.cbegin(); im!=Mx.cend(); ++im) {
 
        const std::string& y = im->first;
        const Mcolor& Q = im->second;
@@ -232,16 +232,16 @@ bool Algorithm<graph_t>::stage3_2() {
 	 continue;
        }
 
-       mularcs_t My = graph.get_adjacent_multiedges(y);
+       Mularcs My = graph.get_adjacent_multiedges(y);
        My.erase(x);
 
-       for(auto jm = My.begin(); jm != My.end(); ++jm) {
+       for(auto jm = My.cbegin(); jm != My.cend(); ++jm) {
 	 std::string z = jm->first;
 	 if (z == Infty) { 
 	   continue;
 	 } 
 	
-	 mularcs_t Cz = graph.get_adjacent_multiedges(z);
+	 Mularcs Cz = graph.get_adjacent_multiedges(z);
 
 	 vertex_t v = "";
 	 for (auto ir = Cz.cbegin(); ir != Cz.cend(); ++ir) {
@@ -250,7 +250,7 @@ bool Algorithm<graph_t>::stage3_2() {
 	   } 
 	 }  
 
-	 if ((!v.empty()) && member(Mx, v) ) {
+	 if ((!v.empty()) && (Mx.find(v) != Mx.cend())) {
 
 	   auto p = std::make_pair(x, y);
 	   auto q = std::make_pair(v, z);

@@ -34,22 +34,24 @@ using namespace std;
 #include "utility/equivalence.h"
 #include "utility/sym_multi_hashmap.h"
 
-
+#include "mularcs.h"
+ 
 #define member(S,x) ((S).find(x)!=(S).end())
 
 extern std::ofstream outlog;
 const std::string Infty = "oo";
 
-typedef std::string vertex_t;
+//typedef std::string vertex_t;
 typedef sym_multi_hashmap<vertex_t> partgraph_t;
-typedef std::map <vertex_t, Mcolor> mularcs_t;
+//typedef std::map <vertex_t, Mcolor> Mularcs;
 typedef std::multimap <vertex_t, Mcolor> multimularcs_t;
 
+//template<class mcolor_t>
 struct MBGraph {
 	MBGraph(const std::vector<Genome>& genome, const ProblemInstance& cfg);
 
-	/*function for mularcs_t*/
-	inline bool is_complement_color(const mularcs_t& adj_edges) const { 
+	/*function for Mularcs*/
+	inline bool is_complement_color(const Mularcs& adj_edges) const { 
 		if (is_simple_vertice(adj_edges) && colors.get_complement_color(adj_edges.cbegin()->second) == adj_edges.crbegin()->second)  { 
 			return true; 
 		} 
@@ -72,14 +74,14 @@ struct MBGraph {
 		return false;
 	} 
 
-	inline bool is_simple_vertice(const mularcs_t& adj_edges) const {
-		if (adj_edges.size() == 2 && adj_edges.begin()->second.is_good_multiedge() && adj_edges.rbegin()->second.is_good_multiedge()) { 
+	inline bool is_simple_vertice(const Mularcs& adj_edges) const {
+		if (adj_edges.size() == 2 && adj_edges.cbegin()->second.is_good_multiedge() && adj_edges.crbegin()->second.is_good_multiedge()) { 
 			return true; 
 		} 
 		return false; 
 	}  
 
-	inline bool is_duplication_vertice(const mularcs_t& adj_edges) const {	
+	inline bool is_duplication_vertice(const Mularcs& adj_edges) const {	
 		for(auto im = adj_edges.cbegin(); im != adj_edges.cend(); ++im) { 
 			for(auto it = adj_edges.cbegin(); it != adj_edges.cend(); ++it) {
 				if (*im == *it) { 
@@ -95,7 +97,7 @@ struct MBGraph {
 		return false; 
 	}  
 
-	inline bool is_fair_vertice(const mularcs_t& adj_edges) const {
+	inline bool is_fair_vertice(const Mularcs& adj_edges) const {
 		if (adj_edges.size() == 3) {
 			for(auto it = adj_edges.cbegin(); it != adj_edges.cend(); ++it) {
 				if (!it->second.is_good_multiedge()) { 
@@ -126,7 +128,7 @@ struct MBGraph {
 		} 
 	} 	
 
-	mularcs_t get_adjacent_multiedges(const vertex_t& u) const; 
+	Mularcs get_adjacent_multiedges(const vertex_t& u) const; 
 	multimularcs_t get_adjacent_multiedges_with_split(const vertex_t& u) const; 
 	
 	inline std::set<std::string>::const_iterator begin_vertices() const { 

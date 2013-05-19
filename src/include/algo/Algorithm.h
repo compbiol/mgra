@@ -59,7 +59,6 @@ private:
 template<class graph_t>
 void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
   save_information(0, cfg);
-	
   std::array<bool, 5> print_dots;
   print_dots.fill(true);
   bool process_compl = true; 
@@ -163,7 +162,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 template<class graph_t>
 void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance& cfg) { 
   Statistics<MBGraph> st(graph); 
- 
+
   graph.colors.update_complement_color(st.get_new_color());
 
   st.count_other();   

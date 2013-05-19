@@ -39,7 +39,7 @@ bool Algorithm<graph_t>::stage2() {
 	
     for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
       const std::string& x = *is;
-      mularcs_t M = graph.get_adjacent_multiedges(x);
+      Mularcs M = graph.get_adjacent_multiedges(x);
 
       if (graph.is_duplication_vertice(M)) { 
 	continue; 
@@ -47,7 +47,7 @@ bool Algorithm<graph_t>::stage2() {
 
       multimularcs_t Cx = graph.get_adjacent_multiedges_with_split(x);
 	
-      for(auto im = M.begin(); im != M.end(); ++im) {
+      for(auto im = M.cbegin(); im != M.cend(); ++im) {
 	const std::string& y = im->first;
 	const Mcolor& Q = im->second; // color of central edge
 

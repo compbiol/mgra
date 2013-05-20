@@ -14,7 +14,6 @@ set(MGRA_SOURCE mgra.cpp
 	Wstats.cpp
 	Wdots.cpp
 	mcolor.cpp
-	2break.cpp
    )
 
 set (ERR_NO_UNIX "Cannot build on non Unix systems")

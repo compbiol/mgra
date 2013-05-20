@@ -131,7 +131,7 @@ bool simplified = false;
 	   if( !found ) continue;
     
     
-	   if( ! TwoBreak(p, q, Q).apply(graph, true) ) continue;
+	   if( ! TwoBreak<graph_t>(p, q, Q).apply(graph, true) ) continue;
 	   ++nr;
 			    
 	   outlog << "Stage 222.1: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
@@ -172,7 +172,7 @@ bool simplified = false;
 
 	   if( member(processed,CC[p.second]) || member(processed,CC[q.second]) || CC[p.second]!=CC[q.second] ) continue;
 
-	   if( ! TwoBreak(p,q,Q).apply(graph,true) ) continue;
+	   if( ! TwoBreak<graph_t>(p,q,Q).apply(graph,true) ) continue;
 	   nr++;
 
 	   outlog << "Stage 222.2: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << endl;
@@ -257,7 +257,7 @@ bool Algorithm<graph_t>::stage3_2() {
 
 	   outlog << "Stage 2222: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
 
-	   if (TwoBreak(p, q, Q).apply(graph, true)) nr++;
+	   if (TwoBreak<graph_t>(p, q, Q).apply(graph, true)) nr++;
 
 	   next = true;
 

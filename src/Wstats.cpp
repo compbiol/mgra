@@ -54,12 +54,12 @@ void writer::Wstats::print_connected_components(const MBGraph& MBG) {
 	ofstat << std::endl;
 }
 
-void writer::Wstats::histStat() { //FIXME
-	ofstat << std::endl << "Total number of 2-breaks: " << TwoBreak::History.size() << std::endl;
+void writer::Wstats::histStat(const MBGraph& graph) { //FIXME
+	ofstat << std::endl << "Total number of 2-breaks: " << graph.get_history().size() << std::endl;
 
  	std::map<Mcolor, size_t> n2br;
 
-	for(auto il = TwoBreak::History.begin(); il != TwoBreak::History.end(); ++il) {
+	for(auto il = graph.begin_history(); il != graph.end_history(); ++il) {
 		++n2br[il->MultiColor];
 	}
 

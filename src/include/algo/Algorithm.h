@@ -4,7 +4,6 @@
 #include <list>
 #include <string>
 
-#include "2break.h"
 #include "mpbgraph.h"
 
 #include "writer/Wstats.h"
@@ -135,13 +134,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 
       auto completion = cfg.get_completion();
       for(auto il = completion.begin(); il != completion.end(); ++il) {
-	TwoBreak t;
-	t.OldArc[0].first = (*il)[0];
-	t.OldArc[0].second = (*il)[1];
-	t.OldArc[1].first = (*il)[2];
-	t.OldArc[1].second = (*il)[3];
-	t.MultiColor = genome_match::name_to_mcolor((*il)[4]);
-
+	TwoBreak<graph_t> t((*il)[0], (*il)[1], (*il)[2], (*il)[3], genome_match::name_to_mcolor((*il)[4]));
 	t.apply(graph, true);
       }
 
@@ -164,7 +157,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
   write_dots.save_components(graph, colors, cfg, 5);
 #endif
 
-  write_stats.histStat();
+  write_stats.histStat(graph);
 }  
 
 template<class graph_t>

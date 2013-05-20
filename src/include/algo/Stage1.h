@@ -123,7 +123,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  const std::string& x0 = *(++path.begin());
 	  const std::string& y0 = *(++path.rbegin());
     
-	  TwoBreak t(Infty, x0, Infty, y0, graph.get_adjacent_multiedges(x0, colors).get_multicolor(Infty)); //FIXME
+	  TwoBreak<graph_t> t(Infty, x0, Infty, y0, graph.get_adjacent_multiedges(x0, colors).get_multicolor(Infty)); //FIXME
 	  if(t.apply(graph, true)) {
 	    path.erase(--path.end());
 	    *path.begin() = y0;
@@ -134,7 +134,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  const std::string y0 = *(++path.rbegin());
 	  const std::string y1 = *(++++path.rbegin());
 
-	  if (TwoBreak(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0, colors).get_multicolor(y1)).apply(graph, true)) { //FIXME
+	  if (TwoBreak<graph_t>(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0, colors).get_multicolor(y1)).apply(graph, true)) { //FIXME
 	    ++nr;
 	    path.erase(--path.end());
 	    *path.rbegin() = Infty;
@@ -197,7 +197,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     path_t::const_iterator z2 = z3++;
 
     while(z3 != path.end()) {
-      if( TwoBreak(*z0, *z1, *z3, *z2, Q).apply(graph, true) ) {
+      if( TwoBreak<graph_t>(*z0, *z1, *z3, *z2, Q).apply(graph, true) ) {
 	++nr;
       } else {
 	z0 = z2;

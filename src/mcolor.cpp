@@ -22,7 +22,6 @@ bool Mcolor::includes(const Mcolor& second) const {
 		} 
 	} 
 	return true;
-	//return std::includes(main_color.cbegin(), main_color.cend(), second.main_color.cbegin(), second.main_color.cend());
 } 
 
 bool Mcolor::is_good_multiedge() const { 
@@ -42,11 +41,11 @@ SplitColor(Q) представляет Q в виде дизъюнктного о
 Теперь, когда SplitBadColors = true, то и ребро (x,y) имеет мультицвет Q, то MBG.mulcols(x) будет содежать вместо (Q,x) пары:
 (Q1,y), (Q2,y), ..., (Qm,y)
 */
-/*std::set<Mcolor> Mcolor::split_color(const ColorsGraph<Mcolor>& colors, bool split_bad_colors = false) const {
+/*std::set<Mcolor> MBGraph::split_color(const ColorsGraph<Mcolor>& colors, bool split_bad_colors) const {
     std::set<Mcolor> S;
 
-    if (member(colors.DiColor, *this)) {
-	S.insert(*this);
+    if (member(colors.DiColor, Q)) {
+	S.insert(Q);
 	return S;
     }
 
@@ -55,12 +54,12 @@ SplitColor(Q) представляет Q в виде дизъюнктного о
     }
 
     equivalence <size_t> EQ;
-    for(auto iq = this->cbegin(); iq != this->cend(); ++iq) { 
+    for(auto iq = Q.cbegin(); iq!= Q.cend(); ++iq) { 
 	EQ.addrel(iq->first, iq->first);
     } 
 
     for(auto ic = colors.DiColor.begin(); ic != colors.DiColor.end(); ++ic) {
-	Mcolor C(*ic, *this, Mcolor::Intersection);
+	Mcolor C(*ic, Q, Mcolor::Intersection);
 	if (C.size() >= 2 && C.size() == ic->size() ) {
 	    for (auto iq = C.begin(); iq != C.end(); ++iq) {
 		EQ.addrel(iq->first, C.begin()->first);
@@ -69,7 +68,7 @@ SplitColor(Q) представляет Q в виде дизъюнктного о
     }
 
     EQ.update();
-    std::map <size_t, Mcolor > cls; //FIXME because cls - is Mcolor
+    std::map <size_t, Mcolor > cls; 
     EQ.get_eclasses(cls);
     for(auto ic = cls.cbegin(); ic != cls.cend(); ++ic) {
 	S.insert(ic->second);
@@ -101,7 +100,6 @@ void Mcolor::set_difference(const Mcolor& first, const Mcolor& second) {
 	for (; first1 != first.cend(); ++first1, ++result) { 
 		*result = *first1;
 	} 
-	//std::set_difference(first.cbegin(), first.cend(), second.cbegin(), second.cend(), std::inserter(main_color, main_color.begin()));
 } 
 
 void Mcolor::set_union(const Mcolor& first, const Mcolor& second) { 
@@ -137,7 +135,6 @@ void Mcolor::set_union(const Mcolor& first, const Mcolor& second) {
 		}  
 		++result;
 	} 	
-	//std::set_union(first.cbegin(), first.cend(), second.cbegin(), second.cend(), std::inserter(main_color, main_color.begin()));
 } 
 
 void Mcolor::set_intersection(const Mcolor& first, const Mcolor& second) { 
@@ -157,6 +154,5 @@ void Mcolor::set_intersection(const Mcolor& first, const Mcolor& second) {
 			++first2;
 		} 
 	}
-	//std::set_intersection(first.cbegin(), first.cend(), second.cbegin(), second.cend(), std::inserter(main_color, main_color.begin()));
 } 
 

@@ -34,18 +34,7 @@ using namespace std;
 #include "mpbgraph.h"
 #include "graph_colors.h"
 
-#ifdef REMOVE_SHORT_BLOCKS
-#define HAVE_BLOCK_LENGTH
-#include "remove_short_blocks.h"
-#endif
-
-#ifdef BPG_COMPRESSED
-#define HAVE_BLOCK_LENGTH
-#endif
-
-#ifdef HAVE_BLOCK_LENGTH
-std::map<std::string, size_t> BL;  // block -> length FIXME
-#endif
+typedef sym_multi_hashmap<vertex_t> partgraph_t;
 
 vector<partgraph_t> RG; // recovered genomes
 vector<transform_t> RT; // and transformations
@@ -219,7 +208,7 @@ void printchr(const std::string& outname, const std::set<std::pair<path_t, bool>
 	}
 
 	out << std::endl << "# Reconstructed genome " << outname << " has " << AllChr.size() << " " << ChrTitle << "s" << std::endl;
-	cout << std::endl << "Reconstructed genome " << outname << " has " << AllChr.size() << " " << ChrTitle << "s" << std::endl;
+	std::cout << std::endl << "Reconstructed genome " << outname << " has " << AllChr.size() << " " << ChrTitle << "s" << std::endl;
 
 	if (ncirc) {
 		out << "#\tout of which " << ncirc << " are circular of total length " << lcirc << std::endl;
@@ -339,8 +328,8 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
 
 	    transform_t::iterator kt = jt--; // jt, kt are successive, *kt == t
 
-	    const TwoBreak& t = *kt;
-	    const TwoBreak& s = *jt;
+	    const TwoBreak<MBGraph>& t = *kt;
+	    const TwoBreak<MBGraph>& s = *jt;
 	    //s.normalize();
 
 //            outlog << "... trying to swap with " << s << endl;
@@ -409,11 +398,11 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
 
 	    if( usearc ) {
 		if( t.MultiColor != s.MultiColor ) break;
-		*kt = TwoBreak(q2.second,p1.second,q1.first,q1.second,t.MultiColor);
-		*jt = TwoBreak(p1.first,p1.second,q2.first,q2.second,t.MultiColor);
+		*kt = TwoBreak<MBGraph>(q2.second,p1.second,q1.first,q1.second,t.MultiColor);
+		*jt = TwoBreak<MBGraph>(p1.first,p1.second,q2.first,q2.second,t.MultiColor);
 	    }
 	    else {
-		TwoBreak temp = *kt;
+		TwoBreak<MBGraph> temp = *kt;
 		*kt = *jt;
                 *jt = temp;
 	    }
@@ -494,7 +483,7 @@ int main(int argc, char* argv[]) {
   std::vector<Genome> genomes = reader::read_genomes(PI);
   genome_match::init_name_genomes(genomes);
 
-  MBGraph graph(genomes, PI); 
+  MBGraph graph(genomes); 
   ColorsGraph<Mcolor> colors(genomes.size(), PI);  
 
   Algorithm<MBGraph> main_algo(graph, colors);
@@ -568,7 +557,7 @@ int main(int argc, char* argv[]) {
 	RG.resize(NC);
 	RT.resize(NC);
     
-	if( !RecoverGenomes(graph, colors, TwoBreak::History) ) exit(1);
+	if( !RecoverGenomes(graph, colors, graph.get_history()) ) exit(1);
     
 	// T-transformation complete, we procede with recovering the ancestral genomes
     

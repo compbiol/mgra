@@ -26,7 +26,7 @@ bool Algorithm<graph_t>::cut_free_ends() {
 		if( !member(graph.DiColor,Q1) && member(graph.DiColor,Q2) /* && !member(graph.get_adjacent_multiedges(y),Infty) */ ) {
 		//if( member(DiColor,Q2) && !member(graph.get_adjacent_multiedges(y),Infty) ) {
 		    outlog << "Unhanging fission:" << endl;
-		    if( TwoBreak(x,y,Infty,Infty,Q2).apply(graph,true) ) nf++;
+		    if( TwoBreak<graph_t>(x,y,Infty,Infty,Q2).apply(graph,true) ) nf++;
 		}
 	    }
 	if (nf > 0) simplified = true;
@@ -96,7 +96,7 @@ bool Algorithm<graph_t>::find_reliable_path() {
 	    	    if( Cy == My.cend() ) continue;
 	    	    
 	    	    if( Cx->second == Cy->second ) {
-                        if( TwoBreak(x,Cx->first,y,Cy->first,Cx->second).apply(graph,true) ) nr++;
+                        if( TwoBreak<graph_t>(x,Cx->first,y,Cy->first,Cx->second).apply(graph,true) ) nr++;
 	    		outlog << "Stage 22: fusion " << x << " + " << y << endl;
 	    		break;
 	    	    }

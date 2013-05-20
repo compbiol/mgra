@@ -1,12 +1,13 @@
 #include "mpbgraph.h"
 
 std::ofstream outlog("/dev/null");
+//std::list<TwoBreak<MBGraph> > History;
 
 ///////////////////////////////////////////////////////////////
 void MBGraph::add_edges(size_t index, const Genome& genome, const std::unordered_set<orf_t>& blocks) {
-	std::string first_vertex; //in chromosome
-	std::string current_vertex; // is rightmost vertex of the previous block
-        std::string prev_chr;
+	vertex_t first_vertex; //in chromosome
+	vertex_t current_vertex; // is rightmost vertex of the previous block
+        vertex_t prev_chr;
 
 	for(auto iter = genome.cbegin(); iter != genome.cend(); ++iter) {
 		if (blocks.find(iter->second) != blocks.end()) { 
@@ -41,32 +42,6 @@ void MBGraph::add_edges(size_t index, const Genome& genome, const std::unordered
 	if (!first_vertex.empty() && genome.isCircular(prev_chr)) {
 		local_graph[index].insert(first_vertex, current_vertex);
 	}
-}
-
-MBGraph::MBGraph(const std::vector<Genome>& genomes, const ProblemInstance& cfg) 
-//:colors(genomes.size(), cfg)
-{
-	local_graph.resize(genomes.size());
-	std::unordered_set<orf_t> blocks; 
-
-	for(size_t i = 0; i < genomes.size(); ++i) { 
-		for(auto it = genomes[i].cbegin(); it != genomes[i].cend(); ++it) {
-			if (blocks.count(it->second) == 0) { 
-				obverse_edges.insert(it->second + "t", it->second + "h");
-				blocks.insert(it->second);
-				vertex_set.insert(it->second + "t"); 
-				vertex_set.insert(it->second + "h"); 
-			} 
-		}
-	} 
-	
-#ifdef VERSION2
-	std::cerr << "Count unique vertex: " << vertex_set.size() << std::endl;
-#endif
-
-	for(size_t i = 0; i < genomes.size(); ++i) {
-		add_edges(i, genomes[i], blocks);
-	}	
 }
 
 /*

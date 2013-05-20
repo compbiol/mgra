@@ -35,8 +35,8 @@ struct Mcolor {
 		} 
 	} 
 
-	//std::set<Mcolor> split_color(ColorsGraph<Mcolor>& colors, bool split_bad_colors) const;	
-
+	//std::set<Mcolor> split_color(const ColorsGraph<Mcolor>& colors, bool split_bad_color) const;
+	
 	bool is_good_multiedge() const;
 	bool includes(const Mcolor& second) const;
 

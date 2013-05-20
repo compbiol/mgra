@@ -19,12 +19,19 @@
 #ifndef TWOBREAK_H
 #define TWOBREAK_H
 
-#include "mpbgraph.h"
+#include <string>
+#include <utility>
 
-typedef std::pair<vertex_t, vertex_t> arc_t;
+#include "utility/sym_multi_hashmap.h"
 
-//template<class mcolor_t>
+typedef std::string vertex_t;
+typedef sym_multi_hashmap<vertex_t> partgraph_t;
+const vertex_t Infty = "oo";
+
+template<class graph_t>
 struct TwoBreak {
+  typedef std::pair<vertex_t, vertex_t> arc_t;
+
   TwoBreak() {
   };
 
@@ -36,15 +43,15 @@ struct TwoBreak {
 
   TwoBreak(const vertex_t& x1, const vertex_t& y1, const vertex_t& x2, const vertex_t& y2, const Mcolor& Q)
   : MultiColor(Q) {
-    OldArc[0] = std::make_pair(x1, y1);
-    OldArc[1] = std::make_pair(x2, y2);
+    OldArc[0] = std::make_pair(x1, y1); //FIXME
+    OldArc[1] = std::make_pair(x2, y2); //FIXME
   }
 
-  inline void revert(MBGraph& M) const {
+  inline void revert(graph_t& M) const {
     TwoBreak(OldArc[0].first, OldArc[1].first, OldArc[0].second, OldArc[1].second, MultiColor).apply(M);
   }
 
-  inline void revertSingle(partgraph_t& SG) const {
+  inline void revertSingle(partgraph_t& SG) const { //FIXME
     TwoBreak(OldArc[0].first, OldArc[1].first, OldArc[0].second, OldArc[1].second, MultiColor).applySingle(SG);
   }
 
@@ -52,9 +59,9 @@ struct TwoBreak {
     return TwoBreak(OldArc[0].first, OldArc[1].first, OldArc[0].second, OldArc[1].second, MultiColor);
   }
 
-  bool islinear(MBGraph& M) const;
+  bool islinear(graph_t& M) const; //FIXME: rename
 
-  bool apply(MBGraph& M, bool record = false) const;
+  bool apply(graph_t& M, bool record = false) const;
 
   void applySingle(partgraph_t& SG) const;
 
@@ -66,17 +73,122 @@ struct TwoBreak {
        << t.OldArc[1].first << "," << t.OldArc[1].second << "):{" << genome_match::mcolor_to_name(t.MultiColor) << "}";
     return os;
   }
-
-  static std::list<TwoBreak> History;
-
+ 
   arc_t OldArc[2];     // (x1,y1) x (x2,y2) = (x1,x2) + (y1,y2)
   Mcolor MultiColor;
 };
 
-typedef std::list<TwoBreak> transform_t;
+// check if a 2-break creates a circular chromosome
+template<class graph_t>
+bool TwoBreak<graph_t>::islinear(graph_t& M) const {
 
-void ApplyAll(MBGraph& M, const transform_t& T, bool record = false);
-void RevertAll(MBGraph& M, const transform_t& T);
+    apply(M);
+
+    for(int i = 0; i < 2; ++i) {
+	vertex_t x;
+	if( i==0 ) x = OldArc[0].first;
+        else x = OldArc[0].second;
+
+        if( x==Infty ) continue;
+
+	for(auto ic = MultiColor.cbegin(); ic != MultiColor.cend(); ++ic) {
+
+	    const partgraph_t& PG = M.get_local_graph(ic->first);
+	    bool circular = false;
+
+	    for(vertex_t y = M.get_adj_vertex(x); PG.defined(y);) { //FIXME
+		y = PG[y];
+
+		if (y != x) { 
+			y = M.get_adj_vertex(y);
+		} 
+
+		if (y == x) {
+		    circular = true;
+                    break;
+		}
+	    }
+		
+	    if (!circular && PG.defined(x)) {
+		for(vertex_t y = x; PG.defined(y);) { //FIXME
+		    y = PG[y];
+
+		    if(y!=x) y = M.get_adj_vertex(y);
+
+		    if(y==x) {
+			circular = true;
+			break;
+		    }
+		}
+	    }
+
+	    if (circular) {
+		revert(M);
+		return false;
+	    }
+	}
+    }
+    revert(M);
+    return true;
+}
+
+template<class graph_t>
+bool TwoBreak<graph_t>::apply(graph_t& M, bool record) const  {
+   if (record) {
+	M.insert_twobreak(*this);
+   }
+ 
+  for(auto ic = MultiColor.cbegin(); ic != MultiColor.cend(); ++ic) {
+    for(size_t i = 0; i < 2; ++i) {
+      if(OldArc[i].first != Infty && OldArc[i].second != Infty) {
+	M.erase_edge(ic->first, OldArc[i].first, OldArc[i].second);
+      } 
+    }
+
+      	    if(OldArc[0].first != Infty && OldArc[1].first != Infty) {
+	        M.add_edge(ic->first, OldArc[0].first, OldArc[1].first);
+	    }
+
+      	    if(OldArc[0].second != Infty && OldArc[1].second != Infty) {
+	        M.add_edge(ic->first, OldArc[0].second, OldArc[1].second);
+	    }
+	}
+   return true;
+}
+
+template<class graph_t>
+void TwoBreak<graph_t>::applySingle(partgraph_t& SG) const {
+  for(size_t i=0;i<2;++i) {
+    if (OldArc[i].first != Infty && OldArc[i].second != Infty) {
+      SG.erase(OldArc[i].first,OldArc[i].second);
+    }
+  }
+
+	if(OldArc[0].first!=Infty && OldArc[1].first!=Infty) {
+	    SG.insert(OldArc[0].first,OldArc[1].first);
+	}
+	if(OldArc[0].second!=Infty && OldArc[1].second!=Infty) {
+	    SG.insert(OldArc[0].second,OldArc[1].second);
+	}
+}
+
+template<class graph_t>
+void TwoBreak<graph_t>::normalize() {
+	while( true ) {
+	    if( OldArc[0].first > OldArc[0].second ) {
+		OldArc[0] = std::make_pair( OldArc[0].second, OldArc[0].first );
+		OldArc[1] = std::make_pair( OldArc[1].second, OldArc[1].first );
+                continue;
+	    }
+	    if( OldArc[0].first > OldArc[1].first || OldArc[0].first > OldArc[1].second ) {
+		arc_t temp = OldArc[0];
+		OldArc[0] = OldArc[1];
+		OldArc[1] = temp;
+                continue;
+	    }
+	    break;
+	}
+}
 
 #endif
 

@@ -221,7 +221,6 @@ void Statistics<graph_t>::count_compl_multiedges() {
   std::unordered_set<std::string> processed;
 
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-    //multiMularcs current = graph.get_adjacent_multiedges_v2(*it); //current is list with adjacent multiedges
     Mularcs current = graph.get_adjacent_multiedges(*it); //current is list with adjacent multiedges
 
     ++multidegree_count[current.size()]; //current.size - is degree vertex *it
@@ -259,7 +258,6 @@ void Statistics<graph_t>::count_compl_multiedges() {
 
   // count lonely vertices (short paths) 
   for(auto it = processed.cbegin(); it != processed.cend(); ++it) {
-    //multiMularcs current = graph.get_adjacent_multiedges_v2(*it);
     Mularcs current = graph.get_adjacent_multiedges(*it);
     if (processed.find(current.cbegin()->first) == processed.end() && processed.find(current.crbegin()->first) == processed.end()) {
       ++simple_vertices_alone_count[std::min(current.cbegin()->second, current.crbegin()->second)]; //no good neighbors
@@ -270,7 +268,6 @@ void Statistics<graph_t>::count_compl_multiedges() {
 template<class graph_t>
 void Statistics<graph_t>::count_not_compl_multiedges() { 
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-    //multiMularcs current = graph.get_adjacent_multiedges_v2(*it);
     Mularcs current = graph.get_adjacent_multiedges(*it);  
     for (auto jt = current.cbegin(); jt != current.cend(); ++jt) {
       if (jt->second.is_good_multiedge()) {
@@ -293,7 +290,7 @@ std::map<std::pair<Mcolor, Mcolor>, size_t> Statistics<graph_t>::get_Hsubgraph()
   for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
     Mularcs Mx = graph.get_adjacent_multiedges(*is);
 
-    if (graph.is_fair_vertice(Mx)) { 
+    if (Mx.is_fair_vertice()) { 
       for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
 	if (im->first == Infty || processed.find(im->first) != processed.end()) { 
 	  continue; 
@@ -301,7 +298,7 @@ std::map<std::pair<Mcolor, Mcolor>, size_t> Statistics<graph_t>::get_Hsubgraph()
 
 	Mularcs My = graph.get_adjacent_multiedges(im->first);
 			
-	if (graph.is_fair_vertice(My)) {
+	if (My.is_fair_vertice()) {
 	  Mularcs Mx0 = Mx;
 	  
 	  Mx0.erase(im->first);
@@ -334,9 +331,8 @@ void Statistics<graph_t>::count_cycles() {
       continue; 
     } 
 
-    //multiMularcs Mx = graph.get_adjacent_multiedges_v2(*is);
     Mularcs Mx = graph.get_adjacent_multiedges(*is); 
-    if (!graph.is_complement_color(Mx)) { 
+    if (!(Mx.is_simple_vertice() && graph.colors.get_complement_color(Mx.cbegin()->second) == Mx.crbegin()->second)) { 
       continue;
     } 
 
@@ -346,7 +342,6 @@ void Statistics<graph_t>::count_cycles() {
 
     do {
       processed.insert(current);
-      //multiMularcs My = graph.get_adjacent_multiedges_v2(current);
       Mularcs My = graph.get_adjacent_multiedges(current);
       if (!My.is_simple_vertice()) {
 	break;

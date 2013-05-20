@@ -17,6 +17,7 @@ struct Algorithm {
 	Algorithm(graph_t& gr) 
 	: graph(gr) 
 	, canformQoo(true)
+	, split_bad_colors(false)
 	, write_stats("stats.txt") {  
 	} 
 
@@ -50,10 +51,11 @@ private:
 private: 
 	graph_t graph; 
 
+	bool canformQoo;  // safe choice, at later stages may change to false
+	bool split_bad_colors;
+
 	writer::Wstats write_stats;
 	writer::Wdots write_dots; 
-
-	bool canformQoo;  // safe choice, at later stages may change to false
 };
 
 template<class graph_t>
@@ -111,9 +113,9 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
     if ((cfg.get_stages() >= 4) && !isChanged) {
       outlog << "Stage: 4" << std::endl;
 
-      graph.split_bad_color_on_off();
+      split_bad_colors = true; 
       isChanged = stage2();
-      graph.split_bad_color_on_off();
+      split_bad_colors = false;
 
       if (print_dots[4] && !isChanged) {
 	print_dots[4] = false;

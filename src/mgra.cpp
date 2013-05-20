@@ -582,7 +582,7 @@ int main(int argc, char* argv[]) {
 	    for(transform_t::const_iterator it = T.begin(); it!=T.end(); ++it) {
 		for(int j=0;j<NC;++j) {
 		    if( j!=i && includes( graph.colors.TColor[i].begin(), graph.colors.TColor[i].end(), graph.colors.TColor[j].begin(), graph.colors.TColor[j].end() ) 
-			&& graph.AreAdjacentBranches(graph.colors.TColor[i],graph.colors.TColor[j]) ) {
+			&& graph.colors.are_adjacent_branches(graph.colors.TColor[i], graph.colors.TColor[j]) ) {
 			RT[j].push_back(*it);
 		    }
 		}

@@ -35,6 +35,48 @@ bool Mcolor::is_good_multiedge() const {
 	return true; 
 } 
 
+/*
+SplitColor(Q) представляет Q в виде дизъюнктного объединения T-consistent мультицветов, т.е. Q = Q1 U ... U Qm
+где каждый Qi является T-consistent и все они попарно не пересекаются. SplitColor(Q) возвращает множество { Q1, Q2, ..., Qm }
+(в частности, когда Q является T-consistent, имеем m=1 и Q1=Q).
+Теперь, когда SplitBadColors = true, то и ребро (x,y) имеет мультицвет Q, то MBG.mulcols(x) будет содежать вместо (Q,x) пары:
+(Q1,y), (Q2,y), ..., (Qm,y)
+*/
+/*std::set<Mcolor> Mcolor::split_color(const ColorsGraph<Mcolor>& colors, bool split_bad_colors = false) const {
+    std::set<Mcolor> S;
+
+    if (member(colors.DiColor, *this)) {
+	S.insert(*this);
+	return S;
+    }
+
+    if (!split_bad_colors) {
+        return S;
+    }
+
+    equivalence <size_t> EQ;
+    for(auto iq = this->cbegin(); iq != this->cend(); ++iq) { 
+	EQ.addrel(iq->first, iq->first);
+    } 
+
+    for(auto ic = colors.DiColor.begin(); ic != colors.DiColor.end(); ++ic) {
+	Mcolor C(*ic, *this, Mcolor::Intersection);
+	if (C.size() >= 2 && C.size() == ic->size() ) {
+	    for (auto iq = C.begin(); iq != C.end(); ++iq) {
+		EQ.addrel(iq->first, C.begin()->first);
+	    }
+	}
+    }
+
+    EQ.update();
+    std::map <size_t, Mcolor > cls; //FIXME because cls - is Mcolor
+    EQ.get_eclasses(cls);
+    for(auto ic = cls.cbegin(); ic != cls.cend(); ++ic) {
+	S.insert(ic->second);
+    }
+    return S;
+}*/
+
 void Mcolor::set_difference(const Mcolor& first, const Mcolor& second) { 
 	auto first1 = first.cbegin(); 
 	auto first2 = second.cbegin(); 

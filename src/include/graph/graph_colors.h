@@ -1,6 +1,7 @@
 #ifndef GRAPH_COLOR_H_
 #define GRAPH_COLOR_H_
 
+#include "genome_match.h"
 #include "utility/sym_map.h"
 
 template<class mcolor_t>
@@ -25,6 +26,25 @@ struct ColorsGraph {
   inline bool is_T_consistent_color(const mcolor_t& col) const { 
     return (all_T_color.find(col) != all_T_color.end());
   } 
+
+  inline bool is_good_color(const mcolor_t& Q, const mcolor_t& Q1) const { 
+	if (!is_T_consistent_color(Q)) { 
+		return false; 
+	} 
+
+	if (!is_T_consistent_color(Q1)) { 
+		return false; 
+	} 
+
+	if (get_complement_color(Q) == Q1) { 
+		return true; 
+	} 
+
+	return false;
+  } 
+
+
+  bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
 
   mcolor_t CColorRep(const mcolor_t& c);
   const mcolor_t& CColor(const mcolor_t& S);
@@ -233,6 +253,37 @@ void ColorsGraph<mcolor_t>::update_complement_color(const std::vector<mcolor_t>&
     } 
   } 
 } 
+
+template<class mcolor_t>
+bool ColorsGraph<mcolor_t>::are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const {
+	if (!is_T_consistent_color(A) || !is_T_consistent_color(B)) { 
+		return false;
+	} 
+
+	mcolor_t Q1; 
+	mcolor_t Q2;
+
+	if (A.size() >= B.size()) {
+		Q1 = A;
+		Q2 = B;
+	} else {
+		Q1 = B;
+		Q2 = A;
+	}
+
+	mcolor_t C(Q1, Q2, Mcolor::Difference);
+	
+	if (C.size() == Q1.size() - Q2.size() && is_T_consistent_color(C)) { 		
+		return true;
+	} 
+
+	mcolor_t M(Q1, Q2, Mcolor::Union); 
+	if (M.size() == Q1.size() + Q2.size() && is_T_consistent_color(M)) { 	
+		return true;
+	} 
+
+	return false;
+}
 
 
 #endif

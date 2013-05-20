@@ -4,7 +4,7 @@
 typedef std::string vertex_t;
 
 struct Mularcs { 
-   typedef std::map<vertex_t, Mcolor> mymap; 
+   typedef std::multimap<vertex_t, Mcolor> mymap; 
    typedef mymap::const_iterator citer; 
    typedef mymap::const_reverse_iterator criter;
    typedef mymap::iterator iter;    
@@ -32,7 +32,7 @@ struct Mularcs {
 	return false; 
    }  
  
-   /*inline bool is_duplication_vertice() const {	
+   inline bool is_duplication_vertice() const {	
 	for(auto im = mularcs.cbegin(); im != mularcs.cend(); ++im) { 
 		for(auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
 			if (*im == *it) { 
@@ -45,7 +45,7 @@ struct Mularcs {
 		} 
 	}  
 	return false; 
-    }*/  
+    } 
 
     inline bool is_fair_vertice() const {
 	if (mularcs.size() == 3) {
@@ -57,7 +57,7 @@ struct Mularcs {
 		return true; 
 	}  
 	return false; 
-   } 
+   }
 
    inline Mcolor get_multicolor(const vertex_t& v) const {
 	if (mularcs.find(v) != mularcs.cend()) { 

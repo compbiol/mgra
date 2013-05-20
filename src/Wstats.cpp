@@ -123,7 +123,7 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, Statistics<MBGraph>& i
 			if (Hcount.find(std::make_pair(*Q1, *Q2)) != Hcount.end()) {
 				ofstat << " "; //"${";
 
-				if (MBG.AreAdjacentBranches(*Q1, *Q2)) { 
+				if (MBG.colors.are_adjacent_branches(*Q1, *Q2)) { 
 					ofstat << "{\\cellcolor[gray]{.9}}";
 				} 
 

@@ -27,7 +27,6 @@
 #include <unordered_set>
 using namespace std;
 
-#include "genome_match.h"
 #include "graph_colors.h"
 #include "structures/Tree.h"
 
@@ -41,68 +40,12 @@ using namespace std;
 extern std::ofstream outlog;
 const std::string Infty = "oo";
 
-//typedef std::string vertex_t;
 typedef sym_multi_hashmap<vertex_t> partgraph_t;
-//typedef std::map <vertex_t, Mcolor> Mularcs;
-typedef std::multimap <vertex_t, Mcolor> multimularcs_t;
 
 //template<class mcolor_t>
 struct MBGraph {
 	MBGraph(const std::vector<Genome>& genome, const ProblemInstance& cfg);
 
-	/*function for Mularcs*/
-	inline bool is_complement_color(const Mularcs& adj_edges) const { 
-		if (adj_edges.is_simple_vertice() && colors.get_complement_color(adj_edges.cbegin()->second) == adj_edges.crbegin()->second)  { 
-			return true; 
-		} 
-		return false; 
-	} 
-
-	inline bool is_good_color(const Mcolor& Q, const Mcolor& Q1) const { 
-		if (!colors.is_T_consistent_color(Q)) { 
-			return false; 
-		} 
-
-		if (!colors.is_T_consistent_color(Q1)) { 
-			return false; 
-		} 
-
-		if (colors.get_complement_color(Q) == Q1) { 
-			return true; 
-		} 
-
-		return false;
-	} 
-
-	inline bool is_duplication_vertice(const Mularcs& adj_edges) const {	
-		for(auto im = adj_edges.cbegin(); im != adj_edges.cend(); ++im) { 
-			for(auto it = adj_edges.cbegin(); it != adj_edges.cend(); ++it) {
-				if (*im == *it) { 
-					continue;
-				} 
-
-				Mcolor color(im->second, it->second, Mcolor::Intersection);
-				if (!color.empty()) { 
-					return true; 
-				} 
-			} 
-		}  
-		return false; 
-	}  
-
-	inline bool is_fair_vertice(const Mularcs& adj_edges) const {
-		if (adj_edges.size() == 3) {
-			for(auto it = adj_edges.cbegin(); it != adj_edges.cend(); ++it) {
-				if (!it->second.is_good_multiedge()) { 
-					return false;
-				}  
-			} 
-			return true; 
-		}  
-		return false; 
-	} 
-
-	/*function for graphs*/
 	inline void add_edge(size_t index, const std::string& first, const std::string& second) { 
 		local_graph[index].insert(first, second);
 	}
@@ -111,18 +54,7 @@ struct MBGraph {
 		return local_graph[index].erase(first, second);
 	} 
 
-	inline void split_bad_color_on_off() { 
-		if (SplitBadColors) { 
-			outlog << "SplitBadColors is OFF" << std::endl;
-			SplitBadColors = false; 
-		} else {
-			outlog << "SplitBadColors is ON" << std::endl; 
-			SplitBadColors = true; 
-		} 
-	} 	
-
-	Mularcs get_adjacent_multiedges(const vertex_t& u) const; 
-	multimularcs_t get_adjacent_multiedges_with_split(const vertex_t& u) const; 
+	Mularcs get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors = false) const; 
 	
 	inline std::set<std::string>::const_iterator begin_vertices() const { 
 		return vertex_set.cbegin();
@@ -164,21 +96,18 @@ struct MBGraph {
 	inline std::vector<partgraph_t>::const_iterator end_local_graphs() const { 
 		return local_graph.cend(); 
 	} 
+
 private:
-	std::set<Mcolor> split_color(const Mcolor& Q) const;	
+	std::set<Mcolor> split_color(const Mcolor& Q, bool split_bad_color) const; //FIXME: go to Mcolor	
 	void add_edges(size_t index, const Genome& genome, const std::unordered_set<orf_t>& blocks);
+
 private:
-	std::set<std::string> vertex_set;  // set of vertices //hash set? 
+	std::set<vertex_t> vertex_set;  // set of vertices //hash set? 
 	partgraph_t obverse_edges; //OBverse relation 
 	std::vector<partgraph_t> local_graph; // local graphs of each color //rename and take private 	
-	
-	bool SplitBadColors; 
-	
-	typedef sym_multi_hashmap<vertex_t> multi_hashmap;	
+
 public:
 	ColorsGraph<Mcolor> colors; 
-	
-	bool AreAdjacentBranches(const Mcolor&, const Mcolor&) const;
 };
 
 #endif

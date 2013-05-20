@@ -4,7 +4,11 @@
 #include <iostream>
 #include <algorithm> 
 #include <map>
+#include <set>
 #include <utility>
+
+//#include "graph_colors.h"
+//#include "utility/equivalence.h"
 
 struct Mcolor {
 	enum Construct {Difference, Union, Intersection};
@@ -30,6 +34,8 @@ struct Mcolor {
 					 break; 
 		} 
 	} 
+
+	//std::set<Mcolor> split_color(ColorsGraph<Mcolor>& colors, bool split_bad_colors) const;	
 
 	bool is_good_multiedge() const;
 	bool includes(const Mcolor& second) const;

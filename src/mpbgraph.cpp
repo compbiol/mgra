@@ -44,8 +44,7 @@ void MBGraph::add_edges(size_t index, const Genome& genome, const std::unordered
 }
 
 MBGraph::MBGraph(const std::vector<Genome>& genomes, const ProblemInstance& cfg) 
-:SplitBadColors(false)
-,colors(genomes.size(), cfg)
+:colors(genomes.size(), cfg)
 {
 	local_graph.resize(genomes.size());
 	std::unordered_set<orf_t> blocks; 
@@ -73,7 +72,7 @@ MBGraph::MBGraph(const std::vector<Genome>& genomes, const ProblemInstance& cfg)
 /*
 Метод возвращает список смежных ребер вершине u, вида (индекс_вершины, цвет ребра) 
 */
-Mularcs MBGraph::get_adjacent_multiedges(const vertex_t& u) const { 
+Mularcs MBGraph::get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors) const { 
 	if (u == Infty) {
 		std::cerr << "mularcs ERROR: Infinite input" << std::endl;
 		exit(1);
@@ -82,7 +81,7 @@ Mularcs MBGraph::get_adjacent_multiedges(const vertex_t& u) const {
 	Mularcs output;
 	for (int i = 0; i < size_graph(); ++i) {
 		if (local_graph[i].defined(u)) { 
-			std::pair<multi_hashmap::const_iterator, multi_hashmap::const_iterator> iters = local_graph[i].equal_range(u);
+			std::pair<partgraph_t::const_iterator, partgraph_t::const_iterator> iters = local_graph[i].equal_range(u);
 			for (auto it = iters.first; it != iters.second; ++it) { 
 				if (output.find(it->second) != output.cend()) { 
 					output.find(it->second)->second.insert(i);
@@ -98,39 +97,33 @@ Mularcs MBGraph::get_adjacent_multiedges(const vertex_t& u) const {
 			} 
 		} 
 	}
+
+	if (split_bad_colors) { 
+		Mularcs split; 
+		for(auto im = output.cbegin(); im != output.cend(); ++im) {
+			if (!member(colors.DiColor, im->second) && im->second.size() < size_graph()) {
+				auto C = split_color(im->second, split_bad_colors);
+				for(auto ic = C.begin(); ic != C.end(); ++ic) {
+					split.insert(im->first, *ic); 
+	    			}
+			} else { 
+				split.insert(im->first, im->second); 
+			}
+		}
+		return split; 
+	}
+ 
 	return output;
 } 
 
 /*
-Метод возвращает список смежных ребер вершине u, вида (индекс_вершины, цвет ребра), 
-но если splitBadColor = true то еще и режет его 
-*/
-multimularcs_t MBGraph::get_adjacent_multiedges_with_split(const vertex_t& u) const { 
-	Mularcs edges = get_adjacent_multiedges(u);
-
-	multimularcs_t output; 
-	for(auto im = edges.cbegin(); im != edges.cend(); ++im) {
-		if (SplitBadColors && !member(colors.DiColor, im->second) && im->second.size() < size_graph()) {
-			auto C = split_color(im->second);
-			for(auto ic = C.begin(); ic != C.end(); ++ic) {
-				output.insert(std::make_pair(im->first, *ic)); 
-	    		}
-		} else { 
-			output.insert(std::make_pair(im->first, im->second)); 
-		}
-	}
-
-	return output; 	
-} 
-
-/*
-SplitColor(Q) представляет Q в виде дизъюнктного объединения T-consistent мультицветов, т.е. Q = Q1 U ... U Qm
+split_color(Q) представляет Q в виде дизъюнктного объединения T-consistent мультицветов, т.е. Q = Q1 U ... U Qm
 где каждый Qi является T-consistent и все они попарно не пересекаются. SplitColor(Q) возвращает множество { Q1, Q2, ..., Qm }
 (в частности, когда Q является T-consistent, имеем m=1 и Q1=Q).
 Теперь, когда SplitBadColors = true, то и ребро (x,y) имеет мультицвет Q, то MBG.mulcols(x) будет содежать вместо (Q,x) пары:
 (Q1,y), (Q2,y), ..., (Qm,y)
 */
-std::set<Mcolor> MBGraph::split_color(const Mcolor& Q) const {
+std::set<Mcolor> MBGraph::split_color(const Mcolor& Q, bool split_bad_colors) const {
     std::set<Mcolor> S;
 
     if (member(colors.DiColor, Q)) {
@@ -138,7 +131,7 @@ std::set<Mcolor> MBGraph::split_color(const Mcolor& Q) const {
 	return S;
     }
 
-    if (!SplitBadColors) {
+    if (!split_bad_colors) {
         return S;
     }
 
@@ -163,35 +156,5 @@ std::set<Mcolor> MBGraph::split_color(const Mcolor& Q) const {
 	S.insert(ic->second);
     }
     return S;
-}
-
-bool MBGraph::AreAdjacentBranches(const Mcolor& A, const Mcolor & B) const {
-	if (!colors.is_T_consistent_color(A) || !colors.is_T_consistent_color(B)) { //FIXME
-		return false;
-	} 
-
-	Mcolor Q1; 
-	Mcolor Q2;
-
-	if (A.size() >= B.size()) {
-		Q1 = A;
-		Q2 = B;
-	} else {
-		Q1 = B;
-		Q2 = A;
-	}
-
-	Mcolor C(Q1, Q2, Mcolor::Difference);
-	
-	if (C.size() == Q1.size() - Q2.size() && colors.is_T_consistent_color(C)) { 		
-		return true;
-	} 
-
-	Mcolor M(Q1, Q2, Mcolor::Union); 
-	if (M.size() == Q1.size() + Q2.size() && colors.is_T_consistent_color(M)) { 	
-		return true;
-	} 
-
-	return false;
 }
 

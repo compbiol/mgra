@@ -4,20 +4,20 @@ writer::Wstats::Wstats(std::string name_file): write_parametres(5) {
 	ofstat.open(name_file); 
 } 
 
-void writer::Wstats::print_all_statistics(int stage, Statistics<MBGraph>& info, const ProblemInstance& cfg, const MBGraph& graph) { 
+void writer::Wstats::print_all_statistics(int stage, Statistics<MBGraph>& info, const ProblemInstance& cfg, const MBGraph& graph, const ColorsGraph<Mcolor>& colors) { 
 	if (stage == 0) { 
 		println("Initial graph:");
 	}  else { 
 		println("After Stage " + toString(stage) + " graph:");
 	} 
 
-	print_complete_edges(graph);
+	print_complete_edges(graph, colors);
 	print_connected_components(graph);
 	print_rear_characters(info.get_compl_stat()); 
 #ifndef VERSION2
 	print_estimated_dist(stage, cfg, graph);
 #endif
-	print_fair_edges(graph, info);
+	print_fair_edges(graph, colors, info);
 	print_not_compl_characters(info.get_no_compl_stat()); 
 } 
 
@@ -70,7 +70,7 @@ void writer::Wstats::histStat() { //FIXME
 	ofstat << std::endl;
 }
 ////////////////////////////////////////////////////////
-void writer::Wstats::print_fair_edges(const MBGraph& MBG, Statistics<MBGraph>& info) {
+void writer::Wstats::print_fair_edges(const MBGraph& MBG, const ColorsGraph<Mcolor>& colors, Statistics<MBGraph>& info) {
 	// output H-subgraphs count
 	ofstat << std::endl << "% Fair multi-edges count: " << std::endl << std::endl;
 
@@ -101,7 +101,7 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, Statistics<MBGraph>& i
 
 	for(auto ic = HCrow.cbegin(); ic != HCrow.cend(); ++ic) {
 		ofstat << " & ${";
-		if (MBG.colors.is_T_consistent_color(*ic)) {
+		if (colors.is_T_consistent_color(*ic)) {
 			ofstat << "\\bf ";
 		} 
 		ofstat <<  genome_match::mcolor_to_name(*ic) << "+}$";
@@ -112,7 +112,7 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, Statistics<MBGraph>& i
 
 	for(auto Q1 = HCrow.cbegin(); Q1 != HCrow.cend(); ++Q1) {
 		ofstat << "${";
-		if (MBG.colors.is_T_consistent_color(*Q1)) {
+		if (colors.is_T_consistent_color(*Q1)) {
 			ofstat << "\\bf ";
 		} 
 		ofstat << genome_match::mcolor_to_name(*Q1) << "+}$"; 
@@ -123,7 +123,7 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, Statistics<MBGraph>& i
 			if (Hcount.find(std::make_pair(*Q1, *Q2)) != Hcount.end()) {
 				ofstat << " "; //"${";
 
-				if (MBG.colors.are_adjacent_branches(*Q1, *Q2)) { 
+				if (colors.are_adjacent_branches(*Q1, *Q2)) { 
 					ofstat << "{\\cellcolor[gray]{.9}}";
 				} 
 
@@ -147,12 +147,12 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, Statistics<MBGraph>& i
 	print_close_table(false);
 }
 
-void writer::Wstats::print_complete_edges(const MBGraph& graph) { 
+void writer::Wstats::print_complete_edges(const MBGraph& graph, const ColorsGraph<Mcolor>& colors) { 
 	size_t nc = 0;
 	ofstat << "... complete multiedges:";
 	for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
 		//multimularcs_t M = graph.get_adjacent_multiedges_v2(*it);
-		Mularcs M = graph.get_adjacent_multiedges(*it);
+		Mularcs M = graph.get_adjacent_multiedges(*it, colors);
 		if (M.size() == 1 && M.cbegin()->second.size() == graph.size_graph() && (*it < M.cbegin()->first || M.cbegin()->first == Infty)) {
 			ofstat << " " << *it << "~" << M.cbegin()->first;
 			++nc;

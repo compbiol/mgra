@@ -14,8 +14,9 @@ typedef std::list<vertex_t> path_t;
 
 template<class graph_t>
 struct Algorithm { 
-	Algorithm(graph_t& gr) 
+	Algorithm(graph_t& gr, const ColorsGraph<Mcolor>& col) //FIXME: get const
 	: graph(gr) 
+	, colors(col)
 	, canformQoo(true)
 	, split_bad_colors(false)
 	, write_stats("stats.txt") {  
@@ -25,6 +26,10 @@ struct Algorithm {
 	
 	graph_t get_graph() { 	
 		return graph;
+	} 
+
+	ColorsGraph<Mcolor> get_colors() { 	
+		return colors;
 	} 
 private: 
 	//Stage 1: loop over vertices  
@@ -50,6 +55,7 @@ private:
 	void save_information(size_t stage, const ProblemInstance& cfg);
 private: 
 	graph_t graph; 
+	ColorsGraph<Mcolor> colors;
 
 	bool canformQoo;  // safe choice, at later stages may change to false
 	bool split_bad_colors;
@@ -139,8 +145,8 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 	t.apply(graph, true);
       }
 
-      Statistics<graph_t> st(graph); 
-      graph.colors.update_complement_color(st.get_new_color());
+      Statistics<graph_t> st(graph, colors); 
+      colors.update_complement_color(st.get_new_color());
 
       process_compl = false;
       isChanged = true;
@@ -149,13 +155,13 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 
   }	
 
-  write_dots.save_dot(graph, cfg, 99);
+  write_dots.save_dot(graph, colors, cfg, 99);
 
 #ifndef VERSION2
-  Statistics<graph_t> st(graph);
-  write_stats.print_fair_edges(graph, st);
+  Statistics<graph_t> st(graph, colors);
+  write_stats.print_fair_edges(graph, colors, st);
 #else 
-  write_dots.save_components(graph, cfg, 5);
+  write_dots.save_components(graph, colors, cfg, 5);
 #endif
 
   write_stats.histStat();
@@ -163,14 +169,14 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 
 template<class graph_t>
 void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance& cfg) { 
-  Statistics<MBGraph> st(graph); 
+  Statistics<MBGraph> st(graph, colors); 
 
-  graph.colors.update_complement_color(st.get_new_color());
+  colors.update_complement_color(st.get_new_color());
 
   st.count_other();   
   auto p = st.get_compl_stat();
-  write_stats.print_all_statistics(stage, st, cfg, graph);
-  write_dots.save_dot(graph, cfg, stage);
+  write_stats.print_all_statistics(stage, st, cfg, graph, colors);
+  write_dots.save_dot(graph, colors, cfg, stage);
 } 
 
 #include "Stage1.h" 

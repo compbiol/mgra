@@ -44,7 +44,7 @@ void MBGraph::add_edges(size_t index, const Genome& genome, const std::unordered
 }
 
 MBGraph::MBGraph(const std::vector<Genome>& genomes, const ProblemInstance& cfg) 
-:colors(genomes.size(), cfg)
+//:colors(genomes.size(), cfg)
 {
 	local_graph.resize(genomes.size());
 	std::unordered_set<orf_t> blocks; 
@@ -72,7 +72,7 @@ MBGraph::MBGraph(const std::vector<Genome>& genomes, const ProblemInstance& cfg)
 /*
 Метод возвращает список смежных ребер вершине u, вида (индекс_вершины, цвет ребра) 
 */
-Mularcs MBGraph::get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors) const { 
+Mularcs MBGraph::get_adjacent_multiedges(const vertex_t& u, const ColorsGraph<Mcolor>& colors, bool split_bad_colors) const { 
 	if (u == Infty) {
 		std::cerr << "mularcs ERROR: Infinite input" << std::endl;
 		exit(1);
@@ -102,7 +102,7 @@ Mularcs MBGraph::get_adjacent_multiedges(const vertex_t& u, bool split_bad_color
 		Mularcs split; 
 		for(auto im = output.cbegin(); im != output.cend(); ++im) {
 			if (!member(colors.DiColor, im->second) && im->second.size() < size_graph()) {
-				auto C = split_color(im->second, split_bad_colors);
+				auto C = split_color(im->second, colors, split_bad_colors);
 				for(auto ic = C.begin(); ic != C.end(); ++ic) {
 					split.insert(im->first, *ic); 
 	    			}
@@ -123,7 +123,7 @@ split_color(Q) представляет Q в виде дизъюнктного �
 Теперь, когда SplitBadColors = true, то и ребро (x,y) имеет мультицвет Q, то MBG.mulcols(x) будет содежать вместо (Q,x) пары:
 (Q1,y), (Q2,y), ..., (Qm,y)
 */
-std::set<Mcolor> MBGraph::split_color(const Mcolor& Q, bool split_bad_colors) const {
+std::set<Mcolor> MBGraph::split_color(const Mcolor& Q, const ColorsGraph<Mcolor>& colors, bool split_bad_colors) const {
     std::set<Mcolor> S;
 
     if (member(colors.DiColor, Q)) {

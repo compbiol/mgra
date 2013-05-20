@@ -42,7 +42,7 @@ const std::string Infty = "oo";
 
 typedef sym_multi_hashmap<vertex_t> partgraph_t;
 
-//template<class mcolor_t>
+//template<class mularcs_t>
 struct MBGraph {
 	MBGraph(const std::vector<Genome>& genome, const ProblemInstance& cfg);
 
@@ -54,7 +54,7 @@ struct MBGraph {
 		return local_graph[index].erase(first, second);
 	} 
 
-	Mularcs get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors = false) const; 
+	Mularcs get_adjacent_multiedges(const vertex_t& u, const ColorsGraph<Mcolor>& colors, const bool split_bad_colors = false) const; 
 	
 	inline std::set<std::string>::const_iterator begin_vertices() const { 
 		return vertex_set.cbegin();
@@ -98,16 +98,13 @@ struct MBGraph {
 	} 
 
 private:
-	std::set<Mcolor> split_color(const Mcolor& Q, bool split_bad_color) const; //FIXME: go to Mcolor	
+	std::set<Mcolor> split_color(const Mcolor& Q, const ColorsGraph<Mcolor>& colors, bool split_bad_color) const; //FIXME: go to Mcolor	
 	void add_edges(size_t index, const Genome& genome, const std::unordered_set<orf_t>& blocks);
 
 private:
 	std::set<vertex_t> vertex_set;  // set of vertices //hash set? 
 	partgraph_t obverse_edges; //OBverse relation 
-	std::vector<partgraph_t> local_graph; // local graphs of each color //rename and take private 	
-
-public:
-	ColorsGraph<Mcolor> colors; 
+	std::vector<partgraph_t> local_graph; // local graphs of each color 
 };
 
 #endif

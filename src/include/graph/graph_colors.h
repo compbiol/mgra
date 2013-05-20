@@ -165,7 +165,7 @@ mcolor_t ColorsGraph<mcolor_t>::add_tree(const std::string& tree, std::vector<st
       }
     }
     if (p != 0) {
-      std::cerr << "ERROR: Malformed input (sub)tree 3" << endl;
+      std::cerr << "ERROR: Malformed input (sub)tree 3" << std::endl;
       exit(3);
     }
   } else {

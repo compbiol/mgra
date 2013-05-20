@@ -1,6 +1,6 @@
 #include "Wdots.h"
 
-void writer::Wdots::save_dot(const MBGraph& graph, const ProblemInstance& cfg, size_t stage) { 
+void writer::Wdots::save_dot(const MBGraph& graph, const ColorsGraph<Mcolor>& colors, const ProblemInstance& cfg, size_t stage) { 
   std::string dotname = cfg.get_graphname() + toString(stage) + ".dot";
   std::ofstream dot(dotname.c_str());
 
@@ -16,7 +16,7 @@ void writer::Wdots::save_dot(const MBGraph& graph, const ProblemInstance& cfg, s
     const std::string& x = *is;
 
     //multiMularcs Mx = graph.get_adjacent_multiedges_v2(x);
-    Mularcs Mx = graph.get_adjacent_multiedges(x);
+    Mularcs Mx = graph.get_adjacent_multiedges(x, colors);
 
     if (Mx.size() == 1) { 
       continue; // trivial cycle
@@ -65,7 +65,7 @@ void writer::Wdots::save_dot(const MBGraph& graph, const ProblemInstance& cfg, s
   dot.close();
 } 
 
-void writer::Wdots::save_components(const MBGraph& graph, const ProblemInstance& cfg, size_t stage) { 
+void writer::Wdots::save_components(const MBGraph& graph, const ColorsGraph<Mcolor>& colors, const ProblemInstance& cfg, size_t stage) { 
   std::string dotname = cfg.get_graphname() + toString(stage);
 
   equivalence<vertex_t> CC; // connected components
@@ -110,7 +110,7 @@ void writer::Wdots::save_components(const MBGraph& graph, const ProblemInstance&
 	continue;
       } 
 
-      Mularcs Mx = graph.get_adjacent_multiedges(x);
+      Mularcs Mx = graph.get_adjacent_multiedges(x, colors);
 
       if (Mx.size() == 1) { 
 	continue; // trivial cycle

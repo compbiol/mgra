@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 
+#include "graph_colors.h"
 #include "mpbgraph.h"
 #include "estimate.h"
 #include "gen_dist.h"
@@ -21,13 +22,13 @@ struct Wstats {
 		ofstat << str << std::endl;
 	} 
 
-	void print_all_statistics(int stage, Statistics<MBGraph>& info, const ProblemInstance& cfg, const MBGraph& graph); 
-	void print_fair_edges(const MBGraph& MBG, Statistics<MBGraph>& info);
+	void print_all_statistics(int stage, Statistics<MBGraph>& info, const ProblemInstance& cfg, const MBGraph& graph, const ColorsGraph<Mcolor>& colors); 
+	void print_fair_edges(const MBGraph& MBG, const ColorsGraph<Mcolor>& colors, Statistics<MBGraph>& info);
 	void histStat(); 
 
 	const size_t write_parametres;
 private:
-	void print_complete_edges(const MBGraph& MBG); 
+	void print_complete_edges(const MBGraph& MBG, const ColorsGraph<Mcolor>& colors); 
 	void print_connected_components(const MBGraph& MBG);
 	void print_rear_characters(const std::vector<std::string>& info);
 	void print_not_compl_characters(const std::vector<std::string>& info);

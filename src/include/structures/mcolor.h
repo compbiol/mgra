@@ -8,7 +8,7 @@
 #include <utility>
 
 //#include "graph_colors.h"
-#include "equivalence.h"
+#include "utility/equivalence.h"
 
 #define member(S,x) ((S).find(x)!=(S).end())
 

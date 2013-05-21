@@ -11,7 +11,7 @@ bool Algorithm<graph_t>::cut_free_ends() {
 	nf = 0;
 	for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
 		const std::string& x = *is;
-		Mularcs M = graph.get_adjacent_multiedges(x);
+		Mularcs<Mcolor> M = graph.get_adjacent_multiedges(x);
 	 
 		const Mcolor& Q1 = M.find(Infty)->second;
                 vertex_t y;
@@ -26,7 +26,7 @@ bool Algorithm<graph_t>::cut_free_ends() {
 		if( !member(graph.DiColor,Q1) && member(graph.DiColor,Q2) /* && !member(graph.get_adjacent_multiedges(y),Infty) */ ) {
 		//if( member(DiColor,Q2) && !member(graph.get_adjacent_multiedges(y),Infty) ) {
 		    outlog << "Unhanging fission:" << endl;
-		    if( TwoBreak<graph_t>(x,y,Infty,Infty,Q2).apply(graph,true) ) nf++;
+		    if( TwoBreak<graph_t, Mcolor>(x,y,Infty,Infty,Q2).apply(graph,true) ) nf++;
 		}
 	    }
 	if (nf > 0) simplified = true;
@@ -47,7 +47,7 @@ bool Algorithm<graph_t>::find_reliable_path() {
 
 	for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
 	     const std::string& x = *is;
-	     Mularcs M = graph.get_adjacent_multiedges(x);
+	     Mularcs<Mcolor> M = graph.get_adjacent_multiedges(x);
 	    // generalized reliable simple path	
 	    if (M.size()>=2 ) {
 			for(auto im = M.cbegin();im!=M.cend();++im) {
@@ -56,9 +56,9 @@ bool Algorithm<graph_t>::find_reliable_path() {
 	
 	                  if( y==Infty ) continue;
 	                    
-			  Mularcs My = graph.get_adjacent_multiedges(y);
+			  Mularcs<Mcolor> My = graph.get_adjacent_multiedges(y);
 			  My.erase(x);
-     			  Mularcs Mx = M;
+     			  Mularcs<Mcolor> Mx = M;
 			  Mx.erase(y);
 
 		    if((Mx.find(Infty) != Mx.cend()) && (My.find(Infty) != My.cend()) && (Mx.find(Infty)->second == My.find(Infty)->second) 
@@ -96,7 +96,7 @@ bool Algorithm<graph_t>::find_reliable_path() {
 	    	    if( Cy == My.cend() ) continue;
 	    	    
 	    	    if( Cx->second == Cy->second ) {
-                        if( TwoBreak<graph_t>(x,Cx->first,y,Cy->first,Cx->second).apply(graph,true) ) nr++;
+                        if( TwoBreak<graph_t, Mcolor>(x,Cx->first,y,Cy->first,Cx->second).apply(graph,true) ) nr++;
 	    		outlog << "Stage 22: fusion " << x << " + " << y << endl;
 	    		break;
 	    	    }

@@ -15,8 +15,7 @@ void writer::Wdots::save_dot(const MBGraph& graph, const ColorsGraph<Mcolor>& co
   for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
     const std::string& x = *is;
 
-    //multiMularcs Mx = graph.get_adjacent_multiedges_v2(x);
-    Mularcs Mx = graph.get_adjacent_multiedges(x, colors);
+    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x, colors);
 
     if (Mx.size() == 1) { 
       continue; // trivial cycle
@@ -110,7 +109,7 @@ void writer::Wdots::save_components(const MBGraph& graph, const ColorsGraph<Mcol
 	continue;
       } 
 
-      Mularcs Mx = graph.get_adjacent_multiedges(x, colors);
+      Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x, colors);
 
       if (Mx.size() == 1) { 
 	continue; // trivial cycle

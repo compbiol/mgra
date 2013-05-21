@@ -306,7 +306,7 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
 	    }
 	}
 
-	it->applySingle(T);
+	it->apply_single(T);
 
         size_t ccsize = numchr(graph, T).second;
 
@@ -328,8 +328,8 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
 
 	    transform_t::iterator kt = jt--; // jt, kt are successive, *kt == t
 
-	    const TwoBreak<MBGraph>& t = *kt;
-	    const TwoBreak<MBGraph>& s = *jt;
+	    const TwoBreak<MBGraph, Mcolor>& t = *kt;
+	    const TwoBreak<MBGraph, Mcolor>& s = *jt;
 	    //s.normalize();
 
 //            outlog << "... trying to swap with " << s << endl;
@@ -398,11 +398,11 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
 
 	    if( usearc ) {
 		if( t.MultiColor != s.MultiColor ) break;
-		*kt = TwoBreak<MBGraph>(q2.second,p1.second,q1.first,q1.second,t.MultiColor);
-		*jt = TwoBreak<MBGraph>(p1.first,p1.second,q2.first,q2.second,t.MultiColor);
+		*kt = TwoBreak<MBGraph, Mcolor>(q2.second,p1.second,q1.first,q1.second,t.MultiColor);
+		*jt = TwoBreak<MBGraph, Mcolor>(p1.first,p1.second,q2.first,q2.second,t.MultiColor);
 	    }
 	    else {
-		TwoBreak<MBGraph> temp = *kt;
+		TwoBreak<MBGraph, Mcolor> temp = *kt;
 		*kt = *jt;
                 *jt = temp;
 	    }
@@ -412,7 +412,7 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
     
                 // N.B. at this point if C is not empty, then C == Q
 		if( !C.empty() ) {
-		    kt->revertSingle(T);
+		    kt->revert_single(T);
 
 		    ccsize = numchr(graph, T).second;
 		}
@@ -432,7 +432,7 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
 	    outlog << " SUCCEDED" << endl;
 
 	    // move t away from the transformation TG and save it to D
-            TG.begin()->applySingle(PG);
+            TG.begin()->apply_single(PG);
 	    D.push_back(*TG.begin());
 
 	    TG.erase(TG.begin());
@@ -450,7 +450,7 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
 
 	T = PG;
 	for(it = TG.begin();it!=start;++it) {
-	    it->applySingle(T);
+	    it->apply_single(T);
 	}
     }
     //if( start == TG.end() ) {
@@ -665,7 +665,7 @@ bool RecoverGenomes(MBGraph& graph, ColorsGraph<Mcolor>& colors, const transform
 	    }
 
 
-	    it->revertSingle(RG[i]);
+	    it->revert_single(RG[i]);
 
 	    if( Q==colors.TColor[i] ) {
 		outlog << " " << genome_match::mcolor_to_name(colors.TColor[i]);

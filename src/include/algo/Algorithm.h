@@ -134,7 +134,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 
       auto completion = cfg.get_completion();
       for(auto il = completion.begin(); il != completion.end(); ++il) {
-	TwoBreak<graph_t> t((*il)[0], (*il)[1], (*il)[2], (*il)[3], genome_match::name_to_mcolor((*il)[4]));
+	TwoBreak<graph_t, Mcolor> t((*il)[0], (*il)[1], (*il)[2], (*il)[3], genome_match::name_to_mcolor((*il)[4]));
 	t.apply(graph, true);
       }
 

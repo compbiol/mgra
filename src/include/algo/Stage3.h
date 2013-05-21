@@ -26,7 +26,7 @@ bool simplified = false;
        std::map<vertex_t, vertex_t> QQ; // multiedges of colors !Q (!*ic)
 		    
        for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {    
-	 Mularcs M = graph.get_adjacent_multiedges(*is, colors);
+	 Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*is, colors);
 
 	 if (M.size() == 1) { 
 	   continue; // ignore complete multiedges
@@ -131,7 +131,7 @@ bool simplified = false;
 	   if( !found ) continue;
     
     
-	   if( ! TwoBreak<graph_t>(p, q, Q).apply(graph, true) ) continue;
+	   if( ! TwoBreak<graph_t, Mcolor>(p, q, Q).apply(graph, true) ) continue;
 	   ++nr;
 			    
 	   outlog << "Stage 222.1: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
@@ -172,7 +172,7 @@ bool simplified = false;
 
 	   if( member(processed,CC[p.second]) || member(processed,CC[q.second]) || CC[p.second]!=CC[q.second] ) continue;
 
-	   if( ! TwoBreak<graph_t>(p,q,Q).apply(graph,true) ) continue;
+	   if( ! TwoBreak<graph_t, Mcolor>(p,q,Q).apply(graph,true) ) continue;
 	   nr++;
 
 	   outlog << "Stage 222.2: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << endl;
@@ -219,7 +219,7 @@ bool Algorithm<graph_t>::stage3_2() {
 
    for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
      const string& x = *is;
-     Mularcs Mx = graph.get_adjacent_multiedges(x, colors);
+     Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x, colors);
 
      bool next = false;
 
@@ -232,7 +232,7 @@ bool Algorithm<graph_t>::stage3_2() {
 	 continue;
        }
 
-       Mularcs My = graph.get_adjacent_multiedges(y, colors);
+       Mularcs<Mcolor> My = graph.get_adjacent_multiedges(y, colors);
        My.erase(x);
 
        for(auto jm = My.cbegin(); jm != My.cend(); ++jm) {
@@ -241,7 +241,7 @@ bool Algorithm<graph_t>::stage3_2() {
 	   continue;
 	 } 
 	
-	 Mularcs Cz = graph.get_adjacent_multiedges(z, colors);
+	 Mularcs<Mcolor> Cz = graph.get_adjacent_multiedges(z, colors);
 
 	 vertex_t v = "";
 	 for (auto ir = Cz.cbegin(); ir != Cz.cend(); ++ir) {
@@ -257,7 +257,7 @@ bool Algorithm<graph_t>::stage3_2() {
 
 	   outlog << "Stage 2222: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
 
-	   if (TwoBreak<graph_t>(p, q, Q).apply(graph, true)) nr++;
+	   if (TwoBreak<graph_t, Mcolor>(p, q, Q).apply(graph, true)) nr++;
 
 	   next = true;
 

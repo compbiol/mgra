@@ -152,7 +152,7 @@ void writer::Wstats::print_complete_edges(const MBGraph& graph, const ColorsGrap
 	ofstat << "... complete multiedges:";
 	for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
 		//multimularcs_t M = graph.get_adjacent_multiedges_v2(*it);
-		Mularcs M = graph.get_adjacent_multiedges(*it, colors);
+		Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*it, colors);
 		if (M.size() == 1 && M.cbegin()->second.size() == graph.size_graph() && (*it < M.cbegin()->first || M.cbegin()->first == Infty)) {
 			ofstat << " " << *it << "~" << M.cbegin()->first;
 			++nc;

@@ -2,11 +2,12 @@
 #define READER_H_
 
 #include <string>
+#include <fstream>
 #include <iostream>
 #include <cstdlib>
 
 #include "pconf.h"
-#include "mpbgraph.h"
+//#include "mpbgraph.h"
 #include "genome.h"
 
 namespace reader { 

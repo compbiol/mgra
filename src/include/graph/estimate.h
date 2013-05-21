@@ -171,7 +171,7 @@ void Statistics<graph_t>::count_weak_simple_vertex() {
   size_t count = 0; 
 
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-    Mularcs Mx = graph.get_adjacent_multiedges(*it, colors);
+    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*it, colors);
 
     if (graph.is_duplication_vertice(Mx)) { 
 	++count;
@@ -186,7 +186,7 @@ void Statistics<graph_t>::count_some_statistics() {
   std::map<std::pair<Mcolor, Mcolor>, size_t> count_vertex;
   
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-    Mularcs Mx = graph.get_adjacent_multiedges(*it, colors);
+    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*it, colors);
     
     if (Mx.size() == 2) { 
 	if (Mx.cbegin()->second < Mx.crbegin()->second) {
@@ -225,7 +225,7 @@ void Statistics<graph_t>::count_compl_multiedges() {
   std::unordered_set<std::string> processed;
 
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-    Mularcs current = graph.get_adjacent_multiedges(*it, colors); //current is list with adjacent multiedges
+    Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it, colors); //current is list with adjacent multiedges
 
     ++multidegree_count[current.size()]; //current.size - is degree vertex *it
 
@@ -262,7 +262,7 @@ void Statistics<graph_t>::count_compl_multiedges() {
 
   // count lonely vertices (short paths) 
   for(auto it = processed.cbegin(); it != processed.cend(); ++it) {
-    Mularcs current = graph.get_adjacent_multiedges(*it, colors);
+    Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it, colors);
     if (processed.find(current.cbegin()->first) == processed.end() && processed.find(current.crbegin()->first) == processed.end()) {
       ++simple_vertices_alone_count[std::min(current.cbegin()->second, current.crbegin()->second)]; //no good neighbors
     }
@@ -272,7 +272,7 @@ void Statistics<graph_t>::count_compl_multiedges() {
 template<class graph_t>
 void Statistics<graph_t>::count_not_compl_multiedges() { 
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-    Mularcs current = graph.get_adjacent_multiedges(*it, colors);  
+    Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it, colors);  
     for (auto jt = current.cbegin(); jt != current.cend(); ++jt) {
       if (jt->second.is_good_multiedge()) {
 	continue; 
@@ -292,7 +292,7 @@ std::map<std::pair<Mcolor, Mcolor>, size_t> Statistics<graph_t>::get_Hsubgraph()
   std::unordered_set<vertex_t> processed;
 	
   for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
-    Mularcs Mx = graph.get_adjacent_multiedges(*is, colors);
+    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*is, colors);
 
     if (Mx.is_fair_vertice()) { 
       for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
@@ -300,10 +300,10 @@ std::map<std::pair<Mcolor, Mcolor>, size_t> Statistics<graph_t>::get_Hsubgraph()
 	  continue; 
 	} 
 
-	Mularcs My = graph.get_adjacent_multiedges(im->first, colors);
+	Mularcs<Mcolor> My = graph.get_adjacent_multiedges(im->first, colors);
 			
 	if (My.is_fair_vertice()) {
-	  Mularcs Mx0 = Mx;
+	  Mularcs<Mcolor> Mx0 = Mx;
 	  
 	  Mx0.erase(im->first);
 	  My.erase(*is);
@@ -335,7 +335,7 @@ void Statistics<graph_t>::count_cycles() {
       continue; 
     } 
 
-    Mularcs Mx = graph.get_adjacent_multiedges(*is, colors); 
+    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*is, colors); 
     if (!(Mx.is_simple_vertice() && colors.get_complement_color(Mx.cbegin()->second) == Mx.crbegin()->second)) { 
       continue;
     } 
@@ -346,7 +346,7 @@ void Statistics<graph_t>::count_cycles() {
 
     do {
       processed.insert(current);
-      Mularcs My = graph.get_adjacent_multiedges(current, colors);
+      Mularcs<Mcolor> My = graph.get_adjacent_multiedges(current, colors);
       if (!My.is_simple_vertice()) {
 	break;
       }

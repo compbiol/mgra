@@ -95,7 +95,7 @@ void reader::read_infercars(const ProblemInstance& cfg, std::vector<Genome>& gen
 
 
 void reader::read_grimm(const ProblemInstance& cfg, std::vector<Genome>& genome) {
-	ifstream input(cfg.get_blk_file().c_str());;
+	std::ifstream input(cfg.get_blk_file().c_str());;
     
 	if (!input) {
 		std::cerr << "Unable to open " << cfg.get_blk_file() << std::endl;

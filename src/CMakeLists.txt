@@ -22,7 +22,13 @@ set (DEBUG -DVERSION2)
 set (WARNS -Wall -Wextra -pedantic-errors)
 set (OPTIMIZE_FLAG " -std=c++0x -O2 -pipe -finline-functions -finline-limit=1000") #-m64 -march=core2
 
-include_directories(${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/include/writer ${PROJECT_SOURCE_DIR}/include/algo ${PROJECT_SOURCE_DIR}/include/graph) 
+include_directories(${CMAKE_BINARY_DIR} 
+			${PROJECT_SOURCE_DIR}/include 
+			${PROJECT_SOURCE_DIR}/include/writer 
+			${PROJECT_SOURCE_DIR}/include/algo 
+			${PROJECT_SOURCE_DIR}/include/graph
+			${PROJECT_SOURCE_DIR}/include/structures
+		   ) 
 
 if (CMAKE_COMPILER_IS_GNUCXX)	
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG}")# ${DEBUG}")

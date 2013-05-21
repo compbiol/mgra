@@ -17,7 +17,7 @@ bool Algorithm<graph_t>::canformQ(const std::string& x, const Mcolor& Q) const {
     // OR 
     // if every intersection Q \cap QQ = \emptyset or QQ.
 
-    Mularcs M = graph.get_adjacent_multiedges(x, colors, split_bad_colors);
+    Mularcs<Mcolor> M = graph.get_adjacent_multiedges(x, colors, split_bad_colors);
     
     for(auto im = M.cbegin(); im != M.cend(); ++im) { 
 	Mcolor C(Q, im->second, Mcolor::Intersection); 
@@ -40,13 +40,13 @@ bool Algorithm<graph_t>::stage2() {
 	
     for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
       const std::string& x = *is;
-      Mularcs M = graph.get_adjacent_multiedges(x, colors);
+      Mularcs<Mcolor> M = graph.get_adjacent_multiedges(x, colors);
 
       if (M.is_duplication_vertice()) { 
 	continue; 
       } 
 
-      Mularcs Cx = graph.get_adjacent_multiedges(x, colors, split_bad_colors);
+      Mularcs<Mcolor> Cx = graph.get_adjacent_multiedges(x, colors, split_bad_colors);
 	
       for(auto im = M.cbegin(); im != M.cend(); ++im) {
 	const std::string& y = im->first;
@@ -56,7 +56,7 @@ bool Algorithm<graph_t>::stage2() {
 	  continue;
 	} 
 
-	Mularcs Cy = graph.get_adjacent_multiedges(y, colors, split_bad_colors);
+	Mularcs<Mcolor> Cy = graph.get_adjacent_multiedges(y, colors, split_bad_colors);
 
 	if (graph.get_adjacent_multiedges(y, colors).is_duplication_vertice()) { 
 	  continue;
@@ -139,7 +139,7 @@ bool Algorithm<graph_t>::stage2() {
 	    //if( !MBG.is_T_consistent_color(C) ) continue; // do not create T-consistent color
 	    */
 
-	  if(TwoBreak<graph_t>(x, ix->first, y, temp, QQ).apply(graph, true)) {
+	  if(TwoBreak<graph_t, Mcolor>(x, ix->first, y, temp, QQ).apply(graph, true)) {
 	    found = true;
 	    ++nf;
 	  }

@@ -7,7 +7,6 @@
 #include <set>
 #include <utility>
 
-//#include "graph_colors.h"
 #include "equivalence.h"
 
 #define member(S,x) ((S).find(x)!=(S).end())
@@ -118,7 +117,7 @@ template<class colors_t>
 std::set<Mcolor> Mcolor::split_color(const colors_t& colors, bool split_bad_colors) const {
     std::set<Mcolor> S;
 
-    if (member(colors.DiColor, *this)) {
+    if (colors.is_vec_T_color(*this)) {
 	S.insert(*this);
 	return S;
     }
@@ -132,7 +131,7 @@ std::set<Mcolor> Mcolor::split_color(const colors_t& colors, bool split_bad_colo
 	EQ.addrel(iq->first, iq->first);
     } 
 
-    for(auto ic = colors.DiColor.begin(); ic != colors.DiColor.end(); ++ic) {
+    for(auto ic = colors.cbegin_T_color(); ic != colors.cend_T_color(); ++ic) {
 	Mcolor C(*ic, *this, Mcolor::Intersection);
 	if (C.size() >= 2 && C.size() == ic->size() ) {
 	    for (auto iq = C.begin(); iq != C.end(); ++iq) {

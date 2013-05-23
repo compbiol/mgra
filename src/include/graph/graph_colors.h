@@ -5,8 +5,10 @@
 #include "utility/sym_map.h"
 
 template<class mcolor_t>
-struct ColorsGraph { 
-  ColorsGraph(size_t size, const ProblemInstance& cfg); 
+struct Graph_with_colors { 
+  typedef typename std::set<mcolor_t>::const_iterator citer; 
+
+  Graph_with_colors(size_t size, const ProblemInstance& cfg); 
 
   void update_complement_color(const std::vector<mcolor_t>& colors);
 
@@ -22,6 +24,10 @@ struct ColorsGraph {
     } 
     return temp;
   }	
+
+  inline size_t count_vec_T_color() const { 
+     return DiColor.size();
+  } 
   
   inline bool is_T_consistent_color(const mcolor_t& col) const { 
     return (all_T_color.find(col) != all_T_color.end());
@@ -43,11 +49,19 @@ struct ColorsGraph {
 	return false;
   } 
 
-
   bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
 
-  mcolor_t CColorRep(const mcolor_t& c);
-  const mcolor_t& CColor(const mcolor_t& S);
+  inline bool is_vec_T_color(const mcolor_t& color) const {
+	return (DiColor.count(color) > 0);
+  }
+
+  inline citer cbegin_T_color() const { 
+	return DiColor.cbegin(); 
+  } 
+
+  inline citer cend_T_color() const { 
+	return DiColor.cend(); 
+  } 
 
 private: 
   void parsing_tree(size_t size, const ProblemInstance& cfg);
@@ -56,14 +70,12 @@ private:
 private:
   size_t count_local_color;
   sym_map<mcolor_t> CColorM; //complementary multicolor
-  std::set<mcolor_t> all_T_color;	//all T-consistent colors
-public:
-  std::set<mcolor_t> DiColor;   // directed colors
-  std::vector<mcolor_t> TColor; // colors corresponding to ancestral genomes. nodes in tree
+  std::set<mcolor_t> all_T_color; //all T-consistent colors
+  std::set<mcolor_t> DiColor; // directed colors
 }; 
 
 template<class mcolor_t>
-ColorsGraph<mcolor_t>::ColorsGraph(size_t size, const ProblemInstance& cfg) 
+Graph_with_colors<mcolor_t>::Graph_with_colors(size_t size, const ProblemInstance& cfg) 
 :count_local_color(size) {
   parsing_tree(count_local_color, cfg);
 
@@ -83,11 +95,8 @@ ColorsGraph<mcolor_t>::ColorsGraph(size_t size, const ProblemInstance& cfg)
     }
   }
   
-  TColor.resize(DiColor.size());
-  
   std::clog << "vecT-consistent colors: " << DiColor.size() << std::endl;
-
-  size_t col = 1;
+  
   for (auto id = DiColor.begin(); id != DiColor.end(); ++id) {
     std::clog << "\t" << genome_match::mcolor_to_name(*id);
     all_T_color.insert(*id);
@@ -100,10 +109,6 @@ ColorsGraph<mcolor_t>::ColorsGraph(size_t size, const ProblemInstance& cfg)
       } 
     }
     all_T_color.insert(C);
-    
-    TColor[col-1] = *id;
-    
-    col++;
   }
   std::clog << std::endl;
   
@@ -129,7 +134,7 @@ ColorsGraph<mcolor_t>::ColorsGraph(size_t size, const ProblemInstance& cfg)
 }
 
 template<class mcolor_t>
-mcolor_t ColorsGraph<mcolor_t>::add_tree(const std::string& tree, std::vector<std::string>& output) {
+mcolor_t Graph_with_colors<mcolor_t>::add_tree(const std::string& tree, std::vector<std::string>& output) {
   if (tree[0] == '(') {
     //non-trivial tree
     if (tree[tree.size() - 1] != ')') {
@@ -184,29 +189,7 @@ mcolor_t ColorsGraph<mcolor_t>::add_tree(const std::string& tree, std::vector<st
 }
 
 template<class mcolor_t>
-const mcolor_t& ColorsGraph<mcolor_t>::CColor(const mcolor_t& S) {
-  if (!CColorM.defined(S)) {
-    mcolor_t T;
-    for (size_t j = 0; j < count_local_color; ++j) {
-      if (!S.mymember(j)) {  
-	T.insert(j);
-      } 
-    }
-    CColorM.insert(S, T);
-  }
-  return CColorM[S];
-}
-
-template<class mcolor_t>
-mcolor_t ColorsGraph<mcolor_t>::CColorRep(const mcolor_t& c) {
-  mcolor_t Q = CColor(c);
-  if (Q.size() > c.size() || (Q.size() == c.size() && Q > c)) 	
-    return c;
-  return Q;
-}
-
-template<class mcolor_t>
-void ColorsGraph<mcolor_t>::parsing_tree(size_t size, const ProblemInstance& cfg) { 
+void Graph_with_colors<mcolor_t>::parsing_tree(size_t size, const ProblemInstance& cfg) { 
   std::vector<std::string> trees = cfg.get_trees();
 
   // add terminal branches	
@@ -222,6 +205,8 @@ void ColorsGraph<mcolor_t>::parsing_tree(size_t size, const ProblemInstance& cfg
     } 
   }
 
+//  writer::Wdots legend; 
+ // legend.write_legend_dot(size, output, cfg)
   std::ofstream flegend("legend.dot");
   flegend << "digraph Legend {" << std::endl;
 
@@ -240,7 +225,7 @@ void ColorsGraph<mcolor_t>::parsing_tree(size_t size, const ProblemInstance& cfg
 } 
 
 template<class mcolor_t>
-void ColorsGraph<mcolor_t>::update_complement_color(const std::vector<mcolor_t>& colors) {
+void Graph_with_colors<mcolor_t>::update_complement_color(const std::vector<mcolor_t>& colors) {
   for(auto it = colors.begin(); it != colors.end(); ++it) { 
     if (!CColorM.defined(*it)) { 
       Mcolor temp; 
@@ -250,12 +235,13 @@ void ColorsGraph<mcolor_t>::update_complement_color(const std::vector<mcolor_t>&
 	} 
       } 
       CColorM.insert(*it, temp);
+      CColorM.insert(temp, *it);
     } 
   } 
 } 
 
 template<class mcolor_t>
-bool ColorsGraph<mcolor_t>::are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const {
+bool Graph_with_colors<mcolor_t>::are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const {
 	if (!is_T_consistent_color(A) || !is_T_consistent_color(B)) { 
 		return false;
 	} 

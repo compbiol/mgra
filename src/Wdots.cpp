@@ -1,6 +1,6 @@
 #include "Wdots.h"
 
-void writer::Wdots::save_dot(const MBGraph& graph, const ColorsGraph<Mcolor>& colors, const ProblemInstance& cfg, size_t stage) { 
+void writer::Wdots::save_dot(const MBGraph& graph, const Graph_with_colors<Mcolor>& colors, const ProblemInstance& cfg, size_t stage) { 
   std::string dotname = cfg.get_graphname() + toString(stage) + ".dot";
   std::ofstream dot(dotname.c_str());
 
@@ -30,7 +30,7 @@ void writer::Wdots::save_dot(const MBGraph& graph, const ColorsGraph<Mcolor>& co
 
       const Mcolor& C = im->second;
       for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
-       	/* ************** output edge (x,y) **************** */
+       	/*************** output edge (x,y) **************** */
 #ifndef VERSION2
 	dot << "\t\"" << x << "\"\t--\t\"";
 	if (y == Infty) {
@@ -64,7 +64,7 @@ void writer::Wdots::save_dot(const MBGraph& graph, const ColorsGraph<Mcolor>& co
   dot.close();
 } 
 
-void writer::Wdots::save_components(const MBGraph& graph, const ColorsGraph<Mcolor>& colors, const ProblemInstance& cfg, size_t stage) { 
+void writer::Wdots::save_components(const MBGraph& graph, const Graph_with_colors<Mcolor>& colors, const ProblemInstance& cfg, size_t stage) { 
   std::string dotname = cfg.get_graphname() + toString(stage);
 
   equivalence<vertex_t> CC; // connected components
@@ -139,23 +139,23 @@ void writer::Wdots::save_components(const MBGraph& graph, const ColorsGraph<Mcol
   } 
 } 
 
-void writer::Wdots::write_legend_dot(size_t size_genomes, const std::vector<std::string>& info) { 
+/*void writer::Wdots::write_legend_dot(size_t size, const std::vector<std::string>& output, const ProblemInstance& cfg) { 
     	std::ofstream output("legend.dot");
 
 	output << "digraph Legend {" << std::endl;
 	output << "\tnode [style=filled];" << std::endl;
 
-/*	for (size_t j = 0; j < genomes.size(); ++j) {
-		output << "\t\"" << genomes[j].get_name() << "\"\t[fillcolor=" <<  RGBcols[RGBcoeff * j]  << "];" << std::endl;
+	/*for (size_t j = 0; j < size; ++j) {
+	    flegend << "\t\"" << cfg.get_name(j) << "\"\t[fillcolor=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * j)  << "];" << std::endl;
 	} 
-		
-	for(auto it = info.cbegin(); it != info.cend(); ++it) {
+
+  	for(auto it = info.cbegin(); it != info.cend(); ++it) {
 		output << *it << std::endl;
 	} 
-*/
+
 	output << "}" << std::endl;
 	output.close();
-} 
+} */
 
 
 /*writer::Wdots::Wdots(std::string name_file) { 

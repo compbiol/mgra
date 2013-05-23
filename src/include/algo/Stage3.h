@@ -12,7 +12,7 @@ bool simplified = false;
    outlog << "Stage 222: splitting into connected components" << std::endl;
 
    // go over all T-consistent multicolors
-   for(auto ic = colors.DiColor.begin(); ic != colors.DiColor.end(); ++ic) {
+   for(auto ic = colors.cbegin_T_color(); ic != colors.cend_T_color(); ++ic) {
      if (ic->size() == 0 || ic->size() == graph.size_graph()) { //FIXME. size() == 0
        continue; // except empty and complete multicolor
      } 		
@@ -228,7 +228,7 @@ bool Algorithm<graph_t>::stage3_2() {
        const std::string& y = im->first;
        const Mcolor& Q = im->second;
 
-       if (!member(colors.DiColor, Q) || y==Infty) { 
+       if (!colors.is_vec_T_color(Q) || y==Infty) { 
 	 continue;
        }
 

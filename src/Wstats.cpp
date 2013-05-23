@@ -4,7 +4,7 @@ writer::Wstats::Wstats(std::string name_file): write_parametres(5) {
 	ofstat.open(name_file); 
 } 
 
-void writer::Wstats::print_all_statistics(int stage, Statistics<MBGraph>& info, const ProblemInstance& cfg, const MBGraph& graph, const ColorsGraph<Mcolor>& colors) { 
+void writer::Wstats::print_all_statistics(int stage, Statistics<MBGraph>& info, const ProblemInstance& cfg, const MBGraph& graph, const Graph_with_colors<Mcolor>& colors) { 
 	if (stage == 0) { 
 		println("Initial graph:");
 	}  else { 
@@ -70,7 +70,7 @@ void writer::Wstats::histStat(const MBGraph& graph) { //FIXME
 	ofstat << std::endl;
 }
 ////////////////////////////////////////////////////////
-void writer::Wstats::print_fair_edges(const MBGraph& MBG, const ColorsGraph<Mcolor>& colors, Statistics<MBGraph>& info) {
+void writer::Wstats::print_fair_edges(const MBGraph& MBG, const Graph_with_colors<Mcolor>& colors, Statistics<MBGraph>& info) {
 	// output H-subgraphs count
 	ofstat << std::endl << "% Fair multi-edges count: " << std::endl << std::endl;
 
@@ -147,11 +147,10 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, const ColorsGraph<Mcol
 	print_close_table(false);
 }
 
-void writer::Wstats::print_complete_edges(const MBGraph& graph, const ColorsGraph<Mcolor>& colors) { 
+void writer::Wstats::print_complete_edges(const MBGraph& graph, const Graph_with_colors<Mcolor>& colors) { 
 	size_t nc = 0;
 	ofstat << "... complete multiedges:";
 	for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-		//multimularcs_t M = graph.get_adjacent_multiedges_v2(*it);
 		Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*it, colors);
 		if (M.size() == 1 && M.cbegin()->second.size() == graph.size_graph() && (*it < M.cbegin()->first || M.cbegin()->first == Infty)) {
 			ofstat << " " << *it << "~" << M.cbegin()->first;

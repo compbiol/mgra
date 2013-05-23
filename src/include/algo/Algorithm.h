@@ -13,7 +13,7 @@ typedef std::list<vertex_t> path_t;
 
 template<class graph_t>
 struct Algorithm { 
-	Algorithm(graph_t& gr, const ColorsGraph<Mcolor>& col) //FIXME: get const
+	Algorithm(graph_t& gr, const Graph_with_colors<Mcolor>& col) //FIXME: get const
 	: graph(gr) 
 	, colors(col)
 	, canformQoo(true)
@@ -27,7 +27,7 @@ struct Algorithm {
 		return graph;
 	} 
 
-	ColorsGraph<Mcolor> get_colors() { 	
+	Graph_with_colors<Mcolor> get_colors() { 	
 		return colors;
 	} 
 private: 
@@ -54,7 +54,7 @@ private:
 	void save_information(size_t stage, const ProblemInstance& cfg);
 private: 
 	graph_t graph; 
-	ColorsGraph<Mcolor> colors;
+	Graph_with_colors<Mcolor> colors;
 
 	bool canformQoo;  // safe choice, at later stages may change to false
 	bool split_bad_colors;

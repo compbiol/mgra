@@ -45,7 +45,7 @@ void MBGraph::add_edges(size_t index, const Genome& genome, const std::unordered
 /*
 Метод возвращает список смежных ребер вершине u, вида (индекс_вершины, цвет ребра) 
 */
-Mularcs<Mcolor> MBGraph::get_adjacent_multiedges(const vertex_t& u, const ColorsGraph<Mcolor>& colors, bool split_bad_colors) const { 
+Mularcs<Mcolor> MBGraph::get_adjacent_multiedges(const vertex_t& u, const Graph_with_colors<Mcolor>& colors, bool split_bad_colors) const { 
 	if (u == Infty) {
 		std::cerr << "mularcs ERROR: Infinite input" << std::endl;
 		exit(1);
@@ -74,7 +74,7 @@ Mularcs<Mcolor> MBGraph::get_adjacent_multiedges(const vertex_t& u, const Colors
 	if (split_bad_colors) { 
 		Mularcs<Mcolor> split; 
 		for(auto im = output.cbegin(); im != output.cend(); ++im) {
-			if (!member(colors.DiColor, im->second) && im->second.size() < size_graph()) {
+			if (!colors.is_vec_T_color(im->second) && im->second.size() < size_graph()) {
 				auto C = im->second.split_color(colors, split_bad_colors);
 				for(auto ic = C.begin(); ic != C.end(); ++ic) {
 					split.insert(im->first, *ic); 

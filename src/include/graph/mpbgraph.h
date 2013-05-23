@@ -71,7 +71,7 @@ struct MBGraph {
 	} 
 
   //template<class mularcs_t, class colors_t>
-  Mularcs<Mcolor> get_adjacent_multiedges(const vertex_t& u, const ColorsGraph<Mcolor>& colors, const bool split_bad_colors = false) const; 
+  Mularcs<Mcolor> get_adjacent_multiedges(const vertex_t& u, const Graph_with_colors<Mcolor>& colors, const bool split_bad_colors = false) const; 
 	
   inline size_t size_graph() const { 
     return local_graph.size();
@@ -132,50 +132,5 @@ private:
 };
 
 typedef std::list<TwoBreak<MBGraph, Mcolor> > transform_t;
-
-/*template<class mularcs_t, class colors_t>
-mularcs_t MBGraph::get_adjacent_multiedges(const vertex_t& u, const colors_t& colors, const bool split_bad_colors) const {
-	if (u == Infty) {
-		std::cerr << "mularcs ERROR: Infinite input" << std::endl;
-		exit(1);
-	}
-
-	mularcs_t output;
-	for (int i = 0; i < size_graph(); ++i) {
-		if (local_graph[i].defined(u)) { 
-			std::pair<partgraph_t::const_iterator, partgraph_t::const_iterator> iters = local_graph[i].equal_range(u);
-			for (auto it = iters.first; it != iters.second; ++it) { 
-				if (output.find(it->second) != output.cend()) { 
-					output.find(it->second)->second.insert(i);
-				} else { 
-					output.insert(it->second, Mcolor(i));	
-				} 
-			}
-		} else { 
-			if (output.find(Infty) != output.cend()) { 
-				output.find(Infty)->second.insert(i);
-			} else { 
-				output.insert(Infty, Mcolor(i));
-			} 
-		} 
-	}
-
-	if (split_bad_colors) { 
-		mularcs_t split; 
-		for(auto im = output.cbegin(); im != output.cend(); ++im) {
-			if (!member(colors.DiColor, im->second) && im->second.size() < size_graph()) {
-				auto C = split_color(im->second, colors, split_bad_colors);
-				for(auto ic = C.begin(); ic != C.end(); ++ic) {
-					split.insert(im->first, *ic); 
-	    			}
-			} else { 
-				split.insert(im->first, im->second); 
-			}
-		}
-		return split; 
-	}
- 
-	return output;
-} */
 	
 #endif

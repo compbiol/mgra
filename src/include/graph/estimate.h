@@ -13,7 +13,8 @@
 template<class graph_t>
 struct Statistics { 
 
-  Statistics(const graph_t& gr, const ColorsGraph<Mcolor>& col)
+
+  Statistics(const graph_t& gr, const Graph_with_colors<Mcolor>& col)
   : graph(gr) 
   , colors(col) {
    
@@ -55,7 +56,7 @@ private:
 
 private: 
   const graph_t& graph;
-  const ColorsGraph<Mcolor>& colors;
+  const Graph_with_colors<Mcolor>& colors;
 
   //vertices
   std::unordered_map<size_t, size_t > multidegree_count; // multidegree_count[n] = # vertices of multidegree n. 

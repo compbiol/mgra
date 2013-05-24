@@ -8,7 +8,6 @@ set(MGRA_SOURCE mgra.cpp
 	reader.cpp
 	pconf.cpp
 	mpbgraph.cpp
-	genome.cpp
 	genome_match.cpp
 	gen_dist.cpp
 	Wstats.cpp

@@ -109,9 +109,12 @@ struct ProblemInstance {
 private: 
 	void init_basic_rgb_colors(bool flag = true); 
 private:
-	static std::vector<std::string> priority_name; 
+	static std::vector<std::string> priority_name;
+	//std::vector<std::string> priority_name;  
 	static std::unordered_map<std::string, size_t> genome_number;
-	static std::unordered_map<size_t, std::string> number_genome; 
+	//std::unordered_map<std::string, size_t> genome_number;
+	static std::unordered_map<size_t, std::string> number_genome;
+	//std::unordered_map<size_t, std::string> number_genome;  
 
 	std::string block_format; 	
 	std::string block_file;

@@ -89,7 +89,7 @@ std::pair<path_t, bool> getchr(const MBGraph& graph, const partgraph_t& PG, cons
 	    y = graph.get_adj_vertex(y);
 	    getchrset.insert(y);
 	    {
-		string xx = y;
+		std::string xx = y;
 		xx.resize(xx.size()-1);
 		if( *y.rbegin()=='t' ) {
 		    path.push_front("+"+xx);
@@ -101,11 +101,11 @@ std::pair<path_t, bool> getchr(const MBGraph& graph, const partgraph_t& PG, cons
 	}
     }
 
-    return make_pair( path, circular );
+    return std::make_pair( path, circular );
 }
 
 
-list< set<vertex_t> > pg_empty;
+std::list< std::set<vertex_t> > pg_empty;
 void splitchr(const MBGraph& graph, const partgraph_t& PG, set< pair<path_t,bool> >& AllChr, const bool Xonly = false, list< set<vertex_t> >& CircChr = pg_empty) {
 
     if (&CircChr != &pg_empty) { 
@@ -132,10 +132,10 @@ void splitchr(const MBGraph& graph, const partgraph_t& PG, set< pair<path_t,bool
 }
 
 std::pair<size_t, size_t> numchr(const MBGraph& graph, const partgraph_t& PG) {
-    set< pair<path_t,bool> > AllChr;
-    list< set<vertex_t> > CircChr;
+    std::set< pair<path_t, bool> > AllChr;
+    std::list<std::set<vertex_t> > CircChr;
     splitchr(graph, PG, AllChr, false, CircChr);
-    return make_pair(AllChr.size(),CircChr.size());
+    return std::make_pair(AllChr.size(),CircChr.size());
 }
 
 //rename and move to namespace writer

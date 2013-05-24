@@ -117,7 +117,7 @@ template<class colors_t>
 std::set<Mcolor> Mcolor::split_color(const colors_t& colors, bool split_bad_colors) const {
     std::set<Mcolor> S;
 
-    if (colors.is_vec_T_color(*this)) {
+    if (member(colors.DiColor, *this)) {
 	S.insert(*this);
 	return S;
     }

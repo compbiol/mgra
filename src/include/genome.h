@@ -23,58 +23,52 @@
 
 #include <unordered_set>
 #include <unordered_map>
-#include <iostream>
 #include <map>
 #include <string>
 
 typedef std::string orf_t;
-typedef std::pair<int, int> span_t; 		// interval in absolute coordinates
-typedef std::pair<std::string, int> coord_t;   	// (contig, offset)
+typedef std::pair<size_t, size_t> span_t; 	// interval in absolute coordinates
+typedef std::pair<std::string, size_t> coord_t; // (contig, offset)
 typedef std::pair<std::string, span_t> cpan_t;  // (chr, start, end)
 
 struct Genome {
-	void insert(std::string gene, std::string chromosome, size_t offset, int sign, size_t start, size_t end);  
+  inline void insert(std::string gene, std::string chromosome, size_t offset, int sign_, size_t start, size_t end) {
+    coord_t p = std::make_pair(chromosome, offset);  
+    main_genome.insert(std::make_pair(p, gene));
+    sign[gene] = sign_;
+  }   
 	
-	/*inline void set_name(const std::string& name_) { 
-		name = name_;
-	} */
+  inline void registrate_circular_chr(std::string name) { 
+    circular_chromosome.insert(name);
+  }  
 
-	inline void registrate_circular_chr(std::string name) { 
-		circular_chromosome.insert(name);
-	}  
+  inline bool isCircular(std::string name) const {
+    return (circular_chromosome.find(name) != circular_chromosome.end());
+  } 
 
-	bool isCircular(std::string name) const;
+  inline int get_sign(const orf_t& name) const { 
+    auto is = sign.find(name);
+    if (is == sign.end()) { 
+      return 0;
+    } else { 
+      return is->second;
+    } 
+  }
 
-	inline int get_sign(const orf_t& name) const { 
-		auto is = sign.find(name);
-		if (is == sign.end()) { 
-			return 0;
-		} else { 
-			return is->second;
-		} 
-	}
+  inline size_t size() const { 
+    return main_genome.size();
+  } 
 
-	inline size_t size() const { 
-		return main_genome.size();
-	} 
+  inline std::map<coord_t, orf_t>::const_iterator cbegin() const { 
+    return main_genome.cbegin();	
+  } 
 
-	inline std::map<coord_t, orf_t>::const_iterator cbegin() const { 
-		return main_genome.cbegin();	
-	} 
-
-	inline std::map<coord_t, orf_t>::const_iterator cend() const { 
-		return main_genome.cend();
-	} 
-
-	/*inline std::string get_name() const { 
-		return name;
-	} */
-
-	std::unordered_map<orf_t, cpan_t> orf2cpan;
+  inline std::map<coord_t, orf_t>::const_iterator cend() const { 
+    return main_genome.cend();
+  } 
 private: 
-	//std::string name;
-	std::map<coord_t, orf_t> main_genome; //why not vector  
-	std::unordered_map<orf_t, int> sign; 
-	std::unordered_set<std::string> circular_chromosome;  //set of circular chromosomes
+  std::map<coord_t, orf_t> main_genome; //why not vector  
+  std::unordered_map<orf_t, int> sign; 
+  std::unordered_set<std::string> circular_chromosome;  //set of circular chromosomes
 };
 #endif

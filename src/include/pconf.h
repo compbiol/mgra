@@ -27,12 +27,23 @@
 #include <iostream>
 #include <cassert>
 
+#include <mcolor.h>
+
 template <typename T>
-inline std::string toString(T val) { 
+__attribute__((always_inline)) inline std::string toString(T val) { 
 	std::ostringstream oss; 
 	oss << val; 
 	return oss.str();
 }  
+
+__attribute__((always_inline)) inline bool check_symbol(char c) { 
+   if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) { 
+     return true;
+   } else { 
+     return false;
+   } 
+} 
+
 
 /*This structures containes information from *.cfg file */
 struct ProblemInstance {
@@ -87,9 +98,13 @@ struct ProblemInstance {
 		return stages;
 	} 
 
-	inline std::string get_target() const { 
+	inline Mcolor get_target() const { 
 		return target;		
 	} 
+
+	//inline Mcolor get_newtarget() const { 
+	//	return color_target;		
+	//} 
 
 	inline std::list<std::vector<std::string> > get_completion() const { //del and write convert two break
 		return completion;
@@ -126,8 +141,9 @@ private:
 	std::vector<std::string> trees;
 
 	size_t stages;
-		
-	std::string target;
+
+	Mcolor target; 		
+	//std::string target;
 
 	std::list<std::vector<std::string> > completion;
 

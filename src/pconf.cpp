@@ -78,12 +78,36 @@ ProblemInstance::ProblemInstance(const std::unordered_map<std::string, std::vect
 
 				if (name == "stages") { 
 					is >> this->stages;
-				} else if (name == "target") { 
-					is >> this->target;
 				} else {
 					std::cerr << "Unknown option " << name << std::endl;
 					exit(1);
 				}
+			}
+		} else if (ip->first == "[Target]") { 
+			std::istringstream is(*ip->second.cbegin());
+			std::string temp; 
+			is >> temp; 
+			std::remove_if(temp.begin(), temp.end(), isspace);
+			if (temp[0] == '{' && temp[temp.length() - 1] == '}') { 
+				std::string current = "";
+				for (size_t i = 1; i < temp.length(); ++i) { 
+					if (temp[i] == ',' || temp[i] == '}') { 
+						if (genome_number.find(current) != genome_number.end()) {  
+							target.insert(genome_number.find(current)->second);
+						}  	
+						current = "";
+					} else if (check_symbol(temp[i])) { 
+						current += temp[i];
+					} else { 
+						std::cerr << "Bad format target " << temp << std::endl;
+						exit(1);
+					}  
+				} 
+
+
+			} else {
+				std::cerr << "Bad format target " << temp << std::endl;
+				exit(1);
 			}
 		} else if (ip->first == "[Completion]") {
 			for(auto js = ip->second.cbegin(); js != ip->second.cend(); ++js) {

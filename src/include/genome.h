@@ -67,7 +67,7 @@ struct Genome {
     return main_genome.cend();
   } 
 private: 
-  std::map<coord_t, orf_t> main_genome; //why not vector  
+  std::map<coord_t, orf_t> main_genome; 
   std::unordered_map<orf_t, int> sign; 
   std::unordered_set<std::string> circular_chromosome;  //set of circular chromosomes
 };

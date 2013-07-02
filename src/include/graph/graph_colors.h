@@ -80,8 +80,9 @@ Graph_with_colors<mcolor_t>::Graph_with_colors(size_t size, const ProblemInstanc
   parsing_tree(count_local_color, cfg);
 
   if (!cfg.get_target().empty()) { 
-    DiColor.erase(genome_match::name_to_mcolor(cfg.get_target()));
+	DiColor.erase(cfg.get_target());
   } 
+  
   
   //check consistency
   for (auto id = DiColor.cbegin(); id != DiColor.cend(); ++id) {

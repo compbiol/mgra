@@ -495,7 +495,6 @@ int main(int argc, char* argv[]) {
  
 #ifndef VERSION2  
   if (!PI.get_target().empty()) {
-
 #if 0
 	// EXPERIMENTAL DECIRCULARIZATION of PI.target
 	transform_t H;
@@ -524,9 +523,9 @@ int main(int argc, char* argv[]) {
 	    std::string y = Infty;
 	    bool good = true;
 	    int def = 0;
-		std::string target = PI.get_target();
-	    for(int i = 0; i < target.size(); ++i) {
-		int j = genome_match::get_number(target.substr(i, 1));//PI.get_number_genome_to_name(target.substr(i, 1));
+	    const Mcolor& target = PI.get_target();
+	    for (auto i = target.cbegin(); i != target.cend(); ++i) { 
+		int j = i->first; 
 		if (graph.is_there_edge(j, x)) {
 		    def++;
 		    if( y==Infty ) y = graph.get_adj_vertex(j, x);
@@ -542,7 +541,7 @@ int main(int argc, char* argv[]) {
 
 	std::set< std::pair<path_t,bool> > GN;
 	splitchr(graph, PG, GN);
-	printchr(PI.get_target(), GN, PI.get_target().empty());
+	printchr(genome_match::mcolor_to_name(PI.get_target()), GN, PI.get_target().empty());
 
 	//for(int i=0;i<N;++i) {
 	//    set< pair<path_t,bool> > GN;

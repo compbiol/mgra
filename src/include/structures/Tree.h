@@ -8,14 +8,6 @@
 #include "mcolor.h"
 #include "pconf.h"
 
-__attribute__((always_inline)) inline bool check_symbol(char c) { 
-   if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) { 
-     return true;
-   } else { 
-     return false;
-   } 
-} 
-
 template<class type_data>
 struct BinaryTree { 
 private: 

@@ -12,21 +12,13 @@
 
 template<class graph_t>
 struct Statistics { 
-
-
   Statistics(const graph_t& gr, const Graph_with_colors<Mcolor>& col)
   : graph(gr) 
   , colors(col) {
    
     count_compl_multiedges();
   
-    count_not_compl_multiedges();
-  	
     count_chromosomes();  
-#ifdef VERSION2 
-    //count_some_statistics();
-    count_weak_simple_vertex();
-#endif
   }	      	
  
   inline void count_other() {
@@ -40,8 +32,6 @@ struct Statistics {
   std::map<std::pair<Mcolor, Mcolor>, size_t> get_Hsubgraph(); //count H-subgraph for stage2 
 
 private:
-  void count_some_statistics();
-  void count_weak_simple_vertex(); 
   void count_compl_multiedges(); //count good edges for stage1
   void count_not_compl_multiedges(); 
   void count_cycles();
@@ -164,61 +154,6 @@ std::vector<Mcolor> Statistics<graph_t>::get_new_color() const {
     output.push_back(im->first);
   }  
   return output;	
-} 
-
-/*************COUNT SOME STATISTICS**************************/
-template<class graph_t>
-void Statistics<graph_t>::count_weak_simple_vertex() { 
-  size_t count = 0; 
-
-  for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*it, colors);
-
-    if (graph.is_duplication_vertice(Mx)) { 
-	++count;
-    } 
-  } 
-
-  std::cerr << "Duplication vertex: " << count << std::endl;
-} 
-
-template<class graph_t>
-void Statistics<graph_t>::count_some_statistics() { 
-  std::map<std::pair<Mcolor, Mcolor>, size_t> count_vertex;
-  
-  for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*it, colors);
-    
-    if (Mx.size() == 2) { 
-	if (Mx.cbegin()->second < Mx.crbegin()->second) {
-		++count_vertex[std::make_pair(Mx.cbegin()->second, Mx.crbegin()->second)];
-	} else { 
-		++count_vertex[std::make_pair(Mx.crbegin()->second, Mx.cbegin()->second)];	
-	} 
-    }
-
-    Mx.erase(Infty);
-
-    if (Mx.size() == 2) { 
-	if (Mx.cbegin()->second < Mx.crbegin()->second) {
-		++count_vertex[std::make_pair(Mx.cbegin()->second, Mx.crbegin()->second)];
-	} else { 
-		++count_vertex[std::make_pair(Mx.crbegin()->second, Mx.cbegin()->second)];	
-	} 
-    } 
-  } 
-
-  std::multimap<size_t, std::pair<Mcolor, Mcolor> > edges; 
-
-  for(auto it = count_vertex.cbegin(); it != count_vertex.cend(); ++it) { 
-	edges.insert(std::make_pair(it->second, it->first));
-  } 
-
-  std::ofstream ofstat("new_stat.txt");
-  for(auto it = edges.crbegin(); it != edges.crend(); ++it) { 
-	ofstat << "{" << genome_match::mcolor_to_name(it->second.first) << "+" << genome_match::mcolor_to_name(it->second.second) << "} " << it->first << std::endl; 
-  } 
-  ofstat.close();
 } 
 
 template<class graph_t>

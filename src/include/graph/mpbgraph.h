@@ -40,15 +40,15 @@ struct MBGraph {
 
     for(size_t i = 0; i < genomes.size(); ++i) { 
       for(auto it = genomes[i].cbegin(); it != genomes[i].cend(); ++it) {
-	if (blocks.count(it->second) == 0) { 
-	  obverse_edges.insert(it->second + "t", it->second + "h");
-	  blocks.insert(it->second);
-	  vertex_set.insert(it->second + "t"); 
-	  vertex_set.insert(it->second + "h"); 
+	if (blocks.count(it->second.first) == 0) { 
+	  obverse_edges.insert(it->second.first + "t", it->second.first + "h");
+	  blocks.insert(it->second.first);
+	  vertex_set.insert(it->second.first + "t"); 
+	  vertex_set.insert(it->second.first + "h"); 
 	} 
       }
     } 
-	
+  
     for(size_t i = 0; i < genomes.size(); ++i) {
       add_edges(i, genomes[i], blocks);
     }	
@@ -58,7 +58,11 @@ struct MBGraph {
     local_graph[index].insert(first, second);
   }
 
-  inline void erase_edge(size_t index, const vertex_t& first, const vertex_t& second) { 
+  inline void erase_edge(size_t index, const vertex_t& first, const vertex_t& second) {
+	//if (first == "172h" && second == "171h") {  
+	//	std::cout << "erase " << index << " " << first << " " << second << std::endl;
+	//} 
+
     return local_graph[index].erase(first, second);
   } 
 

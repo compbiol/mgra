@@ -46,8 +46,8 @@ bool Algorithm<graph_t>::stage2() {
 	continue; 
       } 
 
-      Mularcs<Mcolor> Cx = graph.get_adjacent_multiedges(x, colors, split_bad_colors);
-	
+      Mularcs<Mcolor> Cx = graph.get_adjacent_multiedges(x, colors, split_bad_colors);	
+
       for(auto im = M.cbegin(); im != M.cend(); ++im) {
 	const std::string& y = im->first;
 	const Mcolor& Q = im->second; // color of central edge
@@ -58,7 +58,7 @@ bool Algorithm<graph_t>::stage2() {
 
 	Mularcs<Mcolor> Cy = graph.get_adjacent_multiedges(y, colors, split_bad_colors);
 
-	if (graph.get_adjacent_multiedges(y, colors).is_duplication_vertice()) { 
+	if (graph.get_adjacent_multiedges(y, colors).is_duplication_vertice() || graph.get_adjacent_multiedges(y, colors).is_indel_vertex()) { 
 	  continue;
 	}
 
@@ -69,8 +69,8 @@ bool Algorithm<graph_t>::stage2() {
 	bool mobilQ = false;
 
 	//here 
-	for(auto jc = Cx.cbegin(); jc!= Cx.cend(); ++jc) {
-	  if (jc->first != y || (jc->first != Infty && graph.get_adjacent_multiedges(jc->first, colors).is_duplication_vertice())) { 
+	for(auto jc = Cx.cbegin(); jc != Cx.cend(); ++jc) {
+	  if (jc->first != y || (jc->first != Infty && (graph.get_adjacent_multiedges(jc->first, colors).is_duplication_vertice() || graph.get_adjacent_multiedges(jc->first, colors).is_indel_vertex()))) { 
 		continue; 
 	  } // not a cental sub-edge
 
@@ -81,7 +81,7 @@ bool Algorithm<graph_t>::stage2() {
 
 
 	  for(auto ix = Cx.cbegin(); ix != Cx.cend(); ++ix) { 
-	    if (ix->first == y  || (ix->first != Infty && graph.get_adjacent_multiedges(ix->first, colors).is_duplication_vertice())/*|| ix->first == Infty*/ ) { continue; } 
+	    if (ix->first == y  || (ix->first != Infty && (graph.get_adjacent_multiedges(ix->first, colors).is_duplication_vertice() || graph.get_adjacent_multiedges(ix->first, colors).is_indel_vertex()))/*|| ix->first == Infty*/ ) { continue; } 
 
 	    if (canformQ(ix->first, QQ)) {
 	      outlog << "MOBIL: " << x << "-" << ix->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
@@ -95,7 +95,7 @@ bool Algorithm<graph_t>::stage2() {
 	  } 
     
 	  for(auto iy = Cy.cbegin(); iy != Cy.cend(); ++iy) { 
-	    if (iy->first == x || (iy->first != Infty && graph.get_adjacent_multiedges(iy->first, colors).is_duplication_vertice()) /*|| iy->first == Infty*/ ) { continue; } 
+	    if (iy->first == x || (iy->first != Infty && (graph.get_adjacent_multiedges(iy->first, colors).is_duplication_vertice() || graph.get_adjacent_multiedges(iy->first, colors).is_indel_vertex())) /*|| iy->first == Infty*/ ) { continue; } 
 	    if (canformQ(iy->first, QQ)) {
 	      outlog << "MOBIL: " << y << "-" << iy->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
 	      mobilQ = true;
@@ -115,14 +115,14 @@ bool Algorithm<graph_t>::stage2() {
 	bool found = false;
 
 	for (auto ix = Cx.cbegin(); ix != Cx.cend(); ++ix) { 
-	  if (ix->first == y || (ix->first != Infty && graph.get_adjacent_multiedges(ix->first, colors).is_duplication_vertice())) continue;
+	  if (ix->first == y || (ix->first != Infty && graph.get_adjacent_multiedges(ix->first, colors).is_duplication_vertice() && graph.get_adjacent_multiedges(ix->first, colors).is_indel_vertex())) continue;
 	  const Mcolor& QQ = ix->second;
 
 	  outlog << " Sub-multiedge " << genome_match::mcolor_to_name(ix->second) << std::endl;
 
 	  vertex_t temp = "";   
 	  for(auto iy = Cy.cbegin(); iy != Cy.cend(); ++iy) { 
-	    if (iy->first != Infty && graph.get_adjacent_multiedges(iy->first, colors).is_duplication_vertice()) { 
+	    if (iy->first != Infty && (graph.get_adjacent_multiedges(iy->first, colors).is_duplication_vertice() || graph.get_adjacent_multiedges(iy->first, colors).is_indel_vertex())) { 
 	      continue; 
 	    } 
 	    if (iy->second == ix->second) { 	

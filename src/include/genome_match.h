@@ -24,6 +24,14 @@ struct genome_match {
     return genome_to_number.find(s)->second;
   }
 
+  inline static Mcolor get_complite_color() { 
+    Mcolor comp; 
+    for(size_t i = 0; i < number_to_genome.size(); ++i) { 
+      comp.insert(i); 
+    } 
+    return comp;
+  } 
+
   static Mcolor name_to_mcolor(const std::string& name); 
   static std::string mcolor_to_name(const Mcolor& color);
 private: 

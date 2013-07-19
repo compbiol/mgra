@@ -117,6 +117,7 @@ void reader::read_grimm(const ProblemInstance& cfg, std::vector<Genome>& genome)
 			line = reader::trim(line.substr(1));
 			if (cfg.member_name(line)) {
 				number_genome = cfg.get_number(line);
+				nchr = 0; 
 			} else { 
 				std::clog << "Unknown genome: " << line << std::endl;
 			} 

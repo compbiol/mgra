@@ -30,19 +30,33 @@ struct Mularcs {
     } 
     return false; 
   }  
- 
+
+  inline bool is_indel_vertex() const {
+    mcolor_t un; 
+    for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) { 
+      un = mcolor_t(un, it->second, mcolor_t::Union);
+    }
+
+    if (un != genome_match::get_complite_color()) { 
+      return true;
+    } 
+    return false; 
+  }
+  
   inline bool is_duplication_vertice() const {	
     for(auto im = mularcs.cbegin(); im != mularcs.cend(); ++im) { 
       for(auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
 	if (*im == *it) { 
 	  continue;
 	} 
+
 	mcolor_t color(im->second, it->second, mcolor_t::Intersection);
 	if (!color.empty()) { 
 	  return true; 
 	} 
       } 
     }  
+
     return false; 
   } 
 

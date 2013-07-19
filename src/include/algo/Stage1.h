@@ -51,7 +51,7 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
   while (true) {
     //FIXME: is_duplication_vertice work is a long while. And uses iff prevent duplication vertex. x -> ... -> y -> z -> t , 
     //if z - end path and edge colors z->t, y->z  complimentary, but t - is duplication vertex and 2-break down all colors.       
-    if (current != Infty && graph.get_adjacent_multiedges(current, colors).is_duplication_vertice()) { 
+    if (current != Infty && (graph.get_adjacent_multiedges(current, colors).is_duplication_vertice() || graph.get_adjacent_multiedges(current, colors).is_indel_vertex())) { 
 	break;
     } 
 

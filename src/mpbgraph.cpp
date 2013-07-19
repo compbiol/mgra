@@ -8,12 +8,20 @@ void MBGraph::add_edges(size_t index, const Genome& genome, const std::unordered
         vertex_t prev_chr;
 
 	for(auto iter = genome.cbegin(); iter != genome.cend(); ++iter) {
-		if (blocks.find(iter->second) != blocks.end()) { 
+		/*if (index == 5 && current_vertex == "172h") { 
+			if (iter->second.second > 0) {
+				std::cout << current_vertex << " " << iter->second.first << "t" << std::endl; 
+			} else { 
+				std::cout << current_vertex << " " << iter->second.first << "h" << std::endl; 
+			} 
+		} */
+
+		if (blocks.find(iter->second.first) != blocks.end()) { 
 			if (iter->first.first == prev_chr) {
-				if (genome.get_sign(iter->second) > 0) {
-					local_graph[index].insert(current_vertex, iter->second + "t");
+				if (iter->second.second > 0) {
+					local_graph[index].insert(current_vertex, iter->second.first + "t");
 				} else {
-					local_graph[index].insert(current_vertex, iter->second + "h");
+					local_graph[index].insert(current_vertex, iter->second.first + "h");
 				}
 			} else { 
 				// new chromosome detected				
@@ -21,18 +29,18 @@ void MBGraph::add_edges(size_t index, const Genome& genome, const std::unordered
 					local_graph[index].insert(first_vertex, current_vertex);
 				}
 
-				if (genome.get_sign(iter->second) > 0) { 
-					first_vertex = iter->second + "t"; 
+				if (iter->second.second > 0) { 
+					first_vertex = iter->second.first + "t"; 
 				} else { 
-					first_vertex = iter->second + "h";
+					first_vertex = iter->second.first + "h";
 				} 
 				prev_chr = iter->first.first;
 			} 
 		
-			if (genome.get_sign(iter->second) > 0) { 
-				current_vertex = iter->second + "h"; 
+			if (iter->second.second > 0) { 
+				current_vertex = iter->second.first + "h"; 
 			} else { 
-				current_vertex = iter->second + "t";
+				current_vertex = iter->second.first + "t";
 			} 
 		} 
 	}

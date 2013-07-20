@@ -102,10 +102,6 @@ struct ProblemInstance {
 		return target;		
 	} 
 
-	//inline Mcolor get_newtarget() const { 
-	//	return color_target;		
-	//} 
-
 	inline std::list<std::vector<std::string> > get_completion() const { //del and write convert two break
 		return completion;
 	} 
@@ -143,8 +139,7 @@ private:
 	size_t stages;
 
 	Mcolor target; 		
-	//std::string target;
-
+	
 	std::list<std::vector<std::string> > completion;
 
 	/*about color refactor in future. What*/

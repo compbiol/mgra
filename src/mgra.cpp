@@ -32,25 +32,26 @@ using namespace std;
 #include "reader.h"
 #include "algo/Algorithm.h"
 #include "Wdots.h"
-#include "mpbgraph.h"
-#include "graph_colors.h"
+#include "mbgraph_history.h"
 
 typedef sym_multi_hashmap<vertex_t> partgraph_t;
 
-vector<partgraph_t> RG; // recovered genomes
-vector<transform_t> RT; // and transformations
+std::ofstream outlog("/dev/null");
 
-bool RecoverGenomes(MBGraph&, Graph_with_colors<Mcolor>& colors, const transform_t&);
+std::vector<partgraph_t> RG; // recovered genomes
+std::vector<transform_t> RT; // and transformations
+
+bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph, const transform_t& tr);
 set <vertex_t> getchrset;
 
-std::pair<path_t, bool> getchr(const MBGraph& graph, const partgraph_t& PG, const std::string& x) {
+std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG, const std::string& x) {
     path_t path;
     bool circular = false;
 
     getchrset.clear();
     getchrset.insert(x);
 
-    for(vertex_t y = graph.get_adj_vertex(x); ; ) {
+    for(vertex_t y = graph.get_obverse_vertex(x); ; ) {
 	if( member(getchrset,y) ) {
 	    circular = true;
 	    break; // circ
@@ -78,7 +79,7 @@ std::pair<path_t, bool> getchr(const MBGraph& graph, const partgraph_t& PG, cons
 	}
 	getchrset.insert(y);
 
-	y = graph.get_adj_vertex(y);
+	y = graph.get_obverse_vertex(y);
     }
 
     if( !circular && PG.defined(x) ) {
@@ -86,7 +87,7 @@ std::pair<path_t, bool> getchr(const MBGraph& graph, const partgraph_t& PG, cons
 	    y = PG[y];
 	    getchrset.insert(y);
 
-	    y = graph.get_adj_vertex(y);
+	    y = graph.get_obverse_vertex(y);
 	    getchrset.insert(y);
 	    {
 		std::string xx = y;
@@ -106,7 +107,7 @@ std::pair<path_t, bool> getchr(const MBGraph& graph, const partgraph_t& PG, cons
 
 
 std::list< std::set<vertex_t> > pg_empty;
-void splitchr(const MBGraph& graph, const partgraph_t& PG, set< pair<path_t,bool> >& AllChr, const bool Xonly = false, list< set<vertex_t> >& CircChr = pg_empty) {
+void splitchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG, set< pair<path_t,bool> >& AllChr, const bool Xonly = false, list< set<vertex_t> >& CircChr = pg_empty) {
 
     if (&CircChr != &pg_empty) { 
 	CircChr.clear();
@@ -131,7 +132,7 @@ void splitchr(const MBGraph& graph, const partgraph_t& PG, set< pair<path_t,bool
     }
 }
 
-std::pair<size_t, size_t> numchr(const MBGraph& graph, const partgraph_t& PG) {
+std::pair<size_t, size_t> numchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG) {
     std::set< pair<path_t, bool> > AllChr;
     std::list<std::set<vertex_t> > CircChr;
     splitchr(graph, PG, AllChr, false, CircChr);
@@ -221,7 +222,7 @@ void printchr(const std::string& outname, const std::set<std::pair<path_t, bool>
 
 // fill in OP container with endpoints of q-obverse paths,
 // starting and ending at OP
-void get_obverse_paths(const MBGraph& graph, map< vertex_t, set<vertex_t> >& OP, const Mcolor Q) {
+void get_obverse_paths(const mbgraph_with_history<Mcolor>& graph, map< vertex_t, set<vertex_t> >& OP, const Mcolor Q) {
     map< vertex_t, set<int> > processed;
 
     for(auto iq = Q.cbegin(); iq != Q.cend(); ++iq) {
@@ -233,7 +234,7 @@ void get_obverse_paths(const MBGraph& graph, map< vertex_t, set<vertex_t> >& OP,
 
 	    if( x==Infty || member(processed[x], iq->first) ) continue;
 
-	    for(vertex_t y = graph.get_adj_vertex(ip->first); PG.defined(y);) {
+	    for(vertex_t y = graph.get_obverse_vertex(ip->first); PG.defined(y);) {
 		if( member(OP,y) ) {
 		    ip->second.insert(y);
 		    OP[y].insert(x);
@@ -247,7 +248,7 @@ void get_obverse_paths(const MBGraph& graph, map< vertex_t, set<vertex_t> >& OP,
 		    break;
 		}
 
-		y = graph.get_adj_vertex(y);
+		y = graph.get_obverse_vertex(y);
 	    }
 	    processed[x].insert(iq->first);
 	}
@@ -261,7 +262,7 @@ void get_obverse_paths(const MBGraph& graph, map< vertex_t, set<vertex_t> >& OP,
  * We replace PG with PG' and return the transformation PG -> PG'
  * Transformation may contain only multicolors Q' with Q'\cap Q = 0 or Q.
 */
-transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
+transform_t decircularize(const mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
 
     // decircularizing sub-transform that is removed
     transform_t D;
@@ -329,8 +330,8 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
 
 	    transform_t::iterator kt = jt--; // jt, kt are successive, *kt == t
 
-	    const TwoBreak<MBGraph, Mcolor>& t = *kt;
-	    const TwoBreak<MBGraph, Mcolor>& s = *jt;
+	    const TwoBreak<mbgraph_with_history<Mcolor>, Mcolor>& t = *kt;
+	    const TwoBreak<mbgraph_with_history<Mcolor>, Mcolor>& s = *jt;
 	    //s.normalize();
 
 //            outlog << "... trying to swap with " << s << endl;
@@ -399,11 +400,11 @@ transform_t decircularize(const MBGraph& graph, partgraph_t& PG, transform_t& TG
 
 	    if( usearc ) {
 		if( t.MultiColor != s.MultiColor ) break;
-		*kt = TwoBreak<MBGraph, Mcolor>(q2.second,p1.second,q1.first,q1.second,t.MultiColor);
-		*jt = TwoBreak<MBGraph, Mcolor>(p1.first,p1.second,q2.first,q2.second,t.MultiColor);
+		*kt = TwoBreak<mbgraph_with_history<Mcolor>, Mcolor>(q2.second,p1.second,q1.first,q1.second,t.MultiColor);
+		*jt = TwoBreak<mbgraph_with_history<Mcolor>, Mcolor>(p1.first,p1.second,q2.first,q2.second,t.MultiColor);
 	    }
 	    else {
-		TwoBreak<MBGraph, Mcolor> temp = *kt;
+		TwoBreak<mbgraph_with_history<Mcolor>, Mcolor> temp = *kt;
 		*kt = *jt;
                 *jt = temp;
 	    }
@@ -484,15 +485,13 @@ int main(int argc, char* argv[]) {
   std::vector<Genome> genomes = reader::read_genomes(PI);
   genome_match::init_name_genomes(genomes);
 
-  MBGraph graph(genomes); 
-  Graph_with_colors<Mcolor> colors(genomes.size(), PI);  
+  mbgraph_with_history<Mcolor> graph(genomes, PI); 
 
-  Algorithm<MBGraph> main_algo(graph, colors);
+  Algorithm<mbgraph_with_history<Mcolor> > main_algo(graph);
 
   main_algo.main_algorithm(PI); 
   graph = main_algo.get_graph(); 
-  colors = main_algo.get_colors();
- 
+
 #ifndef VERSION2  
   if (!PI.get_target().empty()) {
 #if 0
@@ -526,10 +525,10 @@ int main(int argc, char* argv[]) {
 	    const Mcolor& target = PI.get_target();
 	    for (auto i = target.cbegin(); i != target.cend(); ++i) { 
 		int j = i->first; 
-		if (graph.is_there_edge(j, x)) {
+		if (graph.is_exist_edge(j, x)) {
 		    def++;
-		    if( y==Infty ) y = graph.get_adj_vertex(j, x);
-		    if( y != graph.get_adj_vertex(j, x) ) good = false;
+		    if( y==Infty ) y = graph.get_adjecent_vertex(j, x);
+		    if( y != graph.get_adjecent_vertex(j, x) ) good = false;
 		}
 	    }
 	    if( good && def == target.size() && y!=Infty ) {
@@ -552,12 +551,12 @@ int main(int argc, char* argv[]) {
 
     } else {  /* empty target */
 
-	const size_t NC = colors.count_vec_T_color();
+	const size_t NC = graph.count_vec_T_color();
     
 	RG.resize(NC);
 	RT.resize(NC);
     
-	if( !RecoverGenomes(graph, colors, graph.get_history()) ) exit(1);
+	if( !RecoverGenomes(graph, graph.get_history()) ) exit(1);
     
 	// T-transformation complete, we procede with recovering the ancestral genomes
     
@@ -566,7 +565,7 @@ int main(int argc, char* argv[]) {
 	// FIXME: check that the order in which circular chromosomes are eliminated
     
 	size_t i = 0; 
-	for (auto im = colors.cbegin_T_color(); im != colors.cend_T_color(); ++im) { 
+	for (auto im = graph.cbegin_T_color(); im != graph.cend_T_color(); ++im) { 
 	    //for(int i = 0; i < NC; ++i) {
     
 	    transform_t T = decircularize(graph, RG[i], RT[i], *im);//colors.TColor[i]);
@@ -574,8 +573,8 @@ int main(int argc, char* argv[]) {
 	    // move to adjacent branches
 	    for (transform_t::const_iterator it = T.cbegin(); it != T.cend(); ++it) {
 		size_t j = 0; 
-		for (auto jt = colors.cbegin_T_color(); jt != colors.cend_T_color(); ++jt) {
-		    if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && colors.are_adjacent_branches(*im, *jt)) {
+		for (auto jt = graph.cbegin_T_color(); jt != graph.cend_T_color(); ++jt) {
+		    if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && graph.are_adjacent_branches(*im, *jt)) {
 			RT[j].push_back(*it);
 		    }
 		    ++j; 
@@ -587,7 +586,7 @@ int main(int argc, char* argv[]) {
 	outlog << "Final 2-break distances from the root X: " << endl;
 	
 	i = 0; 
-	for(auto im = colors.cbegin_T_color(); im != colors.cend_T_color(); ++im) {
+	for(auto im = graph.cbegin_T_color(); im != graph.cend_T_color(); ++im) {
     	    std::set<std::pair<path_t, bool> > GN;
 	    splitchr(graph, RG[i], GN);
 	    printchr(genome_match::mcolor_to_name(*im), GN, PI.get_target().empty());
@@ -608,7 +607,7 @@ int main(int argc, char* argv[]) {
 
 
 ///////////////////////////////////////////////////////////////////////////
-bool RecoverGenomes(MBGraph& graph, Graph_with_colors<Mcolor>& colors, const transform_t& tr) {
+bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph, const transform_t& tr) {
 
     /*
     for(int i=0;i<N;++i) {
@@ -620,7 +619,7 @@ bool RecoverGenomes(MBGraph& graph, Graph_with_colors<Mcolor>& colors, const tra
     }
     */
 
-    size_t NC = colors.count_vec_T_color();
+    size_t NC = graph.count_vec_T_color();
 
     for(int i=0; i < graph.size_graph() - 1; ++i) {
 	if( graph.get_local_graph(i) != graph.get_local_graph(i + 1)) {//FIXME
@@ -650,7 +649,7 @@ bool RecoverGenomes(MBGraph& graph, Graph_with_colors<Mcolor>& colors, const tra
 	outlog << "Reverting (" << it->OldArc[0].first << "," << it->OldArc[0].second << ")x(" << it->OldArc[1].first << "," << it->OldArc[1].second << "):{" << genome_match::mcolor_to_name(it->MultiColor) << "} " << " in";
 
 	size_t i = 0;
-	for(auto im = colors.cbegin_T_color(); im != colors.cend_T_color(); ++im) {
+	for(auto im = graph.cbegin_T_color(); im != graph.cend_T_color(); ++im) {
     	
 	    if (!Q.includes(*im)) { 
 	        ++i;

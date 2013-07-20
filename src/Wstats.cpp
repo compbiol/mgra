@@ -4,26 +4,26 @@ writer::Wstats::Wstats(std::string name_file): write_parametres(5) {
 	ofstat.open(name_file); 
 } 
 
-void writer::Wstats::print_all_statistics(int stage, Statistics<MBGraph>& info, const ProblemInstance& cfg, const MBGraph& graph, const Graph_with_colors<Mcolor>& colors) { 
+void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_history<Mcolor> >& info, const ProblemInstance& cfg, const mbgraph_with_history<Mcolor>& graph) { 
 	if (stage == 0) { 
 		println("Initial graph:");
 	}  else { 
 		println("After Stage " + toString(stage) + " graph:");
 	} 
 
-	print_complete_edges(graph, colors);
+	print_complete_edges(graph);
 	print_connected_components(graph);
 	print_rear_characters(info.get_compl_stat()); 
 #ifndef VERSION2
 	print_estimated_dist(stage, cfg, graph);
 #endif
-	print_fair_edges(graph, colors, info);
+	print_fair_edges(graph, info);
 	print_not_compl_characters(info.get_no_compl_stat()); 
 } 
 
 
 ////////////////////////////////////////////////////////
-void writer::Wstats::print_connected_components(const MBGraph& MBG) {
+void writer::Wstats::print_connected_components(const mbgraph_with_history<Mcolor>& MBG) {
 	// count connected components in the graph
 	equivalence<vertex_t> C;
 	
@@ -54,7 +54,7 @@ void writer::Wstats::print_connected_components(const MBGraph& MBG) {
 	ofstat << std::endl;
 }
 
-void writer::Wstats::histStat(const MBGraph& graph) { //FIXME
+void writer::Wstats::histStat(const mbgraph_with_history<Mcolor>& graph) { //FIXME
 	ofstat << std::endl << "Total number of 2-breaks: " << graph.get_history().size() << std::endl;
 
  	std::map<Mcolor, size_t> n2br;
@@ -70,7 +70,7 @@ void writer::Wstats::histStat(const MBGraph& graph) { //FIXME
 	ofstat << std::endl;
 }
 ////////////////////////////////////////////////////////
-void writer::Wstats::print_fair_edges(const MBGraph& MBG, const Graph_with_colors<Mcolor>& colors, Statistics<MBGraph>& info) {
+void writer::Wstats::print_fair_edges(const mbgraph_with_history<Mcolor>& MBG, Statistics<mbgraph_with_history<Mcolor>>& info) {
 	// output H-subgraphs count
 	ofstat << std::endl << "% Fair multi-edges count: " << std::endl << std::endl;
 
@@ -101,7 +101,7 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, const Graph_with_color
 
 	for(auto ic = HCrow.cbegin(); ic != HCrow.cend(); ++ic) {
 		ofstat << " & ${";
-		if (colors.is_T_consistent_color(*ic)) {
+		if (MBG.is_T_consistent_color(*ic)) {
 			ofstat << "\\bf ";
 		} 
 		ofstat <<  genome_match::mcolor_to_name(*ic) << "+}$";
@@ -112,7 +112,7 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, const Graph_with_color
 
 	for(auto Q1 = HCrow.cbegin(); Q1 != HCrow.cend(); ++Q1) {
 		ofstat << "${";
-		if (colors.is_T_consistent_color(*Q1)) {
+		if (MBG.is_T_consistent_color(*Q1)) {
 			ofstat << "\\bf ";
 		} 
 		ofstat << genome_match::mcolor_to_name(*Q1) << "+}$"; 
@@ -123,7 +123,7 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, const Graph_with_color
 			if (Hcount.find(std::make_pair(*Q1, *Q2)) != Hcount.end()) {
 				ofstat << " "; //"${";
 
-				if (colors.are_adjacent_branches(*Q1, *Q2)) { 
+				if (MBG.are_adjacent_branches(*Q1, *Q2)) { 
 					ofstat << "{\\cellcolor[gray]{.9}}";
 				} 
 
@@ -147,11 +147,11 @@ void writer::Wstats::print_fair_edges(const MBGraph& MBG, const Graph_with_color
 	print_close_table(false);
 }
 
-void writer::Wstats::print_complete_edges(const MBGraph& graph, const Graph_with_colors<Mcolor>& colors) { 
+void writer::Wstats::print_complete_edges(const mbgraph_with_history<Mcolor>& graph) { 
 	size_t nc = 0;
 	ofstat << "... complete multiedges:";
 	for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-		Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*it, colors);
+		Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*it);
 		if (M.size() == 1 && M.cbegin()->second.size() == graph.size_graph() && (*it < M.cbegin()->first || M.cbegin()->first == Infty)) {
 			ofstat << " " << *it << "~" << M.cbegin()->first;
 			++nc;
@@ -187,7 +187,7 @@ void writer::Wstats::print_not_compl_characters(const std::vector<std::string>& 
 	} 
 } 
 
-void writer::Wstats::print_estimated_dist(size_t stage, const ProblemInstance& cfg, const MBGraph& graph) { 
+void writer::Wstats::print_estimated_dist(size_t stage, const ProblemInstance& cfg, const mbgraph_with_history<Mcolor>& graph) { 
 	ofstat << "% Estimated distances:" << std::endl << std::endl;
 	print_start_table(graph.size_graph());
 	ofstat << "Stage " << stage;

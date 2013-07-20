@@ -8,13 +8,12 @@
 #include <cstdlib>
 
 #include "mcolor.h"
-#include "mpbgraph.h"
 
 template<class graph_t>
 struct Statistics { 
-  Statistics(const graph_t& gr, const Graph_with_colors<Mcolor>& col)
+  Statistics(const graph_t& gr)
   : graph(gr) 
-  , colors(col) {
+  {
    
     count_compl_multiedges();
   
@@ -46,8 +45,7 @@ private:
 
 private: 
   const graph_t& graph;
-  const Graph_with_colors<Mcolor>& colors;
-
+  
   //vertices
   std::unordered_map<size_t, size_t > multidegree_count; // multidegree_count[n] = # vertices of multidegree n. 
   std::map<Mcolor, size_t> simple_vertices_count;  	 // simple_vertices_count[min(S,!S)] = # simple vertices incident to S-colored
@@ -78,7 +76,7 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() const {
   std::multimap<size_t, std::string> answer;
 
   for(auto im = compl_multiedges_count.cbegin(); im != compl_multiedges_count.cend(); ++im) {
-    const Mcolor& current = colors.get_complement_color(im->first);  // complementary multicolor.
+    const Mcolor& current = graph.get_complement_color(im->first);  // complementary multicolor.
 
     if (im->first < current) {
       continue;
@@ -92,12 +90,12 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() const {
     std::ostringstream os;
  
     os << "{";		    
-    if (colors.is_T_consistent_color(im->first)) { 
+    if (graph.is_T_consistent_color(im->first)) { 
       os << "\\bf ";
     } 
 
-    const Mcolor& first = colors.get_min_complement_color(current); 
-    const Mcolor& second = colors.get_complement_color(first);
+    const Mcolor& first = graph.get_min_complement_color(current); 
+    const Mcolor& second = graph.get_complement_color(first);
 
     os <<  genome_match::mcolor_to_name(first) << " + "  <<  genome_match::mcolor_to_name(second) << "} & " 
       // multiedges
@@ -131,7 +129,7 @@ std::vector<std::string> Statistics<graph_t>::get_no_compl_stat() const {
     std::ostringstream os;
   
     os << "{";		    
-    if (colors.is_T_consistent_color(im->first)) { 
+    if (graph.is_T_consistent_color(im->first)) { 
       os << "\\bf ";
     } 
     
@@ -161,7 +159,7 @@ void Statistics<graph_t>::count_compl_multiedges() {
   std::unordered_set<std::string> processed;
 
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-    Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it, colors); //current is list with adjacent multiedges
+    Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it); //current is list with adjacent multiedges
 
     ++multidegree_count[current.size()]; //current.size - is degree vertex *it
 
@@ -198,7 +196,7 @@ void Statistics<graph_t>::count_compl_multiedges() {
 
   // count lonely vertices (short paths) 
   for(auto it = processed.cbegin(); it != processed.cend(); ++it) {
-    Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it, colors);
+    Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it);
     if (processed.find(current.cbegin()->first) == processed.end() && processed.find(current.crbegin()->first) == processed.end()) {
       ++simple_vertices_alone_count[std::min(current.cbegin()->second, current.crbegin()->second)]; //no good neighbors
     }
@@ -208,7 +206,7 @@ void Statistics<graph_t>::count_compl_multiedges() {
 template<class graph_t>
 void Statistics<graph_t>::count_not_compl_multiedges() { 
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-    Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it, colors);  
+    Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it);  
     for (auto jt = current.cbegin(); jt != current.cend(); ++jt) {
       if (jt->second.is_good_multiedge()) {
 	continue; 
@@ -228,7 +226,7 @@ std::map<std::pair<Mcolor, Mcolor>, size_t> Statistics<graph_t>::get_Hsubgraph()
   std::unordered_set<vertex_t> processed;
 	
   for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
-    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*is, colors);
+    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*is);
 
     if (Mx.is_fair_vertice()) { 
       for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
@@ -236,7 +234,7 @@ std::map<std::pair<Mcolor, Mcolor>, size_t> Statistics<graph_t>::get_Hsubgraph()
 	  continue; 
 	} 
 
-	Mularcs<Mcolor> My = graph.get_adjacent_multiedges(im->first, colors);
+	Mularcs<Mcolor> My = graph.get_adjacent_multiedges(im->first);
 			
 	if (My.is_fair_vertice()) {
 	  Mularcs<Mcolor> Mx0 = Mx;
@@ -247,8 +245,8 @@ std::map<std::pair<Mcolor, Mcolor>, size_t> Statistics<graph_t>::get_Hsubgraph()
 	  //Mcolor Q1 = Mx0.begin()->second;
 	  //Mcolor Q2 = Mx0.rbegin()->second;
 	  if ((Mx0.cbegin()->second == My.cbegin()->second) || (Mx0.crbegin()->second == My.cbegin()->second)) {
-	    Mcolor QQ1 = colors.get_min_complement_color(Mx0.cbegin()->second);
-	    Mcolor QQ2 = colors.get_min_complement_color(Mx0.crbegin()->second);	    
+	    Mcolor QQ1 = graph.get_min_complement_color(Mx0.cbegin()->second);
+	    Mcolor QQ2 = graph.get_min_complement_color(Mx0.crbegin()->second);	    
 	    ++Hcount[std::make_pair(QQ1, QQ2)];
 	    ++Hcount[std::make_pair(QQ2, QQ1)];
 	    //Hmid[std::make_pair(QQ2, QQ1)] = MBG.is_T_consistent_color(im->second);
@@ -271,8 +269,8 @@ void Statistics<graph_t>::count_cycles() {
       continue; 
     } 
 
-    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*is, colors); 
-    if (!(Mx.is_simple_vertice() && colors.get_complement_color(Mx.cbegin()->second) == Mx.crbegin()->second)) { 
+    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*is); 
+    if (!(Mx.is_simple_vertice() && graph.get_complement_color(Mx.cbegin()->second) == Mx.crbegin()->second)) { 
       continue;
     } 
 
@@ -282,7 +280,7 @@ void Statistics<graph_t>::count_cycles() {
 
     do {
       processed.insert(current);
-      Mularcs<Mcolor> My = graph.get_adjacent_multiedges(current, colors);
+      Mularcs<Mcolor> My = graph.get_adjacent_multiedges(current);
       if (!My.is_simple_vertice()) {
 	break;
       }
@@ -326,7 +324,7 @@ void Statistics<graph_t>::count_chromosomes() {
     for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {		    
       if (processed.find(*is) == processed.end()) { 				  
 	processed.insert(*is);
-	std::string y = graph.get_adj_vertex(*is);
+	std::string y = graph.get_obverse_vertex(*is);
 
 	while (true) {
 	  if (member(processed, y)) {
@@ -335,35 +333,35 @@ void Statistics<graph_t>::count_chromosomes() {
 	  }
 	  
 	  processed.insert(y);
-	  if (!graph.is_there_edge(i, y)) {
+	  if (!graph.is_exist_edge(i, y)) {
 	    ++liniar_chr[i];
 	    break;
 	  }
 	  
-	  y = graph.get_adj_vertex(i, y);
+	  y = graph.get_adjecent_vertex(i, y);
 	  if (member(processed, y)) {
 	    ++circular_chr[i];
 	    break;
 	  }
 	  processed.insert(y);
-	  y = graph.get_adj_vertex(y);
+	  y = graph.get_obverse_vertex(y);
 	}
 		
-	if (graph.is_there_edge(i, *is)) {
-	  std::string y = graph.get_adj_vertex(i, *is);
+	if (graph.is_exist_edge(i, *is)) {
+	  std::string y = graph.get_adjecent_vertex(i, *is);
 					
 	  while (processed.find(y) == processed.end()) {
 	    processed.insert(y);
-	    y = graph.get_adj_vertex(y);
+	    y = graph.get_obverse_vertex(y);
 	    if (member(processed, y)) { 
 	      break;
 	    } 
 
 	    processed.insert(y);
-	    if (!graph.is_there_edge(i, y))  { 
+	    if (!graph.is_exist_edge(i, y))  { 
 	      break;
 	    } 
-	    y = graph.get_adj_vertex(i, y);
+	    y = graph.get_adjecent_vertex(i, y);
 	  }
 	}		    
       }	

@@ -12,7 +12,7 @@ bool simplified = false;
    outlog << "Stage 222: splitting into connected components" << std::endl;
 
    // go over all T-consistent multicolors
-   for(auto ic = colors.cbegin_T_color(); ic != colors.cend_T_color(); ++ic) {
+   for(auto ic = graph.cbegin_T_color(); ic != graph.cend_T_color(); ++ic) {
      if (ic->size() == 0 || ic->size() == graph.size_graph()) { //FIXME. size() == 0
        continue; // except empty and complete multicolor
      } 		
@@ -26,7 +26,7 @@ bool simplified = false;
        std::map<vertex_t, vertex_t> QQ; // multiedges of colors !Q (!*ic)
 		    
        for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {    
-	 Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*is, colors);
+	 Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*is);
 
 	 if (M.size() == 1) { 
 	   continue; // ignore complete multiedges
@@ -90,7 +90,7 @@ bool simplified = false;
 	       }
 	     } 
 	     // if e is enriched to T-consistent color, great!
-	     if( T.size()>Q.size() && colors.is_T_consistent_color(T) ) {
+	     if( T.size()>Q.size() && graph.is_T_consistent_color(T) ) {
 	       outlog << "perfect edge is found" << endl;
 	       q = t;
 	       found = true;
@@ -219,7 +219,7 @@ bool Algorithm<graph_t>::stage3_2() {
 
    for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
      const string& x = *is;
-     Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x, colors);
+     Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
 
      bool next = false;
 
@@ -228,11 +228,11 @@ bool Algorithm<graph_t>::stage3_2() {
        const std::string& y = im->first;
        const Mcolor& Q = im->second;
 
-       if (!colors.is_vec_T_color(Q) || y==Infty) { 
+       if (!graph.is_vec_T_color(Q) || y==Infty) { 
 	 continue;
        }
 
-       Mularcs<Mcolor> My = graph.get_adjacent_multiedges(y, colors);
+       Mularcs<Mcolor> My = graph.get_adjacent_multiedges(y);
        My.erase(x);
 
        for(auto jm = My.cbegin(); jm != My.cend(); ++jm) {
@@ -241,7 +241,7 @@ bool Algorithm<graph_t>::stage3_2() {
 	   continue;
 	 } 
 	
-	 Mularcs<Mcolor> Cz = graph.get_adjacent_multiedges(z, colors);
+	 Mularcs<Mcolor> Cz = graph.get_adjacent_multiedges(z);
 
 	 vertex_t v = "";
 	 for (auto ir = Cz.cbegin(); ir != Cz.cend(); ++ir) {

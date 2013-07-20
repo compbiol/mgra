@@ -9,13 +9,13 @@ bool Algorithm<graph_t>::stage1() {
   do {
     num_rear = 0; 
     for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
-      Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*is, colors);
+      Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*is);
 
       if (!current.is_simple_vertice()) { 
 	continue; 
       } 
 
-      if (!colors.is_good_color(current.cbegin()->second, current.crbegin()->second)) { 	
+      if (!graph.is_good_color(current.cbegin()->second, current.crbegin()->second)) { 	
 	continue;
       } 
 
@@ -51,7 +51,7 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
   while (true) {
     //FIXME: is_duplication_vertice work is a long while. And uses iff prevent duplication vertex. x -> ... -> y -> z -> t , 
     //if z - end path and edge colors z->t, y->z  complimentary, but t - is duplication vertex and 2-break down all colors.       
-    if (current != Infty && (graph.get_adjacent_multiedges(current, colors).is_duplication_vertice() || graph.get_adjacent_multiedges(current, colors).is_indel_vertex())) { 
+    if (current != Infty && (graph.get_adjacent_multiedges(current).is_duplication_vertice() /*|| graph.get_adjacent_multiedges(current, colors).is_indel_vertex()*/)) { 
 	break;
     } 
 
@@ -67,11 +67,11 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
  
     processed.insert(current);
 
-    Mularcs<Mcolor> new_edges = graph.get_adjacent_multiedges(current, colors);
+    Mularcs<Mcolor> new_edges = graph.get_adjacent_multiedges(current);
     Mcolor previous_color = new_edges.find(previous)->second;
     new_edges.erase(previous);
 
-    if (!(new_edges.size() == 1) || !(colors.is_good_color(new_edges.cbegin()->second, previous_color))) { 
+    if (!(new_edges.size() == 1) || !(graph.is_good_color(new_edges.cbegin()->second, previous_color))) { 
       break;
     } 
 	
@@ -96,7 +96,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 
     if (path.size() % 2 && (*path.begin() != *path.rbegin())) {
       outlog << "... ";
-      if (!colors.is_vec_T_color(graph.get_adjacent_multiedges(*(++path.begin()), colors).get_multicolor(*path.begin())) ) { //FIXME
+      if (!graph.is_vec_T_color(graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin())) ) { //FIXME
 	path.erase(path.begin());
 	outlog << "left";
       } else {
@@ -118,12 +118,12 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  outlog << "ERROR: Semi-cycle w/o infinity!" << std::endl;
 	  exit(1);
 	}
-	if (colors.is_vec_T_color(graph.get_adjacent_multiedges(*(++path.begin()), colors).get_multicolor(*path.begin()))) { //FIXME
+	if (graph.is_vec_T_color(graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin()))) { //FIXME
 	  outlog << "... semi-cycle, fusion applied" << std::endl;
 	  const std::string& x0 = *(++path.begin());
 	  const std::string& y0 = *(++path.rbegin());
     
-	  TwoBreak<graph_t, Mcolor> t(Infty, x0, Infty, y0, graph.get_adjacent_multiedges(x0, colors).get_multicolor(Infty)); //FIXME
+	  TwoBreak<graph_t, Mcolor> t(Infty, x0, Infty, y0, graph.get_adjacent_multiedges(x0).get_multicolor(Infty)); //FIXME
 	  if(t.apply(graph, true)) {
 	    path.erase(--path.end());
 	    *path.begin() = y0;
@@ -134,7 +134,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  const std::string y0 = *(++path.rbegin());
 	  const std::string y1 = *(++++path.rbegin());
 
-	  if (TwoBreak<graph_t, Mcolor>(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0, colors).get_multicolor(y1)).apply(graph, true)) { //FIXME
+	  if (TwoBreak<graph_t, Mcolor>(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0).get_multicolor(y1)).apply(graph, true)) { //FIXME
 	    ++nr;
 	    path.erase(--path.end());
 	    *path.rbegin() = Infty;
@@ -152,9 +152,9 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
       // multicolor of (z1,z2). N.B.: x2 is NOT oo
       outlog << "... multicolors of first and second multiedges: ";
     
-      Q = graph.get_adjacent_multiedges(*(++path.begin()), colors).get_multicolor(*path.begin());
+      Q = graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
     
-      if (colors.is_vec_T_color(Q)) { 
+      if (graph.is_vec_T_color(Q)) { 
 	break;
       } 
 
@@ -183,7 +183,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
       }
     }
 
-    Mcolor Qrep = colors.get_min_complement_color(Q);
+    Mcolor Qrep = graph.get_min_complement_color(Q);
 
     // x1 -- x2 -- x3 -- ... -- x2k
     // results in:

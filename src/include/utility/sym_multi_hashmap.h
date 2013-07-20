@@ -25,7 +25,9 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
 
   void insert(const item_class& x, const item_class& y) {
     multi_hashmap::insert(std::make_pair(x, y));
-    multi_hashmap::insert(std::make_pair(y, x));
+    if (x != y) { 
+      multi_hashmap::insert(std::make_pair(y, x));
+    } 
     ++card;
   }
 

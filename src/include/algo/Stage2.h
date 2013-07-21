@@ -139,10 +139,11 @@ bool Algorithm<graph_t>::stage2() {
 	    //if( !MBG.is_T_consistent_color(C) ) continue; // do not create T-consistent color
 	    */
 
-	  if(TwoBreak<graph_t, Mcolor>(x, ix->first, y, temp, QQ).apply(graph, true)) {
+	  //if(TwoBreak<graph_t, Mcolor>(x, ix->first, y, temp, QQ).apply(graph, true)) {
+	    graph.apply_two_break(TwoBreak<Mcolor>(x, ix->first, y, temp, QQ), true);
 	    found = true;
 	    ++nf;
-	  }
+	  //}
 	}
 
 	if (found) { break; } 

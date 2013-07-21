@@ -34,8 +34,10 @@ typedef sym_multi_hashmap<vertex_t> partgraph_t;
 const vertex_t Infty = "oo"; 
 
 struct MBGraph {
-  MBGraph(const std::vector<Genome>& genomes) { 
-    local_graph.resize(genomes.size());
+  MBGraph(const std::vector<Genome>& genomes) 
+  : local_graph(genomes.size()) 
+  , connect_to_infty(genomes.size()) 
+  { 
     std::unordered_set<orf_t> blocks; 
 
     for(size_t i = 0; i < genomes.size(); ++i) { 
@@ -78,9 +80,10 @@ struct MBGraph {
     return obverse_edges.find(v)->second;
   } 
  
-  inline vertex_t get_adjecent_vertex(size_t index, const vertex_t& first) const {  //FIXME EQUAL RANGE
+  //FIXME IF WE RECONSTRUCT ANCESTORS WITH DUPLICATION EQUAL RANGE
+  inline vertex_t get_adjecent_vertex(size_t index, const vertex_t& first) const {  
     assert(index < local_graph.size());
-    assert(local_graph[index].find(first) != local_graph[index].cend());		
+    assert(local_graph[index].find(first) != local_graph[index].cend());
     return local_graph[index].find(first)->second;
   } 	 
 	
@@ -117,14 +120,19 @@ private:
     for(auto iter = genome.cbegin(); iter != genome.cend(); ++iter) {
       if (blocks.find(iter->second.first) != blocks.end()) { 
 	if (iter->first.first == prev_chr) {
-	  if (iter->second.second > 0) {
+          if (iter->second.second > 0) {
 	    local_graph[index].insert(current_vertex, iter->second.first + "t");
 	  } else {
 	    local_graph[index].insert(current_vertex, iter->second.first + "h");
 	  }
-	} else { // new chromosome detected				
-	  if (!first_vertex.empty() && genome.isCircular(prev_chr)) {
-	    local_graph[index].insert(first_vertex, current_vertex);
+	} else { // new chromosome detected				 
+	  if (!first_vertex.empty()) { 
+	    if (genome.isCircular(prev_chr)) {
+		local_graph[index].insert(first_vertex, current_vertex);
+	    } else { 
+		connect_to_infty[index].insert(first_vertex); 
+		connect_to_infty[index].insert(current_vertex);	    
+	    } 
 	  }
 
 	  if (iter->second.second > 0) { 
@@ -132,6 +140,7 @@ private:
 	  } else { 
 	    first_vertex = iter->second.first + "h";
 	  } 
+
 	  prev_chr = iter->first.first;
 	} 
 		
@@ -143,15 +152,20 @@ private:
       } 
     }
 
-    if (!first_vertex.empty() && genome.isCircular(prev_chr)) {
-      local_graph[index].insert(first_vertex, current_vertex);
-    }
-  } 
-
+    if (!first_vertex.empty()) { 
+      if (genome.isCircular(prev_chr)) {
+        local_graph[index].insert(first_vertex, current_vertex);
+      } else { 
+	connect_to_infty[index].insert(first_vertex); 
+	connect_to_infty[index].insert(current_vertex);	    	
+      }  
+    } 
+  }
 protected:
   std::set<vertex_t> vertex_set;  // set of vertices //hash set? 
   partgraph_t obverse_edges; //OBverse relation 
   std::vector<partgraph_t> local_graph; // local graphs of each color 
+  std::vector<std::unordered_set<vertex_t> > connect_to_infty; // vertex set which conected to Infty.
 };	
 
 #endif

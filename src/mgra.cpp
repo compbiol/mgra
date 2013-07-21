@@ -262,7 +262,7 @@ void get_obverse_paths(const mbgraph_with_history<Mcolor>& graph, map< vertex_t,
  * We replace PG with PG' and return the transformation PG -> PG'
  * Transformation may contain only multicolors Q' with Q'\cap Q = 0 or Q.
 */
-transform_t decircularize(const mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
+transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
 
     // decircularizing sub-transform that is removed
     transform_t D;
@@ -308,7 +308,7 @@ transform_t decircularize(const mbgraph_with_history<Mcolor>& graph, partgraph_t
 	    }
 	}
 
-	it->apply_single(T);
+	graph.apply_single_two_break(*it, T);
 
         size_t ccsize = numchr(graph, T).second;
 
@@ -330,8 +330,8 @@ transform_t decircularize(const mbgraph_with_history<Mcolor>& graph, partgraph_t
 
 	    transform_t::iterator kt = jt--; // jt, kt are successive, *kt == t
 
-	    const TwoBreak<mbgraph_with_history<Mcolor>, Mcolor>& t = *kt;
-	    const TwoBreak<mbgraph_with_history<Mcolor>, Mcolor>& s = *jt;
+	    const TwoBreak<Mcolor>& t = *kt;
+	    const TwoBreak<Mcolor>& s = *jt;
 	    //s.normalize();
 
 //            outlog << "... trying to swap with " << s << endl;
@@ -400,11 +400,10 @@ transform_t decircularize(const mbgraph_with_history<Mcolor>& graph, partgraph_t
 
 	    if( usearc ) {
 		if( t.MultiColor != s.MultiColor ) break;
-		*kt = TwoBreak<mbgraph_with_history<Mcolor>, Mcolor>(q2.second,p1.second,q1.first,q1.second,t.MultiColor);
-		*jt = TwoBreak<mbgraph_with_history<Mcolor>, Mcolor>(p1.first,p1.second,q2.first,q2.second,t.MultiColor);
-	    }
-	    else {
-		TwoBreak<mbgraph_with_history<Mcolor>, Mcolor> temp = *kt;
+		*kt = TwoBreak<Mcolor>(q2.second, p1.second, q1.first, q1.second, t.MultiColor);
+		*jt = TwoBreak<Mcolor>(p1.first, p1.second, q2.first, q2.second, t.MultiColor);
+	    } else {
+		TwoBreak<Mcolor> temp = *kt;
 		*kt = *jt;
                 *jt = temp;
 	    }
@@ -414,7 +413,7 @@ transform_t decircularize(const mbgraph_with_history<Mcolor>& graph, partgraph_t
     
                 // N.B. at this point if C is not empty, then C == Q
 		if( !C.empty() ) {
-		    kt->revert_single(T);
+		    graph.apply_single_two_break(kt->inverse(), T);
 
 		    ccsize = numchr(graph, T).second;
 		}
@@ -434,7 +433,7 @@ transform_t decircularize(const mbgraph_with_history<Mcolor>& graph, partgraph_t
 	    outlog << " SUCCEDED" << endl;
 
 	    // move t away from the transformation TG and save it to D
-            TG.begin()->apply_single(PG);
+            graph.apply_single_two_break(*TG.begin(), PG);
 	    D.push_back(*TG.begin());
 
 	    TG.erase(TG.begin());
@@ -452,7 +451,7 @@ transform_t decircularize(const mbgraph_with_history<Mcolor>& graph, partgraph_t
 
 	T = PG;
 	for(it = TG.begin();it!=start;++it) {
-	    it->apply_single(T);
+	    graph.apply_single_two_break(*it, T);
 	}
     }
     //if( start == TG.end() ) {
@@ -663,7 +662,7 @@ bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph, const transform_t& tr) 
 		nchr_old = numchr(graph, RG[i]).first;
 	    }
 
-	    it->revert_single(RG[i]);
+	    graph.apply_single_two_break(it->inverse(), RG[i]);
 
 	    if (Q == *im) {
 		outlog << " " << genome_match::mcolor_to_name(*im);

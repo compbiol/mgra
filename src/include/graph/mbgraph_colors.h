@@ -230,12 +230,18 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
 	  output.insert(it->second, mcolor_t(i));	
 	} 
       }
-    } else { 
+    } else if (connect_to_infty[i].count(u) != 0) { 
       if (output.find(Infty) != output.cend()) { 
 	output.find(Infty)->second.insert(i);
       } else { 
 	output.insert(Infty, mcolor_t(i));
       } 
+    } else { 
+	if (output.find(Infty) != output.cend()) { 
+	  output.find(Infty)->second.insert(i);
+        } else { 
+	  output.insert(Infty, mcolor_t(i));
+        }
     } 
   }
   

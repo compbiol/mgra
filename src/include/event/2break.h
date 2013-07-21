@@ -22,7 +22,7 @@
 #include <string>
 #include <utility>
 
-template<class graph_t, class mcolor_t>
+template<class mcolor_t>
 struct TwoBreak {
   typedef std::pair<vertex_t, vertex_t> arc_t;
 
@@ -41,23 +41,23 @@ struct TwoBreak {
     OldArc[1] = arc_t(x2, y2); 
   }
     
-  inline void revert(graph_t& M) const {
+  /*inline void revert(graph_t& M) const {
     TwoBreak(OldArc[0].first, OldArc[1].first, OldArc[0].second, OldArc[1].second, MultiColor).apply(M);
-  }
+  }*/
 
-  inline void revert_single(partgraph_t& SG) const { 
+  /*inline void revert_single(partgraph_t& SG) const { 
     TwoBreak(OldArc[0].first, OldArc[1].first, OldArc[0].second, OldArc[1].second, MultiColor).apply_single(SG);
-  }
+  }*/
 
   inline TwoBreak inverse() const {
     return TwoBreak(OldArc[0].first, OldArc[1].first, OldArc[0].second, OldArc[1].second, MultiColor);
   }
 
-  bool is_linear(graph_t& M) const; 
+  //bool is_linear(graph_t& M) const; 
 
-  bool apply(graph_t& M, bool record = false) const;
+  //bool apply(graph_t& M, bool record = false) const;
 
-  void apply_single(partgraph_t& SG) const;
+  //void apply_single(partgraph_t& SG) const;
 
   void normalize();
 
@@ -72,7 +72,7 @@ struct TwoBreak {
 };
 
 // check if a 2-break creates a circular chromosome
-template<class graph_t, class mcolor_t>
+/*template<class graph_t, class mcolor_t>
 bool TwoBreak<graph_t, mcolor_t>::is_linear(graph_t& M) const {
   apply(M);
 
@@ -127,9 +127,9 @@ bool TwoBreak<graph_t, mcolor_t>::is_linear(graph_t& M) const {
 
   revert(M);
   return true;
-}
+}*/
 
-template<class graph_t, class mcolor_t>
+/*template<class graph_t, class mcolor_t>
 bool TwoBreak<graph_t, mcolor_t>::apply(graph_t& M, bool record) const  {
   if (record) {
     M.insert_twobreak(*this);
@@ -151,9 +151,9 @@ bool TwoBreak<graph_t, mcolor_t>::apply(graph_t& M, bool record) const  {
     }
   }
   return true;
-}
+}*/
 
-template<class graph_t, class mcolor_t>
+/*template<class graph_t, class mcolor_t>
 void TwoBreak<graph_t, mcolor_t>::apply_single(partgraph_t& SG) const {
   for(size_t i = 0; i < 2; ++i) {
     if (OldArc[i].first != Infty && OldArc[i].second != Infty) {
@@ -168,10 +168,10 @@ void TwoBreak<graph_t, mcolor_t>::apply_single(partgraph_t& SG) const {
   if (OldArc[0].second != Infty && OldArc[1].second != Infty) {
     SG.insert(OldArc[0].second, OldArc[1].second);
   }
-}
+}*/
 
-template<class graph_t, class mcolor_t>
-void TwoBreak<graph_t, mcolor_t>::normalize() {
+template<class mcolor_t>
+void TwoBreak<mcolor_t>::normalize() {
   while (true) {
     if (OldArc[0].first > OldArc[0].second) {
       OldArc[0] = arc_t(OldArc[0].second, OldArc[0].first);

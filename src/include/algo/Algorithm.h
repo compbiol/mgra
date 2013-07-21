@@ -99,8 +99,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
       
       if (!isChanged) { 
          isChanged = stage3_2(); // process 4-cycles
-      } 
-      
+      }       
       if (canformQoo && !isChanged) {
 	isChanged = true;
 	canformQoo = false; // more flexible
@@ -131,8 +130,8 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 
       auto completion = cfg.get_completion();
       for(auto il = completion.begin(); il != completion.end(); ++il) {
-	TwoBreak<graph_t, Mcolor> t((*il)[0], (*il)[1], (*il)[2], (*il)[3], genome_match::name_to_mcolor((*il)[4]));
-	t.apply(graph, true);
+	TwoBreak<Mcolor> t((*il)[0], (*il)[1], (*il)[2], (*il)[3], genome_match::name_to_mcolor((*il)[4]));
+	graph.apply_two_break(t, true);
       }
 
       Statistics<graph_t> st(graph); 

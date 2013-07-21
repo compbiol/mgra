@@ -15,7 +15,8 @@ bool simplified = false;
    for(auto ic = graph.cbegin_T_color(); ic != graph.cend_T_color(); ++ic) {
      if (ic->size() == 0 || ic->size() == graph.size_graph()) { //FIXME. size() == 0
        continue; // except empty and complete multicolor
-     } 		
+     }
+ 		
      const Mcolor& Q = *ic;
 
      bool repeat = true;
@@ -85,12 +86,12 @@ bool simplified = false;
 
 	     Mcolor T = Q;
 	     for(size_t i = 0; i < graph.size_graph(); ++i) {
-	       if( graph.get_local_graph(i).defined(p.first) && graph.get_local_graph(i)[p.first]==t.first ) {
+	       if (graph.is_exist_edge(i, p.first) && graph.get_adjecent_vertex(i, p.first) == t.first) {
 		 T.insert(i);
 	       }
 	     } 
 	     // if e is enriched to T-consistent color, great!
-	     if( T.size()>Q.size() && graph.is_T_consistent_color(T) ) {
+	     if (T.size() > Q.size() && graph.is_T_consistent_color(T) ) {
 	       outlog << "perfect edge is found" << endl;
 	       q = t;
 	       found = true;
@@ -100,7 +101,7 @@ bool simplified = false;
 	   }
 
 	   // we did not find good edge, but there are some candidates - take any
-	   if( !found && EI[ ie->first ].size() == 1 ) {
+	   if( !found && EI[ie->first].size() == 1 ) {
 	     outlog << "somewhat good but unique edge is found" << endl;
 	     q = *(EI[ ie->first ].begin());
 	     EI.erase( ie->first );
@@ -131,7 +132,8 @@ bool simplified = false;
 	   if( !found ) continue;
     
     
-	   if( ! TwoBreak<graph_t, Mcolor>(p, q, Q).apply(graph, true) ) continue;
+	   //if( ! TwoBreak<graph_t, Mcolor>(p, q, Q).apply(graph, true) ) continue;
+	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q), true);
 	   ++nr;
 			    
 	   outlog << "Stage 222.1: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
@@ -172,8 +174,9 @@ bool simplified = false;
 
 	   if( member(processed,CC[p.second]) || member(processed,CC[q.second]) || CC[p.second]!=CC[q.second] ) continue;
 
-	   if( ! TwoBreak<graph_t, Mcolor>(p,q,Q).apply(graph,true) ) continue;
-	   nr++;
+	   //if( ! TwoBreak<graph_t, Mcolor>(p,q,Q).apply(graph,true) ) continue;
+	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q), true);
+	   ++nr;
 
 	   outlog << "Stage 222.2: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << endl;
 
@@ -257,7 +260,9 @@ bool Algorithm<graph_t>::stage3_2() {
 
 	   outlog << "Stage 2222: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
 
-	   if (TwoBreak<graph_t, Mcolor>(p, q, Q).apply(graph, true)) nr++;
+	   //if (TwoBreak<graph_t, Mcolor>(p, q, Q).apply(graph, true)) nr++;
+	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q), true);
+	   ++nr;
 
 	   next = true;
 

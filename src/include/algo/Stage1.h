@@ -123,22 +123,25 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  const std::string& x0 = *(++path.begin());
 	  const std::string& y0 = *(++path.rbegin());
     
-	  TwoBreak<graph_t, Mcolor> t(Infty, x0, Infty, y0, graph.get_adjacent_multiedges(x0).get_multicolor(Infty)); //FIXME
-	  if(t.apply(graph, true)) {
+	  TwoBreak<Mcolor> t(Infty, x0, Infty, y0, graph.get_adjacent_multiedges(x0).get_multicolor(Infty)); //FIXME
+
+	graph.apply_two_break(t, true);
+	  //if (graph.apply_two_break(t, true)) {
 	    path.erase(--path.end());
 	    *path.begin() = y0;
 	    ++nr;
-	  }
+	  //}
 	} else {
 	  outlog << "... semi-cycle, fission applied" << endl;
 	  const std::string y0 = *(++path.rbegin());
 	  const std::string y1 = *(++++path.rbegin());
 
-	  if (TwoBreak<graph_t, Mcolor>(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0).get_multicolor(y1)).apply(graph, true)) { //FIXME
+	  //if (TwoBreak<graph_t, Mcolor>(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0).get_multicolor(y1)).apply(graph, true)) { //FIXME
+graph.apply_two_break(TwoBreak<Mcolor>(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0).get_multicolor(y1)), true );
 	    ++nr;
 	    path.erase(--path.end());
 	    *path.rbegin() = Infty;
-	  }
+//	  }
 	}
 	if (path.size() < 4) return nr;
       } else { 
@@ -195,11 +198,12 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     path_t::const_iterator z2 = z3++;
 
     while(z3 != path.end()) {
-      if( TwoBreak<graph_t, Mcolor>(*z0, *z1, *z3, *z2, Q).apply(graph, true) ) {
+      //if (graph.apply_two_break(TwoBreak<Mcolor>(*z0, *z1, *z3, *z2, Q), true)) {
+	graph.apply_two_break(TwoBreak<Mcolor>(*z0, *z1, *z3, *z2, Q), true);
 	++nr;
-      } else {
+      /*} else {
 	z0 = z2;
-      }
+      }*/
       z1 = z3++;
       if (z3 == path.end()) { 
 	break;

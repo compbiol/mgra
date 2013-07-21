@@ -50,7 +50,7 @@ USE2.clear();
 		while(processed.find(y)==processed.end()) {
 		    processed.insert(y); //CurrG.insert(y);
 		    len++;
-		    if(GE.defined(y)) y = GE[y];
+		    if (GE.defined(y)) y = GE[y];
 		    else {
 			bg++;
 			// cout << "bg:" << len << " ";

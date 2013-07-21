@@ -5,7 +5,7 @@
 ** Multiple Genome Rearrangements and Ancestors (MGRA) 
 ** reconstruction software. 
 ** 
-** Copyright (C) 2008 - 2013 by Max Alekseyev <maxal@cse.sc.edu> and Pavel Avdeyev
+** Copyright (C) 2008 - 2013 by Max Alekseyev <maxal@cse.sc.edu>
 **. 
 ** This program is free software; you can redistribute it and/or 
 ** modify it under the terms of the GNU General Public License 

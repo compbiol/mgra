@@ -295,7 +295,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
     for(auto it = start; it != TG.end();) {
         // check multicolor
 	{
-	    Mcolor C(it->MultiColor, Q, Mcolor::Intersection);
+	    Mcolor C(it->get_mcolor(), Q, Mcolor::Intersection);
     
 	    if( C.empty() ) {
 		++it;
@@ -340,7 +340,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 
 	    bool usearc = false;
 
-	    Mcolor C(t.MultiColor, s.MultiColor, Mcolor::Intersection);
+	    Mcolor C(t.get_mcolor(), s.get_mcolor(), Mcolor::Intersection);
 	    if( !C.empty() ) {
 
 
@@ -354,43 +354,39 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 			 (y3,x2) x (y1,y2)
 		*/
     
-		for(int j=0;j<2;++j) {
-    
-		    if( t.OldArc[j] == make_pair(jt->OldArc[0].first,jt->OldArc[1].first) ) {
+		for(int j = 0; j < 2; ++j) {    
+		    if (t.get_arc(j) == std::make_pair(jt->get_arc(0).first, jt->get_arc(1).first)) { 
 			usearc = true;
     
-			p2 = t.OldArc[j];
-			q2 = t.OldArc[1-j];
+			p2 = t.get_arc(j);
+			q2 = t.get_arc(1 - j);
     
-			p1 = jt->OldArc[0];
-			q1 = jt->OldArc[1];
-		    }
-		    else if( t.OldArc[j] == make_pair(jt->OldArc[1].first,jt->OldArc[0].first) ) {
+			p1 = jt->get_arc(0);
+			q1 = jt->get_arc(1);
+		    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(1).first, jt->get_arc(0).first)) {
 			usearc = true;
     
-			p2 = t.OldArc[j];
-			q2 = t.OldArc[1-j];
+			p2 = t.get_arc(j);
+			q2 = t.get_arc(1 - j);
     
-			p1 = jt->OldArc[1];
-			q1 = jt->OldArc[0];
-		    }
-		    else if( t.OldArc[j] == make_pair(jt->OldArc[0].second,jt->OldArc[1].second) ) {
+			p1 = jt->get_arc(1);
+			q1 = jt->get_arc(0);
+		    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(0).second, jt->get_arc(1).second)) {
 			usearc = true;
     
-			p2 = t.OldArc[j];
-			q2 = t.OldArc[1-j];
+			p2 = t.get_arc(j);
+			q2 = t.get_arc(1 - j);
     
-			p1 = make_pair(jt->OldArc[0].second, jt->OldArc[0].first);
-			q1 = make_pair(jt->OldArc[1].second, jt->OldArc[1].first);
-		    }
-		    else if( t.OldArc[j] == make_pair(jt->OldArc[1].second,jt->OldArc[0].second) ) {
+			p1 = make_pair(jt->get_arc(0).second, jt->get_arc(0).first);
+			q1 = make_pair(jt->get_arc(1).second, jt->get_arc(1).first);
+		    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(1).second, jt->get_arc(0).second)) {
 			usearc = true;
     
-			p2 = t.OldArc[j];
-			q2 = t.OldArc[1-j];
+			p2 = t.get_arc(j);
+			q2 = t.get_arc(1 - j);
     
-			p1 = make_pair(jt->OldArc[1].second, jt->OldArc[1].first);
-			q1 = make_pair(jt->OldArc[0].second, jt->OldArc[0].first);
+			p1 = make_pair(jt->get_arc(1).second, jt->get_arc(1).first);
+			q1 = make_pair(jt->get_arc(0).second, jt->get_arc(0).first);
 		    }
 		    if(usearc) break;
 		}
@@ -398,10 +394,10 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 
 	    // TwoBreak t0 = t;
 
-	    if( usearc ) {
-		if( t.MultiColor != s.MultiColor ) break;
-		*kt = TwoBreak<Mcolor>(q2.second, p1.second, q1.first, q1.second, t.MultiColor);
-		*jt = TwoBreak<Mcolor>(p1.first, p1.second, q2.first, q2.second, t.MultiColor);
+	    if (usearc) {
+		if (t.get_mcolor() != s.get_mcolor()) break;
+		*kt = TwoBreak<Mcolor>(q2.second, p1.second, q1.first, q1.second, t.get_mcolor());
+		*jt = TwoBreak<Mcolor>(p1.first, p1.second, q2.first, q2.second, t.get_mcolor());
 	    } else {
 		TwoBreak<Mcolor> temp = *kt;
 		*kt = *jt;
@@ -409,7 +405,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 	    }
 
 	    {
-		Mcolor C(kt->MultiColor, Q, Mcolor::Intersection);
+		Mcolor C(kt->get_mcolor(), Q, Mcolor::Intersection);
     
                 // N.B. at this point if C is not empty, then C == Q
 		if( !C.empty() ) {
@@ -592,7 +588,9 @@ int main(int argc, char* argv[]) {
         
 	    std::ofstream tr((genome_match::mcolor_to_name(*im) + ".trs").c_str());
 	    for(auto it = RT[i].begin(); it != RT[i].end(); ++it) {
-		tr << it->OldArc[0].first << " " << it->OldArc[0].second << "\t" << it->OldArc[1].first << " " << it->OldArc[1].second << "\t" << genome_match::mcolor_to_name(it->MultiColor) << std::endl;
+		tr << it->get_arc(0).first << " " << it->get_arc(0).second << "\t" 
+		   << it->get_arc(1).first << " " << it->get_arc(1).second << "\t" 
+	  	   << genome_match::mcolor_to_name(it->get_mcolor()) << std::endl;
 	    }
 	    tr.close();
      	    ++i; 
@@ -643,9 +641,9 @@ bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph, const transform_t& tr) 
     } 
 
     for(auto it = tr.rbegin(); it != tr.rend(); ++it) {
-	const Mcolor& Q = it->MultiColor;
+	const Mcolor& Q = it->get_mcolor();
 
-	outlog << "Reverting (" << it->OldArc[0].first << "," << it->OldArc[0].second << ")x(" << it->OldArc[1].first << "," << it->OldArc[1].second << "):{" << genome_match::mcolor_to_name(it->MultiColor) << "} " << " in";
+	outlog << "Reverting (" << it->get_arc(0).first << "," << it->get_arc(0).second << ")x(" << it->get_arc(1).first << "," << it->get_arc(1).second << "):{" << genome_match::mcolor_to_name(it->get_mcolor()) << "} " << " in";
 
 	size_t i = 0;
 	for(auto im = graph.cbegin_T_color(); im != graph.cend_T_color(); ++im) {
@@ -673,10 +671,10 @@ bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph, const transform_t& tr) 
 		bool samechr = true;
 
 		set< string > Vert;
-		if (it->OldArc[0].first != Infty) Vert.insert(it->OldArc[0].first);
-		if (it->OldArc[0].second != Infty) Vert.insert(it->OldArc[0].second);
-		if (it->OldArc[1].first != Infty) Vert.insert(it->OldArc[1].first);
-		if (it->OldArc[1].second != Infty) Vert.insert(it->OldArc[1].second);
+		if (it->get_arc(0).first != Infty) Vert.insert(it->get_arc(0).first);
+		if (it->get_arc(0).second != Infty) Vert.insert(it->get_arc(0).second);
+		if (it->get_arc(1).first != Infty) Vert.insert(it->get_arc(1).first);
+		if (it->get_arc(1).second != Infty) Vert.insert(it->get_arc(1).second);
     
 		getchr(graph, RG[i],*Vert.begin());
     

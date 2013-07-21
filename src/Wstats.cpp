@@ -60,7 +60,7 @@ void writer::Wstats::histStat(const mbgraph_with_history<Mcolor>& graph) { //FIX
  	std::map<Mcolor, size_t> n2br;
 
 	for(auto il = graph.begin_history(); il != graph.end_history(); ++il) {
-		++n2br[il->MultiColor];
+		++n2br[il->get_mcolor()];
 	}
 
 	for(auto im = n2br.begin(); im != n2br.end(); ++im) {

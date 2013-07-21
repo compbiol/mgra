@@ -26,6 +26,7 @@ include_directories(${CMAKE_BINARY_DIR}
 			${PROJECT_SOURCE_DIR}/include/algo 
 			${PROJECT_SOURCE_DIR}/include/graph
 			${PROJECT_SOURCE_DIR}/include/structures
+			${PROJECT_SOURCE_DIR}/include/event
 		   ) 
 
 if (CMAKE_COMPILER_IS_GNUCXX)	

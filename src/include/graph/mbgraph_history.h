@@ -116,6 +116,21 @@ void mbgraph_with_history<mcolor_t>::apply_single_two_break(const TwoBreak<mcolo
   }
 } 
 
+template<class mcolor_t>
+void mbgraph_with_history<mcolor_t>::apply_ins_del(const InsDel<mcolor_t>& insdel, bool record) {
+  if (record) {
+    insdel_history.push_back(insdel);
+  }
+ 
+  for (auto ic = insdel.cbegin_mcolor(); ic != insdel.cend_mcolor(); ++ic) {
+	if (insdel.is_deletion_oper()) {
+		erase_edge(ic->first, insdel.get_edge().first, insdel.get_edge().second);
+	} else {
+		add_edge(ic->first, insdel.get_edge().first, insdel.get_edge().second);
+	} 
+  }
+} 
+
 // check if a 2-break creates a circular chromosome
 /*template<class graph_t, class mcolor_t>
 bool TwoBreak<graph_t, mcolor_t>::is_linear(graph_t& M) const {

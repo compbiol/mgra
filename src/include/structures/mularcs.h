@@ -24,46 +24,18 @@ struct Mularcs {
     mularcs.erase(v);
   } 
  
-  inline bool is_simple_vertice() const {
-    if (mularcs.size() == 2 && mularcs.cbegin()->second.is_good_multiedge() && mularcs.crbegin()->second.is_good_multiedge()) { 
-      return true; 
-    } 
-    return false; 
-  }  
-
-  inline bool is_indel_vertex() const {
+  inline mcolor_t union_multicolors() const {
     mcolor_t un; 
-    for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) { 
-      un = mcolor_t(un, it->second, mcolor_t::Union);
+    for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
+      un = mcolor_t(un, it->second, mcolor_t::Union);  
     }
-
-    if (un != genome_match::get_complite_color()) { 
-      return true;
-    } 
-    return false; 
+    return un;
   }
-  
-  inline bool is_duplication_vertice() const {	
-    for(auto im = mularcs.cbegin(); im != mularcs.cend(); ++im) { 
-      for(auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
-	if (*im == *it) { 
-	  continue;
-	} 
-
-	mcolor_t color(im->second, it->second, mcolor_t::Intersection);
-	if (!color.empty()) { 
-	  return true; 
-	} 
-      } 
-    }  
-
-    return false; 
-  } 
-
-  inline bool is_fair_vertice() const {
+ 
+  inline bool is_fair_vertice() const { //FIXME: DELETE
     if (mularcs.size() == 3) {
       for(auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
-	if (!it->second.is_good_multiedge()) { 
+	if (!it->second.is_one_to_one_match()) { 
 	  return false;
 	}  
       } 

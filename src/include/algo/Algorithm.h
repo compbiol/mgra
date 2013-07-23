@@ -38,6 +38,10 @@ private:
 	bool stage2();
 	bool canformQ(const std::string& x, const Mcolor& Q) const;
 
+	//Stage 3_1: process insertion/deletion events
+	bool newstage3_1();
+	bool newstage3_2();
+
 	//Stage 3: process components, process 4-cycles
 	bool stage3_1(); 
 	bool stage3_2();
@@ -55,7 +59,8 @@ private:
 
 	bool canformQoo;  // safe choice, at later stages may change to false
 	bool split_bad_colors;
-
+	std::set<std::pair<vertex_t, Mcolor> > viewed_edges; // viewed edges for newstage3_1 
+	
 	writer::Wstats write_stats;
 	writer::Wdots write_dots; 
 };
@@ -67,12 +72,15 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
   print_dots.fill(true);
   bool process_compl = true; 
   bool isChanged = true;
+  size_t stage = 2;
 
   while(isChanged) {
     isChanged = false; 
 
     if ((cfg.get_stages() >= 1) && !isChanged) {
-      outlog << "Stage: 1" << std::endl;
+#ifdef VERSION2
+      std::cerr << "Stage: 1" << std::endl;
+#endif
       isChanged = stage1();	
 
       if (print_dots[1] && !isChanged) {
@@ -83,7 +91,9 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
     }
 
     if ((cfg.get_stages() >= 2) && !isChanged) {
-      outlog << "Stage: 2" << std::endl;
+#ifdef VERSION2
+      std::cerr << "Stage: 2" << std::endl;
+#endif
       isChanged = stage2();
 
       if (print_dots[2] && !isChanged) {
@@ -91,6 +101,26 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 	save_information(2, cfg);		    
       }
     }
+
+#ifdef VERSION2
+    if ((cfg.get_stages() >= 3) && !isChanged && print_dots[3]) { // STAGE 3
+      std::cerr << "Stage: 3 (indel stage)" << std::endl;
+
+      if (!viewed_edges.empty() && !isChanged) {
+	 isChanged = newstage3_2();
+      }
+
+      if (!isChanged) { 
+	isChanged = newstage3_1(); // cut the graph into connected components
+      }	
+
+      if (print_dots[3] && !isChanged) {
+	print_dots[3] = false;
+	save_information(stage++, cfg);		    
+      }
+    }
+
+#else
 
     if ((cfg.get_stages() >= 3) && !isChanged) { // STAGE 3, somewhat unreliable
       outlog << "Stage: 3" << std::endl;
@@ -124,7 +154,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
       }
     }
 
-#ifndef VERSION2
+
     if (process_compl && !cfg.get_completion().empty() && !isChanged) {     
       outlog << "Manual Completion Stage" << std::endl;
 
@@ -150,6 +180,9 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
   Statistics<graph_t> st(graph);
   write_stats.print_fair_edges(graph, st);
 #else 
+  if (!viewed_edges.empty()) {
+	std::cerr << "WARNING: viewed_edges have size = " << viewed_edges.size() << std::endl;
+  }
   write_dots.save_components(graph, cfg, 5);
 #endif
 
@@ -170,6 +203,7 @@ void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance& c
 
 #include "Stage1.h" 
 #include "Stage2.h"
+#include "Stage3_1.h"
 #include "Stage3.h"
 #include "Stage99.h"
 

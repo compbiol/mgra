@@ -24,16 +24,6 @@ bool Mcolor::includes(const Mcolor& second) const {
 	return true;
 } 
 
-bool Mcolor::is_good_multiedge() const { 
-	for (auto it = main_color.cbegin(); it != main_color.cend(); ++it) { 
-		if (it->second != 1) { 
-			return false; 
-		} 
-	} 
-		
-	return true; 
-} 
-
 bool Mcolor::is_one_to_one_match() const { 
 	for (auto it = main_color.cbegin(); it != main_color.cend(); ++it) { 
 		if (it->second != 1) { 

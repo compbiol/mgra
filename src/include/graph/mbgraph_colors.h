@@ -246,20 +246,17 @@ bool mbgraph_with_colors<mcolor_t>::is_indel_vertex(const vertex_t& v) const {
     return false; 
   }  
  
-  mcolor_t un; 
-  Mularcs<mcolor_t> mularcs = get_adjacent_multiedges(v);
-  for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
-    if (!it->second.is_one_to_one_match()) { 
-      return false; 
-    }
+  mcolor_t un = get_adjacent_multiedges(v).union_multicolors();
+	
+  if (!un.is_one_to_one_match()) {
+	return false; 
+  }  
 
-    un = mcolor_t(un, it->second, mcolor_t::Union);  
+  if (un == genome_match::get_complite_color()) { 
+    return false;
   }
-
-  if (un != genome_match::get_complite_color()) { 
-    return true;
-  } 
-  return false; 
+ 
+  return true; 
 }
 
 template<class mcolor_t>  

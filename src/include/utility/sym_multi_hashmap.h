@@ -58,12 +58,10 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
       abort();
     }
 
-    //std::cerr << x << " " << y << std::endl;
     const_iterator rem = find(x, y);
     assert(rem != multi_hashmap::end()); 
     multi_hashmap::erase(rem);
 
-    //std::cerr << y << " " << x << std::endl;
     rem = find(y, x);
     assert(rem != multi_hashmap::end()); 
     multi_hashmap::erase(rem);

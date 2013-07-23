@@ -195,19 +195,19 @@ void Statistics<graph_t>::count_compl_multiedges() {
 
     ++multidegree_count[current.size()]; //current.size - is degree vertex *it
 
-    if (current.is_simple_vertice()) {  //we define simple vertices as a regular vertex of multidegree 2. 
+    if (graph.is_simple_vertex(*it)) {  //we define simple vertices as a regular vertex of multidegree 2. 
       processed.insert(*it);
       ++simple_vertices_count[std::min(current.cbegin()->second, current.crbegin()->second)]; //simple vertices because degree 2.
     }
 
     for(auto im = current.cbegin(); im != current.cend(); ++im) {
-      if (!im->second.is_good_multiedge()) {  /*|| !graph.is_T_consistent_color(im->second)) { */
+      if (!im->second.is_one_to_one_match()) {  /*|| !graph.is_T_consistent_color(im->second)) { */
 	continue;
       } 
 
       ++compl_multiedges_count[im->second];   // count two times, because same underected edge (u, v) and (v, u)
 			
-      if (current.is_simple_vertice()) {
+      if (graph.is_simple_vertex(*it)) {
 	++good_multiedges_count[im->second]; //good if one vertices have degree 2
 	
 	if (im->first == Infty) { 
@@ -240,7 +240,7 @@ void Statistics<graph_t>::count_not_compl_multiedges() {
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
     Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it);  
     for (auto jt = current.cbegin(); jt != current.cend(); ++jt) {
-      if (jt->second.is_good_multiedge()) {
+      if (jt->second.is_one_to_one_match()) {
 	continue; 
       } 
 

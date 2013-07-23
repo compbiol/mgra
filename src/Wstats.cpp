@@ -14,9 +14,9 @@ void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_his
 	print_complete_edges(graph);
 	print_connected_components(graph);
 	print_rear_characters(info.get_compl_stat()); 
-#ifndef VERSION2
-	print_estimated_dist(stage, cfg, graph);
-#endif
+//#ifndef VERSION2
+	//print_estimated_dist(stage, cfg, graph);
+//#endif
 	print_fair_edges(graph, info);
 	print_not_compl_characters(info.get_no_compl_stat()); 
 } 
@@ -33,7 +33,9 @@ void writer::Wstats::print_connected_components(const mbgraph_with_history<Mcolo
 
 	for(auto lc = MBG.begin_local_graphs(); lc != MBG.end_local_graphs(); ++lc) { 
 		for(auto il = lc->cbegin(); il != lc->cend(); ++il) {
-			C.addrel(il->first, il->second);
+			if (il->first != Infty && il->second != Infty) { 
+				C.addrel(il->first, il->second);	
+			} 
 		}
 	}
 

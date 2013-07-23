@@ -9,8 +9,7 @@ std::set<orf_t> USE2; //and used at least 2 times
 
 // returns: # trivial cycles, # (true) synteny blocks, d2, d3
 std::vector<size_t> genome_dist(const partgraph_t& BE, const partgraph_t& GE, const partgraph_t& OE, const bool closed) {
-	std::vector<size_t> res(4);
-
+std::vector<size_t> res(4);
 BEC.clear(); 
 GEC.clear();
 BPR.clear();
@@ -23,7 +22,7 @@ USE2.clear();
     Lgg.clear();
     Lbg.clear();
 */
-    map<int,int> L, Lbb, Lgg, Lbg;
+    std::map<int,int> L, Lbb, Lgg, Lbg;
     int  ncyc, bb, gg, bg;
     {   // count chains
         ncyc = bb = gg = bg = 0;

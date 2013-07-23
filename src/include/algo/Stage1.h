@@ -9,16 +9,60 @@ bool Algorithm<graph_t>::stage1() {
   do {
     num_rear = 0; 
     for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
-      Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*is);
-
-      if (!current.is_simple_vertice()) { 
+      if (!graph.is_simple_vertex(*is)) { 
 	continue; 
       } 
 
-      if (!graph.is_good_color(current.cbegin()->second, current.crbegin()->second)) { 	
+      Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*is);
+
+/*      bool flag = true; 
+      for(auto im = current.cbegin(); im != current.cend(); ++im) {	
+	 if (im->first == Infty) {
+		continue; 
+	 } 
+
+
+	 if ( graph.is_indel_vertex(im->first)) {
+	    std::cerr << "Is indel " << im->first << std::endl;
+
+	    if (im->first == "1246t") {
+	      Mularcs<Mcolor> mularcs = graph.get_adjacent_multiedges(im->first);
+
+		for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
+			std::cerr << it->first << " " << genome_match::mcolor_to_name(it->second) << std::endl; 
+		}
+		std::cerr << "grust " << graph.get_obverse_vertex(im->first) << std::endl;
+		mularcs = graph.get_adjacent_multiedges(graph.get_obverse_vertex(im->first));
+
+		for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
+			std::cerr << it->first << " " << genome_match::mcolor_to_name(it->second) << std::endl; 
+		}
+	    }  
+
+	    flag = false;
+	    break;
+	}
+
+	 if (graph.is_duplication_vertex(im->first) || graph.is_indel_vertex(im->first)) {
+	    flag = false;
+	    break; 
+	 } 
+
+	 Mularcs<Mcolor> Cx = graph.get_adjacent_multiedges(im->first);
+	 for(auto ib = Cx.cbegin(); ib != Cx.cend(); ++ib) {	
+	   if (ib->first != Infty && (graph.is_duplication_vertex(ib->first) || graph.is_indel_vertex(ib->first))) {
+	     //std::cerr << ib->first << std::endl;
+	     flag = false;
+	     break; 
+	   } 
+	 }
+	 if (!flag) { break; } 
+      }
+
+      if (!flag) {
 	continue;
       } 
-
+*/
       path_t path({*is});
 
       std::unordered_set<vertex_t> processed({*is, Infty}); // we count oo as already processed
@@ -51,7 +95,7 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
   while (true) {
     //FIXME: is_duplication_vertice work is a long while. And uses iff prevent duplication vertex. x -> ... -> y -> z -> t , 
     //if z - end path and edge colors z->t, y->z  complimentary, but t - is duplication vertex and 2-break down all colors.       
-    if (current != Infty && (graph.get_adjacent_multiedges(current).is_duplication_vertice() /*|| graph.get_adjacent_multiedges(current, colors).is_indel_vertex()*/)) { 
+    if (current != Infty && (graph.is_duplication_vertex(current) || graph.is_indel_vertex(current))) { 
 	break;
     } 
 
@@ -70,9 +114,14 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
     Mularcs<Mcolor> new_edges = graph.get_adjacent_multiedges(current);
     Mcolor previous_color = new_edges.find(previous)->second;
     new_edges.erase(previous);
-
+    
     if (!(new_edges.size() == 1) || !(graph.is_good_color(new_edges.cbegin()->second, previous_color))) { 
       break;
+    } 
+
+    vertex_t future = new_edges.cbegin()->first;
+    if (future != Infty && (graph.is_duplication_vertex(future) || graph.is_indel_vertex(future)) ) {
+	break;
     } 
 	
     previous = current;

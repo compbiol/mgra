@@ -38,7 +38,8 @@ struct Mcolor {
 
 	template<class colors_t>
 	std::set<Mcolor> split_color(const colors_t& colors, bool split_bad_colors) const;
-	
+
+	bool is_one_to_one_match() const;
 	bool is_good_multiedge() const;
 	bool includes(const Mcolor& second) const;
 

@@ -36,7 +36,6 @@ const vertex_t Infty = "oo";
 struct MBGraph {
   MBGraph(const std::vector<Genome>& genomes) 
   : local_graph(genomes.size()) 
-  , connect_to_infty(genomes.size()) 
   { 
     std::unordered_set<orf_t> blocks; 
 
@@ -76,6 +75,9 @@ struct MBGraph {
   } 
 
   inline vertex_t get_obverse_vertex(const vertex_t& v) const {
+    if (v == Infty) {
+	std::cerr << "ololo" << std::endl;
+    } 
     assert(obverse_edges.find(v) != obverse_edges.cend());
     return obverse_edges.find(v)->second;
   } 
@@ -130,8 +132,8 @@ private:
 	    if (genome.isCircular(prev_chr)) {
 		local_graph[index].insert(first_vertex, current_vertex);
 	    } else { 
-		connect_to_infty[index].insert(first_vertex); 
-		connect_to_infty[index].insert(current_vertex);	    
+		local_graph[index].insert(first_vertex, Infty);
+		local_graph[index].insert(current_vertex, Infty);
 	    } 
 	  }
 
@@ -156,8 +158,8 @@ private:
       if (genome.isCircular(prev_chr)) {
         local_graph[index].insert(first_vertex, current_vertex);
       } else { 
-	connect_to_infty[index].insert(first_vertex); 
-	connect_to_infty[index].insert(current_vertex);	    	
+	local_graph[index].insert(first_vertex, Infty);
+	local_graph[index].insert(current_vertex, Infty);
       }  
     } 
   }
@@ -165,7 +167,6 @@ protected:
   std::set<vertex_t> vertex_set;  // set of vertices //hash set? 
   partgraph_t obverse_edges; //OBverse relation 
   std::vector<partgraph_t> local_graph; // local graphs of each color 
-  std::vector<std::unordered_set<vertex_t> > connect_to_infty; // vertex set which conected to Infty.
 };	
 
 #endif

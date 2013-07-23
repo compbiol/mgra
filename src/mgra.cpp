@@ -79,6 +79,9 @@ std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const 
 	}
 	getchrset.insert(y);
 
+	if (y == Infty) { 
+		break;
+	} 
 	y = graph.get_obverse_vertex(y);
     }
 
@@ -87,6 +90,9 @@ std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const 
 	    y = PG[y];
 	    getchrset.insert(y);
 
+	    if (y == Infty) {
+		break;
+	    }
 	    y = graph.get_obverse_vertex(y);
 	    getchrset.insert(y);
 	    {
@@ -595,7 +601,6 @@ int main(int argc, char* argv[]) {
 	    tr.close();
      	    ++i; 
 	}
-
     }
 #endif
     return 0;

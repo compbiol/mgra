@@ -53,6 +53,10 @@ struct mbgraph_with_colors: public MBGraph {
     return (all_T_color.find(col) != all_T_color.end());
   } 
 
+  bool is_simple_vertex(const vertex_t& v) const;
+  bool is_indel_vertex(const vertex_t& v) const;  
+  bool is_duplication_vertex(const vertex_t& v) const;
+
   inline bool is_good_color(const mcolor_t& Q, const mcolor_t& Q1) const { 
 	if (!is_T_consistent_color(Q)) { 
 		return false; 
@@ -213,6 +217,66 @@ mcolor_t mbgraph_with_colors<mcolor_t>::add_tree(const std::string& tree, std::v
 }
 
 template<class mcolor_t>
+bool mbgraph_with_colors<mcolor_t>::is_simple_vertex(const vertex_t& v) const {
+  Mularcs<mcolor_t> mularcs = get_adjacent_multiedges(v);
+  if (mularcs.size() == 2) { 
+    if (mularcs.cbegin()->second.is_one_to_one_match() && mularcs.crbegin()->second.is_one_to_one_match()) { 
+      if (!is_duplication_vertex(v) || !is_indel_vertex(v)) {
+	return true;  
+      }
+    } 
+  } 
+  return false; 
+}  
+
+template<class mcolor_t>
+bool mbgraph_with_colors<mcolor_t>::is_indel_vertex(const vertex_t& v) const {
+  if (is_duplication_vertex(v)) {
+    return false; 
+  }  
+ 
+  if (get_adjacent_multiedges(v).get_multicolor(Infty) != get_adjacent_multiedges(get_obverse_vertex(v)).get_multicolor(Infty)) {
+    return false;
+  } 
+
+  mcolor_t un; 
+  Mularcs<mcolor_t> mularcs = get_adjacent_multiedges(v);
+  for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
+    if (!it->second.is_one_to_one_match()) { 
+      return false; 
+    }
+
+    if (it->first != Infty) { 
+      un = mcolor_t(un, it->second, mcolor_t::Union);  
+    } 
+  }
+
+  if (un != genome_match::get_complite_color()) { 
+    return true;
+  } 
+  return false; 
+}
+
+template<class mcolor_t>  
+bool mbgraph_with_colors<mcolor_t>::is_duplication_vertex(const vertex_t& v) const {	
+  Mularcs<mcolor_t> mularcs = get_adjacent_multiedges(v);
+  for(auto im = mularcs.cbegin(); im != mularcs.cend(); ++im) { 
+    for(auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
+      if (*im == *it || it->first == Infty || im->first == Infty) { 
+	continue;
+      } 
+
+      mcolor_t color(im->second, it->second, mcolor_t::Intersection);
+      if (!color.empty()) { 
+	return true; 
+      }
+    } 
+  }  
+  return false; 
+} 
+
+
+template<class mcolor_t>
 Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors) const { 
   if (u == Infty) {
     std::cerr << "mularcs ERROR: Infinite input" << std::endl;
@@ -230,19 +294,13 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
 	  output.insert(it->second, mcolor_t(i));	
 	} 
       }
-    } else if (connect_to_infty[i].count(u) != 0) { 
-      if (output.find(Infty) != output.cend()) { 
-	output.find(Infty)->second.insert(i);
-      } else { 
-	output.insert(Infty, mcolor_t(i));
-      } 
-    } else { 
+    } /*else { 
 	if (output.find(Infty) != output.cend()) { 
 	  output.find(Infty)->second.insert(i);
         } else { 
 	  output.insert(Infty, mcolor_t(i));
         }
-    } 
+    }*/ 
   }
   
   if (split_bad_colors) { 

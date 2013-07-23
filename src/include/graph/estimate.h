@@ -17,13 +17,15 @@ struct Statistics {
    
     count_compl_multiedges();
   
-    count_chromosomes();  
+    //count_chromosomes();  
+    count_all();
   }	      	
  
   inline void count_other() {
     count_cycles();
   }
- 
+
+  void count_all() const;
   std::vector<std::string> get_compl_stat() const;   
   std::vector<std::string> get_no_compl_stat() const;	
   std::vector<Mcolor> get_new_color() const;
@@ -70,6 +72,35 @@ private:
   std::vector<size_t> circular_chr; 				
 };
 
+template<class graph_t>
+void Statistics<graph_t>::count_all() const {
+  size_t dupl = 0; 
+  size_t indel = 0; 
+  size_t dupl_mcolors = 0;  
+	
+  for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
+    if (graph.is_duplication_vertex(*it)) {
+	++dupl;
+    } 
+    if (graph.is_indel_vertex(*it)) {
+	++indel;
+    } 
+
+    Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it); //current is list with adjacent multiedges
+    for (auto it = current.cbegin(); it != current.cend(); ++it) {
+	if (!it->second.is_one_to_one_match()) {
+		++dupl_mcolors;
+	}
+    } 
+  } 
+
+#ifdef VERSION2
+  std::cerr << "After stage" << std::endl;
+  std::cerr << "Duplication vertex " << dupl << std::endl;
+  std::cerr << "Insertion/deletion vertex " << indel << std::endl;
+  std::cerr << "Colors is not one-to-one match " << dupl_mcolors << std::endl; 
+#endif
+} 
 
 template<class graph_t>
 std::vector<std::string> Statistics<graph_t>::get_compl_stat() const { 

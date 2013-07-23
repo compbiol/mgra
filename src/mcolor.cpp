@@ -34,6 +34,16 @@ bool Mcolor::is_good_multiedge() const {
 	return true; 
 } 
 
+bool Mcolor::is_one_to_one_match() const { 
+	for (auto it = main_color.cbegin(); it != main_color.cend(); ++it) { 
+		if (it->second != 1) { 
+			return false; 
+		} 
+	} 
+		
+	return true; 
+} 
+
 /*
 SplitColor(Q) представляет Q в виде дизъюнктного объединения T-consistent мультицветов, т.е. Q = Q1 U ... U Qm
 где каждый Qi является T-consistent и все они попарно не пересекаются. SplitColor(Q) возвращает множество { Q1, Q2, ..., Qm }

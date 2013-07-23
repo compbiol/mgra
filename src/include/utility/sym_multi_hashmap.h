@@ -12,7 +12,8 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
   typedef typename multi_hashmap::const_iterator const_iterator;
 
   using multi_hashmap::end;
-  using multi_hashmap::find;
+  using multi_hashmap::find; //REMOVE
+  using multi_hashmap::count;
   using multi_hashmap::equal_range;
   
   sym_multi_hashmap() {
@@ -20,7 +21,7 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
   }
 
   bool defined(const item_class& x) const {
-    return find(x) != end();
+    return count(x) != 0;
   }
 
   void insert(const item_class& x, const item_class& y) {
@@ -31,12 +32,15 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
     ++card;
   }
 
-  void erase(const item_class& x) {
-    multi_hashmap::erase(multi_hashmap::find(x));
-    multi_hashmap::erase(x);
-    --card;
-  }
-  
+  const_iterator find(const item_class& x, const item_class& y) { 
+    std::pair<const_iterator, const_iterator> range = multi_hashmap::equal_range(x);
+    for (auto it = range.first; it != range.second; ++it) { 
+      if (it->second == y) { 
+	return it; 
+      } 
+    } 
+    return multi_hashmap::end();
+  } 
 
   const item_class& operator[] (const item_class& x) const {
     auto ix = find(x);
@@ -49,12 +53,20 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
 
 	
   void erase(const item_class& x, const item_class& y) {
-    if(!defined(x)) {
+    if (!defined(x)) {
       std::cerr << "sym_multi_hashmap::erase() error: unmapped pair (" << x << "," << y << ")" << std::endl;
       abort();
     }
-    multi_hashmap::erase(x);
-    multi_hashmap::erase(y);
+
+    //std::cerr << x << " " << y << std::endl;
+    const_iterator rem = find(x, y);
+    assert(rem != multi_hashmap::end()); 
+    multi_hashmap::erase(rem);
+
+    //std::cerr << y << " " << x << std::endl;
+    rem = find(y, x);
+    assert(rem != multi_hashmap::end()); 
+    multi_hashmap::erase(rem);
     --card;
   }
 
@@ -70,19 +82,6 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
     multi_hashmap::clear();
     card = 0;
   }
-
-  void pop(item_class& x, item_class& y) {
-    if (!card) {
-      std::cerr << "sym_multi_hashmap::extract error: empty sym_multi_hashmap!\n";
-      abort();
-    }
-    x = multi_hashmap::begin()->first;
-    y = multi_hashmap::begin()->second;
-    multi_hashmap::erase(x);
-    multi_hashmap::erase(y);
-    --card;
-  }
-
 private:
   size_t card;
 };

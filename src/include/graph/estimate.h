@@ -25,7 +25,7 @@ struct Statistics {
     count_cycles();
   }
 
-  void count_all() const;
+  std::vector<size_t> count_all() const;
   std::vector<std::string> get_compl_stat() const;   
   std::vector<std::string> get_no_compl_stat() const;	
   std::vector<Mcolor> get_new_color() const;
@@ -73,17 +73,21 @@ private:
 };
 
 template<class graph_t>
-void Statistics<graph_t>::count_all() const {
+std::vector<size_t> Statistics<graph_t>::count_all() const {
   size_t dupl = 0; 
   size_t indel = 0; 
-  size_t dupl_mcolors = 0;  
-	
+  size_t count_self_loop = 0;
+  size_t dupl_mcolors = 0;  	
+
   for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
     if (graph.is_duplication_vertex(*it)) {
 	++dupl;
-    } 
-    if (graph.is_indel_vertex(*it)) {
+    } else if (graph.is_indel_vertex(*it)) {
 	++indel;
+    } 
+
+    if (graph.is_have_self_loop(*it)) {
+	++count_self_loop;
     } 
 
     Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*it); //current is list with adjacent multiedges
@@ -94,12 +98,8 @@ void Statistics<graph_t>::count_all() const {
     } 
   } 
 
-#ifdef VERSION2
-  std::cerr << "After stage" << std::endl;
-  std::cerr << "Duplication vertex " << dupl << std::endl;
-  std::cerr << "Insertion/deletion vertex " << indel << std::endl;
-  std::cerr << "Colors is not one-to-one match " << dupl_mcolors << std::endl; 
-#endif
+  std::vector<size_t> answer({dupl, indel, count_self_loop, dupl_mcolors});
+  return answer;
 } 
 
 template<class graph_t>
@@ -115,8 +115,8 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() const {
 	 
     size_t m1 = calc_value(compl_multiedges_count, current) / 2;
     size_t m2 = (im->second) / 2;	
-    size_t paths = calc_value(simple_vertices_count, current) - (calc_value(simple_multiedges_count, current) + calc_value(simple_multiedges_count, im->first)) - calc_value(simple_vertices_alone_count, current) - calc_value(special_cycle_count, current);
-    size_t cycles = calc_value(simple_cycle_count, current) + calc_value(special_cycle_count, current);
+    int paths = calc_value(simple_vertices_count, current) - (calc_value(simple_multiedges_count, current) + calc_value(simple_multiedges_count, im->first)) - calc_value(simple_vertices_alone_count, current) - calc_value(special_cycle_count, current);
+    int cycles = calc_value(simple_cycle_count, current) + calc_value(special_cycle_count, current);
  	
     std::ostringstream os;
  
@@ -140,6 +140,7 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() const {
       // irregular multiedges
        << calc_value(good_irrer_multiedges_count, current) << " + " << calc_value(good_irrer_multiedges_count, im->first) << " = " << calc_value(good_irrer_multiedges_count, current) + calc_value(good_irrer_multiedges_count, im->first);
 	
+	//std::cerr <<  calc_value(simple_vertices_count, current) << " " << calc_value(simple_multiedges_count, current) << " " << calc_value(simple_multiedges_count, im->first) << " " << calc_value(simple_vertices_alone_count, current) << " " << calc_value(special_cycle_count, current) << std::endl;
     answer.insert(std::make_pair(m1 + m2, os.str()));
   }
 	
@@ -301,7 +302,8 @@ void Statistics<graph_t>::count_cycles() {
     } 
 
     Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*is); 
-    if (!(Mx.is_simple_vertice() && graph.get_complement_color(Mx.cbegin()->second) == Mx.crbegin()->second)) { 
+
+    if (!(graph.is_simple_vertex(*is) && graph.get_complement_color(Mx.cbegin()->second) == Mx.crbegin()->second)) { 
       continue;
     } 
 
@@ -311,10 +313,12 @@ void Statistics<graph_t>::count_cycles() {
 
     do {
       processed.insert(current);
-      Mularcs<Mcolor> My = graph.get_adjacent_multiedges(current);
-      if (!My.is_simple_vertice()) {
+
+      if (!graph.is_simple_vertex(current)) {
 	break;
       }
+
+      Mularcs<Mcolor> My = graph.get_adjacent_multiedges(current);
 
       if (prev == My.cbegin()->first) {
 	prev = current;
@@ -323,7 +327,7 @@ void Statistics<graph_t>::count_cycles() {
 	prev = current;
 	current = My.cbegin()->first;
       }
-               
+
       while (current == Infty) {
 	if (special_Q.empty()) {
 	  special_Q = My.find(current)->second;

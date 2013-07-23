@@ -49,7 +49,7 @@ struct MBGraph {
 	} 
       }
     } 
-  
+      
     for(size_t i = 0; i < genomes.size(); ++i) {
       add_edges(i, genomes[i], blocks);
     }	
@@ -74,10 +74,11 @@ struct MBGraph {
     return local_graph.size();
   } 
 
+  inline size_t count_vertex() const { 
+    return vertex_set.size();
+  } 
+
   inline vertex_t get_obverse_vertex(const vertex_t& v) const {
-    if (v == Infty) {
-	std::cerr << "ololo" << std::endl;
-    } 
     assert(obverse_edges.find(v) != obverse_edges.cend());
     return obverse_edges.find(v)->second;
   } 

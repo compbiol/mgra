@@ -24,6 +24,8 @@ struct Wstats {
 	void print_fair_edges(const mbgraph_with_history<Mcolor>& MBG, Statistics<mbgraph_with_history<Mcolor>>& info);
 	void histStat(const mbgraph_with_history<Mcolor>& graph); 
 
+	void print_duplication_statistics(const std::vector<size_t>& answer);
+
 	const size_t write_parametres;
 private:
 	void print_complete_edges(const mbgraph_with_history<Mcolor>& MBG); 

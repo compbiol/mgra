@@ -80,36 +80,21 @@ void mbgraph_with_history<mcolor_t>::apply_two_break(const TwoBreak<mcolor_t>& b
       add_edge(ic->first, break2.get_arc(0).second, break2.get_arc(1).second);
     }
   }
-  /*for (auto ic = break2.cbegin_mcolor(); ic != break2.cend_mcolor(); ++ic) {
-    for (size_t i = 0; i < 2; ++i) {
-      if (break2.get_arc(i).first != Infty && break2.get_arc(i).second != Infty) {
-	erase_edge(ic->first, break2.get_arc(i).first, break2.get_arc(i).second);
-      } 
-    }
-
-    if (break2.get_arc(0).first != Infty && break2.get_arc(1).first != Infty) {
-      add_edge(ic->first, break2.get_arc(0).first, break2.get_arc(1).first);
-    }
-
-    if (break2.get_arc(0).second != Infty && break2.get_arc(1).second != Infty) {
-      add_edge(ic->first, break2.get_arc(0).second, break2.get_arc(1).second);
-    }
-  }*/
 } 
 
 template<class mcolor_t>
 void mbgraph_with_history<mcolor_t>::apply_single_two_break(size_t index, const TwoBreak<mcolor_t>& break2) {
   for(size_t i = 0; i < 2; ++i) {
-    if (break2.get_arc(i).first != Infty && break2.get_arc(i).second != Infty) {
+    if (break2.get_arc(i).first != Infty || break2.get_arc(i).second != Infty) {
       erase_edge(index, break2.get_arc(i).first, break2.get_arc(i).second);
     } 
   }
 
-  if (break2.get_arc(0).first != Infty && break2.get_arc(1).first != Infty) {
+  if (break2.get_arc(0).first != Infty || break2.get_arc(1).first != Infty) {
     add_edge(index, break2.get_arc(0).first, break2.get_arc(1).first);
   }
 
-  if (break2.get_arc(0).second != Infty && break2.get_arc(1).second != Infty) {
+  if (break2.get_arc(0).second != Infty || break2.get_arc(1).second != Infty) {
     add_edge(index, break2.get_arc(0).second, break2.get_arc(1).second);
   }
 }
@@ -129,19 +114,6 @@ void mbgraph_with_history<mcolor_t>::apply_single_two_break(const TwoBreak<mcolo
   if (break2.get_arc(0).second != Infty || break2.get_arc(1).second != Infty) {
     SG.insert(break2.get_arc(0).second, break2.get_arc(1).second);
   }
-  /*for(size_t i = 0; i < 2; ++i) {
-    if (break2.get_arc(i).first != Infty && break2.get_arc(i).second != Infty) {
-      SG.erase(break2.get_arc(i).first, break2.get_arc(i).second);
-    }
-  }
-	
-  if (break2.get_arc(0).first != Infty && break2.get_arc(1).first != Infty) {
-    SG.insert(break2.get_arc(0).first, break2.get_arc(1).first);
-  }
-
-  if (break2.get_arc(0).second != Infty && break2.get_arc(1).second != Infty) {
-    SG.insert(break2.get_arc(0).second, break2.get_arc(1).second);
-  }*/
 } 
 
 // check if a 2-break creates a circular chromosome

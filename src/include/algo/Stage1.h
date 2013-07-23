@@ -15,7 +15,9 @@ bool Algorithm<graph_t>::stage1() {
 
       Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*is);
 
-/*      bool flag = true; 
+// FIXME: REWRITE ALL CODE FOR BETTER ALGO AND NOT USES THIS
+{
+      bool flag = true; 
       for(auto im = current.cbegin(); im != current.cend(); ++im) {	
 	 if (im->first == Infty) {
 		continue; 
@@ -23,22 +25,6 @@ bool Algorithm<graph_t>::stage1() {
 
 
 	 if ( graph.is_indel_vertex(im->first)) {
-	    std::cerr << "Is indel " << im->first << std::endl;
-
-	    if (im->first == "1246t") {
-	      Mularcs<Mcolor> mularcs = graph.get_adjacent_multiedges(im->first);
-
-		for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
-			std::cerr << it->first << " " << genome_match::mcolor_to_name(it->second) << std::endl; 
-		}
-		std::cerr << "grust " << graph.get_obverse_vertex(im->first) << std::endl;
-		mularcs = graph.get_adjacent_multiedges(graph.get_obverse_vertex(im->first));
-
-		for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
-			std::cerr << it->first << " " << genome_match::mcolor_to_name(it->second) << std::endl; 
-		}
-	    }  
-
 	    flag = false;
 	    break;
 	}
@@ -51,7 +37,6 @@ bool Algorithm<graph_t>::stage1() {
 	 Mularcs<Mcolor> Cx = graph.get_adjacent_multiedges(im->first);
 	 for(auto ib = Cx.cbegin(); ib != Cx.cend(); ++ib) {	
 	   if (ib->first != Infty && (graph.is_duplication_vertex(ib->first) || graph.is_indel_vertex(ib->first))) {
-	     //std::cerr << ib->first << std::endl;
 	     flag = false;
 	     break; 
 	   } 
@@ -62,7 +47,7 @@ bool Algorithm<graph_t>::stage1() {
       if (!flag) {
 	continue;
       } 
-*/
+}
       path_t path({*is});
 
       std::unordered_set<vertex_t> processed({*is, Infty}); // we count oo as already processed

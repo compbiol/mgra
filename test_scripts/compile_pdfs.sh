@@ -25,6 +25,9 @@ do
 			if [ $TEST_FLAG -eq 3 ]; then
 				sfdp -Goverlap=prism -Tpdf $x -o $NAMEFILE
 			fi
+			if [ $TEST_FLAG -eq 4 ]; then
+				neato -Gmode=KK -Gratio=1.0 -Gepsilon=.3 -v -T pdf $x -o $NAMEFILE
+			fi
 		;;
 	esac
 done 

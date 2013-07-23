@@ -7,13 +7,22 @@ writer::Wstats::Wstats(std::string name_file): write_parametres(5) {
 void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_history<Mcolor> >& info, const ProblemInstance& cfg, const mbgraph_with_history<Mcolor>& graph) { 
 	if (stage == 0) { 
 		println("Initial graph:");
+#ifdef VERSION2
+		println("... Unique blocks: " + toString(graph.count_vertex() / 2));
+		println("... Vertex: " + toString(graph.count_vertex()));
+#endif
 	}  else { 
 		println("After Stage " + toString(stage) + " graph:");
 	} 
 
+#ifdef VERSION2
+	print_duplication_statistics(info.count_all()); 
+#endif
 	print_complete_edges(graph);
 	print_connected_components(graph);
 	print_rear_characters(info.get_compl_stat()); 
+
+
 //#ifndef VERSION2
 	//print_estimated_dist(stage, cfg, graph);
 //#endif
@@ -21,6 +30,12 @@ void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_his
 	print_not_compl_characters(info.get_no_compl_stat()); 
 } 
 
+void writer::Wstats::print_duplication_statistics(const std::vector<size_t>& answer) {
+  ofstat << "... Duplication vertex: " << answer[0] << std::endl;
+  ofstat << "... Insertion/deletion vertex: " << answer[1] << std::endl;
+  ofstat << "... Count self loop: " << answer[2] << std::endl;
+  ofstat << "... Colors is not one-to-one match: " << answer[3] << std::endl; 
+}
 
 ////////////////////////////////////////////////////////
 void writer::Wstats::print_connected_components(const mbgraph_with_history<Mcolor>& MBG) {

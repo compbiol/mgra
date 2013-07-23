@@ -29,9 +29,9 @@ void writer::Wdots::save_dot(const mbgraph_with_history<Mcolor>& graph, const Pr
       } 
 
       const Mcolor& C = im->second;
+      bool vec_T_color = graph.is_vec_T_color(C);
       for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
        	/*************** output edge (x,y) **************** */
-#ifndef VERSION2
 	dot << "\t\"" << x << "\"\t--\t\"";
 	if (y == Infty) {
 	  if (ic == C.cbegin()) { 
@@ -41,24 +41,23 @@ void writer::Wdots::save_dot(const mbgraph_with_history<Mcolor>& graph, const Pr
 	} else { 
 	  dot << y << "\"\t[";
 	} 
-	dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;
-#else 
-	if (y != Infty) { 
-	  dot << "\t\"" << x << "\"\t--\t\"";
-	  dot << y << "\"\t[";
-	  dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;
-	} 
+#ifdef VERSION2
+	if (vec_T_color) {
+		dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
+	} else {
+		dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
+	}
+#else
+	dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
 #endif
       }
     }
     mark.insert(x);
   }
 
-#ifndef VERSION2
   for(int i = infv; i < 0; ++i) {
     dot << "\t\"" << i << "\"\t[shape=point,color=black];" << std::endl;
   }
-#endif
 
   dot << "}" << std::endl;
   dot.close();
@@ -87,11 +86,9 @@ void writer::Wdots::save_components(const mbgraph_with_history<Mcolor>& graph, c
   size_t i = 0; 
   for(auto it = components.cbegin(); it != components.cend(); ++it) { 
     const std::set<std::string>& current = it->second;
-    if (current.size() <= 7) {
+    if (current.size() <= 2) {
       continue;
     }
-
-    //std::cerr << current.size() << std::endl; 
   
     std::string namefile = dotname + "_" + toString(++i) + ".dot"; 
     std::ofstream dot(namefile.c_str());
@@ -101,6 +98,7 @@ void writer::Wdots::save_components(const mbgraph_with_history<Mcolor>& graph, c
       dot << "edge [colorscheme=" << cfg.get_colorscheme() << "];" << std::endl;
     } 
 
+    int infv = 0;
     std::unordered_set<vertex_t> mark; // vertex set
     for(auto is = current.cbegin(); is != current.cend(); ++is) {
       const std::string& x = *is;
@@ -123,15 +121,33 @@ void writer::Wdots::save_components(const mbgraph_with_history<Mcolor>& graph, c
 	} 
 
 	const Mcolor& C = im->second;
+	bool vec_T_color = graph.is_vec_T_color(C);
 	for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
-	  if (y != Infty) { 
-	    dot << "\t\"" << x << "\"\t--\t\"";
-	    dot << y << "\"\t[";
-	    dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;
-	  } 
+		dot << "\t\"" << x << "\"\t--\t\"";
+		if (y == Infty) {
+		  if (ic == C.cbegin()) { 
+		    --infv;
+		  } 
+		  dot << infv << "\"\t[len=0.75,";
+		} else { 
+		  dot << y << "\"\t[";
+		} 
+#ifdef VERSION2
+		if (vec_T_color) {
+			dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
+		} else {
+			dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
+		}
+#else 
+		dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
+#endif
 	}
       }
       mark.insert(x);
+    }
+
+    for(int i = infv; i < 0; ++i) {
+	dot << "\t\"" << i << "\"\t[shape=point,color=black];" << std::endl;
     }
 
     dot << "}" << std::endl;

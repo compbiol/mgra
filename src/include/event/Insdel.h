@@ -67,12 +67,12 @@ struct InsDel {
 
   friend std::ostream& operator << (std::ostream& os, const InsDel& t) {
     if (t.is_deletion) { 
-	os << "Deletion (" << t.edge.first << "," << t.edge.second << "):{" 
-	<< genome_match::mcolor_to_name(t.mcolor) << "}";    
+	os << "Deletion "; 
     } else { 
-	os << "Insertion (" << t.edge.first << "," << t.edge.second << "):{" 
-	<< genome_match::mcolor_to_name(t.mcolor) << "}";
+	os << "Insertion ";
     } 
+    os << "(" << t.edge.first << "," << t.edge.second << "):{" 
+      << genome_match::mcolor_to_name(t.mcolor) << "}";    
     return os;
   }
  

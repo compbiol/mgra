@@ -9,6 +9,7 @@
 #include "mcolor.h"
 #include "genome.h"
 #include "pconf.h"
+#include "genome_match.h"
 
 namespace writer {
 struct Wdots { 

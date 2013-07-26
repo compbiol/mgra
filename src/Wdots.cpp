@@ -17,7 +17,7 @@ void writer::Wdots::save_dot(const mbgraph_with_history<Mcolor>& graph, const Pr
 
     Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
 
-    if (Mx.size() == 1) { 
+    if (Mx.size() == 1 && Mx.cbegin()->second == genome_match::get_complete_color()) { 
       continue; // trivial cycle
     } 
 
@@ -28,28 +28,32 @@ void writer::Wdots::save_dot(const mbgraph_with_history<Mcolor>& graph, const Pr
 	continue; // already output
       } 
 
+      
+
       const Mcolor& C = im->second;
       bool vec_T_color = graph.is_vec_T_color(C);
       for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
-       	/*************** output edge (x,y) **************** */
-	dot << "\t\"" << x << "\"\t--\t\"";
-	if (y == Infty) {
-	  if (ic == C.cbegin()) { 
-	    --infv;
-	  } 
-	  dot << infv << "\"\t[len=0.75,";
-	} else { 
-	  dot << y << "\"\t[";
-	} 
+	for (size_t i = 0; i < ic->second; ++i) { 
+	       	/*************** output edge (x,y) **************** */
+		dot << "\t\"" << x << "\"\t--\t\"";
+		if (y == Infty) {
+		  if (ic == C.cbegin()) { 
+		    --infv;
+		  } 
+		  dot << infv << "\"\t[len=0.75,";
+		} else { 
+		  dot << y << "\"\t[";
+		} 
 #ifdef VERSION2
-	if (vec_T_color) {
-		dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
-	} else {
-		dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
-	}
+		if (vec_T_color) {
+			dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
+		} else {
+			dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
+		}
 #else
-	dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
+		dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
 #endif
+	} 
       }
     }
     mark.insert(x);
@@ -109,7 +113,7 @@ void writer::Wdots::save_components(const mbgraph_with_history<Mcolor>& graph, c
 
       Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
 
-      if (Mx.size() == 1) { 
+      if (Mx.size() == 1 && Mx.cbegin()->second == genome_match::get_complete_color()) { 
 	continue; // trivial cycle
       } 
       
@@ -123,6 +127,7 @@ void writer::Wdots::save_components(const mbgraph_with_history<Mcolor>& graph, c
 	const Mcolor& C = im->second;
 	bool vec_T_color = graph.is_vec_T_color(C);
 	for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
+	  for (size_t i = 0; i < ic->second; ++i) { 
 		dot << "\t\"" << x << "\"\t--\t\"";
 		if (y == Infty) {
 		  if (ic == C.cbegin()) { 
@@ -141,6 +146,7 @@ void writer::Wdots::save_components(const mbgraph_with_history<Mcolor>& graph, c
 #else 
 		dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
 #endif
+	  }
 	}
       }
       mark.insert(x);

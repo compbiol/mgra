@@ -7,8 +7,6 @@ bool Algorithm<graph_t>::newstage3_1() {
 	size_t ins = 0;
 	size_t del = 0;
 
-	std::cerr << "Start work with stage 3" << std::endl;
-
 	std::unordered_set<vertex_t > processed; 
 	for (auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) { 
 		const vertex_t& a1 = *it; 
@@ -22,7 +20,12 @@ bool Algorithm<graph_t>::newstage3_1() {
 		processed.insert(a2);
 
 		Mcolor indel_color = graph.get_adjacent_multiedges(a1).union_multicolors(); 
-		assert(indel_color == graph.get_adjacent_multiedges(a2).union_multicolors());
+
+		if (indel_color != graph.get_adjacent_multiedges(a2).union_multicolors()) {
+			std::cerr << "Output colors " << a1 << " != " << a2 << std::endl; 
+			continue;
+		}
+
 		Mcolor bar_indel_color = graph.get_complement_color(indel_color);
 
 		if (graph.is_vec_T_color(bar_indel_color)) {
@@ -61,7 +64,7 @@ bool Algorithm<graph_t>::newstage3_2() {
 
 		// FIXME: IF WE CREATE DUPLICATION VERTEX? 
 		Mcolor color = graph.get_adjacent_multiedges(a1).get_multicolor(a2);
-		if (color == genome_match::get_complite_color()) {
+		if (color == genome_match::get_complete_color()) {
 			InsDel<Mcolor> bad_deletion(a1, a2, it->second, true); 
 			graph.apply_ins_del(bad_deletion, false);
 			assert(graph.is_vec_T_color(graph.get_complement_color(it->second)));

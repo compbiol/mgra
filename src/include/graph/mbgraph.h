@@ -49,7 +49,7 @@ struct MBGraph {
 	} 
       }
     } 
-      
+
     for(size_t i = 0; i < genomes.size(); ++i) {
       add_edges(i, genomes[i], blocks);
     }	
@@ -171,3 +171,42 @@ protected:
 };	
 
 #endif
+
+   /*size_t tnd = 0; 
+    size_t rtd = 0; 
+    size_t mtd = 0; 
+    size_t mrtd = 0; 
+
+     for(size_t i = 0; i < genomes.size(); ++i) { 
+      gene_t previous = genomes[i].cbegin()->second; 
+      for(auto it = ++genomes[i].cbegin(); it != genomes[i].cend(); ++it) {
+	if (previous.first == it->second.first) { 
+		if (previous.second == 1) { 
+ 			std::cerr << "+" << previous.first << " "; 
+		} else {
+			std::cerr << "-" << previous.first << " "; 
+		}
+		if (it->second.second == 1) { 
+			std::cerr << "+" << it->second.first << std::endl;
+		} else { 
+			std::cerr << "-" << it->second.first << std::endl;
+		}	 
+		if (previous.second == 1 && it->second.second == 1) {
+			++tnd; 
+		} else if (previous.second == 1 && it->second.second == -1) {
+			++rtd; 
+		} else if (previous.second == -1 && it->second.second == 1) {
+			++mrtd; 			
+		} else if (previous.second == -1 && it->second.second == -1) {
+			++mtd; 
+		} 
+	}
+	previous = it->second;
+      } 
+    } 
+ 
+    std::cerr << "Tandem duplication "<< tnd << std::endl; 
+    std::cerr << "Reverse tandem duplication " << rtd << std::endl; 
+    std::cerr << "Minus tandem duplication " << mtd << std::endl; 
+    std::cerr << "Minus reverse tandem duplication " << mrtd << std::endl; 
+*/

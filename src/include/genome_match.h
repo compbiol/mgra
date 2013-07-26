@@ -24,7 +24,7 @@ struct genome_match {
     return genome_to_number.find(s)->second;
   }
 
-  inline static Mcolor get_complite_color() { 
+  inline static Mcolor get_complete_color() { 
     Mcolor comp; 
     for(size_t i = 0; i < number_to_genome.size(); ++i) { 
       comp.insert(i); 

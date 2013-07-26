@@ -41,6 +41,7 @@ struct Mcolor {
 
 	bool is_one_to_one_match() const;
 	bool includes(const Mcolor& second) const;
+	size_t how_much_includes(const Mcolor& second) const;  
 
 	inline void insert(size_t i) {
 		if (main_color.find(i) == main_color.end()) {  

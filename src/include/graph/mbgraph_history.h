@@ -22,6 +22,7 @@
 #include "mbgraph_colors.h"
 #include "2break.h"
 #include "Insdel.h"
+#include "TandemDuplication.h"
 
 #define member(S,x) ((S).find(x)!=(S).end())
 
@@ -33,13 +34,18 @@ struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> {
 	{ 
 	} 
 
+	//2-break operations
 	void apply_two_break(const TwoBreak<mcolor_t>& break2, bool record = false);
 	void apply_single_two_break(size_t index, const TwoBreak<mcolor_t>& break2);  
 	void apply_single_two_break(const TwoBreak<mcolor_t>& break2, partgraph_t& SG); //FIXME DEL 
 	//bool is_linear(graph_t& M) const; 
 
+	//Insertion/Deletion operations
 	void apply_ins_del(const InsDel<mcolor_t>& insdel, bool record = true);
 	void apply_single_ins_del(size_t index, const InsDel<mcolor_t>& insdel);  
+
+	//(Reverse) tandem duplication operations
+	void apply_tandem_duplication(const TandemDuplication<mcolor_t>& dupl, bool record = true);
 
 	inline typename std::list<TwoBreak<mcolor_t> > get_history() const { //FIXME: DEL
 		return break2_history; 
@@ -55,7 +61,10 @@ struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> {
 private: 
 	std::list<TwoBreak<mcolor_t> > break2_history;
 	std::list<InsDel<mcolor_t> > insdel_history;		
+	std::list<TandemDuplication<mcolor_t> > tandem_dupl_history;		
 };
+
+
 
 typedef std::list<TwoBreak<Mcolor> > transform_t;
 
@@ -128,6 +137,23 @@ void mbgraph_with_history<mcolor_t>::apply_ins_del(const InsDel<mcolor_t>& insde
 	} else {
 		add_edge(ic->first, insdel.get_edge().first, insdel.get_edge().second);
 	} 
+  }
+} 
+
+template<class mcolor_t>
+void mbgraph_with_history<mcolor_t>::apply_tandem_duplication(const TandemDuplication<mcolor_t>& dupl, bool record) {
+  if (record) {
+    tandem_dupl_history.push_back(dupl);
+  }
+ 
+  for (auto it = dupl.cbegin_edges(); it != dupl.cend_edges(); ++it) {
+    for (auto im = dupl.cbegin_mcolor(); im != dupl.cend_mcolor(); ++im) {
+	if (dupl.is_deletion_oper()) {
+		erase_edge(im->first, it->first, it->second);
+	} else {
+		add_edge(im->first, it->first, it->second);
+	}
+    }
   }
 } 
 

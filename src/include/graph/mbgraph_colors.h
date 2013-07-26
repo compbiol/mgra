@@ -252,7 +252,7 @@ bool mbgraph_with_colors<mcolor_t>::is_indel_vertex(const vertex_t& v) const {
 	return false; 
   }  
 
-  if (un == genome_match::get_complite_color()) { 
+  if (un == genome_match::get_complete_color()) { 
     return false;
   }
  
@@ -268,7 +268,7 @@ bool mbgraph_with_colors<mcolor_t>::is_duplication_vertex(const vertex_t& v) con
   Mularcs<mcolor_t> mularcs = get_adjacent_multiedges(v);
   for(auto im = mularcs.cbegin(); im != mularcs.cend(); ++im) { 
     for(auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
-      if (*im == *it || it->first == Infty || im->first == Infty) { 
+      if (*im == *it) { 
 	continue;
       } 
 

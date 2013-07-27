@@ -41,17 +41,6 @@ struct sym_map : public std::map<item_class, item_class, order> {
   }
 
   void insert(const item_class& x,const item_class& y) {
-    /*if (defined(x) || defined(y)) { //FIXME
-      std::cerr << std::endl << "symmap::insert() error: redefining ";
-      if (defined(x)) { 
-	std::cerr << "(" << x << "," << mymap::operator[](x) << ") ";
-      } 
-      if (defined(y)) { 
-	std::cerr << "(" << y << "," << mymap::operator[](y) << ") ";
-      } 
-      std::cerr << "with (" << x << "," << y << ")" << std::endl;
-      abort();
-    }*/
     mymap::insert(std::make_pair(x, y));
     mymap::insert(std::make_pair(y, x));
     ++card;
@@ -59,7 +48,7 @@ struct sym_map : public std::map<item_class, item_class, order> {
 
   void erase(const item_class& x) {
     if (!defined(x)) {
-      //std::cerr << std::endl << "symmap::erase() error: unmapped element (" << x << ")" << std::endl;
+      std::cerr << std::endl << "symmap::erase() error: unmapped element (" << x << ")" << std::endl;
       abort();
     }
     mymap::erase(mymap::find(x));
@@ -70,7 +59,7 @@ struct sym_map : public std::map<item_class, item_class, order> {
   const item_class& operator [] (const item_class& x) const {
     auto ix = find(x);
     if (ix == end()) {
-      //std::cerr << "symmap::operator[] error: undefined element " << x << std::endl;
+      std::cerr << "symmap::operator[] error: undefined element " << x << std::endl;
       abort();
     }
     return ix->second;
@@ -79,7 +68,7 @@ struct sym_map : public std::map<item_class, item_class, order> {
 	
   void erase(const item_class& x, const item_class& y) {
     if(!defined(x) || mymap::operator[](x) != y) {
-      //std::cerr << "symmap::erase() error: unmapped pair (" << x << "," << y << ")" << std::endl;
+      std::cerr << "symmap::erase() error: unmapped pair (" << x << "," << y << ")" << std::endl;
       abort();
     }
     mymap::erase(x);

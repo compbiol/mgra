@@ -61,6 +61,7 @@ struct TwoBreak {
   } 
 
   void normalize();
+  void apply_single(partgraph_t& SG) const;
 
   friend std::ostream& operator << (std::ostream& os, const TwoBreak& t) {
     os << "(" << t.arcs[0].first << "," << t.arcs[0].second << ")x(" 
@@ -73,6 +74,23 @@ private:
   arc_t arcs[2]; // (x1,y1) x (x2,y2) = (x1,x2) + (y1,y2)
   mcolor_t mcolor; 
 };
+
+template<class mcolor_t>
+void TwoBreak<mcolor_t>::apply_single(partgraph_t& SG) const {
+  for(size_t i = 0; i < 2; ++i) {
+    if (arcs[i].first != Infty || arcs[i].second != Infty) {
+      SG.erase(arcs[i].first, arcs[i].second);
+    }
+  }
+	
+  if (arcs[0].first != Infty || arcs[1].first != Infty) {
+    SG.insert(arcs[0].first, arcs[1].first);
+  }
+
+  if (arcs[0].second != Infty || arcs[1].second != Infty) {
+    SG.insert(arcs[0].second, arcs[1].second);
+  }
+} 
 
 template<class mcolor_t>
 void TwoBreak<mcolor_t>::normalize() {

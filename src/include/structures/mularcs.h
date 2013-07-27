@@ -32,18 +32,6 @@ struct Mularcs {
     return un;
   }
  
-  inline bool is_fair_vertice() const { //FIXME: DELETE
-    if (mularcs.size() == 3) {
-      for(auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
-	if (!it->second.is_one_to_one_match()) { 
-	  return false;
-	}  
-      } 
-      return true; 
-    }  
-    return false; 
-  }
-
   inline mcolor_t get_multicolor(const vertex_t& v) const {
     if (mularcs.find(v) != mularcs.cend()) { 
       return mularcs.find(v)->second; 

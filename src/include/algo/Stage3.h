@@ -1,282 +1,98 @@
-#ifndef STAGE_3_H_
-#define STAGE_3_H_
+#ifndef STAGE3_1_H_
+#define STAGE3_1_H_
 
-// cut the graph into connected components
 template<class graph_t>
-bool Algorithm<graph_t>::stage3_1() { 
-bool simplified = false;
- size_t nr = 0; // number of rearrangements, 
+bool Algorithm<graph_t>::stage3_1() {
+	size_t number_indel_event = 0; 
+	size_t ins = 0;
+	size_t del = 0;
+	size_t not_good = 0;
 
- do {
-   nr = 0;
-   outlog << "Stage 222: splitting into connected components" << std::endl;
+	std::unordered_set<vertex_t > processed; 
+	for (auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) { 
+		const vertex_t& a1 = *it; 
+		const vertex_t& a2 = graph.get_obverse_vertex(*it);
 
-   // go over all T-consistent multicolors
-   for(auto ic = graph.cbegin_T_color(); ic != graph.cend_T_color(); ++ic) {
-     if (ic->size() == 0 || ic->size() == graph.size_graph()) { //FIXME. size() == 0
-       continue; // except empty and complete multicolor
-     }
- 		
-     const Mcolor& Q = *ic;
+		if (!graph.is_indel_vertex(a1) || (processed.find(a1) != processed.end()) || !graph.is_indel_vertex(a2))  {
+			continue; 
+		}	
 
-     bool repeat = true;
-     while(repeat) {
-       repeat = false;
+		std::cerr << "Start worked with " << a1 << " " << a2;
 
-       equivalence<vertex_t> CC; // connected components
-       std::map<vertex_t, vertex_t> QQ; // multiedges of colors !Q (!*ic)
-		    
-       for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {    
-	 Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*is);
+		processed.insert(a1); 
+		processed.insert(a2);
 
-	 if (M.size() == 1) { 
-	   continue; // ignore complete multiedges
-	 } 
+		Mcolor indel_color = graph.get_adjacent_multiedges(a1).union_multicolors(); 
 
-	 for(auto im = M.cbegin(); im != M.cend(); ++im) {    
-	   if (im->second == *ic) { // edges of color Q (*ic)
-	     QQ.insert(std::make_pair(*is, im->first));
-	   } else if (im->first != Infty) { // reg. edges of color !Q (!*ic)
-	     CC.addrel(*is, im->first);
-	   }
-	 }
-       }
-		    
-       // N.B. for regular edges (x, y) of multicolor Q, QQ[x] = y and QQ[y] = x
-       // for irregular edge (x,oo), QQ[x] = oo		    
-       CC.update();
-       outlog << genome_match::mcolor_to_name(*ic) << " ~ " << CC.classes() << std::endl;
-    
-       typedef std::string concom_t;
-       std::map <concom_t, std::set<std::pair<std::string, std::string> > > EC; // reg. edges between diff. connected components of color Q
-       std::map <concom_t, std::set<std::pair<std::string, std::string> > > EI; // irreg. edges of color Q
-    
-       for(auto iq = QQ.begin(); iq != QQ.end(); ++iq) {
-	 if (iq->second == Infty) {
-	   EI[CC[iq->first]].insert(std::make_pair(iq->first, iq->second));
-	   continue;
-	 }
-			
-	 if (CC.isequiv(iq->first, iq->second)) { 
-	   continue;
-	 } 
-			
-	 EC[CC[iq->first]].insert(std::make_pair(iq->first, iq->second));
-       }
-		
-       std::map <std::string, std::pair<std::string, std::string> > FE; // free end
-       std::set <concom_t> processed;
+		if (indel_color != graph.get_adjacent_multiedges(a2).union_multicolors()) {
+			std::cerr << "Union color " << a1 << " not compare with union color " << a2 << std::endl; 
+			continue;
+		}
 
-       // reg. edges between diff. connected components of color Q
-       for(auto ie = EC.begin(); ie != EC.end(); ++ie) {
-	 if (member(processed, ie->first)) continue;
+		Mcolor bar_indel_color = graph.get_complement_color(indel_color);
 
-	 // connected component with a single external edge
-	 if (ie->second.size() == 1) {
-	   std::pair<std::string, std::string> p = *(ie->second.begin());
-	   std::pair<std::string, std::string> q;
-
-	   // look for irregular edges
-	   bool found = false;
-    
-	   for(auto ii = EI[ie->first].cbegin(); ii != EI[ie->first].cend(); ++ii) {
-	     const std::pair<std::string, std::string>& t = *ii; // edge
-
-	     // let check what would happen with (be-)edge e=(p.first,t.first)
-
-	     Mcolor T = Q;
-	     for(size_t i = 0; i < graph.size_graph(); ++i) {
-	       if (graph.is_exist_edge(i, p.first) && graph.get_adjecent_vertex(i, p.first) == t.first) {
-		 T.insert(i);
-	       }
-	     } 
-	     // if e is enriched to T-consistent color, great!
-	     if (T.size() > Q.size() && graph.is_T_consistent_color(T) ) {
-	       outlog << "perfect edge is found" << endl;
-	       q = t;
-	       found = true;
-	       EI[ ie->first ].erase(ii);
-	       break;
-	     }
-	   }
-
-	   // we did not find good edge, but there are some candidates - take any
-	   if( !found && EI[ie->first].size() == 1 ) {
-	     outlog << "somewhat good but unique edge is found" << endl;
-	     q = *(EI[ ie->first ].begin());
-	     EI.erase( ie->first );
-	     found = true;
-	   }
-
-	   // save for future
-	   if( !found && EI[ ie->first ].size() == 0 ) {
-
-	     /*
-	       if( !member(FE,CC[p.second]) ) {
-	       FE[ CC[p.second] ] = p;
-	       }
-	       else {
-	       q = FE[ CC[p.second] ];
-	       // N.B. we have CC[p.second] == CC[q.second]
-
-	       FE.erase( CC[p.second] );
-	       found = true;
-	       }
-	     */
-
-	     outlog << "no irregular edges, do fission" << endl;
-	     q = make_pair(Infty,Infty);
-	     found = true;
-	   }
-    
-	   if( !found ) continue;
-    
-    
-	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q), true);
-	   ++nr;
-			    
-	   outlog << "Stage 222.1: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
-
-	   processed.insert(CC[p.first]);
-	   if (q.first != Infty) { 
-	     processed.insert(CC[q.first]);
-	   } 
-
-	   processed.insert(CC[p.second]);
-	   if (q.second != Infty) { 
-	     processed.insert(CC[q.second]);
-	   } 
-
-	   /*
-	     EC[ CC[p.second] ].erase( make_pair(p.second,p.first) );
-	     if( q.second != Infty ) EC[ CC[q.second] ].erase( make_pair(q.second,q.first) );
-	     EC[ CC[p.first] ].erase( make_pair(p.first,p.second) );
-	     EC[ CC[q.first] ].erase( make_pair(q.first,q.second) );
+		if (graph.is_vec_T_color(bar_indel_color)) {
+			std::cerr << " past vec-TC-color. Done." << std::endl; 
+			++ins; 
+			InsDel<Mcolor> insertion(a1, a2, bar_indel_color, false);
+			graph.apply_ins_del(insertion);
+			++number_indel_event;
+		} else if (graph.is_vec_T_color(indel_color)) {
+			std::cerr << " past TC-color. Add to viewed edges." << std::endl;
+			++del;
+			InsDel<Mcolor> bad_insertion(a1, a2, bar_indel_color, false); 
+			graph.apply_ins_del(bad_insertion, false);
+			viewed_edges.insert(std::make_pair(a1, bar_indel_color));
+			++number_indel_event;
+		} else {
+			std::cerr << " have both complimentary TC-color. Not worked." << std::endl;
+			++not_good;
+		}  	
+	}
 
 
-	     if( !CC.isequiv(p.first,q.first) ) {
-	     EC[ CC[p.first] ].insert( make_pair(p.first,q.first) );
-	     EC[ CC[q.first] ].insert( make_pair(q.first,p.first) );
-	     }
-	   */
+	std::cerr << "Attempt worked with " << processed.size() << " vertex" << std::endl;
+	std::cerr << "have insertion (insert vec-TC-color) " << ins << std::endl; 
+	std::cerr << "have deletion (insert TC-color) " << del << std::endl;
+	std::cerr << "not process (both TC-color) " << not_good << std::endl;
 
-	   repeat = true;
-	   continue;
-	 }
-
-	 if( ie->second.size()==2 && EI[ ie->first ].size() == 0 ) {
-
-	   pair<string,string> p = *(ie->second.begin());
-	   pair<string,string> q = *(ie->second.rbegin());
-			    
-	   // N.B. we have CC[p.first] == CC[q.first] == ie->first
-
-	   if( member(processed,CC[p.second]) || member(processed,CC[q.second]) || CC[p.second]!=CC[q.second] ) continue;
-
-	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q), true);
-	   ++nr;
-
-	   outlog << "Stage 222.2: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << endl;
-
-	   processed.insert( CC[p.first] );
-	   processed.insert( CC[q.first] );
-	   processed.insert( CC[p.second] );
-	   processed.insert( CC[q.second] );
-
-	   /*
-	     EC[ CC[p.second] ].erase( make_pair(p.second,p.first) );
-	     EC[ CC[q.second] ].erase( make_pair(q.second,q.first) );
-	     EC[ CC[p.first] ].erase( make_pair(p.first,p.second) );
-	     EC[ CC[q.first] ].erase( make_pair(q.first,q.second) );
-    
-	     if( !CC.isequiv(p.second,q.second) ) {
-	     EC[ CC[p.second] ].insert( make_pair(p.second,q.second) );
-	     EC[ CC[q.second] ].insert( make_pair(q.second,p.second) );
-	     }
-	   */
-
-	   repeat = true;
-	   continue;
-	 }
-       }
-     }
-   }
-   if (nr != 0) { 
-     simplified = true;
-   } 
- } while (nr > 0); 
- 
- return simplified; 
+	if (number_indel_event != 0) {
+		return true; 
+	} else {
+		return false;
+	}
 } 
 
- // search for 4-cycles
 template<class graph_t>
-bool Algorithm<graph_t>::stage3_2() { 
- bool simplified = false;
- size_t nr = 0; // number of rearrangements, 
+bool Algorithm<graph_t>::stage3_2() {
+	size_t number_indel_event = 0; 
 
- do {
-   nr = 0;
+	for (auto it = viewed_edges.cbegin(); it != viewed_edges.cend(); ++it) {
+		const vertex_t& a1 = it->first; 
+		const vertex_t& a2 = graph.get_obverse_vertex(it->first);
 
-   for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
-     const string& x = *is;
-     Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
+		std::cerr << "Start worked with viewed edge " << a1 << " " << a2;
 
-     bool next = false;
+		Mcolor color = graph.get_adjacent_multiedges(a1).get_multicolor(a2);
+		if (color == genome_match::get_complete_color()) {
+			InsDel<Mcolor> bad_deletion(a1, a2, it->second, true); 
+			graph.apply_ins_del(bad_deletion, false);
+			assert(graph.is_vec_T_color(graph.get_complement_color(it->second)));
+			InsDel<Mcolor> good_deletion(a1, a2, graph.get_complement_color(it->second), true); 
+			graph.apply_ins_del(good_deletion);
+			viewed_edges.erase(it);
+			--it;
+			++number_indel_event;				
+			std::cerr << " yes, it's complite we remove it" << std::endl;
+		} else {
+			std::cerr << " NO, now is bad " << genome_match::mcolor_to_name(color) << std::endl;
+		}
+	} 
 
-     for(auto im = Mx.cbegin(); im!=Mx.cend(); ++im) {
-
-       const std::string& y = im->first;
-       const Mcolor& Q = im->second;
-
-       if (!graph.is_vec_T_color(Q) || y==Infty) { 
-	 continue;
-       }
-
-       Mularcs<Mcolor> My = graph.get_adjacent_multiedges(y);
-       My.erase(x);
-
-       for(auto jm = My.cbegin(); jm != My.cend(); ++jm) {
-	 std::string z = jm->first;
-	 if (z == Infty) { 
-	   continue;
-	 } 
-	
-	 Mularcs<Mcolor> Cz = graph.get_adjacent_multiedges(z);
-
-	 vertex_t v = "";
-	 for (auto ir = Cz.cbegin(); ir != Cz.cend(); ++ir) {
-	   if (ir->second == Q) { 
-	     v = ir->first;
-	   } 
-	 }  
-
-	 if ((!v.empty()) && (Mx.find(v) != Mx.cend())) {
-
-	   auto p = std::make_pair(x, y);
-	   auto q = std::make_pair(v, z);
-
-	   outlog << "Stage 2222: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
-
-	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q), true);
-	   ++nr;
-
-	   next = true;
-
-	   break;
-
-	 }
-       }
-       if(next) break;
-     }
-   }
-
-   if (nr != 0) { 
-     simplified = true; 
-   } 
- } while (nr > 0);
-
- return simplified; 
+	if (number_indel_event != 0) {
+		return true; 
+	} else {
+		return false;
+	}
 } 
-
 #endif

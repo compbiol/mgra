@@ -30,7 +30,7 @@ struct mbgraph_with_colors: public MBGraph {
 
   mbgraph_with_colors(const std::vector<Genome>& genomes, const ProblemInstance& cfg); 
 
-  void update_complement_color(const std::vector<mcolor_t>& colors);
+  void update_complement_color(const std::vector<mcolor_t>& colors); //FIXME: THINK ABOUT IT
 
   inline mcolor_t get_complement_color(const mcolor_t& color) const { 
     assert(CColorM.find(color) != CColorM.end());
@@ -53,35 +53,14 @@ struct mbgraph_with_colors: public MBGraph {
     return (all_T_color.find(col) != all_T_color.end());
   } 
 
+  inline bool is_vec_T_color(const mcolor_t& color) const {
+	return (DiColor.count(color) > 0);
+  }
+
   bool is_simple_vertex(const vertex_t& v) const;
   bool is_indel_vertex(const vertex_t& v) const;  
   bool is_duplication_vertex(const vertex_t& v) const;
   bool is_have_self_loop(const vertex_t& v) const;
-
-  inline bool is_good_color(const mcolor_t& Q, const mcolor_t& Q1) const { 
-	if (!is_T_consistent_color(Q)) { 
-		return false; 
-	} 
-
-	if (!is_T_consistent_color(Q1)) { 
-		return false; 
-	} 
-
-	if (get_complement_color(Q) == Q1) { 
-		return true; 
-	} 
-
-	return false;
-  } 
-
-
-  bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
-
-  Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u, const bool split_bad_colors = false) const; 
-
-  inline bool is_vec_T_color(const mcolor_t& color) const {
-	return (DiColor.count(color) > 0);
-  }
 
   inline citer cbegin_T_color() const { 
 	return DiColor.cbegin(); 
@@ -91,9 +70,13 @@ struct mbgraph_with_colors: public MBGraph {
 	return DiColor.cend(); 
   } 
 
+  Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u, const bool split_bad_colors = false) const; 
+
+  bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
+
 private: 
-  void parsing_tree(size_t size, const ProblemInstance& cfg);
-  mcolor_t add_tree(const std::string& tree, std::vector<std::string>& output);
+  void parsing_tree(size_t size, const ProblemInstance& cfg); //FIXME DELETED
+  mcolor_t add_tree(const std::string& tree, std::vector<std::string>& output); //FIXME DELETED
 
 private:
   sym_map<mcolor_t> CColorM; //complementary multicolor

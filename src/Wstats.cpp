@@ -72,11 +72,11 @@ void writer::Wstats::print_connected_components(const mbgraph_with_history<Mcolo
 }
 
 void writer::Wstats::histStat(const mbgraph_with_history<Mcolor>& graph) { //FIXME
-	ofstat << std::endl << "Total number of 2-breaks: " << graph.get_history().size() << std::endl;
+	ofstat << std::endl << "Total number of 2-breaks: " << graph.get_count_2breaks() << std::endl;
 
  	std::map<Mcolor, size_t> n2br;
 
-	for(auto il = graph.begin_history(); il != graph.end_history(); ++il) {
+	for(auto il = graph.crbegin_2break_history(); il != graph.crend_2break_history(); ++il) {
 		++n2br[il->get_mcolor()];
 	}
 
@@ -85,6 +85,35 @@ void writer::Wstats::histStat(const mbgraph_with_history<Mcolor>& graph) { //FIX
 	}
 	
 	ofstat << std::endl;
+#ifdef VERSION2
+	ofstat << std::endl << "Total number of insertion/deletions events: " << graph.get_count_insdel() << std::endl;
+
+ 	std::map<Mcolor, size_t> ninsdel;
+
+	for(auto il = graph.begin_insdel_history(); il != graph.end_insdel_history(); ++il) {
+		++ninsdel[il->get_mcolor()];
+	}
+
+	for(auto im = ninsdel.begin(); im != ninsdel.end(); ++im) {
+		ofstat << genome_match::mcolor_to_name(im->first) << "\t" << im->second << std::endl;
+	}
+	
+	ofstat << std::endl;
+
+	ofstat << std::endl << "Total number of (reverse) tandem duplication: " << graph.get_count_tandem_duplication() << std::endl;
+
+ 	std::map<Mcolor, size_t> ntd;
+
+	for(auto il = graph.begin_tandem_duplication_history(); il != graph.end_tandem_duplication_history(); ++il) {
+		++ntd[il->get_mcolor()];
+	}
+
+	for(auto im = ntd.begin(); im != ntd.end(); ++im) {
+		ofstat << genome_match::mcolor_to_name(im->first) << "\t" << im->second << std::endl;
+	}
+	
+	ofstat << std::endl;
+#endif
 }
 ////////////////////////////////////////////////////////
 void writer::Wstats::print_fair_edges(const mbgraph_with_history<Mcolor>& MBG, Statistics<mbgraph_with_history<Mcolor>>& info) {
@@ -169,7 +198,7 @@ void writer::Wstats::print_complete_edges(const mbgraph_with_history<Mcolor>& gr
 	ofstat << "... complete multiedges:";
 	for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
 		Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*it);
-		if (M.size() == 1 && M.cbegin()->second.size() == graph.size_graph() && (*it < M.cbegin()->first || M.cbegin()->first == Infty)) {
+		if (M.size() == 1 && M.cbegin()->second == genome_match::get_complete_color() && (*it < M.cbegin()->first || M.cbegin()->first == Infty)) {
 			ofstat << " " << *it << "~" << M.cbegin()->first;
 			++nc;
 		}

@@ -100,7 +100,11 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
     Mcolor previous_color = new_edges.find(previous)->second;
     new_edges.erase(previous);
     
-    if (!(new_edges.size() == 1) || !(graph.is_good_color(new_edges.cbegin()->second, previous_color))) { 
+    if (new_edges.size() != 1 
+    	|| !graph.is_T_consistent_color(new_edges.cbegin()->second) 
+	|| !graph.is_T_consistent_color(previous_color) 
+	|| graph.get_complement_color(previous_color) != new_edges.cbegin()->second) 
+    { 
       break;
     } 
 

@@ -41,7 +41,7 @@ std::ofstream outlog("/dev/null");
 std::vector<partgraph_t> RG; // recovered genomes
 std::vector<transform_t> RT; // and transformations
 
-bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph, const transform_t& tr);
+bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph);
 set <vertex_t> getchrset;
 
 std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG, const std::string& x) {
@@ -314,7 +314,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 	    }
 	}
 
-	graph.apply_single_two_break(*it, T);
+	it->apply_single(T);
 
         size_t ccsize = numchr(graph, T).second;
 
@@ -415,7 +415,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
     
                 // N.B. at this point if C is not empty, then C == Q
 		if( !C.empty() ) {
-		    graph.apply_single_two_break(kt->inverse(), T);
+		    kt->inverse().apply_single(T);
 
 		    ccsize = numchr(graph, T).second;
 		}
@@ -435,7 +435,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 	    outlog << " SUCCEDED" << endl;
 
 	    // move t away from the transformation TG and save it to D
-            graph.apply_single_two_break(*TG.begin(), PG);
+            TG.begin()->apply_single(PG);
 	    D.push_back(*TG.begin());
 
 	    TG.erase(TG.begin());
@@ -452,8 +452,8 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 	}
 
 	T = PG;
-	for(it = TG.begin();it!=start;++it) {
-	    graph.apply_single_two_break(*it, T);
+	for(it = TG.begin(); it != start; ++it) {
+	    it->apply_single(T);
 	}
     }
     //if( start == TG.end() ) {
@@ -557,7 +557,7 @@ int main(int argc, char* argv[]) {
 	RG.resize(NC);
 	RT.resize(NC);
     
-	if( !RecoverGenomes(graph, graph.get_history()) ) exit(1);
+	if( !RecoverGenomes(graph) ) exit(1);
     
 	// T-transformation complete, we procede with recovering the ancestral genomes
     
@@ -609,7 +609,7 @@ int main(int argc, char* argv[]) {
 
 
 ///////////////////////////////////////////////////////////////////////////
-bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph, const transform_t& tr) {
+bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph) {
 
     /*
     for(int i=0;i<N;++i) {
@@ -645,7 +645,7 @@ bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph, const transform_t& tr) 
 	RTF[j].resize(3);
     } 
 
-    for(auto it = tr.rbegin(); it != tr.rend(); ++it) {
+    for(auto it = graph.crbegin_2break_history(); it != graph.crend_2break_history(); ++it) {
 	const Mcolor& Q = it->get_mcolor();
 
 	outlog << "Reverting (" << it->get_arc(0).first << "," << it->get_arc(0).second << ")x(" << it->get_arc(1).first << "," << it->get_arc(1).second << "):{" << genome_match::mcolor_to_name(it->get_mcolor()) << "} " << " in";
@@ -665,7 +665,7 @@ bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph, const transform_t& tr) 
 		nchr_old = numchr(graph, RG[i]).first;
 	    }
 
-	    graph.apply_single_two_break(it->inverse(), RG[i]);
+	    it->inverse().apply_single(RG[i]);
 
 	    if (Q == *im) {
 		outlog << " " << genome_match::mcolor_to_name(*im);

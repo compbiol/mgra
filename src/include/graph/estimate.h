@@ -259,16 +259,34 @@ std::map<std::pair<Mcolor, Mcolor>, size_t> Statistics<graph_t>::get_Hsubgraph()
 	
   for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
     Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(*is);
-
-    if (Mx.is_fair_vertice()) { 
+  
+    bool is_fair1 = (Mx.size() == 3); 
+    if (is_fair1) {
+      for(auto it = Mx.cbegin(); it != Mx.cend(); ++it) {
+	if (!it->second.is_one_to_one_match()) { 
+	  is_fair1 = false;
+	}
+      }  
+    }
+  
+    if (is_fair1) { 
       for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
 	if (im->first == Infty || processed.find(im->first) != processed.end()) { 
 	  continue; 
 	} 
 
 	Mularcs<Mcolor> My = graph.get_adjacent_multiedges(im->first);
+
+        bool is_fair2 = (My.size() == 3); 
+        if (is_fair2) {
+          for(auto it = Mx.cbegin(); it != Mx.cend(); ++it) {
+	    if (!it->second.is_one_to_one_match()) { 
+	      is_fair2 = false;
+	    }
+          }   
+        }
 			
-	if (My.is_fair_vertice()) {
+	if (is_fair2) {
 	  Mularcs<Mcolor> Mx0 = Mx;
 	  
 	  Mx0.erase(im->first);

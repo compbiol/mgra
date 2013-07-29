@@ -38,17 +38,20 @@ private:
 	bool stage2();
 	bool canformQ(const std::string& x, const Mcolor& Q) const;
 
-	//Stage 3_1: process insertion/deletion events
+	//Stage 3: process insertion/deletion events
 	bool stage3_1();
 	bool stage3_2();
 
-	//Stage 4_1: process tandem duplication events
+	//Stage 4: process tandem duplication events
 	bool stage4_td(); 
 	bool stage4_rtd(); 
 
 	//Stage 5: process components, process 4-cycles
 	bool stage5_1(); 
 	bool stage5_2();
+
+	//Stage 6: process insertion/deletion events less reliable
+	bool stage6();
 
 	//Stage 4: process H-subgraph with split bad color
 
@@ -63,7 +66,8 @@ private:
 
 	bool canformQoo;  // safe choice, at later stages may change to false
 	bool split_bad_colors;
-	std::set<std::pair<vertex_t, Mcolor> > viewed_edges; // viewed edges for newstage3_1 
+
+	std::list<std::pair<InsDel<Mcolor>, std::set<Mcolor> > > viewed_edges; // , Mcolor viewed edges for stage3_1 
 	
 	writer::Wstats write_stats;
 	writer::Wdots write_dots; 
@@ -72,7 +76,7 @@ private:
 template<class graph_t>
 void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
   save_information(0, cfg);
-  std::array<bool, 6> print_dots;
+  std::array<bool, 7> print_dots;
   print_dots.fill(true);
   bool process_compl = true; 
   bool isChanged = true;
@@ -143,15 +147,33 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
     if ((cfg.get_stages() >= 5) && !isChanged) { // STAGE 5, somewhat unreliable
       std::cerr << "Stage: 5" << std::endl;
 
+      isChanged = stage5_1(); // cut the graph into connected components
+  
       if (!isChanged) { 
          isChanged = stage5_2(); // process 4-cycles
       }       
+
+      if (canformQoo && !isChanged) {
+	isChanged = true;
+	canformQoo = false; // more flexible
+      }   
 
       if (print_dots[5] && !isChanged) {
 	print_dots[5] = false;
 	save_information(5, cfg);
       }
-    }   
+    }
+    
+    if ((cfg.get_stages() >= 6) && !isChanged) {
+      std::cerr << "Stage: 6" << std::endl;
+
+      isChanged = stage6();
+
+      if (print_dots[6] && !isChanged) {
+	print_dots[6] = false;
+	save_information(6, cfg);
+      }
+    }
 #else
 
     if ((cfg.get_stages() >= 3) && !isChanged) { // STAGE 3, somewhat unreliable
@@ -216,7 +238,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
   if (!viewed_edges.empty()) {
 	std::cerr << "WARNING, WARNING: Viewed edges, when we insert TC color, not removed. We have " << viewed_edges.size() << std::endl;
   }
-  write_dots.save_components(graph, cfg, 5);
+  //write_dots.save_components(graph, cfg, 5);
 #endif
 
   write_stats.histStat(graph);

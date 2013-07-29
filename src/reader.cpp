@@ -80,12 +80,12 @@ void reader::read_infercars(const ProblemInstance& cfg, std::vector<Genome>& gen
  
 			std::string genome_name;
  			istr >> genome_name;
-    			if (!cfg.member_name(genome_name)) {
+    			if (!cfg.is_genome_name(genome_name)) {
 				std::cerr << "Unknown genome name: " << genome_name << std::endl;
 				continue;
     			}
 
-			size_t k = cfg.get_number(genome_name);
+			size_t k = cfg.get_genome_number(genome_name);
 			istr >> chromosome[k] >> start_block[k] >> end_block[k] >> sign[k];
 			++count_block[k];
 		}
@@ -115,8 +115,8 @@ void reader::read_grimm(const ProblemInstance& cfg, std::vector<Genome>& genome)
 			continue;
 		} else if (line[0] == '>') {		
 			line = reader::trim(line.substr(1));
-			if (cfg.member_name(line)) {
-				number_genome = cfg.get_number(line);
+			if (cfg.is_genome_name(line)) {
+				number_genome = cfg.get_genome_number(line);
 				nchr = 0; 
 			} else { 
 				std::clog << "Unknown genome: " << line << std::endl;

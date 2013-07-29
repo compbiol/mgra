@@ -329,7 +329,7 @@ void mbgraph_with_colors<mcolor_t>::parsing_tree(size_t size, const ProblemInsta
   flegend << "\tnode [style=filled];" << std::endl;
 
   for (size_t j = 0; j < size; ++j) {
-    flegend << "\t\"" << cfg.get_name(j) << "\"\t[fillcolor=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * j)  << "];" << std::endl;
+    flegend << "\t\"" << cfg.get_priority_name(j) << "\"\t[fillcolor=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * j)  << "];" << std::endl;
   } 
 
 

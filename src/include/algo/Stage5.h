@@ -5,7 +5,7 @@
 template<class graph_t>
 bool Algorithm<graph_t>::stage5_1() { 
  bool isChanged = false;
- size_t number_rear = 0; // number of rearrangements, 
+ size_t number_rear = 0; // number of rearrangements 
 
  do {
    number_rear = 0;
@@ -47,34 +47,37 @@ bool Algorithm<graph_t>::stage5_1() {
        CC.update();
        outlog << genome_match::mcolor_to_name(*ic) << " ~ " << CC.classes() << std::endl;
     
-       typedef std::string concom_t;
-       std::map <concom_t, std::set<std::pair<std::string, std::string> > > EC; // reg. edges between diff. connected components of color Q
-       std::map <concom_t, std::set<std::pair<std::string, std::string> > > EI; // irreg. edges of color Q
+       typedef std::string concom_t; //connected components type
+       std::map<concom_t, std::set<arc_t> > EC; // reg. edges between diff. connected components of color Q
+       std::map<concom_t, std::set<arc_t> > EI; // irreg. edges of color Q
     
        for(auto iq = QQ.begin(); iq != QQ.end(); ++iq) {
 	 if (iq->second == Infty) {
 	   EI[CC[iq->first]].insert(std::make_pair(iq->first, iq->second));
+	 } else if (CC.isequiv(iq->first, iq->second)) { 
 	   continue;
+	 } else {			
+	   EC[CC[iq->first]].insert(std::make_pair(iq->first, iq->second));
 	 }
-			
-	 if (CC.isequiv(iq->first, iq->second)) { 
-	   continue;
-	 } 
-			
-	 EC[CC[iq->first]].insert(std::make_pair(iq->first, iq->second));
        }
 		
-       std::map <std::string, std::pair<std::string, std::string> > FE; // free end
-       std::set <concom_t> processed;
+       std::set<concom_t> processed;
 
        // reg. edges between diff. connected components of color Q
        for(auto ie = EC.begin(); ie != EC.end(); ++ie) {
-	 if (member(processed, ie->first)) continue;
+	 if (member(processed, ie->first)) { 
+		continue;
+	 }
 
 	 // connected component with a single external edge
 	 if (ie->second.size() == 1) {
-	   std::pair<std::string, std::string> p = *(ie->second.begin());
+	   const std::pair<std::string, std::string>& p = *(ie->second.begin());
 	   std::pair<std::string, std::string> q;
+
+	   if (graph.is_indel_vertex(p.first) || graph.is_indel_vertex(p.second) 
+		|| graph.is_duplication_vertex(p.first) || graph.is_duplication_vertex(p.second)) {
+		continue;
+           }
 
 	   // look for irregular edges
 	   bool found = false;
@@ -95,35 +98,20 @@ bool Algorithm<graph_t>::stage5_1() {
 	       outlog << "perfect edge is found" << endl;
 	       q = t;
 	       found = true;
-	       EI[ ie->first ].erase(ii);
+	       EI[ie->first].erase(ii);
 	       break;
 	     }
 	   }
 
 	   // we did not find good edge, but there are some candidates - take any
-	   if( !found && EI[ie->first].size() == 1 ) {
+	   if (!found && EI[ie->first].size() == 1) {
 	     outlog << "somewhat good but unique edge is found" << endl;
-	     q = *(EI[ ie->first ].begin());
-	     EI.erase( ie->first );
+	     q = *(EI[ie->first].begin());
+	     EI.erase(ie->first);
 	     found = true;
 	   }
 
-	   // save for future
-	   if( !found && EI[ ie->first ].size() == 0 ) {
-
-	     /*
-	       if( !member(FE,CC[p.second]) ) {
-	       FE[ CC[p.second] ] = p;
-	       }
-	       else {
-	       q = FE[ CC[p.second] ];
-	       // N.B. we have CC[p.second] == CC[q.second]
-
-	       FE.erase( CC[p.second] );
-	       found = true;
-	       }
-	     */
-
+	   if (!found && EI[ie->first].size() == 0) {
 	     outlog << "no irregular edges, do fission" << endl;
 	     q = std::make_pair(Infty, Infty);
 	     found = true;
@@ -132,9 +120,14 @@ bool Algorithm<graph_t>::stage5_1() {
 	   if (!found) {
 		continue;
            }
-    
-    
-	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q), true);
+
+	   if ((q.first != Infty && (graph.is_indel_vertex(q.first) || graph.is_duplication_vertex(q.first)))  
+		|| (q.second != Infty && (graph.is_indel_vertex(q.second) || graph.is_duplication_vertex(q.second)))) {
+		continue;
+           }
+
+        
+	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q));
 	   ++number_rear;
 			    
 	   outlog << "Stage 5_1: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
@@ -149,60 +142,38 @@ bool Algorithm<graph_t>::stage5_1() {
 	     processed.insert(CC[q.second]);
 	   } 
 
-	   /*
-	     EC[ CC[p.second] ].erase( make_pair(p.second,p.first) );
-	     if( q.second != Infty ) EC[ CC[q.second] ].erase( make_pair(q.second,q.first) );
-	     EC[ CC[p.first] ].erase( make_pair(p.first,p.second) );
-	     EC[ CC[q.first] ].erase( make_pair(q.first,q.second) );
-
-
-	     if( !CC.isequiv(p.first,q.first) ) {
-	     EC[ CC[p.first] ].insert( make_pair(p.first,q.first) );
-	     EC[ CC[q.first] ].insert( make_pair(q.first,p.first) );
-	     }
-	   */
-
 	   repeat = true;
-	   continue;
-	 }
+	 } else if (ie->second.size() == 2 && EI[ie->first].size() == 0) {
+	   arc_t p = *(ie->second.begin());
+	   arc_t q = *(ie->second.rbegin());
 
-	 if( ie->second.size()==2 && EI[ ie->first ].size() == 0 ) {
+	   if (graph.is_indel_vertex(p.first) || graph.is_indel_vertex(p.second) 
+		|| graph.is_duplication_vertex(p.first) || graph.is_duplication_vertex(p.second)) {
+		continue;
+           }
 
-	   pair<string,string> p = *(ie->second.begin());
-	   pair<string,string> q = *(ie->second.rbegin());
+	   if (graph.is_indel_vertex(q.first) || graph.is_indel_vertex(q.second) 
+		|| graph.is_duplication_vertex(q.first) || graph.is_duplication_vertex(q.second)) {
+		continue;
+           }
 			    
 	   // N.B. we have CC[p.first] == CC[q.first] == ie->first
+	   if (member(processed, CC[p.second]) || member(processed, CC[q.second]) || CC[p.second] != CC[q.second]){ 
+		continue;
+	   }
 
-	   if( member(processed,CC[p.second]) || member(processed,CC[q.second]) || CC[p.second]!=CC[q.second] ) continue;
-
-	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q), true);
+	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q));
 	   ++number_rear;
 
 	   outlog << "Stage 222.2: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << endl;
 
-	   processed.insert( CC[p.first] );
-	   processed.insert( CC[q.first] );
-	   processed.insert( CC[p.second] );
-	   processed.insert( CC[q.second] );
-
-	   /*
-	     EC[ CC[p.second] ].erase( make_pair(p.second,p.first) );
-	     EC[ CC[q.second] ].erase( make_pair(q.second,q.first) );
-	     EC[ CC[p.first] ].erase( make_pair(p.first,p.second) );
-	     EC[ CC[q.first] ].erase( make_pair(q.first,q.second) );
-    
-	     if( !CC.isequiv(p.second,q.second) ) {
-	     EC[ CC[p.second] ].insert( make_pair(p.second,q.second) );
-	     EC[ CC[q.second] ].insert( make_pair(q.second,p.second) );
-	     }
-	   */
-
+	   processed.insert({CC[p.first], CC[q.first], CC[p.second], CC[q.second]});
 	   repeat = true;
-	   continue;
 	 }
        }
      }
    }
+
    if (number_rear != 0) { 
      isChanged = true;
    } 
@@ -225,12 +196,12 @@ bool Algorithm<graph_t>::stage5_2() {
 	continue;
      }
 
-     const std::string& x = *is;     
+     const vertex_t& x = *is;     
      Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
      bool next = false;
 
-     for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
-       const std::string& y = im->first;
+     for(auto im = Mx.cbegin(); (im != Mx.cend()) && (!next); ++im) {
+       const vertex_t& y = im->first;
        const Mcolor& Q = im->second;
 
        if (!graph.is_vec_T_color(Q) || y == Infty || graph.is_indel_vertex(y) || graph.is_duplication_vertex(y)) { 
@@ -240,8 +211,8 @@ bool Algorithm<graph_t>::stage5_2() {
        Mularcs<Mcolor> My = graph.get_adjacent_multiedges(y);
        My.erase(x);
 
-       for(auto jm = My.cbegin(); jm != My.cend(); ++jm) {
-	 std::string z = jm->first;
+       for(auto jm = My.cbegin(); (jm != My.cend()) && (!next); ++jm) {
+	 const vertex_t& z = jm->first;
 	 
 	 if (z == Infty || graph.is_indel_vertex(z) || graph.is_duplication_vertex(z)) { 
 	   continue;
@@ -257,15 +228,10 @@ bool Algorithm<graph_t>::stage5_2() {
 
 	 if (!v.empty() && (Mx.find(v) != Mx.cend())) {
 	   outlog << "Stage 5_2: " << x << " - " << y << "\tX\t" << v << " - " << z << std::endl;
-	   graph.apply_two_break(TwoBreak<Mcolor>(x, y, v, z, Q), true);
+	   graph.apply_two_break(TwoBreak<Mcolor>(x, y, v, z, Q));
 	   ++number_rear;
 	   next = true;
-	   break;
 	 }
-       }
-
-       if (next) {
-	break;
        }
      }
    }

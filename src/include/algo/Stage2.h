@@ -160,7 +160,7 @@ bool Algorithm<graph_t>::stage2() {
 		continue; 
 	  }
 
-          graph.apply_two_break(TwoBreak<Mcolor>(x, ix->first, y, temp, QQ), true);
+          graph.apply_two_break(TwoBreak<Mcolor>(x, ix->first, y, temp, QQ));
 	  found = true;
 	  ++nf;
 	}

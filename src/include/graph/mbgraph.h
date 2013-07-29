@@ -26,12 +26,13 @@
 #include <cassert>
 
 #include "utility/sym_multi_hashmap.h"
+#include "2break.h"
 #include "genome.h"
+#include "2break.h"
+//typedef std::string vertex_t;
+//typedef sym_multi_hashmap<vertex_t> partgraph_t;
 
-typedef std::string vertex_t;
-typedef sym_multi_hashmap<vertex_t> partgraph_t;
-
-const vertex_t Infty = "oo"; 
+//const vertex_t Infty = "oo"; 
 
 struct MBGraph {
   MBGraph(const std::vector<Genome>& genomes) 
@@ -65,11 +66,6 @@ struct MBGraph {
     return local_graph[index].erase(first, second);
   } 
 
-	inline bool is_exist_edge(size_t index, const vertex_t& first) const { // FIXME: NEED only estimate.h
-    	  assert(index < local_graph.size());
-	  return local_graph[index].defined(first);		
-  	}
-	
   inline size_t size_graph() const { 
     return local_graph.size();
   } 
@@ -77,11 +73,16 @@ struct MBGraph {
   inline size_t count_vertex() const { 
     return vertex_set.size();
   } 
-
+	
   inline vertex_t get_obverse_vertex(const vertex_t& v) const {
     assert(obverse_edges.find(v) != obverse_edges.cend());
     return obverse_edges.find(v)->second;
   } 
+
+  inline bool is_exist_edge(size_t index, const vertex_t& first) const { // FIXME: NEED only estimate.h
+    assert(index < local_graph.size());
+    return local_graph[index].defined(first);		
+  }
  
   //FIXME IF WE RECONSTRUCT ANCESTORS WITH DUPLICATION EQUAL RANGE
   inline vertex_t get_adjecent_vertex(size_t index, const vertex_t& first) const {  

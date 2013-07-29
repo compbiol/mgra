@@ -1,9 +1,5 @@
 #include "pconf.h"
 
-std::vector<std::string> ProblemInstance::priority_name; 
-std::unordered_map<std::string, size_t> ProblemInstance::genome_number;
-std::unordered_map<size_t, std::string> ProblemInstance::number_genome; 
-
 ProblemInstance::ProblemInstance(const std::unordered_map<std::string, std::vector<std::string> >& input) { 
 	for(auto ip = input.cbegin(); ip != input.cend(); ++ip) {
 		if (ip->first == "[Genomes]") {  

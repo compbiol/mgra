@@ -22,6 +22,14 @@
 #include <string>
 #include <utility>
 
+#include "utility/sym_multi_hashmap.h"
+#include "genome_match.h"
+
+typedef std::string vertex_t;
+typedef sym_multi_hashmap<vertex_t> partgraph_t;
+
+const vertex_t Infty = "oo"; 
+
 template<class mcolor_t>
 struct TwoBreak {
   typedef std::pair<vertex_t, vertex_t> arc_t;

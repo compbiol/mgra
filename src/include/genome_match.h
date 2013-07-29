@@ -13,7 +13,7 @@
 struct genome_match { 
   typedef std::unordered_map<orf_t, size_t> gen2num; 
  
-  static void init_name_genomes(const std::vector<Genome>& genomes);
+  static void init_name_genomes(const ProblemInstance& cfg, const std::vector<Genome>& genomes);
   
   inline static bool member_name (const std::string& i) { 
     return (genome_to_number.find(i) != genome_to_number.end());

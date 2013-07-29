@@ -484,7 +484,11 @@ int main(int argc, char* argv[]) {
   ProblemInstance PI(reader::read_cfg_file(name_cfg_file)); 
 
   std::vector<Genome> genomes = reader::read_genomes(PI);
-  genome_match::init_name_genomes(genomes);
+  genome_match::init_name_genomes(PI, genomes);
+
+  for(size_t i = 0; i < genomes.size(); ++i) { 
+	std::clog << "Genome " << PI.get_priority_name(i) << " blocks: " << genomes[i].size() << std::endl;
+  } 
 
   mbgraph_with_history<Mcolor> graph(genomes, PI); 
 
@@ -496,7 +500,7 @@ int main(int argc, char* argv[]) {
 #ifndef VERSION2  
   if (!PI.get_target().empty()) {
 #if 0
-	// EXPERIMENTAL DECIRCULARIZATION of PI.target
+	// EXPERIMENTAL DEtransform_tCIRCULARIZATION of PI.target
 	transform_t H;
 	for(transform_t::const_iterator ih=TwoBreak::History.begin();ih!=TwoBreak::History.end();++ih) {
 	    H.push_front(ih->inverse());

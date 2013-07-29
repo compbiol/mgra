@@ -20,7 +20,7 @@
 #define MBGRAPH_HISTORY_H_
 
 #include "mbgraph_colors.h"
-#include "2break.h"
+//#include "2break.h"
 #include "Insdel.h"
 #include "TandemDuplication.h"
 
@@ -35,7 +35,7 @@ struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> {
 	} 
 
 	//2-break operations
-	void apply_two_break(const TwoBreak<mcolor_t>& break2, bool record = false);
+	void apply_two_break(const TwoBreak<mcolor_t>& break2, bool record = true);
 	//bool is_linear() const; 
 
 	inline size_t get_count_2breaks() const { 

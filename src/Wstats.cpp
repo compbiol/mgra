@@ -237,14 +237,14 @@ void writer::Wstats::print_estimated_dist(size_t stage, const ProblemInstance& c
 	ofstat << "% Estimated distances:" << std::endl << std::endl;
 	print_start_table(graph.size_graph());
 	ofstat << "Stage " << stage;
-	for(auto it = cfg.cbegin_name_genome(); it != cfg.cend_name_genome(); ++it) { 
-		ofstat << " & " << (*it); 
+	for(size_t i = 0; i < cfg.get_count_genomes(); ++i) { 
+		ofstat << " & " << cfg.get_priority_name(i); 
 	} 
 	ofstat << " \\\\" << std::endl << "\\hline" << std::endl;
 
 	size_t i = 0; 
-	for(auto it = cfg.cbegin_name_genome(); it != cfg.cend_name_genome(); ++it, ++i) {
-		ofstat << (*it) << " & "; 
+	for(size_t i = 0; i < cfg.get_count_genomes(); ++i) { 
+		ofstat << cfg.get_priority_name(i) << " & "; 
 		
 		for(size_t j = 0; j < graph.size_graph(); ++j) {
 			if (j > i) {

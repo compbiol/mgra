@@ -49,30 +49,23 @@ __attribute__((always_inline)) inline bool check_symbol(char c) {
 struct ProblemInstance {
 	ProblemInstance(const std::unordered_map<std::string, std::vector<std::string> >& input); 
 
-	inline std::vector<std::string>::const_iterator cbegin_name_genome() const {  ///FIXME: USING in Wstats.txt
-		return priority_name.cbegin();
-	} 
-
-	inline std::vector<std::string>::const_iterator cend_name_genome() const { 
-		return priority_name.cend();
-	} 
-
-	inline size_t get_count_genomes() const { 
-		return priority_name.size();
-	} 
-
-	inline static std::string get_name(size_t i) { 
-		return priority_name[i];
-	} 
-
-	inline static bool member_name(const std::string& i) { 
+	inline bool is_genome_name(const std::string& i) const {
 		return (genome_number.find(i) != genome_number.end());
 	} 
 
-	inline static size_t get_number(const std::string& str) {
-		assert (member_name(str)); 
+	inline size_t get_genome_number(const std::string& str) const {
+		assert (genome_number.find(str) != genome_number.end()); 
 		return genome_number.find(str)->second;
 	} 
+
+	inline size_t get_count_genomes() const {
+		return priority_name.size();
+	} 
+
+	inline std::string get_priority_name(size_t i) const {
+		return priority_name[i];
+	} 
+
 	
 	inline std::string get_blk_format() const { 
 		return block_format;
@@ -120,12 +113,9 @@ struct ProblemInstance {
 private: 
 	void init_basic_rgb_colors(bool flag = true); 
 private:
-	static std::vector<std::string> priority_name;
-	//std::vector<std::string> priority_name;  
-	static std::unordered_map<std::string, size_t> genome_number;
-	//std::unordered_map<std::string, size_t> genome_number;
-	static std::unordered_map<size_t, std::string> number_genome;
-	//std::unordered_map<size_t, std::string> number_genome;  
+	std::vector<std::string> priority_name;  
+	std::unordered_map<std::string, size_t> genome_number;
+	std::unordered_map<size_t, std::string> number_genome;  
 
 	std::string block_format; 	
 	std::string block_file;

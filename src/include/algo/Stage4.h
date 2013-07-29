@@ -13,23 +13,23 @@ bool Algorithm<graph_t>::stage4_td() {
 
   for (auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
     if (graph.is_duplication_vertex(*it) && !graph.is_have_self_loop(*it)) {
-      std::cerr << "vertex " << *it;
+      //std::cerr << "vertex " << *it;
       Mularcs<Mcolor> mularcs = graph.get_adjacent_multiedges(*it); 
       if (mularcs.find(graph.get_obverse_vertex(*it)) != mularcs.cend()) {
 	std::cerr << " --> " << graph.get_obverse_vertex(*it); 
 	Mcolor color = mularcs.get_multicolor(graph.get_obverse_vertex(*it));	
 	if (graph.is_vec_T_color(color)) { 
-	  std::cerr << " is a vecTC. Process" << std::endl; 
+	  //std::cerr << " is a vecTC. Process" << std::endl; 
 	  ++vtc; 
 	  std::vector<arc_t> duplication({std::make_pair(*it, graph.get_obverse_vertex(*it))}); 
 	  TandemDuplication<Mcolor> dupl(duplication, color, true, false);
 	  graph.apply_tandem_duplication(dupl);	
 	  ++number_dupl;
 	} else if (graph.is_vec_T_color(graph.get_complement_color(color))) {
-	  std::cerr << " is a bar vecTC. Not worked now" << std::endl;
+	  //std::cerr << " is a bar vecTC. Not worked now" << std::endl;
 	  ++bvtc; 
 	} else { 
-	  std::cerr << " both is a TC. Not worked now" << std::endl;
+	  //std::cerr << " both is a TC. Not worked now" << std::endl;
 	  ++tc;
 	}
       } else {
@@ -71,16 +71,16 @@ bool Algorithm<graph_t>::stage4_td() {
 	    
 	    if (current == *it) {
 	      if (graph.is_vec_T_color(color)) { 
-		std::cerr << "->(" << duplication.rbegin()->first << "," << duplication.rbegin()->second << ") is a vecTC. Process" << std::endl; 
+		//std::cerr << "->(" << duplication.rbegin()->first << "," << duplication.rbegin()->second << ") is a vecTC. Process" << std::endl; 
 		++vtc; 
 		TandemDuplication<Mcolor> dupl(duplication, color, true, false);
 		graph.apply_tandem_duplication(dupl);	
 		++number_dupl;
 	      } else if (graph.is_vec_T_color(graph.get_complement_color(color))) {
-		std::cerr << "->(" << duplication.rbegin()->first << "," << duplication.rbegin()->second << ") is a bar vecTC. Not worked now" << std::endl;
+		//std::cerr << "->(" << duplication.rbegin()->first << "," << duplication.rbegin()->second << ") is a bar vecTC. Not worked now" << std::endl;
 		++bvtc; 
 	      } else { 
-		std::cerr << "->(" << duplication.rbegin()->first << "," << duplication.rbegin()->second << ") both is a TC. Not worked now" << std::endl;
+		//std::cerr << "->(" << duplication.rbegin()->first << "," << duplication.rbegin()->second << ") both is a TC. Not worked now" << std::endl;
 		++tc;
 	      }
 	      find = true;	
@@ -89,7 +89,7 @@ bool Algorithm<graph_t>::stage4_td() {
 	  }
 	}
 	if (!find) {
-	  std::cerr << " not tandem duplication" << std::endl;
+	  //std::cerr << " not tandem duplication" << std::endl;
 	  ++not_tandem;
 	}
       }	
@@ -119,14 +119,14 @@ bool Algorithm<graph_t>::stage4_rtd() {
 
   for (auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
     if (graph.is_have_self_loop(*it)) { 
-      std::cerr << "vertex " << *it;
+      //std::cerr << "vertex " << *it;
       std::vector<arc_t> duplication({std::make_pair(*it, *it)}); 
 		
       Mularcs<Mcolor> mularcs = graph.get_adjacent_multiedges(*it); 
       Mcolor color = mularcs.get_multicolor(*it); 
 		
       if (graph.is_vec_T_color(color)) { 
-	std::cerr << " have self-loop of a vecTC"; 
+	//std::cerr << " have self-loop of a vecTC"; 
 	++vtc;
 	vertex_t current = graph.get_obverse_vertex(*it);
 	bool flag = true; 
@@ -146,7 +146,7 @@ bool Algorithm<graph_t>::stage4_rtd() {
 	  }
 	} 		
 
-	std::cerr << " --> " << current;
+	//std::cerr << " --> " << current;
 			
 	Mularcs<Mcolor> current_mularcs = graph.get_adjacent_multiedges(current);
 
@@ -158,7 +158,7 @@ bool Algorithm<graph_t>::stage4_rtd() {
 	} 
 	if (count_included.size() != 2 && 
 	    (count_included.size() != 1 || color != current_mularcs.get_multicolor(*count_included.begin()))) {
-	  std::cerr << " have " << count_included.size() << " choise in vertex " << std::endl;  
+	  //std::cerr << " have " << count_included.size() << " choise in vertex " << std::endl;  
 	  continue;					
 	}
 
@@ -181,7 +181,7 @@ bool Algorithm<graph_t>::stage4_rtd() {
 	    duplication.push_back(std::make_pair(*count_included.begin(), current));
 	    duplication.push_back(std::make_pair(*it, *count_included.begin()));
 	  } else {
-	    std::cerr << " don't know what choose" << std::endl;
+	    //std::cerr << " don't know what choose" << std::endl;
 	    continue;
 	  }
 	}
@@ -189,12 +189,12 @@ bool Algorithm<graph_t>::stage4_rtd() {
 	TandemDuplication<Mcolor> dupl(duplication, color, true, true);
 	graph.apply_tandem_duplication(dupl);
 	++number_dupl;
-	std::cerr << " processed" << std::endl;
+	//std::cerr << " processed" << std::endl;
       } else if (graph.is_vec_T_color(graph.get_complement_color(color))) {
-	std::cerr << " have self-loop bar vecTC. Not worked now" << std::endl; 
+	//std::cerr << " have self-loop bar vecTC. Not worked now" << std::endl; 
 	++bvtc;
       } else { 
-	std::cerr << " have self-loop both TC. Not worked now" << std::endl; 
+	//std::cerr << " have self-loop both TC. Not worked now" << std::endl; 
 	++tc;
       }		
     } 

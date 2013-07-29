@@ -40,6 +40,14 @@ struct Mularcs {
     } 
   } 
 
+  inline std::set<mcolor_t> get_multicolors() const { 
+    std::set<mcolor_t> answer; 
+    for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
+      answer.insert(it->second);
+    }		
+    return answer;	 
+  }
+
   inline iter find(const vertex_t& v) { 
     return mularcs.find(v);
   }
@@ -67,7 +75,6 @@ struct Mularcs {
   inline criter crend() const { 
     return mularcs.crend();
   } 
-
 private: 
   mymap mularcs;
 }; 

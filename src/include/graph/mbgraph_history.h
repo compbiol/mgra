@@ -29,7 +29,7 @@
 template<class mcolor_t>
 struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> { 
 
-	mbgraph_with_history(const std::vector<Genome>& genomes, const ProblemInstance& cfg)
+	mbgraph_with_history(const std::vector<Genome>& genomes, const ProblemInstance<Mcolor>& cfg)
 	: mbgraph_with_colors<mcolor_t>(genomes, cfg) 
 	{ 
 	} 

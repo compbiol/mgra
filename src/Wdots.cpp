@@ -1,6 +1,6 @@
 #include "Wdots.h"
 
-void writer::Wdots::save_dot(const mbgraph_with_history<Mcolor>& graph, const ProblemInstance& cfg, size_t stage) { 
+void writer::Wdots::save_dot(const mbgraph_with_history<Mcolor>& graph, const ProblemInstance<Mcolor>& cfg, size_t stage) { 
   std::string dotname = cfg.get_graphname() + toString(stage) + ".dot";
   std::ofstream dot(dotname.c_str());
 
@@ -63,7 +63,7 @@ void writer::Wdots::save_dot(const mbgraph_with_history<Mcolor>& graph, const Pr
   dot.close();
 } 
 
-void writer::Wdots::save_components(const mbgraph_with_history<Mcolor>& graph, const ProblemInstance& cfg, size_t stage) { 
+void writer::Wdots::save_components(const mbgraph_with_history<Mcolor>& graph, const ProblemInstance<Mcolor>& cfg, size_t stage) { 
   std::string dotname = cfg.get_graphname() + toString(stage);
 
   equivalence<vertex_t> CC; // connected components

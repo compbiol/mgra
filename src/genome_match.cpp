@@ -3,7 +3,7 @@
 std::vector<orf_t> genome_match::number_to_genome;
 genome_match::gen2num genome_match::genome_to_number;   
 
-void genome_match::init_name_genomes(const ProblemInstance& cfg, const std::vector<Genome>& genomes) {
+void genome_match::init_name_genomes(const ProblemInstance<Mcolor>& cfg, const std::vector<Genome>& genomes) {
   number_to_genome.resize(genomes.size());
 	
   for(size_t i = 0; i < genomes.size(); ++i) { 

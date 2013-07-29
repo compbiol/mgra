@@ -6,7 +6,6 @@ set(PROJECT mgra)
 
 set(MGRA_SOURCE mgra.cpp
 	reader.cpp
-	pconf.cpp
 	genome_match.cpp
 	gen_dist.cpp
 	Wstats.cpp
@@ -30,7 +29,7 @@ include_directories(${CMAKE_BINARY_DIR}
 		   ) 
 
 if (CMAKE_COMPILER_IS_GNUCXX)	
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${DEBUG}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG}")# ${DEBUG}")
 else (CMAKE_COMPILER_IS_GNUCXX)
 	message (FATAL_ERROR ${ERR_NO_UNIX})
 endif (CMAKE_COMPILER_IS_GNUCXX)

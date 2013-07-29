@@ -28,7 +28,7 @@ template<class mcolor_t>
 struct mbgraph_with_colors: public MBGraph { 
   typedef typename std::set<mcolor_t>::const_iterator citer; 
 
-  mbgraph_with_colors(const std::vector<Genome>& genomes, const ProblemInstance& cfg); 
+  mbgraph_with_colors(const std::vector<Genome>& genomes, const ProblemInstance<Mcolor>& cfg); 
 
   void update_complement_color(const std::vector<mcolor_t>& colors); //FIXME: THINK ABOUT IT
 
@@ -75,7 +75,7 @@ struct mbgraph_with_colors: public MBGraph {
   bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
 
 private: 
-  void parsing_tree(size_t size, const ProblemInstance& cfg); //FIXME DELETED
+  void parsing_tree(size_t size, const ProblemInstance<Mcolor>& cfg); //FIXME DELETED
   mcolor_t add_tree(const std::string& tree, std::vector<std::string>& output); //FIXME DELETED
 
 private:
@@ -85,7 +85,7 @@ private:
 }; 
 
 template<class mcolor_t>
-mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<Genome>& genomes, const ProblemInstance& cfg) 
+mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<Genome>& genomes, const ProblemInstance<Mcolor>& cfg) 
 : MBGraph(genomes)
 {
   parsing_tree(genomes.size(), cfg);
@@ -305,7 +305,7 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
 } 
 
 template<class mcolor_t>
-void mbgraph_with_colors<mcolor_t>::parsing_tree(size_t size, const ProblemInstance& cfg) { 
+void mbgraph_with_colors<mcolor_t>::parsing_tree(size_t size, const ProblemInstance<Mcolor>& cfg) { 
   std::vector<std::string> trees = cfg.get_trees();
 
   // add terminal branches	

@@ -481,7 +481,7 @@ int main(int argc, char* argv[]) {
   } 
 
   /*Reading problem configuration*/
-  ProblemInstance PI(reader::read_cfg_file(name_cfg_file)); 
+  ProblemInstance<Mcolor> PI(reader::read_cfg_file(name_cfg_file)); 
 
   std::vector<Genome> genomes = reader::read_genomes(PI);
   genome_match::init_name_genomes(PI, genomes);

@@ -22,7 +22,7 @@ struct Algorithm {
 	, write_stats("stats.txt") {  
 	} 
 
-	void main_algorithm(const ProblemInstance& cfg);
+	void main_algorithm(const ProblemInstance<Mcolor>& cfg);
 	
 	graph_t get_graph() { 	
 		return graph;
@@ -60,7 +60,7 @@ private:
 	bool find_reliable_path(); 
 private:
 	//Save information
-	void save_information(size_t stage, const ProblemInstance& cfg);
+	void save_information(size_t stage, const ProblemInstance<Mcolor>& cfg);
 private: 
 	graph_t graph; 
 
@@ -74,7 +74,7 @@ private:
 };
 
 template<class graph_t>
-void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
+void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
   save_information(0, cfg);
   std::array<bool, 7> print_dots;
   print_dots.fill(true);
@@ -245,7 +245,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance& cfg) {
 }  
 
 template<class graph_t>
-void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance& cfg) { 
+void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance<Mcolor>& cfg) { 
   Statistics<graph_t> st(graph); 
 
   graph.update_complement_color(st.get_new_color());

@@ -4,7 +4,7 @@ writer::Wstats::Wstats(std::string name_file): write_parametres(5) {
 	ofstat.open(name_file); 
 } 
 
-void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_history<Mcolor> >& info, const ProblemInstance& cfg, const mbgraph_with_history<Mcolor>& graph) { 
+void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_history<Mcolor> >& info, const ProblemInstance<Mcolor>& cfg, const mbgraph_with_history<Mcolor>& graph) { 
 	if (stage == 0) { 
 		println("Initial graph:");
 #ifdef VERSION2
@@ -233,7 +233,7 @@ void writer::Wstats::print_not_compl_characters(const std::vector<std::string>& 
 	} 
 } 
 
-void writer::Wstats::print_estimated_dist(size_t stage, const ProblemInstance& cfg, const mbgraph_with_history<Mcolor>& graph) { 
+void writer::Wstats::print_estimated_dist(size_t stage, const ProblemInstance<Mcolor>& cfg, const mbgraph_with_history<Mcolor>& graph) { 
 	ofstat << "% Estimated distances:" << std::endl << std::endl;
 	print_start_table(graph.size_graph());
 	ofstat << "Stage " << stage;

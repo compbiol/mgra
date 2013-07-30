@@ -329,7 +329,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 	//TwoBreak t = *it;
 	//t.normalize();
 
-	outlog << "Found problematic 2-break: " << *it << "\t";
+	outlog << "Found problematic 2-break: ";// << *it << "\t";
 
 	// move t over to beginning
 	for(transform_t::iterator jt=it;jt!=TG.begin();) {

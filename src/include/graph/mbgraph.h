@@ -28,7 +28,7 @@
 #include "utility/sym_multi_hashmap.h"
 #include "2break.h"
 #include "genome.h"
-#include "2break.h"
+
 //typedef std::string vertex_t;
 //typedef sym_multi_hashmap<vertex_t> partgraph_t;
 

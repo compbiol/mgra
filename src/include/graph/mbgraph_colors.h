@@ -32,6 +32,15 @@ struct mbgraph_with_colors: public MBGraph {
 
   void update_complement_color(const std::vector<mcolor_t>& colors); //FIXME: THINK ABOUT IT
 
+  bool is_simple_vertex(const vertex_t& v) const;
+  bool is_indel_vertex(const vertex_t& v) const;  
+  bool is_duplication_vertex(const vertex_t& v) const;
+  bool is_have_self_loop(const vertex_t& v) const;
+
+  Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors = false) const; 
+
+  bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
+
   inline mcolor_t get_complement_color(const mcolor_t& color) const { 
     assert(CColorM.find(color) != CColorM.end());
     return CColorM.find(color)->second;
@@ -46,21 +55,16 @@ struct mbgraph_with_colors: public MBGraph {
   }	
 
   inline size_t count_vec_T_color() const { 
-     return DiColor.size();
+    return DiColor.size();
   } 
   
-  inline bool is_T_consistent_color(const mcolor_t& col) const { 
-    return (all_T_color.find(col) != all_T_color.end());
+  inline bool is_T_consistent_color(const mcolor_t& color) const { 
+    return (all_T_color.count(color) > 0);
   } 
 
   inline bool is_vec_T_color(const mcolor_t& color) const {
 	return (DiColor.count(color) > 0);
   }
-
-  bool is_simple_vertex(const vertex_t& v) const;
-  bool is_indel_vertex(const vertex_t& v) const;  
-  bool is_duplication_vertex(const vertex_t& v) const;
-  bool is_have_self_loop(const vertex_t& v) const;
 
   inline citer cbegin_T_color() const { 
 	return DiColor.cbegin(); 
@@ -69,11 +73,6 @@ struct mbgraph_with_colors: public MBGraph {
   inline citer cend_T_color() const { 
 	return DiColor.cend(); 
   } 
-
-  Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u, const bool split_bad_colors = false) const; 
-
-  bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
-
 private: 
   void parsing_tree(size_t size, const ProblemInstance<Mcolor>& cfg); //FIXME DELETED
   mcolor_t add_tree(const std::string& tree, std::vector<std::string>& output); //FIXME DELETED
@@ -123,7 +122,7 @@ mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<Genome>& ge
     all_T_color.insert(C);
   }
   std::clog << std::endl;
-  
+
   // tell where the root resides
   std::clog << "the root resides in between:";
   auto T = DiColor;
@@ -320,24 +319,6 @@ void mbgraph_with_colors<mcolor_t>::parsing_tree(size_t size, const ProblemInsta
       DiColor.insert(C); // complete multicolor is excluded
     } 
   }
-
-//  writer::Wdots legend; 
- // legend.write_legend_dot(size, output, cfg)
-  std::ofstream flegend("legend.dot");
-  flegend << "digraph Legend {" << std::endl;
-
-  flegend << "\tnode [style=filled];" << std::endl;
-
-  for (size_t j = 0; j < size; ++j) {
-    flegend << "\t\"" << cfg.get_priority_name(j) << "\"\t[fillcolor=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * j)  << "];" << std::endl;
-  } 
-
-
-  for(auto it = output.cbegin(); it != output.cend(); ++it) {
-    flegend << *it << std::endl;
-  } 
-  flegend << "}" << std::endl;
-  flegend.close();
 } 
 
 template<class mcolor_t>

@@ -153,21 +153,27 @@ void writer::Wdots::save_components(const mbgraph_with_history<Mcolor>& graph, c
   } 
 } 
 
-/*void writer::Wdots::write_legend_dot(size_t size, const std::vector<std::string>& info, const ProblemInstance& cfg) { 
+void writer::Wdots::write_legend_dot(const ProblemInstance<Mcolor>& cfg) { 
     	std::ofstream output("legend.dot");
 
 	output << "digraph Legend {" << std::endl;
 	output << "\tnode [style=filled];" << std::endl;
 
-	for (size_t j = 0; j < size; ++j) {
-	    flegend << "\t\"" << cfg.get_name(j) << "\"\t[fillcolor=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * j)  << "];" << std::endl;
+	for (size_t j = 0; j < cfg.get_count_genomes(); ++j) {
+	    output << "\t\"" << cfg.get_priority_name(j) << "\"\t[fillcolor=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * j)  << "];" << std::endl;
 	} 
 
+	std::vector<std::string> info;
+	for(auto it = cfg.cbegin_trees1(); it != cfg.cend_trees1(); ++it) {
+		it->get_nodes(info);
+	}
+ 
+	
   	for(auto it = info.cbegin(); it != info.cend(); ++it) {
 		output << *it << std::endl;
 	} 
 
 	output << "}" << std::endl;
 	output.close();
-}*/ 
+} 
 

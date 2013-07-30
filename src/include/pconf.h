@@ -28,6 +28,8 @@
 #include <iostream>
 #include <cassert>
 
+#include "2break.h"
+#include "Tree.h"
 
 template <typename T>
 __attribute__((always_inline)) inline std::string toString(T val) { 
@@ -43,7 +45,6 @@ __attribute__((always_inline)) inline bool check_symbol(char c) {
      return false;
    } 
 } 
-
 
 /*This structures containes information from *.cfg file */
 template<class mcolor_t>
@@ -88,6 +89,18 @@ struct ProblemInstance {
 
 	inline std::vector<std::string>/*std::vector<BinaryTree<std::string> >*/ get_trees() const { 
 		return trees;
+	}
+
+	inline std::vector<BinaryTree<std::string> > get_trees1() const { 
+		return trees1;
+	} 
+
+	inline std::vector<BinaryTree<std::string> >::const_iterator cbegin_trees1() const { 
+		return trees1.cbegin();
+	} 
+
+	inline std::vector<BinaryTree<std::string> >::const_iterator cend_trees1() const { 
+		return trees1.cend();
 	} 
 
 	inline size_t get_stages() const { 
@@ -98,7 +111,7 @@ struct ProblemInstance {
 		return target;		
 	} 
 
-	inline std::list<std::vector<std::string> > get_completion() const { //del and write convert two break
+	inline std::list<TwoBreak<mcolor_t> > get_completion() const { //del and write convert two break
 		return completion;
 	} 
 
@@ -126,14 +139,14 @@ private:
 	std::string graphfname;
 	std::string colorscheme;
 
-	//std::vector<BinaryTree<std::string> > trees;
+	std::vector<BinaryTree<std::string> > trees1;
 	std::vector<std::string> trees;
 
 	size_t stages;
 
 	mcolor_t target; 		
 	
-	std::list<std::vector<std::string> > completion;
+	std::list<TwoBreak<mcolor_t> > completion;
 
 	std::vector<std::string> RGBcolors;
 	int RGBcoeff; 
@@ -141,39 +154,46 @@ private:
 
 template<class mcolor_t>
 ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string, std::vector<std::string> >& input) { 
-	for(auto ip = input.cbegin(); ip != input.cend(); ++ip) {
-		if (ip->first == "[Genomes]") {  
-			this->priority_name.resize(ip->second.size());
+	std::vector<std::string> genomes; 
+	if (input.find("[Genomes]") != input.cend()) {  
+		genomes = input.find("[Genomes]")->second;
+	} else { 
+		std::cerr << "Cann't find genomes section" << std::endl;
+		exit(1);
+	}
+
+	priority_name.resize(genomes.size());
 	    
-			size_t k = 0;	    
-			for(auto js = ip->second.cbegin(); js != ip->second.cend(); ++js, ++k) {
-				std::istringstream is(*js);
-				std::string name;
-				is >> name;
+	for(size_t k = 0; k < genomes.size(); ++k) {
+		std::istringstream is(genomes[k]);
+		std::string name;
+		is >> name;
 
-				if (genome_number.count(name) > 0) { 
-					std::cerr << "ERROR: Genome identificator " << name << " is not unique!" << std::endl;
-					exit(1);
-				} 
+		if (genome_number.count(name) > 0) { 
+			std::cerr << "ERROR: Genome identificator " << name << " is not unique!" << std::endl;
+			exit(1);
+		} 
 
-				priority_name[k] = name;	
-				genome_number.insert(std::make_pair(name, k));
-				number_genome.insert(std::make_pair(k, name));
+		priority_name[k] = name;	
+		genome_number.insert(std::make_pair(name, k));
+		number_genome.insert(std::make_pair(k, name));
 
-				while(!is.eof()) {
-					std::string alias;
-					is >> alias;
+		while(!is.eof()) {
+			std::string alias;
+			is >> alias;
 
-					if (this->genome_number.count(alias) > 0) {
-						std::cerr << "ERROR: Duplicate alias " << alias << std::endl;
-						exit(1);
-					}
-
-					number_genome.insert(std::make_pair(k, alias));
-					genome_number.insert(std::make_pair(alias, k));
-				}
+			if (this->genome_number.count(alias) > 0) {
+				std::cerr << "ERROR: Duplicate alias " << alias << std::endl;
+				exit(1);
 			}
-		} else if (ip->first == "[Blocks]") {
+
+			number_genome.insert(std::make_pair(k, alias));
+			genome_number.insert(std::make_pair(alias, k));
+		}
+	} 
+
+	for(auto ip = input.cbegin(); ip != input.cend(); ++ip) {
+		if (ip->first == "[Blocks]") {
 			for (auto js = ip->second.cbegin(); js != ip->second.cend(); ++js) {
 				std::istringstream is(*js);
 				std::string name;
@@ -188,9 +208,9 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 				}			} 
 		} else if (ip->first == "[Trees]") {
 			trees = ip->second;
-			//for (auto it = ip->second.cbegin(); it != ip->second.cend(); ++it) { 
-			//	this->trees.push_back(BinaryTree<std::string>(*it));	
-			//} 
+			for (auto it = ip->second.cbegin(); it != ip->second.cend(); ++it) { 
+				trees1.push_back(BinaryTree<std::string>(*it, genome_number));	
+			} 
 		} else if (ip->first == "[Graphs]") {
 			for(auto js = ip->second.cbegin(); js != ip->second.cend(); ++js) {
 				std::istringstream is(*js);
@@ -219,7 +239,22 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 					exit(1);
 				}
 			}
-		} else if (ip->first == "[Target]" || ip->first == "[Completion]") {
+		} else if (ip->first == "[Target]") { 
+			std::istringstream is(*ip->second.cbegin());
+			std::string temp; 
+			is >> temp; 
+			std::remove_if(temp.begin(), temp.end(), (int(*)(int)) isspace); //FIXME NOT WORKED
+			target = name_to_mcolor(temp);
+		} else if (ip->first == "[Completion]") {
+			for(auto js = ip->second.cbegin(); js != ip->second.cend(); ++js) {
+				std::vector<std::string> mc(5);
+				std::istringstream is(*js);
+				is >> mc[0] >> mc[1] >> mc[2] >> mc[3] >> mc[4];
+				std::remove_if(mc[4].begin(), mc[4].end(), (int(*)(int)) isspace); //FIXME NOT WORKED		
+				mcolor_t color = name_to_mcolor(mc[4]);
+				completion.push_back(TwoBreak<mcolor_t>(mc[0], mc[1], mc[2], mc[3], color));
+			}
+		} else if (ip->first == "[Genomes]") {
 			continue;  
 		} else { 
 			std::cerr << "Unknown section " << ip->first << std::endl;
@@ -227,22 +262,6 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 		}
 	} 
 
-	for(auto ip = input.cbegin(); ip != input.cend(); ++ip) {
-		if (ip->first == "[Target]") { 
-			std::istringstream is(*ip->second.cbegin());
-			std::string temp; 
-			is >> temp; 
-			std::remove_if(temp.begin(), temp.end(), (int(*)(int)) isspace);
-			target = name_to_mcolor(temp);
-		} else if (ip->first == "[Completion]") {
-			for(auto js = ip->second.cbegin(); js != ip->second.cend(); ++js) {
-				std::vector<std::string> mc(5);
-				std::istringstream is(*js);
-				is >> mc[0] >> mc[1] >> mc[2] >> mc[3] >> mc[4];
-				completion.push_back(mc);
-			}
-		}
-	}
 	init_basic_rgb_colors(colorscheme.empty());
 } 
 

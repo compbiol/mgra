@@ -6,9 +6,9 @@
 #include <sstream>
 #include <cassert>
 
+#include "pconf.h"
 #include "genome.h"
 #include "mcolor.h"
-#include "pconf.h"
 
 struct genome_match { 
   typedef std::unordered_map<orf_t, size_t> gen2num; 

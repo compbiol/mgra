@@ -23,7 +23,7 @@
 #include <utility>
 
 #include "utility/sym_multi_hashmap.h"
-#include "genome_match.h"
+//#include "genome_match.h"
 
 typedef std::string vertex_t;
 typedef sym_multi_hashmap<vertex_t> partgraph_t;
@@ -71,12 +71,12 @@ struct TwoBreak {
   void normalize();
   void apply_single(partgraph_t& SG) const;
 
-  friend std::ostream& operator << (std::ostream& os, const TwoBreak& t) {
+  /*friend std::ostream& operator << (std::ostream& os, const TwoBreak& t) {
     os << "(" << t.arcs[0].first << "," << t.arcs[0].second << ")x(" 
 	<< t.arcs[1].first << "," << t.arcs[1].second << "):{" 
 	<< genome_match::mcolor_to_name(t.mcolor) << "}";
     return os;
-  }
+  }*/
  
 private: 
   arc_t arcs[2]; // (x1,y1) x (x2,y2) = (x1,x2) + (y1,y2)

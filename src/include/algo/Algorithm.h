@@ -81,6 +81,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
   bool process_compl = true; 
   bool isChanged = true;
 
+  write_dots.write_legend_dot(cfg);
   while(isChanged) {
     isChanged = false; 
 
@@ -215,8 +216,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
 
       auto completion = cfg.get_completion();
       for(auto il = completion.begin(); il != completion.end(); ++il) {
-	TwoBreak<Mcolor> t((*il)[0], (*il)[1], (*il)[2], (*il)[3], genome_match::name_to_mcolor((*il)[4]));
-	graph.apply_two_break(t, true);
+	graph.apply_two_break(*il);
       }
 
       Statistics<graph_t> st(graph); 

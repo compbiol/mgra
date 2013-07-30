@@ -54,7 +54,7 @@ do
 	for myfile in *
 	do
 		case $myfile in 
-			*.trs | *.gen | stats.txt | logerror.txt | stage99.dot)
+			*.trs | *.gen | stats.txt | logerror.txt | stage99.dot | legend.dot)
 				cd $HOME_DIR/ideal/$NAME_DIR
 				find -name $myfile >/dev/null
 				if [ $? -ne 0 ]; then

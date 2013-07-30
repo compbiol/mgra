@@ -79,9 +79,18 @@ struct MBGraph {
     return obverse_edges.find(v)->second;
   } 
 
-  inline bool is_exist_edge(size_t index, const vertex_t& first) const { // FIXME: NEED only estimate.h
+  // FIXME: PROBLEM WITH TARGET. I NOT UNDERSTAND ALGORITHM ABOUT THIS. If changed, chaged this function
+  inline bool is_exist_edge(size_t index, const vertex_t& first) const { 
     assert(index < local_graph.size());
-    return local_graph[index].defined(first);		
+    if (local_graph[index].find(first) != local_graph[index].end()) { 
+	if (local_graph[index].find(first)->second == Infty)  {
+		return false;
+	}
+	return true;
+    } else { 
+	return false; 
+    }  
+    //return local_graph[index].defined(first);		
   }
  
   //FIXME IF WE RECONSTRUCT ANCESTORS WITH DUPLICATION EQUAL RANGE

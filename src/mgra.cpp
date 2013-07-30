@@ -532,7 +532,7 @@ int main(int argc, char* argv[]) {
 		int j = i->first; 
 		if (graph.is_exist_edge(j, x)) {
 		    def++;
-		    if( y==Infty ) y = graph.get_adjecent_vertex(j, x);
+		    if (y == Infty) y = graph.get_adjecent_vertex(j, x);
 		    if( y != graph.get_adjecent_vertex(j, x) ) good = false;
 		}
 	    }
@@ -543,7 +543,7 @@ int main(int argc, char* argv[]) {
 	}
 	//cf.close();
 
-	std::set< std::pair<path_t,bool> > GN;
+	std::set< std::pair<path_t, bool> > GN;
 	splitchr(graph, PG, GN);
 	printchr(genome_match::mcolor_to_name(PI.get_target()), GN, PI.get_target().empty());
 

@@ -50,6 +50,9 @@ template<class mcolor_t>
 struct ProblemInstance {
 	ProblemInstance(const std::unordered_map<std::string, std::vector<std::string> >& input); 
 
+	mcolor_t name_to_mcolor(const std::string& temp) const;
+	std::string mcolor_to_name(const mcolor_t& temp) const;
+
 	inline bool is_genome_name(const std::string& i) const {
 		return (genome_number.find(i) != genome_number.end());
 	} 
@@ -66,7 +69,6 @@ struct ProblemInstance {
 	inline std::string get_priority_name(size_t i) const {
 		return priority_name[i];
 	} 
-
 	
 	inline std::string get_blk_format() const { 
 		return block_format;
@@ -133,7 +135,6 @@ private:
 	
 	std::list<std::vector<std::string> > completion;
 
-	/*about color refactor in future. What*/
 	std::vector<std::string> RGBcolors;
 	int RGBcoeff; 
 };
@@ -150,14 +151,14 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 				std::string name;
 				is >> name;
 
-				if (this->genome_number.count(name) > 0) { 
+				if (genome_number.count(name) > 0) { 
 					std::cerr << "ERROR: Genome identificator " << name << " is not unique!" << std::endl;
 					exit(1);
 				} 
 
-				this->priority_name[k] = name;	
-				this->genome_number.insert(std::make_pair(name, k));
-				this->number_genome.insert(std::make_pair(k, name));
+				priority_name[k] = name;	
+				genome_number.insert(std::make_pair(name, k));
+				number_genome.insert(std::make_pair(k, name));
 
 				while(!is.eof()) {
 					std::string alias;
@@ -168,8 +169,8 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 						exit(1);
 					}
 
-					this->number_genome.insert(std::make_pair(k, alias));
-					this->genome_number.insert(std::make_pair(alias, k));
+					number_genome.insert(std::make_pair(k, alias));
+					genome_number.insert(std::make_pair(alias, k));
 				}
 			}
 		} else if (ip->first == "[Blocks]") {
@@ -197,9 +198,9 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 				is >> name;
 
 				if (name == "filename") { 
-					is >> this->graphfname;
+					is >> graphfname;
 				} else if (name == "colorscheme") { 
-					is >> this->colorscheme; 
+					is >> colorscheme; 
 				} else {
 					std::cerr << "Unknown option " << name << std::endl;
 					exit(1);
@@ -212,51 +213,36 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 				is >> name;
 
 				if (name == "stages") { 
-					is >> this->stages;
+					is >> stages;
 				} else {
 					std::cerr << "Unknown option " << name << std::endl;
 					exit(1);
 				}
 			}
-		} else if (ip->first == "[Target]") { 
-			std::istringstream is(*ip->second.cbegin());
-			std::string temp; 
-			is >> temp; 
-			std::remove_if(temp.begin(), temp.end(), (int(*)(int)) isspace);
-			if (temp[0] == '{' && temp[temp.length() - 1] == '}') { 
-				std::string current = "";
-				for (size_t i = 1; i < temp.length(); ++i) { 
-					if (temp[i] == ',' || temp[i] == '}') { 
-						if (genome_number.find(current) != genome_number.end()) {  
-							target.insert(genome_number.find(current)->second);
-						}  	
-						current = "";
-					} else if (check_symbol(temp[i])) { 
-						current += temp[i];
-					} else { 
-						std::cerr << "Bad format target " << temp << std::endl;
-						exit(1);
-					}  
-				} 
-
-
-			} else {
-				std::cerr << "Bad format target " << temp << std::endl;
-				exit(1);
-			}
-		} else if (ip->first == "[Completion]") {
-			for(auto js = ip->second.cbegin(); js != ip->second.cend(); ++js) {
-				std::vector<std::string> mc(5);
-				std::istringstream is(*js);
-				is >> mc[0] >> mc[1] >> mc[2] >> mc[3] >> mc[4];
-				this->completion.push_back(mc);
-			}
+		} else if (ip->first == "[Target]" || ip->first == "[Completion]") {
+			continue;  
 		} else { 
 			std::cerr << "Unknown section " << ip->first << std::endl;
 			exit(1);
 		}
 	} 
 
+	for(auto ip = input.cbegin(); ip != input.cend(); ++ip) {
+		if (ip->first == "[Target]") { 
+			std::istringstream is(*ip->second.cbegin());
+			std::string temp; 
+			is >> temp; 
+			std::remove_if(temp.begin(), temp.end(), (int(*)(int)) isspace);
+			target = name_to_mcolor(temp);
+		} else if (ip->first == "[Completion]") {
+			for(auto js = ip->second.cbegin(); js != ip->second.cend(); ++js) {
+				std::vector<std::string> mc(5);
+				std::istringstream is(*js);
+				is >> mc[0] >> mc[1] >> mc[2] >> mc[3] >> mc[4];
+				completion.push_back(mc);
+			}
+		}
+	}
 	init_basic_rgb_colors(colorscheme.empty());
 } 
 
@@ -297,7 +283,7 @@ void ProblemInstance<mcolor_t>::init_basic_rgb_colors(bool flag) {
 	}
 } 
 
-/*
+
 template<class mcolor_t>
 mcolor_t ProblemInstance<mcolor_t>::name_to_mcolor(const std::string& temp) const {
 	mcolor_t answer; 
@@ -331,7 +317,7 @@ std::string ProblemInstance<mcolor_t>::mcolor_to_name(const mcolor_t& color) con
 	} 
 
 	for (auto it = color.cbegin(); it != color.cend(); ++it) {
-		const std::string& sym = number_genome.find(it->first)->second; 
+		const std::string& sym = priority_name[it->first]; 
 		for(size_t i = 0; i < it->second; ++i) { 
 			answer += (sym + ",");
 		} 
@@ -339,5 +325,5 @@ std::string ProblemInstance<mcolor_t>::mcolor_to_name(const mcolor_t& color) con
 
 	answer[answer.size() - 1] = '}';
 	return answer; 
-}*/
+}
 #endif

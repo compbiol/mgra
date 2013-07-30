@@ -20,9 +20,10 @@
 #define MBGRAPH_COLOR_H_
 
 #include "mbgraph.h"
-#include "genome_match.h"
 #include "mularcs.h"
 #include "utility/sym_map.h"
+
+#include "genome_match.h" //FIXME REMOVE LATER
 
 template<class mcolor_t>
 struct mbgraph_with_colors: public MBGraph { 
@@ -38,11 +39,14 @@ struct mbgraph_with_colors: public MBGraph {
   bool is_have_self_loop(const vertex_t& v) const;
 
   Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors = false) const; 
-
   bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
 
+  inline mcolor_t get_complete_color() const {
+    return complete_color;
+  }
+
   inline mcolor_t get_complement_color(const mcolor_t& color) const { 
-    assert(CColorM.find(color) != CColorM.end());
+    assert (CColorM.find(color) != CColorM.end());
     return CColorM.find(color)->second;
   } 
   
@@ -54,14 +58,14 @@ struct mbgraph_with_colors: public MBGraph {
     return temp;
   }	
 
-  inline size_t count_vec_T_color() const { 
-    return DiColor.size();
-  } 
-  
   inline bool is_T_consistent_color(const mcolor_t& color) const { 
     return (all_T_color.count(color) > 0);
   } 
 
+  inline size_t count_vec_T_color() const { 
+    return DiColor.size();
+  } 
+  
   inline bool is_vec_T_color(const mcolor_t& color) const {
 	return (DiColor.count(color) > 0);
   }
@@ -74,10 +78,17 @@ struct mbgraph_with_colors: public MBGraph {
 	return DiColor.cend(); 
   } 
 private: 
-  void parsing_tree(size_t size, const ProblemInstance<Mcolor>& cfg); //FIXME DELETED
-  mcolor_t add_tree(const std::string& tree, std::vector<std::string>& output); //FIXME DELETED
-
+  inline mcolor_t compute_complement_color(const mcolor_t& color) const {
+      mcolor_t answer; 
+      for(size_t j = 0; j < size_graph(); ++j) { 
+	if (!color.mymember(j)) { 
+	  answer.insert(j);
+	} 
+      } 
+      return answer;
+  }
 private:
+  mcolor_t complete_color;
   sym_map<mcolor_t> CColorM; //complementary multicolor
   std::set<mcolor_t> all_T_color; //all T-consistent colors
   std::set<mcolor_t> DiColor; // directed colors
@@ -87,115 +98,32 @@ template<class mcolor_t>
 mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<Genome>& genomes, const ProblemInstance<Mcolor>& cfg) 
 : MBGraph(genomes)
 {
-  parsing_tree(genomes.size(), cfg);
+  for (size_t i = 0; i < genomes.size(); ++i) {
+    complete_color.insert(i);
+    DiColor.insert(mcolor_t(i));
+  }
 
-  if (!cfg.get_target().empty()) { 
-    DiColor.erase(cfg.get_target());
-  } 
-  
+  for (auto it = cfg.cbegin_trees(); it != cfg.cend_trees(); ++it) {
+    it->get_dicolors(DiColor);
+  }
+
+  DiColor.erase(complete_color);
+  DiColor.erase(cfg.get_target());
   
   //check consistency
   for (auto id = DiColor.cbegin(); id != DiColor.cend(); ++id) {
     for(auto jd = id; jd != DiColor.end(); ++jd) {
       mcolor_t C(*id, *jd, mcolor_t::Intersection);
       if (!C.empty() && C.size() != id->size() && C.size() != jd->size()) {
-	std::clog << "Multicolors " << genome_match::mcolor_to_name(*id) << " " << genome_match::mcolor_to_name(*jd) << " have nontrivial intersection, removing the latter" << std::endl;
 	DiColor.erase(jd++);
 	--jd;
       }
     }
   }
-  
-  std::clog << "vecT-consistent colors: " << DiColor.size() << std::endl;
-  
+   
   for (auto id = DiColor.begin(); id != DiColor.end(); ++id) {
-    std::clog << "\t" << genome_match::mcolor_to_name(*id);
     all_T_color.insert(*id);
-    
-    // compute complement to *id
-    mcolor_t C;
-    for(size_t j = 0; j < genomes.size(); ++j) {
-      if (!(id->mymember(j))) { //IS HERE MEMBER
-	C.insert(j);
-      } 
-    }
-    all_T_color.insert(C);
-  }
-  std::clog << std::endl;
-
-  // tell where the root resides
-  std::clog << "the root resides in between:";
-  auto T = DiColor;
-  for (auto it = T.begin(); it != T.end(); ++it) {
-    for (auto jt = it; ++jt != T.end(); ) {
-      mcolor_t C(*it, *jt, mcolor_t::Intersection);
-      if (C.size() == it->size()) {
-	T.erase(it++);
-	jt = it;
-	continue;
-      }
-      if (C.size() == jt->size()) {
-	T.erase(jt++);
-	--jt;
-      }
-    }
-    std::clog << " " << genome_match::mcolor_to_name(*it);
-  }
-  std::clog << std::endl;
-}
-
-template<class mcolor_t>
-mcolor_t mbgraph_with_colors<mcolor_t>::add_tree(const std::string& tree, std::vector<std::string>& output) {
-  if (tree[0] == '(') {
-    //non-trivial tree
-    if (tree[tree.size() - 1] != ')') {
-      std::cerr << "ERROR: Malformed input (sub)tree 1" << std::endl;
-      exit(3);
-    }
-
-    int p = 0;
-    for(size_t j = 1; j < tree.size() - 1; ++j) {
-      if (tree[j] == '(') { 
-	++p; 
-      } else if (tree[j] == ')') {
-	--p;
-      } else if (tree[j] == ',') { 
-	if (p == 0) { 
-	  mcolor_t Q1 = add_tree(tree.substr(1, j - 1), output);
-	  mcolor_t Q2 = add_tree(tree.substr(j + 1, tree.size() - j - 2), output);
-
-	  DiColor.insert(Q1);
-	  DiColor.insert(Q2);
-
-	  mcolor_t Q(Q1, Q2, mcolor_t::Union);
-		    
-	  output.push_back("\t\"" + genome_match::mcolor_to_name(Q) + "\"\t->\t\"" + genome_match::mcolor_to_name(Q1) + "\";");
-	  output.push_back("\t\"" + genome_match::mcolor_to_name(Q) + "\"\t->\t\"" + genome_match::mcolor_to_name(Q2) + "\";");
-
-	  return Q;
-	} 
-      } 
-      if (p < 0) {
-	std::cerr << "ERROR: Malformed input (sub)tree 2" << std::endl;
-	exit(3);
-      }
-    }
-    if (p != 0) {
-      std::cerr << "ERROR: Malformed input (sub)tree 3" << std::endl;
-      exit(3);
-    }
-  } else {
-    //single node
-    mcolor_t Q;
-    for(size_t j = 0; j < tree.size(); ++j) {
-      std::string c = tree.substr(j, 1);
-      if (!genome_match::member_name(c)) {
-	std::cerr << "ERROR: Unknown genome in (sub)tree: " << tree << std::endl;
-	exit(3);
-      }
-      Q.insert(genome_match::get_number(c));
-    }
-    return Q;
+    all_T_color.insert(compute_complement_color(*id));
   }
 }
 
@@ -211,7 +139,6 @@ bool mbgraph_with_colors<mcolor_t>::is_simple_vertex(const vertex_t& v) const {
   } 
   return false; 
 }  
-
 
 template<class mcolor_t>
 bool mbgraph_with_colors<mcolor_t>::is_have_self_loop(const vertex_t& v) const {
@@ -234,7 +161,7 @@ bool mbgraph_with_colors<mcolor_t>::is_indel_vertex(const vertex_t& v) const {
 	return false; 
   }  
 
-  if (un == genome_match::get_complete_color()) { 
+  if (un == complete_color) { 
     return false;
   }
  
@@ -304,35 +231,11 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
 } 
 
 template<class mcolor_t>
-void mbgraph_with_colors<mcolor_t>::parsing_tree(size_t size, const ProblemInstance<Mcolor>& cfg) { 
-  std::vector<std::string> trees = cfg.get_trees();
-
-  // add terminal branches	
-  for (size_t j = 0; j < size; ++j) {
-    DiColor.insert(mcolor_t(j));
-  }
-
-  std::vector<std::string> output;
-  for(auto it = trees.cbegin(); it != trees.cend(); ++it) {
-    mcolor_t C = add_tree(*it, output);
-    if (C.size() < size) { 
-      DiColor.insert(C); // complete multicolor is excluded
-    } 
-  }
-} 
-
-template<class mcolor_t>
 void mbgraph_with_colors<mcolor_t>::update_complement_color(const std::vector<mcolor_t>& colors) {
   for(auto it = colors.begin(); it != colors.end(); ++it) { 
     if (!CColorM.defined(*it)) { 
-      Mcolor temp; 
-      for(size_t j = 0; j < size_graph(); ++j) { 
-	if ((!it->mymember(j))) { 
-	  temp.insert(j);
-	} 
-      } 
+      mcolor_t temp = compute_complement_color(*it);  
       CColorM.insert(*it, temp);
-      CColorM.insert(temp, *it);
     } 
   } 
 } 
@@ -354,20 +257,19 @@ bool mbgraph_with_colors<mcolor_t>::are_adjacent_branches(const mcolor_t& A, con
     Q2 = A;
   }
   
-  mcolor_t C(Q1, Q2, Mcolor::Difference);
+  mcolor_t C(Q1, Q2, mcolor_t::Difference);
   
   if (C.size() == Q1.size() - Q2.size() && is_T_consistent_color(C)) { 		
     return true;
   } 
   
-  mcolor_t M(Q1, Q2, Mcolor::Union); 
+  mcolor_t M(Q1, Q2, mcolor_t::Union); 
   if (M.size() == Q1.size() + Q2.size() && is_T_consistent_color(M)) { 	
     return true;
   } 
   
   return false;
 }
-
 
 #endif
 

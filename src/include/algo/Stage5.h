@@ -29,7 +29,7 @@ bool Algorithm<graph_t>::stage5_1() {
        for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {    
 	 Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*is);
 
-	 if (M.size() == 1 && M.cbegin()->second == genome_match::get_complete_color()) { 
+	 if (M.size() == 1 && M.cbegin()->second == graph.get_complete_color()) { 
 	   continue; // ignore complete multiedges
 	 } 
 

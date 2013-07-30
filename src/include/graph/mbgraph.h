@@ -66,14 +66,6 @@ struct MBGraph {
     return local_graph[index].erase(first, second);
   } 
 
-  inline size_t size_graph() const { 
-    return local_graph.size();
-  } 
-
-  inline size_t count_vertex() const { 
-    return vertex_set.size();
-  } 
-	
   inline vertex_t get_obverse_vertex(const vertex_t& v) const {
     assert(obverse_edges.find(v) != obverse_edges.cend());
     return obverse_edges.find(v)->second;
@@ -107,7 +99,15 @@ struct MBGraph {
 	inline partgraph_t get_obverce_graph() const {
 		return obverse_edges;
 	}  
-	
+
+  inline size_t size_graph() const { 
+    return local_graph.size();
+  } 
+
+  inline size_t count_vertex() const { 
+    return vertex_set.size();
+  } 
+		
   inline std::set<vertex_t>::const_iterator begin_vertices() const { 
     return vertex_set.cbegin();
   } 

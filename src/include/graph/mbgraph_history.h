@@ -20,6 +20,7 @@
 #define MBGRAPH_HISTORY_H_
 
 #include "mbgraph_colors.h"
+#include "genome_match.h"
 //#include "2break.h"
 #include "Insdel.h"
 #include "TandemDuplication.h"

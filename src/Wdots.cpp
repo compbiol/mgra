@@ -17,7 +17,7 @@ void writer::Wdots::save_dot(const mbgraph_with_history<Mcolor>& graph, const Pr
 
     Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
 
-    if (Mx.size() == 1 && Mx.cbegin()->second == genome_match::get_complete_color()) { 
+    if (Mx.size() == 1 && Mx.cbegin()->second == graph.get_complete_color()) { 
       continue; // trivial cycle
     } 
 
@@ -26,9 +26,7 @@ void writer::Wdots::save_dot(const mbgraph_with_history<Mcolor>& graph, const Pr
 
       if (mark.find(y) != mark.end()) { 
 	continue; // already output
-      } 
-
-      
+      }    
 
       const Mcolor& C = im->second;
       bool vec_T_color = graph.is_vec_T_color(C);
@@ -109,7 +107,7 @@ void writer::Wdots::save_components(const mbgraph_with_history<Mcolor>& graph, c
 
       Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
 
-      if (Mx.size() == 1 && Mx.cbegin()->second == genome_match::get_complete_color()) { 
+      if (Mx.size() == 1 && Mx.cbegin()->second == graph.get_complete_color()) { 
 	continue; // trivial cycle
       } 
       
@@ -164,8 +162,8 @@ void writer::Wdots::write_legend_dot(const ProblemInstance<Mcolor>& cfg) {
 	} 
 
 	std::vector<std::string> info;
-	for(auto it = cfg.cbegin_trees1(); it != cfg.cend_trees1(); ++it) {
-		it->get_nodes(info);
+	for(auto it = cfg.cbegin_trees(); it != cfg.cend_trees(); ++it) {
+		it->get_nodes<ProblemInstance<Mcolor> >(info, cfg);
 	}
  
 	

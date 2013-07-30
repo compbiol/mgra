@@ -464,6 +464,30 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
     return D;
 }
 
+void tell_root_besides(const mbgraph_with_history<Mcolor>& graph) {
+  // tell where the root resides
+  std::clog << "the root resides in between:";
+
+  std::set<Mcolor> T(graph.cbegin_T_color(), graph.cend_T_color()); 
+
+  for (auto it = T.begin(); it != T.end(); ++it) {
+    for (auto jt = it; ++jt != T.end(); ) {
+      Mcolor C(*it, *jt, Mcolor::Intersection);
+      if (C.size() == it->size()) {
+	T.erase(it++);
+	jt = it;
+	continue;
+      }
+      if (C.size() == jt->size()) {
+	T.erase(jt++);
+	--jt;
+      }
+    }
+    std::clog << " " << genome_match::mcolor_to_name(*it);
+  }
+  std::clog << std::endl;
+}
+
 ////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[]) {
   std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) ver. 1.5" << std::endl;
@@ -482,15 +506,23 @@ int main(int argc, char* argv[]) {
 
   /*Reading problem configuration*/
   ProblemInstance<Mcolor> PI(reader::read_cfg_file(name_cfg_file)); 
-
   std::vector<Genome> genomes = reader::read_genomes(PI);
-  genome_match::init_name_genomes(PI, genomes);
+  
+  genome_match::init_name_genomes(PI, genomes); //FIXME: IT'S DEBUG
 
   for(size_t i = 0; i < genomes.size(); ++i) { 
 	std::clog << "Genome " << PI.get_priority_name(i) << " blocks: " << genomes[i].size() << std::endl;
   } 
 
   mbgraph_with_history<Mcolor> graph(genomes, PI); 
+
+  std::clog << "vecT-consistent colors: " << graph.count_vec_T_color() << std::endl;
+  for (auto id = graph.cbegin_T_color(); id != graph.cend_T_color(); ++id) {
+    std::clog << "\t" << genome_match::mcolor_to_name(*id);  ///FIXME: CHANGE
+  }
+  std::clog << std::endl;
+
+  tell_root_besides(graph); 	
 
   Algorithm<mbgraph_with_history<Mcolor> > main_algo(graph);
 

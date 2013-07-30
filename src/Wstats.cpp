@@ -198,7 +198,7 @@ void writer::Wstats::print_complete_edges(const mbgraph_with_history<Mcolor>& gr
 	ofstat << "... complete multiedges:";
 	for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
 		Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*it);
-		if (M.size() == 1 && M.cbegin()->second == genome_match::get_complete_color() && (*it < M.cbegin()->first || M.cbegin()->first == Infty)) {
+		if (M.size() == 1 && M.cbegin()->second == graph.get_complete_color() && (*it < M.cbegin()->first || M.cbegin()->first == Infty)) {
 			ofstat << " " << *it << "~" << M.cbegin()->first;
 			++nc;
 		}

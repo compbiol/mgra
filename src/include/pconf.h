@@ -87,20 +87,12 @@ struct ProblemInstance {
 		return colorscheme;		
 	} 
 
-	inline std::vector<std::string>/*std::vector<BinaryTree<std::string> >*/ get_trees() const { 
-		return trees;
-	}
-
-	inline std::vector<BinaryTree<std::string> > get_trees1() const { 
-		return trees1;
+	inline std::vector<BinaryTree<std::string> >::const_iterator cbegin_trees() const { 
+		return trees.cbegin();
 	} 
 
-	inline std::vector<BinaryTree<std::string> >::const_iterator cbegin_trees1() const { 
-		return trees1.cbegin();
-	} 
-
-	inline std::vector<BinaryTree<std::string> >::const_iterator cend_trees1() const { 
-		return trees1.cend();
+	inline std::vector<BinaryTree<std::string> >::const_iterator cend_trees() const { 
+		return trees.cend();
 	} 
 
 	inline size_t get_stages() const { 
@@ -111,7 +103,7 @@ struct ProblemInstance {
 		return target;		
 	} 
 
-	inline std::list<TwoBreak<mcolor_t> > get_completion() const { //del and write convert two break
+	inline std::list<TwoBreak<mcolor_t> > get_completion() const { 
 		return completion;
 	} 
 
@@ -139,8 +131,7 @@ private:
 	std::string graphfname;
 	std::string colorscheme;
 
-	std::vector<BinaryTree<std::string> > trees1;
-	std::vector<std::string> trees;
+	std::vector<BinaryTree<std::string> > trees;
 
 	size_t stages;
 
@@ -207,9 +198,8 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 					exit(1);
 				}			} 
 		} else if (ip->first == "[Trees]") {
-			trees = ip->second;
 			for (auto it = ip->second.cbegin(); it != ip->second.cend(); ++it) { 
-				trees1.push_back(BinaryTree<std::string>(*it, genome_number));	
+				trees.push_back(BinaryTree<std::string>(*it, genome_number));	
 			} 
 		} else if (ip->first == "[Graphs]") {
 			for(auto js = ip->second.cbegin(); js != ip->second.cend(); ++js) {

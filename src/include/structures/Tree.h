@@ -7,10 +7,13 @@
 #include <string>
 #include <memory>
 
+#include "mcolor.h"
+
 template<class type_data>
 struct BinaryTree { 
   struct Node { 
-    std::vector<std::string> data; 
+    //std::vector<std::string> data;     
+    std::vector<size_t> data;
     std::shared_ptr<Node> left_child;    
     std::shared_ptr<Node> right_child; 
 
@@ -22,7 +25,10 @@ struct BinaryTree {
     { 
     }
 
-    std::string/*std::set<std::string>*/ get_nodes(std::vector<std::string>& info) const;
+    template<class cofg_t>
+    std::string/*std::set<std::string>*/ get_nodes(std::vector<std::string>& info, const cofg_t& cfg) const;
+
+    Mcolor get_dicolors(std::set<Mcolor>& dicolor) const; 
   };
 
   BinaryTree(const std::string& st, const std::unordered_map<std::string, size_t>& genome_number) 
@@ -30,20 +36,16 @@ struct BinaryTree {
   { 
   } 
 
-  void get_nodes(std::vector<std::string>& info) const {
-	root.get_nodes(info);	
+  template<class cfg_t>
+  void get_nodes(std::vector<std::string>& info, const cfg_t& cfg) const {
+	root.get_nodes(info, cfg);	
   }
 
-/*  std::vector<Mcolor> get_dicolors() { 
-    std::vector<Mcolor> ans; 
-    root.to_color(ans);
-    return ans;
-  } 
-*/
+  void get_dicolors(std::set<Mcolor>& dicolor) const {
+	Mcolor color = root.get_dicolors(dicolor);	
+	dicolor.insert(color); 
+  }
 
- // std::string print() { 
-  //  return root.to_string();
-  //} 
 private: 
   Node root; 
 };
@@ -86,7 +88,7 @@ BinaryTree<type_data>::Node::Node(const std::string& tree, const std::unordered_
 	std::cerr << "ERROR: Unknown genome in (sub)tree: " << tree << std::endl;
 	exit(3);
       }
-      data.push_back(c);
+      data.push_back(genome_number.find(c)->second);
     }
     left_child = nullptr;
     right_child = nullptr;
@@ -94,12 +96,13 @@ BinaryTree<type_data>::Node::Node(const std::string& tree, const std::unordered_
 }
 
 template<class type_data>
-std::string/*std::set<std::string>*/ BinaryTree<type_data>::Node::get_nodes(std::vector<std::string>& info) const {
+template<class cfg_t>
+std::string/*std::set<std::string>*/ BinaryTree<type_data>::Node::get_nodes(std::vector<std::string>& info, const cfg_t& cfg) const  {
 	if (!left_child && !right_child) { 
 		//std::set<std::string> lists;
 		std::string temp = ""; 
 		for(auto it = data.cbegin(); it != data.cend(); ++it) {
-			temp += (*it);//lists.insert(*it);
+			temp += (cfg.get_priority_name(*it));//lists.insert(*it);
     		}
 		return temp;//return lists;
 	} 
@@ -107,7 +110,7 @@ std::string/*std::set<std::string>*/ BinaryTree<type_data>::Node::get_nodes(std:
 	std::string first = "";  
 	//std::set<std::string> list_first; 
 	if (left_child) {
-		first = left_child->get_nodes(info);
+		first = left_child->get_nodes(info, cfg);
 		//list_first = left_child->get_nodes(info);
 	
 		/*for (auto it = list_first.cbegin(); it != list_first.cend(); ++it) {
@@ -118,7 +121,7 @@ std::string/*std::set<std::string>*/ BinaryTree<type_data>::Node::get_nodes(std:
 	std::string second = ""; 
 	//std::set<std::string> list_second; 
 	if (right_child) {
-		second = right_child->get_nodes(info);
+		second = right_child->get_nodes(info, cfg);
 		//list_second = right_child->get_nodes(info);
 		/*for (auto it = list_second.cbegin(); it != list_second.cend(); ++it) {
 			second += (*it);
@@ -139,4 +142,31 @@ std::string/*std::set<std::string>*/ BinaryTree<type_data>::Node::get_nodes(std:
 	//return list_result;
 	return result;
 }
+
+template<class type_data>
+Mcolor BinaryTree<type_data>::Node::get_dicolors(std::set<Mcolor>& dicolor) const {
+	if (!left_child && !right_child) { 
+		Mcolor temp; 
+		for(auto it = data.cbegin(); it != data.cend(); ++it) {	
+			temp.insert(*it); 
+    		}
+		return temp;
+	} 
+
+	Mcolor first;  
+	if (left_child) {
+		first = left_child->get_dicolors(dicolor);
+		dicolor.insert(first);
+	}
+
+	Mcolor second; 
+	if (right_child) {
+		second = right_child->get_dicolors(dicolor);
+		dicolor.insert(second);
+	}
+
+	Mcolor result(first, second, Mcolor::Union);
+
+	return result;
+} 
 #endif

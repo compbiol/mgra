@@ -69,7 +69,7 @@ bool Algorithm<graph_t>::stage3_2() {
 
 		//std::cerr << "Start worked with viewed edge " << a1 << " " << a2;
 		Mcolor color = graph.get_adjacent_multiedges(a1).get_multicolor(a2);
-		if (color == genome_match::get_complete_color()) {
+		if (color == graph.get_complete_color()) {
 			graph.apply_ins_del(it->first.inverse(), false);
 			for (auto im = it->second.cbegin(); im != it->second.cend(); ++im) {
 				InsDel<Mcolor> good_deletion(a1, a2, *im, true); 

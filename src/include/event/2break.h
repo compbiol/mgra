@@ -23,7 +23,6 @@
 #include <utility>
 
 #include "utility/sym_multi_hashmap.h"
-//#include "genome_match.h"
 
 typedef std::string vertex_t;
 typedef sym_multi_hashmap<vertex_t> partgraph_t;

@@ -81,12 +81,14 @@ private:
   inline mcolor_t compute_complement_color(const mcolor_t& color) const {
       mcolor_t answer; 
       for(size_t j = 0; j < size_graph(); ++j) { 
-	if (!color.mymember(j)) { 
+	if (!color.in_color(j)) { 
 	  answer.insert(j);
 	} 
       } 
       return answer;
   }
+
+  std::set<mcolor_t> split_color(const mcolor_t& color) const;
 private:
   mcolor_t complete_color;
   sym_map<mcolor_t> CColorM; //complementary multicolor
@@ -216,7 +218,7 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
     Mularcs<mcolor_t> split; 
     for(auto im = output.cbegin(); im != output.cend(); ++im) {
       if (!is_vec_T_color(im->second) && im->second.size() < size_graph()) {
-	auto C = im->second.split_color(*this, split_bad_colors);
+	auto C = split_color(im->second);
 	for(auto ic = C.begin(); ic != C.end(); ++ic) {
 	  split.insert(im->first, *ic); 
 	}
@@ -228,6 +230,45 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
   }
 
   return output;
+} 
+
+/*
+SplitColor(Q) представляет Q в виде дизъюнктного объединения T-consistent мультицветов, т.е. Q = Q1 U ... U Qm
+где каждый Qi является T-consistent и все они попарно не пересекаются. SplitColor(Q) возвращает множество { Q1, Q2, ..., Qm }
+(в частности, когда Q является T-consistent, имеем m=1 и Q1=Q).
+Теперь, когда SplitBadColors = true, то и ребро (x,y) имеет мультицвет Q, то MBG.mulcols(x) будет содежать вместо (Q,x) пары:
+(Q1,y), (Q2,y), ..., (Qm,y)
+*/
+template<class mcolor_t>
+std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& color) const {
+    std::set<mcolor_t> S;
+
+    if (is_vec_T_color(color)) {
+	S.insert(color);
+	return S;
+    }
+
+    equivalence<size_t> EQ;
+    for(auto iq = color.cbegin(); iq != color.cend(); ++iq) { 
+	EQ.addrel(iq->first, iq->first);
+    } 
+
+    for(auto ic = DiColor.cbegin(); ic != DiColor.cend(); ++ic) {
+	mcolor_t C(*ic, color, mcolor_t::Intersection);
+	if (C.size() >= 2 && C.size() == ic->size() ) {
+	    for (auto iq = C.begin(); iq != C.end(); ++iq) {
+		EQ.addrel(iq->first, C.begin()->first);
+	    }
+	}
+    }
+
+    EQ.update();
+    std::map<size_t, mcolor_t> cls; 
+    EQ.get_eclasses(cls);
+    for(auto ic = cls.cbegin(); ic != cls.cend(); ++ic) {
+	S.insert(ic->second);
+    }
+    return S;
 } 
 
 template<class mcolor_t>

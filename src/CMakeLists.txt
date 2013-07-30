@@ -9,8 +9,6 @@ set(MGRA_SOURCE mgra.cpp
 	genome_match.cpp
 	gen_dist.cpp
 	Wstats.cpp
-	Wdots.cpp
-	mcolor.cpp
    )
 
 set (ERR_NO_UNIX "Cannot build on non Unix systems")

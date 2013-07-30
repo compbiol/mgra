@@ -70,7 +70,7 @@ private:
 	std::list<std::pair<InsDel<Mcolor>, std::set<Mcolor> > > viewed_edges; // , Mcolor viewed edges for stage3_1 
 	
 	writer::Wstats write_stats;
-	writer::Wdots write_dots; 
+	writer::Wdots<graph_t, ProblemInstance<Mcolor> > write_dots; 
 };
 
 template<class graph_t>

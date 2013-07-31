@@ -76,7 +76,7 @@ private:
 template<class graph_t>
 void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
   save_information(0, cfg);
-  std::array<bool, 7> print_dots;
+  std::array<bool, 8> print_dots;
   print_dots.fill(true);
   bool process_compl = true; 
   bool isChanged = true;
@@ -173,6 +173,19 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
       if (print_dots[6] && !isChanged) {
 	print_dots[6] = false;
 	save_information(6, cfg);
+      }
+    }
+
+    if ((cfg.get_stages() >= 7) && !isChanged) {
+      std::cerr << "Stage: 7" << std::endl;
+
+      split_bad_colors = true; 
+      isChanged = stage2();
+      split_bad_colors = false;
+
+      if (print_dots[7] && !isChanged) {
+	print_dots[7] = false;
+	save_information(7, cfg);
       }
     }
 #else

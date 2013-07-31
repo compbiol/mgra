@@ -12,6 +12,10 @@ struct Mularcs {
     mularcs.insert(std::make_pair(v, mc));	
   } 
 
+  inline void insert(citer begin, citer end) { 
+    mularcs.insert(begin, end);	
+  } 
+
   inline void insert(const vertex_t& v, size_t i) {
     if (mularcs.find(v) != mularcs.end()) { 
       mularcs.find(v)->second.insert(i);
@@ -24,6 +28,10 @@ struct Mularcs {
     mularcs.erase(v);
   } 
  
+  inline std::pair<citer, citer> equal_range(const vertex_t& v) {
+	return mularcs.equal_range(v);
+  } 
+  
   inline mcolor_t union_multicolors() const {
     mcolor_t un; 
     for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
@@ -59,7 +67,7 @@ struct Mularcs {
   inline size_t size() const {
     return mularcs.size();  
   }
- 
+
   inline citer cbegin() const { 
     return mularcs.cbegin(); 
   } 

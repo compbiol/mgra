@@ -37,6 +37,7 @@ private:
 	//Stage 2: process H-subgraph
 	bool stage2();
 	bool canformQ(const std::string& x, const Mcolor& Q) const;
+	bool is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>& Cx, const Mularcs<Mcolor>& Cy) const;
 
 	//Stage 3: process insertion/deletion events
 	bool stage3_1();

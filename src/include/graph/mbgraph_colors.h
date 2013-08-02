@@ -253,6 +253,10 @@ std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& co
 	return S;
     }
 
+//    if (!split_bad_colors) { 
+//		
+//    }
+
     equivalence<size_t> EQ;
     for(auto iq = color.cbegin(); iq != color.cend(); ++iq) { 
 	EQ.addrel(iq->first, iq->first);

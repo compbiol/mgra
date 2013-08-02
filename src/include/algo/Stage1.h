@@ -67,7 +67,7 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
  
     processed.insert(current);
 
-    if (current != Infty && (graph.is_duplication_vertex(current) || graph.is_indel_vertex(current))) { 
+    if (graph.is_duplication_vertex(current) || graph.is_indel_vertex(current)) { 
 	break;
     } 
 
@@ -75,16 +75,22 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
     Mcolor previous_color = new_edges.find(previous)->second;
     new_edges.erase(previous);
     
-    if (new_edges.size() != 1 
-    	|| !graph.is_T_consistent_color(new_edges.cbegin()->second) 
-	|| !graph.is_T_consistent_color(previous_color) 
-	|| graph.get_complement_color(previous_color) != new_edges.cbegin()->second) 
-    { 
-      break;
+    if (new_edges.size() == 1 && graph.get_complement_color(previous_color) == new_edges.cbegin()->second) 
+    {
+     if (split_bad_colors) {
+       previous = current;
+       current = new_edges.cbegin()->first; 
+     } else {	
+       if (graph.is_T_consistent_color(new_edges.cbegin()->second) && graph.is_T_consistent_color(previous_color)) { 
+         previous = current;
+         current = new_edges.cbegin()->first; 
+       } else { 
+	break;
+       } 
+     }  
+    } else { 
+	break;
     } 
-
-    previous = current;
-    current = new_edges.cbegin()->first;
   }
 
   return current;
@@ -95,16 +101,36 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
   size_t nr = 0;
 
   if (path.size() >= 4 || (path.size() == 3 && *path.begin() == *path.rbegin())) {
-    //std::cerr << std::endl << "Processing a path of length " << path.size() - 1 << std::endl;
-    //std::cerr << "path:\t" << *path.begin();
-    //for(auto ip = ++path.begin(); ip != path.end(); ++ip) {
-      //std::cerr << " -- " << *ip;
-    //}
-    //std::cerr << std::endl;
+    /*std::cerr << std::endl << "Processing a path of length " << path.size() - 1 << std::endl;
+    std::cerr << "path:\t" << *path.begin();
+    for(auto ip = ++path.begin(); ip != path.end(); ++ip) {
+      std::cerr << " -- " << *ip;
+    }
+    std::cerr << std::endl;*/
 
-    if (path.size() % 2 && (*path.begin() != *path.rbegin())) {
+    Mcolor process_color; 
+    if (split_bad_colors) {
+	Mcolor first = graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
+	Mcolor second = graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*(++++path.begin()));
+	if (graph.split_color(first).size() <= graph.split_color(second).size()) {
+		process_color = first;
+    	} else { 
+		process_color = second;
+    	}
+    } else { 
+	Mcolor first = graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
+	Mcolor second = graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*(++++path.begin()));
+	if (graph.is_vec_T_color(first)) {
+		process_color = first;
+    	} else { 
+		process_color = second;
+    	}
+    }  
+
+    if ((path.size() % 2 != 0) && (*path.begin() != *path.rbegin())) {
       //std::cerr << "... ";
-      if (!graph.is_vec_T_color(graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin())) ) { //FIXME
+
+      if (process_color != graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin())) { 
 	path.erase(path.begin());
 	//std::cerr << "left";
       } else {
@@ -126,30 +152,42 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  //std::cerr << "ERROR: Semi-cycle w/o infinity! " << *path.begin() << std::endl;
 	  exit(1);
 	}
-	if (graph.is_vec_T_color(graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin()))) { //FIXME
+	if (process_color == graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin())) { 
 	  //std::cerr << "... semi-cycle, fusion applied" << std::endl;
+
 	  const vertex_t& x0 = *(++path.begin());
 	  const vertex_t& y0 = *(++path.rbegin());
-    
-	  TwoBreak<Mcolor> t(Infty, x0, Infty, y0, graph.get_adjacent_multiedges(x0).get_multicolor(Infty)); 
 
-	  graph.apply_two_break(t);
+	  Mularcs<Mcolor> mul = graph.get_adjacent_multiedges(x0, split_bad_colors);
+	  auto colors = mul.equal_range(Infty);
+	  for (auto it = colors.first; it != colors.second; ++it) { 
+		graph.apply_two_break(TwoBreak<Mcolor>(Infty, x0, Infty, y0, it->second));
+		++nr;
+	  } 
+	
 	  path.erase(--path.end());
 	  *path.begin() = y0;
-	  ++nr;
 	} else {
 	  //std::cerr << "... semi-cycle, fission applied" << std::endl;
-	  const std::string y0 = *(++path.rbegin());
-	  const std::string y1 = *(++++path.rbegin());
 
-	  graph.apply_two_break(TwoBreak<Mcolor>(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0).get_multicolor(y1)));
-	  ++nr;
+	  const vertex_t& y0 = *(++path.rbegin());
+	  const vertex_t& y1 = *(++++path.rbegin());
+
+	  Mularcs<Mcolor> mul = graph.get_adjacent_multiedges(y0, split_bad_colors);
+	  auto pair = mul.equal_range(y1);
+	  for (auto it = pair.first; it != pair.second; ++it) { 
+ 	    graph.apply_two_break(TwoBreak<Mcolor>(y0, y1, Infty, Infty, it->second));
+	    ++nr;
+	  }
+        
 	  path.erase(--path.end());
 	  *path.rbegin() = Infty;
 	}
-	if (path.size() < 4) return nr;
+	if (path.size() < 4) { 
+	  return nr;
+	}
       } else { 
-	;//std::cerr << "... cycle" << std::endl;
+	//std::cerr << "... cycle" << std::endl;
       } 
     }
 
@@ -161,17 +199,19 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     
       Q = graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
     
-      if (graph.is_vec_T_color(Q)) { 
+      if (process_color == Q) { 
 	break;
       } 
 
       if (*path.begin() == *path.rbegin()) {
 	//std::cerr << "... rotating" << std::endl;
+
 	path.push_back(*path.begin());
 	path.erase(path.begin());
       } else {
 	if (*path.begin() == Infty && *path.rbegin() != Infty) {
 	  //std::cerr << "... flipping" << std::endl;
+
 	  for(auto ip = ++path.begin();ip != path.end();) {
 	    path.push_front(*ip);
 	    path.erase(ip++);
@@ -179,10 +219,12 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	}
 	if (*path.rbegin() == Infty) {
 	  //std::cerr << "... extending beyond oo" << std::endl;
+
 	  path.push_back(Infty);
 	  path.erase(path.begin());
 	} else {
 	  //std::cerr << "... truncating ??" << std::endl;
+
 	  path.erase(path.begin());
 	  path.erase(--path.end());
 	  if (path.size() < 4) { 
@@ -192,8 +234,6 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
       }
     }
 
-    Mcolor Qrep = graph.get_min_complement_color(Q);
-
     // x1 -- x2 -- x3 -- ... -- x2k
     // results in:
     // x2 == x3   x4 == x5 ... x(2k-2) == x(2k-1)   x1 -- x2k
@@ -202,10 +242,13 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     path_t::const_iterator z0 = z3++;
     path_t::const_iterator z1 = z3++;
     path_t::const_iterator z2 = z3++;
+    std::set<Mcolor> colors = graph.split_color(Q);
 
     while(z3 != path.end()) {
-	graph.apply_two_break(TwoBreak<Mcolor>(*z0, *z1, *z3, *z2, Q));
-	++nr;
+      for (auto it = colors.cbegin(); it != colors.cend(); ++it) {
+	graph.apply_two_break(TwoBreak<Mcolor>(*z0, *z1, *z3, *z2, *it));
+      } 
+      ++nr;
       z1 = z3++;
       if (z3 == path.end()) { 
 	break;
@@ -214,9 +257,9 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     }
 
     //std::cerr << "... resolved with " << nr << " 2-breaks" << std::endl;
+
     return nr;
   }
-
   return 0;
 }
 

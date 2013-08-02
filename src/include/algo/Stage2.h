@@ -8,7 +8,7 @@ if return false, then Q cannot be formed
 if true - who knows...
 */
 template<class graph_t>
-bool Algorithm<graph_t>::canformQ(const std::string& x, const Mcolor& Q) const {
+bool Algorithm<graph_t>::canformQ(const vertex_t& x, const Mcolor& Q) const {
   if (x == Infty) {
     return canformQoo;
   }

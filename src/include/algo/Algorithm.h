@@ -189,6 +189,19 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
 	save_information(7, cfg);
       }
     }
+
+    if ((cfg.get_stages() >= 8) && !isChanged) {
+      std::cerr << "Stage: 8" << std::endl;
+
+      split_bad_colors = true; 
+      isChanged = stage1();
+      split_bad_colors = false;
+
+      if (print_dots[8] && !isChanged) {
+	print_dots[8] = false;
+	save_information(8, cfg);
+      }
+    }
 #else
 
     if ((cfg.get_stages() >= 3) && !isChanged) { // STAGE 3, somewhat unreliable

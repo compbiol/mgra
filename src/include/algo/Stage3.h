@@ -44,16 +44,12 @@ bool Algorithm<graph_t>::stage3_1() {
   }
 
 
-  std::cerr << "Attempt worked with " << processed.size() << " vertex" << std::endl;
-  std::cerr << "have insertion (insert vec-TC-color) " << ins << std::endl; 
-  std::cerr << "have deletion (insert TC-color) " << del << std::endl;
-  std::cerr << "not process (both TC-color) " << not_good << std::endl;
+  //std::cerr << "Attempt worked with " << processed.size() << " vertex" << std::endl;
+  //std::cerr << "have insertion (insert vec-TC-color) " << ins << std::endl; 
+  //std::cerr << "have deletion (insert TC-color) " << del << std::endl;
+  //std::cerr << "not process (both TC-color) " << not_good << std::endl;
 
-  if (number_indel_event != 0) {
-    return true; 
-  } else {
-    return false;
-  }
+  return (number_indel_event != 0); 
 } 
 
 template<class graph_t>
@@ -81,11 +77,7 @@ bool Algorithm<graph_t>::stage3_2() {
     //}
   } 
 
-  if (number_indel_event != 0) {
-    return true; 
-  } else {
-    return false;
-  }
+  return (number_indel_event != 0);
 }
 
 template<class graph_t>
@@ -99,18 +91,10 @@ bool Algorithm<graph_t>::stage6() { //less reliable
 
     if (graph.is_indel_vertex(a1) && (processed.find(a1) == processed.end()) && graph.is_indel_vertex(a2))  {
       Mularcs<Mcolor> mul1 = graph.get_adjacent_multiedges(a1); 		
-      Mularcs<Mcolor> mul2 = graph.get_adjacent_multiedges(a2); 	
       Mcolor indel_color = mul1.union_multicolors();
       Mcolor bar_indel_color = graph.get_complement_color(indel_color); 
 
-      if (mul1.size() != 0 && (mul1.get_multicolors() == mul2.get_multicolors()) && !graph.is_vec_T_color(indel_color) && !graph.is_vec_T_color(bar_indel_color)) { 
-
-	bool flag = true; 
-	for (auto it = mul1.cbegin(); (it != mul1.cend()) && flag; ++it) {
-	  flag = graph.is_vec_T_color(it->second); 
-	}
-
-	if (flag) {
+      if (mul1.size() != 0 && !graph.is_vec_T_color(indel_color) && !graph.is_vec_T_color(bar_indel_color)) { 
 	  processed.insert(a1); 
 	  processed.insert(a2);
 
@@ -118,17 +102,12 @@ bool Algorithm<graph_t>::stage6() { //less reliable
 	
 	  InsDel<Mcolor> bad_insertion(a1, a2, bar_indel_color, false); 
 	  graph.apply_ins_del(bad_insertion, false);
-	  viewed_edges.push_back(std::make_pair(bad_insertion, mul1.get_multicolors()));
+	  viewed_edges.push_back(std::make_pair(bad_insertion, graph.split_color(indel_color)));
 	  ++number_indel_event;
-	} 
       }
     }
   }
 
-  if (number_indel_event != 0) {
-    return true; 
-  } else {
-    return false;
-  } 
+  return (number_indel_event != 0); 
 } 
 #endif

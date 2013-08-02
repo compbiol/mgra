@@ -38,6 +38,7 @@ struct mbgraph_with_colors: public MBGraph {
   bool is_duplication_vertex(const vertex_t& v) const;
   bool is_have_self_loop(const vertex_t& v) const;
 
+  std::set<mcolor_t> split_color(const mcolor_t& color) const;
   Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors = false) const; 
   bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
 
@@ -46,6 +47,7 @@ struct mbgraph_with_colors: public MBGraph {
   }
 
   inline mcolor_t get_complement_color(const mcolor_t& color) const { 
+    assert(color.is_one_to_one_match());
     assert (CColorM.find(color) != CColorM.end());
     return CColorM.find(color)->second;
   } 
@@ -88,7 +90,6 @@ private:
       return answer;
   }
 
-  std::set<mcolor_t> split_color(const mcolor_t& color) const;
 private:
   mcolor_t complete_color;
   sym_map<mcolor_t> CColorM; //complementary multicolor
@@ -172,12 +173,16 @@ bool mbgraph_with_colors<mcolor_t>::is_indel_vertex(const vertex_t& v) const {
 
 template<class mcolor_t>  
 bool mbgraph_with_colors<mcolor_t>::is_duplication_vertex(const vertex_t& v) const {	
-  if (this->is_have_self_loop(v)) {
+  if (is_have_self_loop(v)) {
     return true;
- } 
+  } 
 
   Mularcs<mcolor_t> mularcs = get_adjacent_multiedges(v);
   for(auto im = mularcs.cbegin(); im != mularcs.cend(); ++im) { 
+    if (!im->second.is_one_to_one_match()) {
+	return true; 
+    }
+
     for(auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
       if (*im == *it) { 
 	continue;

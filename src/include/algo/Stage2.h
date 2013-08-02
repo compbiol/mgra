@@ -109,18 +109,13 @@ bool Algorithm<graph_t>::stage2() {
 
 	if (!is_mobil_edge(y, Cx, Cy)) {
 	  //std::cerr << "NOT MOBIL" << std::endl;
-
 	  for (auto ix = Cx.cbegin(); ix != Cx.cend(); ++ix) { 
-	    if (ix->first != y && graph.is_vec_T_color(ix->second)) { 
+            vertex_t v = Cy.get_vertex(ix->second);
+	    if (ix->first != y && graph.is_vec_T_color(ix->second) && !v.empty()) { 
 	      //std::cerr << " Sub-multiedge " << genome_match::mcolor_to_name(ix->second) << std::endl;
-	      for(auto iy = Cy.cbegin(); iy != Cy.cend(); ++iy) { 
-		if (iy->second == ix->second) { 	
-		  graph.apply_two_break(TwoBreak<Mcolor>(x, ix->first, y, iy->first, ix->second));
-		  found = true;
-		  ++nr;
-		  break; 
-		} 
-	      } 
+	      graph.apply_two_break(TwoBreak<Mcolor>(x, ix->first, y, v, ix->second));
+	      found = true;
+	      ++nr;
 	    }
 	  } 
 	} 

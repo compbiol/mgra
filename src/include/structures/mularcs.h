@@ -44,6 +44,16 @@ struct Mularcs {
     } 
   } 
 
+  inline vertex_t get_vertex(const mcolor_t& color) const { 
+    vertex_t v = "";
+    for (auto ir = mularcs.cbegin(); ir != mularcs.cend(); ++ir) {
+      if (ir->second == color) { 
+        v = ir->first;
+      }
+    }
+    return v;   
+  } 
+
   inline std::set<mcolor_t> get_multicolors() const { 
     std::set<mcolor_t> answer; 
     for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
@@ -51,10 +61,6 @@ struct Mularcs {
     }		
     return answer;	 
   }
-
-  inline std::pair<citer, citer> equal_range(const vertex_t& v) const {
-	return mularcs.equal_range(v);
-  } 
   
   inline iter find(const vertex_t& v) { 
     return mularcs.find(v);
@@ -63,6 +69,10 @@ struct Mularcs {
   inline citer find(const vertex_t& v) const { 
     return mularcs.find(v);
   }
+
+  inline std::pair<citer, citer> equal_range(const vertex_t& v) const {
+    return mularcs.equal_range(v);
+  } 
  
   inline size_t size() const {
     return mularcs.size();  

@@ -16,8 +16,11 @@ bool Algorithm<graph_t>::stage4_td() {
       //std::cerr << "vertex " << *it;
       Mularcs<Mcolor> mularcs = graph.get_adjacent_multiedges(*it); 
       if (mularcs.find(graph.get_obverse_vertex(*it)) != mularcs.cend()) {
-	std::cerr << " --> " << graph.get_obverse_vertex(*it); 
-	Mcolor color = mularcs.get_multicolor(graph.get_obverse_vertex(*it));	
+	//std::cerr << " --> " << graph.get_obverse_vertex(*it); 
+	Mcolor color = mularcs.get_multicolor(graph.get_obverse_vertex(*it));
+	if (!color.is_one_to_one_match()) { 
+		continue;
+	}
 	if (graph.is_vec_T_color(color)) { 
 	  //std::cerr << " is a vecTC. Process" << std::endl; 
 	  ++vtc; 
@@ -95,11 +98,11 @@ bool Algorithm<graph_t>::stage4_td() {
       }	
     }
   } 
-  std::cerr << "we have tandem duplication " << vtc + bvtc + tc << std::endl;
-  std::cerr << "vec-TC-color tandem duplication " << vtc << std::endl;
-  std::cerr << "TC-color tandem duplication " << bvtc << std::endl;
-  std::cerr << "both TC-color tandem duplication " << tc << std::endl;
-  std::cerr << "Not tandem duplication " << not_tandem << std::endl;
+  //std::cerr << "we have tandem duplication " << vtc + bvtc + tc << std::endl;
+  //std::cerr << "vec-TC-color tandem duplication " << vtc << std::endl;
+  //std::cerr << "TC-color tandem duplication " << bvtc << std::endl;
+  //std::cerr << "both TC-color tandem duplication " << tc << std::endl;
+  //std::cerr << "Not tandem duplication " << not_tandem << std::endl;
 
   if (number_dupl != 0) {
     return true; 
@@ -200,10 +203,10 @@ bool Algorithm<graph_t>::stage4_rtd() {
     } 
   }
 
-  std::cerr << "We have self-loops: " << vtc + bvtc + tc << std::endl; 
-  std::cerr << "vec-TC-color self-loops: " << vtc << std::endl; 
-  std::cerr << "bar vec-TC-color self loops: " << bvtc << std::endl; 
-  std::cerr << "both is TC in self-loop: " << tc << std::endl; 
+  //std::cerr << "We have self-loops: " << vtc + bvtc + tc << std::endl; 
+  //std::cerr << "vec-TC-color self-loops: " << vtc << std::endl; 
+  //std::cerr << "bar vec-TC-color self loops: " << bvtc << std::endl; 
+  //std::cerr << "both is TC in self-loop: " << tc << std::endl; 
 
   if (number_dupl != 0) {
     return true; 

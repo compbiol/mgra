@@ -81,7 +81,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
   print_dots.fill(true);
   bool process_compl = true; 
   bool isChanged = true;
-
+ 
   write_dots.write_legend_dot(cfg);
   while(isChanged) {
     isChanged = false; 

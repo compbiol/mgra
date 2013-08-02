@@ -15,39 +15,6 @@ bool Algorithm<graph_t>::stage1() {
 
       Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*is);
 
-// FIXME: REWRITE ALL CODE FOR BETTER ALGO AND NOT USES THIS
-{
-      bool flag = true; 
-      for(auto im = current.cbegin(); im != current.cend(); ++im) {	
-	 if (im->first == Infty) {
-		continue; 
-	 } 
-
-
-	 if ( graph.is_indel_vertex(im->first)) {
-	    flag = false;
-	    break;
-	}
-
-	 if (graph.is_duplication_vertex(im->first) || graph.is_indel_vertex(im->first)) {
-	    flag = false;
-	    break; 
-	 } 
-
-	 Mularcs<Mcolor> Cx = graph.get_adjacent_multiedges(im->first);
-	 for(auto ib = Cx.cbegin(); ib != Cx.cend(); ++ib) {	
-	   if (ib->first != Infty && (graph.is_duplication_vertex(ib->first) || graph.is_indel_vertex(ib->first))) {
-	     flag = false;
-	     break; 
-	   } 
-	 }
-	 if (!flag) { break; } 
-      }
-
-      if (!flag) {
-	continue;
-      } 
-}
       path_t path({*is});
 
       std::unordered_set<vertex_t> processed({*is, Infty}); // we count oo as already processed
@@ -55,13 +22,20 @@ bool Algorithm<graph_t>::stage1() {
       for(auto im = current.cbegin(); im != current.cend(); ++im) {	
 	bool is_next = (im == current.cbegin()); 
 
-	std::string current = find_simple_path(path, processed, *is, im->first, is_next);
+	vertex_t current = find_simple_path(path, processed, *is, im->first, is_next);
 
 	if (current == *is) { 
 	  break; // got a cycle from x to x, cannot extend it 
 	}  		    
       }
-      num_rear += process_simple_path(path);
+
+      if ((*path.begin() == *path.rbegin()) && (*path.begin() != Infty) 
+	&& (graph.is_duplication_vertex(*path.begin()) || graph.is_indel_vertex(*path.begin())) 
+	&& (path.size() % 2 == 0)) {
+	continue; 
+      } else {
+     	num_rear += process_simple_path(path);
+      }
     } 
 
     if (num_rear != 0) { 
@@ -80,9 +54,6 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
   while (true) {
     //FIXME: is_duplication_vertice work is a long while. And uses iff prevent duplication vertex. x -> ... -> y -> z -> t , 
     //if z - end path and edge colors z->t, y->z  complimentary, but t - is duplication vertex and 2-break down all colors.       
-    if (current != Infty && (graph.is_duplication_vertex(current) || graph.is_indel_vertex(current))) { 
-	break;
-    } 
 
     if (is_next) { 
       path.push_front(current);
@@ -96,6 +67,10 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
  
     processed.insert(current);
 
+    if (current != Infty && (graph.is_duplication_vertex(current) || graph.is_indel_vertex(current))) { 
+	break;
+    } 
+
     Mularcs<Mcolor> new_edges = graph.get_adjacent_multiedges(current);
     Mcolor previous_color = new_edges.find(previous)->second;
     new_edges.erase(previous);
@@ -108,11 +83,6 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
       break;
     } 
 
-    vertex_t future = new_edges.cbegin()->first;
-    if (future != Infty && (graph.is_duplication_vertex(future) || graph.is_indel_vertex(future)) ) {
-	break;
-    } 
-	
     previous = current;
     current = new_edges.cbegin()->first;
   }
@@ -125,61 +95,61 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
   size_t nr = 0;
 
   if (path.size() >= 4 || (path.size() == 3 && *path.begin() == *path.rbegin())) {
-    outlog << std::endl << "Processing a path of length " << path.size() - 1 << std::endl;
-    outlog << "path:\t" << *path.begin();
-    for(auto ip = ++path.begin(); ip != path.end(); ++ip) {
-      outlog << " -- " << *ip;
-    }
-    outlog << std::endl;
+    //std::cerr << std::endl << "Processing a path of length " << path.size() - 1 << std::endl;
+    //std::cerr << "path:\t" << *path.begin();
+    //for(auto ip = ++path.begin(); ip != path.end(); ++ip) {
+      //std::cerr << " -- " << *ip;
+    //}
+    //std::cerr << std::endl;
 
     if (path.size() % 2 && (*path.begin() != *path.rbegin())) {
-      outlog << "... ";
+      //std::cerr << "... ";
       if (!graph.is_vec_T_color(graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin())) ) { //FIXME
 	path.erase(path.begin());
-	outlog << "left";
+	//std::cerr << "left";
       } else {
 	path.erase(--path.end());
-	outlog << "right";
+	//std::cerr << "right";
       }
-      outlog << " end removed" << std::endl;
+      //std::cerr << " end removed" << std::endl;
     }
 
-    if (*path.begin() == Infty && *path.rbegin() == Infty ) {
+    /*if (*path.begin() == Infty && *path.rbegin() == Infty ) {
       outlog << "... affecting two chromosome ends" << std::endl;
     } else if( *path.begin() == Infty || *path.rbegin() == Infty ) {
       outlog << "... affecting a chromosome end" << std::endl;
-    }
+    }*/
 
     if (*path.begin() == *path.rbegin()) {
       if (path.size() % 2 == 0) {
 	if (*path.begin() != Infty) {
-	  outlog << "ERROR: Semi-cycle w/o infinity!" << std::endl;
+	  //std::cerr << "ERROR: Semi-cycle w/o infinity! " << *path.begin() << std::endl;
 	  exit(1);
 	}
 	if (graph.is_vec_T_color(graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin()))) { //FIXME
-	  outlog << "... semi-cycle, fusion applied" << std::endl;
-	  const std::string& x0 = *(++path.begin());
-	  const std::string& y0 = *(++path.rbegin());
+	  //std::cerr << "... semi-cycle, fusion applied" << std::endl;
+	  const vertex_t& x0 = *(++path.begin());
+	  const vertex_t& y0 = *(++path.rbegin());
     
 	  TwoBreak<Mcolor> t(Infty, x0, Infty, y0, graph.get_adjacent_multiedges(x0).get_multicolor(Infty)); 
 
-	graph.apply_two_break(t);
-	    path.erase(--path.end());
-	    *path.begin() = y0;
-	    ++nr;
+	  graph.apply_two_break(t);
+	  path.erase(--path.end());
+	  *path.begin() = y0;
+	  ++nr;
 	} else {
-	  outlog << "... semi-cycle, fission applied" << endl;
+	  //std::cerr << "... semi-cycle, fission applied" << std::endl;
 	  const std::string y0 = *(++path.rbegin());
 	  const std::string y1 = *(++++path.rbegin());
 
-	graph.apply_two_break(TwoBreak<Mcolor>(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0).get_multicolor(y1)));
-	    ++nr;
-	    path.erase(--path.end());
-	    *path.rbegin() = Infty;
+	  graph.apply_two_break(TwoBreak<Mcolor>(y0, y1, Infty, Infty, graph.get_adjacent_multiedges(y0).get_multicolor(y1)));
+	  ++nr;
+	  path.erase(--path.end());
+	  *path.rbegin() = Infty;
 	}
 	if (path.size() < 4) return nr;
       } else { 
-	outlog << "... cycle" << std::endl;
+	;//std::cerr << "... cycle" << std::endl;
       } 
     }
 
@@ -187,7 +157,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 
     while (true) {
       // multicolor of (z1,z2). N.B.: x2 is NOT oo
-      outlog << "... multicolors of first and second multiedges: ";
+      //std::cerr << "... multicolors of first and second multiedges: ";
     
       Q = graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
     
@@ -196,26 +166,28 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
       } 
 
       if (*path.begin() == *path.rbegin()) {
-	outlog << "... rotating" << std::endl;
+	//std::cerr << "... rotating" << std::endl;
 	path.push_back(*path.begin());
 	path.erase(path.begin());
       } else {
 	if (*path.begin() == Infty && *path.rbegin() != Infty) {
-	  outlog << "... flipping" << std::endl;
+	  //std::cerr << "... flipping" << std::endl;
 	  for(auto ip = ++path.begin();ip != path.end();) {
 	    path.push_front(*ip);
 	    path.erase(ip++);
 	  }
 	}
 	if (*path.rbegin() == Infty) {
-	  outlog << "... extending beyond oo" << std::endl;
+	  //std::cerr << "... extending beyond oo" << std::endl;
 	  path.push_back(Infty);
 	  path.erase(path.begin());
 	} else {
-	  outlog << "... truncating ??" << std::endl;
+	  //std::cerr << "... truncating ??" << std::endl;
 	  path.erase(path.begin());
 	  path.erase(--path.end());
-	  if (path.size() < 4) return nr;
+	  if (path.size() < 4) { 
+	    return nr;
+	  }
 	}
       }
     }
@@ -241,7 +213,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
       z2 = z3++;
     }
 
-    outlog << "... resolved with " << nr << " 2-breaks" << std::endl;
+    //std::cerr << "... resolved with " << nr << " 2-breaks" << std::endl;
     return nr;
   }
 

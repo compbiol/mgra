@@ -9,7 +9,7 @@ bool Algorithm<graph_t>::stage5_1() {
 
  do {
    number_rear = 0;
-   outlog << "Stage 5_1: splitting into connected components" << std::endl;
+   //std::cerr << "Stage 5_1: splitting into connected components" << std::endl;
 
    // go over all T-consistent multicolors
    for(auto ic = graph.cbegin_T_color(); ic != graph.cend_T_color(); ++ic) {
@@ -41,7 +41,7 @@ bool Algorithm<graph_t>::stage5_1() {
        // N.B. for regular edges (x, y) of multicolor Q, QQ[x] = y and QQ[y] = x
        // for irregular edge (x,oo), QQ[x] = oo		    
        CC.update();
-       outlog << genome_match::mcolor_to_name(*ic) << " ~ " << CC.classes() << std::endl;
+       //std::cerr << genome_match::mcolor_to_name(*ic) << " ~ " << CC.classes() << std::endl;
     
        typedef std::string concom_t; //connected components type
        std::map<concom_t, std::set<arc_t> > EC; // reg. edges between diff. connected components of color Q
@@ -91,7 +91,7 @@ bool Algorithm<graph_t>::stage5_1() {
 	     } 
 	     // if e is enriched to T-consistent color, great!
 	     if (T.size() > Q.size() && graph.is_T_consistent_color(T) ) {
-	       outlog << "perfect edge is found" << std::endl;
+	       //std::cerr << "perfect edge is found" << std::endl;
 	       q = t;
 	       found = true;
 	       EI[ie->first].erase(ii);
@@ -100,14 +100,14 @@ bool Algorithm<graph_t>::stage5_1() {
 
 	   // we did not find good edge, but there are some candidates - take any
 	   if (!found && EI[ie->first].size() == 1) {
-	     outlog << "somewhat good but unique edge is found" << std::endl;
+	     //std::cerr << "somewhat good but unique edge is found" << std::endl;
 	     q = *(EI[ie->first].begin());
 	     EI.erase(ie->first);
 	     found = true;
 	   }
 
 	   if (!found && EI[ie->first].size() == 0) {
-	     outlog << "no irregular edges, do fission" << std::endl;
+	     //std::cerr << "no irregular edges, do fission" << std::endl;
 	     q = std::make_pair(Infty, Infty);
 	     found = true;
 	   }
@@ -125,7 +125,7 @@ bool Algorithm<graph_t>::stage5_1() {
 	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q));
 	   ++number_rear;
 			    
-	   outlog << "Stage 5_1: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
+	   //std::cerr << "Stage 5_1: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
 
 	   processed.insert(CC[p.first]);
 	   if (q.first != Infty) { 
@@ -160,7 +160,7 @@ bool Algorithm<graph_t>::stage5_1() {
 	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q));
 	   ++number_rear;
 
-	   outlog << "Stage 222.2: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << endl;
+	   //std::cerr << "Stage 222.2: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << endl;
 
 	   processed.insert({CC[p.first], CC[q.first], CC[p.second], CC[q.second]});
 	   repeat = true;
@@ -210,7 +210,7 @@ bool Algorithm<graph_t>::stage5_2() {
 	     Mularcs<Mcolor> Cz = graph.get_adjacent_multiedges(z);
 	     vertex_t v = Cz.get_vertex(Q);
 	     if (!v.empty() && (Mx.find(v) != Mx.cend())) {
-	       outlog << "Stage 5_2: " << x << " - " << y << "\tX\t" << v << " - " << z << std::endl;
+	       //std::cerr << "Stage 5_2: " << x << " - " << y << "\tX\t" << v << " - " << z << std::endl;
 	       graph.apply_two_break(TwoBreak<Mcolor>(x, y, v, z, Q));
 	       ++number_rear;
 	       next = true;
@@ -228,56 +228,4 @@ bool Algorithm<graph_t>::stage5_2() {
 
  return isChanged; 
 } 
-
-/*template<class graph_t>
-bool Algorithm<graph_t>::stage7() { 
- bool isChanged = false;
- size_t number_rear = 0; // number of rearrangements
-
- do {
-   number_rear = 0;
-
-   for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
-     if (graph.is_indel_vertex(*is) || graph.is_duplication_vertex(*is)) {
-	continue;
-     }
-
-     const vertex_t& x = *is;     
-     Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
-     bool next = false;
-
-     for(auto im = Mx.cbegin(); (im != Mx.cend()) && (!next); ++im) {
-       const vertex_t& y = im->first;
-       const Mcolor& Q = im->second;
-
-       if (graph.is_vec_T_color(Q) && y != Infty && !graph.is_indel_vertex(y) && !graph.is_duplication_vertex(y)) { 
-         Mularcs<Mcolor> My = graph.get_adjacent_multiedges(y);
-         My.erase(x);
-
-         for(auto jm = My.cbegin(); (jm != My.cend()) && (!next); ++jm) {
-	   const vertex_t& z = jm->first;
-	 
-	   if (z != Infty && !graph.is_indel_vertex(z) && !graph.is_duplication_vertex(z)) { 
-	     Mularcs<Mcolor> Cz = graph.get_adjacent_multiedges(z);
-	     vertex_t v = Cz.get_vertex(Q);
-	     if (!v.empty() && (Mx.find(v) != Mx.cend())) {
-	       outlog << "Stage 5_2: " << x << " - " << y << "\tX\t" << v << " - " << z << std::endl;
-	       graph.apply_two_break(TwoBreak<Mcolor>(x, y, v, z, Q));
-	       ++number_rear;
-	       next = true;
-	     }
-	   }
-         }
-       }
-     }
-   }
-
-   if (number_rear != 0) { 
-     isChanged = true; 
-   } 
- } while (number_rear > 0);
-
- return isChanged; 
-} */
-
 #endif

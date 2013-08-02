@@ -14,9 +14,9 @@
 struct Mcolor {
   enum Construct {Difference, Union, Intersection};
 	
-  typedef std::map<size_t, size_t> my_map;
-  typedef my_map::const_iterator citer;
-  typedef my_map::iterator iter; 
+  typedef std::map<size_t, size_t> map_t;
+  typedef map_t::const_iterator citer;
+  typedef map_t::iterator iter; 
 
   Mcolor() { 
   } 
@@ -33,6 +33,14 @@ struct Mcolor {
       break; 
     case Intersection: set_intersection(first, second);
       break; 
+    } 
+  } 
+
+  inline void insert(size_t i) {
+    if (main_color.find(i) == main_color.end()) {  
+      main_color.insert(std::make_pair(i, 1));
+    } else {
+      main_color[i] += 1;	
     } 
   } 
 
@@ -80,16 +88,9 @@ struct Mcolor {
   } 
 
 
-  inline void insert(size_t i) {
-    if (main_color.find(i) == main_color.end()) {  
-      main_color.insert(std::make_pair(i, 1));
-    } else {
-      main_color[i] += 1;	
-    } 
-  } 
-
-  inline size_t find(size_t i) { 
-    return main_color[i];					
+  inline size_t find(size_t i) const { 
+    assert(main_color.find(i) != main_color.end());
+    return main_color.find(i)->second;					
   } 
 
   inline bool in_color(size_t j) const { 
@@ -218,6 +219,6 @@ private:
   }
 
 private: 
-  my_map main_color;
+  map_t main_color;
 };
 #endif

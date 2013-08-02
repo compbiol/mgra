@@ -3,10 +3,10 @@
 
 template<class mcolor_t>
 struct Mularcs { 
-  typedef std::multimap<vertex_t, mcolor_t> mymap; 
-  typedef typename mymap::const_iterator citer; 
-  typedef typename mymap::const_reverse_iterator criter;
-  typedef typename mymap::iterator iter;    
+  typedef std::multimap<vertex_t, mcolor_t> map_t; 
+  typedef typename map_t::const_iterator citer; 
+  typedef typename map_t::const_reverse_iterator criter;
+  typedef typename map_t::iterator iter;    
 
   inline void insert(const vertex_t& v, const mcolor_t& mc) { 
     mularcs.insert(std::make_pair(v, mc));	
@@ -35,6 +35,14 @@ struct Mularcs {
     }
     return un;
   }
+
+  inline std::set<mcolor_t> get_multicolors() const { 
+    std::set<mcolor_t> answer; 
+    for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
+      answer.insert(it->second);
+    }		
+    return answer;	 
+  }
  
   inline mcolor_t get_multicolor(const vertex_t& v) const {
     if (mularcs.find(v) != mularcs.cend()) { 
@@ -53,20 +61,8 @@ struct Mularcs {
     }
     return v;   
   } 
-
-  inline std::set<mcolor_t> get_multicolors() const { 
-    std::set<mcolor_t> answer; 
-    for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
-      answer.insert(it->second);
-    }		
-    return answer;	 
-  }
   
-  inline iter find(const vertex_t& v) { 
-    return mularcs.find(v);
-  }
-
-  inline citer find(const vertex_t& v) const { 
+  inline iter find(const vertex_t& v) { //FIXME: MAYBE REMOVE
     return mularcs.find(v);
   }
 
@@ -94,7 +90,7 @@ struct Mularcs {
     return mularcs.crend();
   } 
 private: 
-  mymap mularcs;
+  map_t mularcs;
 }; 
 
 #endif

@@ -38,8 +38,8 @@ struct mbgraph_with_colors: public MBGraph {
   bool is_duplication_vertex(const vertex_t& v) const;
   bool is_have_self_loop(const vertex_t& v) const;
 
-  std::set<mcolor_t> split_color(const mcolor_t& color) const;
   Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors = false) const; 
+  std::set<mcolor_t> split_color(const mcolor_t& color) const;
   bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
 
   inline mcolor_t get_complete_color() const {
@@ -133,13 +133,10 @@ mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<Genome>& ge
 template<class mcolor_t>
 bool mbgraph_with_colors<mcolor_t>::is_simple_vertex(const vertex_t& v) const {
   Mularcs<mcolor_t> mularcs = get_adjacent_multiedges(v);
-  if (mularcs.size() == 2) { 
-    if (mularcs.cbegin()->second.is_one_to_one_match() && mularcs.crbegin()->second.is_one_to_one_match()) { 
-      if (!is_duplication_vertex(v) && !is_indel_vertex(v)) {
+  if (mularcs.size() == 2 && mularcs.cbegin()->second.is_one_to_one_match() && mularcs.crbegin()->second.is_one_to_one_match() 
+      && !is_duplication_vertex(v) && !is_indel_vertex(v)) {
 	return true;  
-      }
-    } 
-  } 
+  }
   return false; 
 }  
 
@@ -160,14 +157,10 @@ bool mbgraph_with_colors<mcolor_t>::is_indel_vertex(const vertex_t& v) const {
  
   mcolor_t un = get_adjacent_multiedges(v).union_multicolors();
 	
-  if (!un.is_one_to_one_match()) {
+  if (!un.is_one_to_one_match() || (un == complete_color)) {
 	return false; 
   }  
 
-  if (un == complete_color) { 
-    return false;
-  }
- 
   return true; 
 }
 
@@ -184,16 +177,15 @@ bool mbgraph_with_colors<mcolor_t>::is_duplication_vertex(const vertex_t& v) con
     }
 
     for(auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
-      if (*im == *it) { 
-	continue;
-      } 
-
-      mcolor_t color(im->second, it->second, mcolor_t::Intersection);
-      if (!color.empty()) { 
-	return true; 
+      if (*im != *it) { 
+        mcolor_t color(im->second, it->second, mcolor_t::Intersection);
+        if (!color.empty()) { 
+	  return true; 
+        }
       }
     } 
   }  
+
   return false; 
 } 
 
@@ -252,10 +244,6 @@ std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& co
 	S.insert(color);
 	return S;
     }
-
-//    if (!split_bad_colors) { 
-//		
-//    }
 
     equivalence<size_t> EQ;
     for(auto iq = color.cbegin(); iq != color.cend(); ++iq) { 

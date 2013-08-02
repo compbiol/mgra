@@ -9,8 +9,6 @@
 #include "writer/Wstats.h"
 #include "writer/Wdots.h"
 
-extern std::ofstream outlog;
-
 typedef std::list<vertex_t> path_t;
 
 template<class graph_t>
@@ -54,7 +52,8 @@ private:
 	//Stage 6: process insertion/deletion events less reliable
 	bool stage6();
 
-	//Stage 4: process H-subgraph with split bad color
+	//Stage 7: process H-subgraph with split bad color
+	//Stage 8: process complete but non-T-consistent paths/cycles by splitting colors
 
 	//Not uses stage: 
 	bool cut_free_ends(); 
@@ -205,7 +204,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
 #else
 
     if ((cfg.get_stages() >= 3) && !isChanged) { // STAGE 3, somewhat unreliable
-      outlog << "Stage: 3" << std::endl;
+      //std::cerr << "Stage: 3" << std::endl;
 
       isChanged = stage5_1(); // cut the graph into connected components
       
@@ -225,7 +224,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
     }
 
     if ((cfg.get_stages() >= 4) && !isChanged) {
-      outlog << "Stage: 4" << std::endl;
+      //std::cerr << "Stage: 4" << std::endl;
 
       split_bad_colors = true; 
       isChanged = stage2();
@@ -239,7 +238,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
 
 
     if (process_compl && !cfg.get_completion().empty() && !isChanged) {     
-      outlog << "Manual Completion Stage" << std::endl;
+      //std::cerr << "Manual Completion Stage" << std::endl;
 
       auto completion = cfg.get_completion();
       for(auto il = completion.begin(); il != completion.end(); ++il) {
@@ -289,6 +288,6 @@ void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance<Mc
 #include "Stage4.h"
 #include "Stage5.h"
 
-#include "Stage99.h"
+//#include "Stage99.h"
 
 #endif

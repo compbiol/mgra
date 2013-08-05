@@ -219,8 +219,8 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     std::set<Mcolor> colors = graph.split_color(Q);
 
     while(z3 != path.end()) {
-      for (auto it = colors.cbegin(); it != colors.cend(); ++it) {
-	graph.apply_two_break(TwoBreak<Mcolor>(*z0, *z1, *z3, *z2, *it));
+      for (const auto &col: colors) {
+	graph.apply_two_break(TwoBreak<Mcolor>(*z0, *z1, *z3, *z2, col));
 	++number_rear;     
       } 
       z1 = z3++;

@@ -49,9 +49,13 @@ private:
 	bool stage5_1(); 
 	bool stage5_2();
 
+	//Stage 10: convert duplication to tandem duplication  //FIXME: GO TO STAGE 6 
+	bool stage4_conv_to_td();
+
 	//Stage 6: process insertion/deletion events bu splitting colors 
 	//Stage 7: process H-subgraph with split bad color
 	//Stage 8: process complete but non-T-consistent paths/cycles by splitting colors
+	//Stage 9: process complete but non-T-consistent tandem duplication and reverse tandem duplication by splitting colors
 
 	//Not uses stage: 
 	bool cut_free_ends(); 
@@ -74,7 +78,7 @@ private:
 template<class graph_t>
 void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
   save_information(0, cfg);
-  std::array<bool, 9> print_dots;
+  std::array<bool, 11> print_dots;
   print_dots.fill(true);
   bool process_compl = true; 
   bool isChanged = true;
@@ -124,10 +128,8 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
    if ((cfg.get_stages() >= 4) && !isChanged) { 
       std::cerr << "Stage: 4 (tandem duplication stage)" << std::endl;
 
-      if (!isChanged) { 
-	isChanged = stage4_rtd(); 
-      }	
-
+      isChanged = stage4_rtd(); 
+      
       if (!isChanged) { 
 	isChanged = stage4_td(); 
       }	
@@ -196,14 +198,19 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
 	save_information(8, cfg);
       }
     }
-
+    
     if ((cfg.get_stages() >= 9) && !isChanged) {
       std::cerr << "Stage: 9" << std::endl;
 
       split_bad_colors = true; 
-      //isChanged = stage4_rtd();
-      //isChanged = stage4_td();
+      isChanged = stage4_td();
       split_bad_colors = false;
+
+      if (!isChanged) { 
+	split_bad_colors = true; 
+	isChanged = stage4_rtd(); 
+	split_bad_colors = false;
+      }	
 
       if (print_dots[9] && !isChanged) {
 	print_dots[9] = false;
@@ -211,6 +218,30 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
       }
     }
 
+
+    if ((cfg.get_stages() >= 10) && !isChanged) { 
+      std::cerr << "Stage: 10 (convert from duplication to tandem duplication)" << std::endl;
+
+      isChanged = stage4_conv_to_td(); 
+      
+      if (print_dots[10] && !isChanged) {
+	print_dots[10] = false;
+	save_information(10, cfg);		    
+      }
+    }
+
+    if ((cfg.get_stages() >= 11) && !isChanged) { 
+      std::cerr << "Stage: 11 (convert from duplication to tandem duplication) less reliable" << std::endl;
+
+      split_bad_colors = true; 
+      isChanged = stage4_conv_to_td(); 
+      split_bad_colors = false; 
+	
+      if (print_dots[11] && !isChanged) {
+	print_dots[11] = false;
+	save_information(11, cfg);		    
+      }
+    }
 #else
    if ((cfg.get_stages() >= 1) && !isChanged) {
       //std::cerr << "Stage: 1" << std::endl;
@@ -286,12 +317,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
 
   }	
 
-  write_dots.save_dot(graph, cfg, 99);
-
-#ifndef VERSION2
-  Statistics<graph_t> st(graph);
-  write_stats.print_fair_edges(graph, st);
-#else 
+#ifdef VERSION2 
   if (!viewed_edges.empty()) {
  	remove_past_bad_colors();
   }
@@ -299,6 +325,14 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
   if (!viewed_edges.empty()) {
 	std::cerr << "WARNING, WARNING: Viewed edges, when we insert TC color, not removed. We have " << viewed_edges.size() << std::endl;
   }
+#endif 
+
+  write_dots.save_dot(graph, cfg, 99);
+
+#ifndef VERSION2
+  Statistics<graph_t> st(graph);
+  write_stats.print_fair_edges(graph, st);
+#else 
   write_dots.save_components(graph, cfg, 5);
 #endif
 

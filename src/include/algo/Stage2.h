@@ -71,30 +71,60 @@ bool Algorithm<graph_t>::stage2() {
 	continue; 
       } 
 
-      Mularcs<Mcolor> M = graph.get_adjacent_multiedges(x);
-      Mularcs<Mcolor> Cx = graph.get_adjacent_multiedges(x, split_bad_colors);	 
-     
+      Mularcs<Mcolor> M;// = graph.get_adjacent_multiedges(x);
+      Mularcs<Mcolor> Cx;// = graph.get_adjacent_multiedges(x, split_bad_colors);	
+      {
+	Mularcs<Mcolor> oldM = graph.get_adjacent_multiedges(x);
+	Mularcs<Mcolor> oldCx = graph.get_adjacent_multiedges(x, split_bad_colors);	
+
+	for(auto im = oldM.cbegin(); im != oldM.cend(); ++im) { 
+	  if (im->second != graph.get_complete_color() && (im->first == Infty 
+		|| (im->first != Infty && !graph.is_duplication_vertex(im->first) && !graph.is_indel_vertex(im->first)))) { 	
+	    auto ins = oldCx.equal_range(im->first);
+	    Cx.insert(ins.first, ins.second);
+	    M.insert(im->first, im->second);
+	  }
+	}
+	M.erase(Infty);
+      }
+
       bool found = false;
       for(auto im = M.cbegin(); (im != M.cend()) && !found; ++im) {
 	const vertex_t& y = im->first; // Q == im->second - color of central edge
 
-	if (im->first != Infty && !graph.is_duplication_vertex(im->first) && !graph.is_indel_vertex(im->first)) { 
-	  Mularcs<Mcolor> Cy = graph.get_adjacent_multiedges(y, split_bad_colors);
-	  Cy.erase(x);
+	//if (im->first != Infty && !graph.is_duplication_vertex(im->first) && !graph.is_indel_vertex(im->first)) { 
 	
-	  if (!is_mobil_edge(y, Cx, Cy)) {
-	    //std::cerr << "NOT MOBIL" << std::endl;
-	    for (auto ix = Cx.cbegin(); ix != Cx.cend(); ++ix) { 
-              vertex_t v = Cy.get_vertex(ix->second);
-	      if (ix->first != y && graph.is_vec_T_color(ix->second) && !v.empty()) { 
-	        //std::cerr << " Sub-multiedge " << genome_match::mcolor_to_name(ix->second) << std::endl;
-	        graph.apply_two_break(TwoBreak<Mcolor>(x, ix->first, y, v, ix->second));
-	        found = true;
-	        ++number_rear;
-	      }
-	    } 
+	Mularcs<Mcolor> Cy;// = graph.get_adjacent_multiedges(y, split_bad_colors);
+	//Cy.erase(x);
+	{
+	  Mularcs<Mcolor> oldCy = graph.get_adjacent_multiedges(y, split_bad_colors);
+	  oldCy.erase(x);
+	  std::unordered_set<vertex_t> processed;
+	  for(auto iy = oldCy.cbegin(); iy != oldCy.cend(); ++iy) { 
+	    if (processed.find(iy->first) == processed.cend()) {
+	      if ((iy->first == Infty) || (iy->first != Infty && !graph.is_duplication_vertex(iy->first) && !graph.is_indel_vertex(iy->first))) {
+		auto ins = oldCy.equal_range(iy->first);
+		Cy.insert(ins.first, ins.second); 
+		processed.insert(iy->first);
+	      } 
+	    }
+	  }
+	}
+
+	if (!is_mobil_edge(y, Cx, Cy)) {
+	  //std::cerr << "NOT MOBIL" << std::endl;
+	  for (auto ix = Cx.cbegin(); ix != Cx.cend(); ++ix) { 
+            vertex_t v = Cy.get_vertex(ix->second);
+	    if (ix->first != y && graph.is_vec_T_color(ix->second) && !v.empty()) { 
+	      //std::cerr << " Sub-multiedge " << genome_match::mcolor_to_name(ix->second) << std::endl;
+	      graph.apply_two_break(TwoBreak<Mcolor>(x, ix->first, y, v, ix->second));
+	      found = true;
+	      ++number_rear;
+	    }
 	  } 
-	} 
+	}
+
+	//}  
       }
     } 
 

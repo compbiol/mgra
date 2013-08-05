@@ -84,41 +84,42 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
     isChanged = false; 
 
 #ifdef VERSION2
-    if ((cfg.get_stages() >= 1) && !isChanged) { 
-      std::cerr << "Stage: 1 (indel stage)" << std::endl;
+    if ((cfg.get_stages() >= 1) && !isChanged) {
+      std::cerr << "Stage: 1" << std::endl;
 
-      if (!isChanged) { 
-	isChanged = stage3_1(); 
-      }	
+      isChanged = stage1();	
 
       if (print_dots[1] && !isChanged) {
-	print_dots[1] = false;
-	save_information(1, cfg);		    
+	print_dots[1] = false;    	
+	save_information(1, cfg);		
       }
+
     }
 
     if ((cfg.get_stages() >= 2) && !isChanged) {
       std::cerr << "Stage: 2" << std::endl;
 
-      isChanged = stage1();	
+      isChanged = stage2();
 
       if (print_dots[2] && !isChanged) {
-	print_dots[2] = false;    	
-	save_information(2, cfg);		
+	print_dots[2] = false;
+	save_information(2, cfg);		    
       }
-
     }
 
-    if ((cfg.get_stages() >= 3) && !isChanged) {
-      std::cerr << "Stage: 3" << std::endl;
+    if ((cfg.get_stages() >= 3) && !isChanged) { 
+      std::cerr << "Stage: 3 (indel stage)" << std::endl;
 
-      isChanged = stage2();
+      if (!isChanged) { 
+	isChanged = stage3_1(); 
+      }	
 
       if (print_dots[3] && !isChanged) {
 	print_dots[3] = false;
 	save_information(3, cfg);		    
       }
     }
+
 
    if ((cfg.get_stages() >= 4) && !isChanged) { 
       std::cerr << "Stage: 4 (tandem duplication stage)" << std::endl;
@@ -298,7 +299,7 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
   if (!viewed_edges.empty()) {
 	std::cerr << "WARNING, WARNING: Viewed edges, when we insert TC color, not removed. We have " << viewed_edges.size() << std::endl;
   }
-//  write_dots.save_components(graph, cfg, 5);
+  write_dots.save_components(graph, cfg, 5);
 #endif
 
   write_stats.histStat(graph);

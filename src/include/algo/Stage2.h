@@ -76,6 +76,7 @@ bool Algorithm<graph_t>::stage2() {
       {
 	Mularcs<Mcolor> oldM = graph.get_adjacent_multiedges(x);
 	Mularcs<Mcolor> oldCx = graph.get_adjacent_multiedges(x, split_bad_colors);	
+
 	for(auto im = oldM.cbegin(); im != oldM.cend(); ++im) { 
 	  if (im->second != graph.get_complete_color() && (im->first == Infty 
 		|| (im->first != Infty && !graph.is_duplication_vertex(im->first) && !graph.is_indel_vertex(im->first)))) { 	

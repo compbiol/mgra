@@ -1,19 +1,21 @@
 #ifndef GENOME_MATCH_ 
 #define GENOME_MATCH_ 
 
-#include <algorithm>
-#include <set>
-#include <sstream>
-#include <cassert>
-
 #include "pconf.h"
 #include "genome.h"
 #include "mcolor.h"
 
 struct genome_match { 
-  typedef std::unordered_map<orf_t, size_t> gen2num; 
+  typedef std::unordered_map<std::string, size_t> gen2num; 
  
-  static void init_name_genomes(const ProblemInstance<Mcolor>& cfg, const std::vector<Genome>& genomes);
+  static void init_name_genomes(const ProblemInstance<Mcolor>& cfg, const std::vector<Genome>& genomes) {
+    number_to_genome.resize(genomes.size());
+	
+    for(size_t i = 0; i < genomes.size(); ++i) { 
+      number_to_genome[i] = cfg.get_priority_name(i);
+      genome_to_number.insert(std::make_pair(number_to_genome[i], i));
+    }
+  } 
   
   inline static bool member_name (const std::string& i) { 
     return (genome_to_number.find(i) != genome_to_number.end());
@@ -24,10 +26,40 @@ struct genome_match {
     return genome_to_number.find(s)->second;
   }
 
-  static Mcolor name_to_mcolor(const std::string& name); 
-  static std::string mcolor_to_name(const Mcolor& color);
+  static Mcolor name_to_mcolor(const std::string& name) {
+    Mcolor current;
+
+    for (size_t j = 0; j < name.size(); ++j) {
+      std::string t = name.substr(j, 1);
+      if (genome_to_number.find(t) == genome_to_number.end()) {
+	std::cerr << "ERROR: Malformed multicolor " << name << std::endl;
+	exit(1);
+      }
+      current.insert(genome_to_number.find(t)->second);
+    }
+
+    return current;
+  }
+
+  static std::string mcolor_to_name(const Mcolor& S) {
+    if (S.empty()) { 
+      return "\\ensuremath{\\emptyset}";
+    }
+
+    std::ostringstream os;
+
+    for(auto is = S.cbegin(); is != S.cend(); ++is) {
+      const std::string& sym = number_to_genome[is->first]; 
+      for(size_t i = 0; i < is->second; ++i) { 
+	os << sym;
+      } 
+    }
+
+    return os.str();
+  }
+     
 private: 
-  static std::vector<orf_t> number_to_genome;
+  static std::vector<std::string> number_to_genome;
   static gen2num genome_to_number;    		
 };
 

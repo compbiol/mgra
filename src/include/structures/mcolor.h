@@ -7,7 +7,7 @@
 #include <set>
 #include <utility>
 
-#include "equivalence.h"
+#include "utility/equivalence.h"
 
 #define member(S,x) ((S).find(x)!=(S).end()) //FIXME: DELETED
 
@@ -45,8 +45,8 @@ struct Mcolor {
   } 
 
   inline bool is_one_to_one_match() const {
-    for (auto it = main_color.cbegin(); it != main_color.cend(); ++it) { 
-      if (it->second != 1) { 
+    for (const auto &col : main_color) { 
+      if (col.second != 1) { 
 	return false; 
       } 
     } 
@@ -88,7 +88,7 @@ struct Mcolor {
   } 
 
 
-  inline size_t find(size_t i) const { 
+  inline size_t find(size_t i) const { //FIXME
     assert(main_color.find(i) != main_color.end());
     return main_color.find(i)->second;					
   } 

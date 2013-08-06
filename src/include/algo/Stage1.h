@@ -8,16 +8,16 @@ bool Algorithm<graph_t>::stage1() {
 
   do {
     number_rear = 0; 
-    for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
-      if (graph.is_simple_vertex(*is)) { 
-	path_t path({*is});
-	std::unordered_set<vertex_t> processed({*is, Infty}); // we count oo as already processed
-	Mularcs<Mcolor> current = graph.get_adjacent_multiedges(*is);
+    for (const auto& v: graph) {  
+      if (graph.is_simple_vertex(v)) { 
+	path_t path({v});
+	std::unordered_set<vertex_t> processed({v, Infty}); // we count oo as already processed
+	Mularcs<Mcolor> current = graph.get_adjacent_multiedges(v);
 
 	for(auto im = current.cbegin(); im != current.cend(); ++im) {	
 	  bool is_next = (im == current.cbegin()); 
-	  vertex_t current = find_simple_path(path, processed, *is, im->first, is_next);
-	  if (current == *is) { 
+	  vertex_t current = find_simple_path(path, processed, v, im->first, is_next);
+	  if (current == v) { 
 	    break; // got a cycle from x to x, cannot extend it 
 	  }  		    
 	}
@@ -58,7 +58,7 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
     if (processed.find(current) == processed.end() && !graph.is_duplication_vertex(current) && !graph.is_indel_vertex(current)) {     
       processed.insert(current);
       Mularcs<Mcolor> new_edges = graph.get_adjacent_multiedges(current);
-      Mcolor previous_color = new_edges.find(previous)->second;
+      Mcolor previous_color = new_edges.get_multicolor(previous); //->second;
       new_edges.erase(previous);
     
       if (new_edges.size() == 1 && graph.get_complement_color(previous_color) == new_edges.cbegin()->second) {

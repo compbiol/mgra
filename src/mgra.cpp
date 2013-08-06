@@ -34,6 +34,9 @@ using namespace std;
 #include "Wdots.h"
 #include "mbgraph_history.h"
 
+std::vector<std::string> genome_match::number_to_genome;
+genome_match::gen2num genome_match::genome_to_number;   
+
 typedef sym_multi_hashmap<vertex_t> partgraph_t;
 
 std::ofstream outlog("/dev/null");

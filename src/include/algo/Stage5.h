@@ -209,7 +209,7 @@ bool Algorithm<graph_t>::stage5_2() {
 	   if (z != Infty && !graph.is_indel_vertex(z) && !graph.is_duplication_vertex(z)) { 
 	     Mularcs<Mcolor> Cz = graph.get_adjacent_multiedges(z);
 	     vertex_t v = Cz.get_vertex(Q);
-	     if (!v.empty() && (Mx.find(v) != Mx.cend())) {
+	     if (!v.empty() && Mx.defined(v)) { // find(v) != Mx.cend())) {
 	       //std::cerr << "Stage 5_2: " << x << " - " << y << "\tX\t" << v << " - " << z << std::endl;
 	       graph.apply_two_break(TwoBreak<Mcolor>(x, y, v, z, Q));
 	       ++number_rear;

@@ -30,22 +30,26 @@ struct Mularcs {
  
   inline mcolor_t union_multicolors() const {
     mcolor_t un; 
-    for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
-      un = mcolor_t(un, it->second, mcolor_t::Union);  
+    for (const auto &arc : mularcs) { 
+      un = mcolor_t(un, arc.second, mcolor_t::Union);  
     }
     return un;
   }
 
   inline std::set<mcolor_t> get_multicolors() const { 
     std::set<mcolor_t> answer; 
-    for (auto it = mularcs.cbegin(); it != mularcs.cend(); ++it) {
-      answer.insert(it->second);
+    for (const auto &arc : mularcs) {
+      answer.insert(arc.second);
     }		
     return answer;	 
   }
+
+  inline bool defined(const vertex_t& v) const { 
+    return (mularcs.count(v) != 0);
+  }
  
   inline mcolor_t get_multicolor(const vertex_t& v) const {
-    if (mularcs.find(v) != mularcs.cend()) { 
+    if (mularcs.count(v) != 0) { 
       return mularcs.find(v)->second; 
     } else { 
       return mcolor_t();
@@ -62,10 +66,6 @@ struct Mularcs {
     return v;   
   } 
   
-  inline iter find(const vertex_t& v) { //FIXME: MAYBE REMOVE
-    return mularcs.find(v);
-  }
-
   inline std::pair<citer, citer> equal_range(const vertex_t& v) const {
     return mularcs.equal_range(v);
   } 
@@ -73,6 +73,14 @@ struct Mularcs {
   inline size_t size() const {
     return mularcs.size();  
   }
+
+  inline iter begin() { 
+    return mularcs.begin(); 
+  } 
+
+  inline iter end() { 
+    return mularcs.end();
+  } 
 
   inline citer cbegin() const { 
     return mularcs.cbegin(); 

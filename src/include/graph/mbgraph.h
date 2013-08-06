@@ -35,13 +35,15 @@
 //const vertex_t Infty = "oo"; 
 
 struct MBGraph {
+  typedef std::string orf_t;
+
   MBGraph(const std::vector<Genome>& genomes) 
   : local_graph(genomes.size()) 
   { 
-    std::unordered_set<orf_t> blocks; 
+    std::unordered_set<orf_t> blocks;
 
-    for(size_t i = 0; i < genomes.size(); ++i) { 
-      for(auto it = genomes[i].cbegin(); it != genomes[i].cend(); ++it) {
+    for (const auto& genome : genomes) { 
+      for(auto it = genome.cbegin(); it != genome.cend(); ++it) {
 	if (blocks.count(it->second.first) == 0) { 
 	  obverse_edges.insert(it->second.first + "t", it->second.first + "h");
 	  blocks.insert(it->second.first);
@@ -107,6 +109,14 @@ struct MBGraph {
   inline size_t count_vertex() const { 
     return vertex_set.size();
   } 
+
+  inline std::set<vertex_t>::iterator begin() { 
+    return vertex_set.begin();
+  } 
+	
+  inline std::set<vertex_t>::iterator end() { 
+    return vertex_set.end();
+  }
 		
   inline std::set<vertex_t>::const_iterator begin_vertices() const { 
     return vertex_set.cbegin();

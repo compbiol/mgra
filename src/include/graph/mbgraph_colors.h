@@ -143,7 +143,7 @@ bool mbgraph_with_colors<mcolor_t>::is_simple_vertex(const vertex_t& v) const {
 template<class mcolor_t>
 bool mbgraph_with_colors<mcolor_t>::is_have_self_loop(const vertex_t& v) const {
   Mularcs<mcolor_t> mularcs = get_adjacent_multiedges(v);
-  if (mularcs.find(v) != mularcs.cend()) {
+  if (mularcs.defined(v)) {
      return true;
   } 
   return false;
@@ -202,11 +202,7 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
     if (local_graph[i].defined(u)) { 
       std::pair<partgraph_t::const_iterator, partgraph_t::const_iterator> iters = local_graph[i].equal_range(u);
       for (auto it = iters.first; it != iters.second; ++it) { 
-	if (output.find(it->second) != output.cend()) { 
-	  output.find(it->second)->second.insert(i);
-	} else { 
-	  output.insert(it->second, mcolor_t(i));	
-	} 
+	output.insert(it->second, i); 
       }
     } 
   }
@@ -250,9 +246,9 @@ std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& co
 	EQ.addrel(iq->first, iq->first);
     } 
 
-    for(auto ic = DiColor.cbegin(); ic != DiColor.cend(); ++ic) {
-	mcolor_t C(*ic, color, mcolor_t::Intersection);
-	if (C.size() >= 2 && C.size() == ic->size() ) {
+    for (const auto &vtc: DiColor) { 
+	mcolor_t C(vtc, color, mcolor_t::Intersection);
+	if (C.size() >= 2 && C.size() == vtc.size() ) {
 	    for (auto iq = C.begin(); iq != C.end(); ++iq) {
 		EQ.addrel(iq->first, C.begin()->first);
 	    }
@@ -262,8 +258,8 @@ std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& co
     EQ.update();
     std::map<size_t, mcolor_t> cls; 
     EQ.get_eclasses(cls);
-    for(auto ic = cls.cbegin(); ic != cls.cend(); ++ic) {
-	S.insert(ic->second);
+    for(const auto &col : cls) {
+	S.insert(col.second);
     }
     return S;
 } 

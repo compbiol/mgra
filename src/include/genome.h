@@ -21,21 +21,18 @@
 #ifndef GENOME_H_
 #define GENOME_H_
 
-#include <unordered_set>
-#include <unordered_map>
-#include <map>
-#include <string>
-
-typedef std::string orf_t;
-typedef std::pair<size_t, size_t> span_t; 	// interval in absolute coordinates
-typedef std::pair<std::string, size_t> coord_t; // (contig, offset)
-typedef std::pair<std::string, int> gene_t;
-typedef std::pair<std::string, span_t> cpan_t;  // (chr, start, end)
-
+#include "defined.h"
+ 
 struct Genome {
-  inline void insert(std::string gene, std::string chromosome, size_t offset, int sign, size_t start, size_t end) {
-    coord_t p = std::make_pair(chromosome, offset);
-    gene_t orf = std::make_pair(gene, sign);   
+  typedef std::string orf_t;
+  typedef std::pair<size_t, size_t> span_t; 	// interval in absolute coordinates
+  typedef std::pair<std::string, size_t> coord_t; // (contig, offset)
+  typedef std::pair<orf_t, int> gene_t;
+  typedef std::pair<std::string, span_t> cpan_t;  // (chr, start, end)
+
+  inline void insert(const orf_t& gene, const std::string& chromosome, size_t offset, int sign, size_t start, size_t end) {
+    const coord_t& p = std::make_pair(chromosome, offset);
+    const gene_t& orf = std::make_pair(gene, sign);   
     main_genome.insert(std::make_pair(p, orf));
   }   
 	
@@ -44,7 +41,7 @@ struct Genome {
   }  
 
   inline bool isCircular(std::string name) const {
-    return (circular_chromosome.find(name) != circular_chromosome.end());
+    return (circular_chromosome.count(name) != 0);
   } 
 
   inline size_t size() const { 

@@ -348,12 +348,12 @@ void Statistics<graph_t>::count_cycles() {
 
       while (current == Infty) {
 	if (special_Q.empty()) {
-	  special_Q = My.find(current)->second;
+	  special_Q = My.get_multicolor(current);
 	  prev = *is;
 	  current = Mx.cbegin()->first; 
 	} else {
-	  if (special_Q != My.find(current)->second) { 
-	    ++special_cycle_count[std::min(special_Q, My.find(current)->second)]; 	  
+	  if (special_Q != My.get_multicolor(current)) {//find(current)->second) { 
+	    ++special_cycle_count[std::min(special_Q, My.get_multicolor(current))];//My.find(current)->second)]; 	  
 	  }
 	  break;
 	}
@@ -372,7 +372,7 @@ void Statistics<graph_t>::count_chromosomes() {
   liniar_chr.resize(graph.size_graph());
   
   for(int i = 0; i < graph.size_graph(); ++i) {
-    std::unordered_set<orf_t> processed;		
+    std::unordered_set<vertex_t> processed;		
 
     for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {		    
       if (processed.find(*is) == processed.end()) { 				  

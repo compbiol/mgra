@@ -19,110 +19,100 @@
 #ifndef EQUIV_H
 #define EQUIV_H
 
-#include <map>
 #include <functional>
 
 template <class Item, class Cmp = std::less<Item> >
 struct equivalence {
-    typedef std::map<Item, Item, Cmp> map_t;
+  typedef std::map<Item, Item, Cmp> map_t;
 
-    // introduce a relation between two specified integers
-    void addrel(const Item& x, const Item& y);
+  // introduce a relation between two specified integers
+  void addrel(const Item& x, const Item& y);
 
-    void addrel(const std::pair<Item, Item>& p) { 
-	addrel(p.first, p.second); 
-    }
+  void addrel(const std::pair<Item, Item>& p) { 
+    addrel(p.first, p.second); 
+  }
 
-    // return `true' iff two integers are equivalent
-    inline bool isequiv(const Item& x, const Item& y) { 
-	return (operator[](x) == operator[](y));
-    } 
+  // return `true' iff two integers are equivalent
+  inline bool isequiv(const Item& x, const Item& y) { 
+    return (operator[](x) == operator[](y));
+  } 
 
-    inline bool isequiv(const std::pair<Item, Item>& p) { 
-	return isequiv(p.first, p.second); 
-    }
+  inline bool isequiv(const std::pair<Item, Item>& p) { 
+    return isequiv(p.first, p.second); 
+  }
 
-    const Item& operator[](const Item& x);
+  const Item& operator[](const Item& x);
 
-    inline void insert(const Item& x) {
-	operator[](x);
-    }
+  inline void insert(const Item& x) {
+    operator[](x);
+  }
 
-    inline bool defined(const Item& x) const { 
-	return (container.find(x) != container.end());
-    } 
+  inline bool defined(const Item& x) const { 
+    return (container.find(x) != container.end());
+  } 
 
-    void update();
+  void update();
 
-    int classes();
+  size_t classes();
 
-    template<class eclass_t>
-    void get_eclasses(std::map<Item, eclass_t, Cmp>& C);
+  template<class eclass_t>
+  std::map<Item, eclass_t, Cmp> get_eclasses();
 
 private: 
-    map_t container; 
+  map_t container; 
 };
 
 template<class Item, class Cmp>
 const Item& equivalence<Item,Cmp>::operator[] (const Item& x) {
-    if (container.find(x) == container.end()) { 
-	return container[x] = x; 
-    } 
+  if (container.find(x) == container.end()) { 
+    return container[x] = x; 
+  } 
 
-    Item y = x;
-    while (container[y] != y) { 
-	y = container[y];
-    } 
-    return (container[x] = y);
+  Item y = x;
+  while (container[y] != y) { 
+    y = container[y];
+  } 
+  return (container[x] = y);
 }
 
 template<class Item, class Cmp>
 void equivalence<Item,Cmp>::addrel(const Item& x, const Item& y) {
-    Item z = operator[](x);
-    Item t = operator[](y);
+  Item z = operator[](x);
+  Item t = operator[](y);
 
-    if (container.key_comp()(z, t)) { 
-	container[z] = t; 
-    } else { 
-	container[t] = z;
-    } 
+  if (container.key_comp()(z, t)) { 
+    container[z] = t; 
+  } else { 
+    container[t] = z;
+  } 
 }
 
 template<class Item, class Cmp>
 void equivalence<Item,Cmp>::update() {
-    for(auto mi = container.begin(); mi != container.end(); ++mi) { 
-	operator[](mi->first);
-    } 
+  for(auto mi = container.begin(); mi != container.end(); ++mi) { 
+    operator[](mi->first);
+  } 
 }
 
 template<class Item, class Cmp>
-int equivalence<Item,Cmp>::classes() {
-    int c = 0;
-    for(auto mi = container.begin(); mi != container.end(); ++mi) { 
-	if (operator[](mi->first) == mi->first) { 
-	  ++c;
-	} 
+size_t equivalence<Item, Cmp>::classes() {
+  size_t count = 0;
+  for(const auto& item : container) { 
+    if (operator[](item.first) == item.first) { 
+      ++count;
     } 
-    return c;
+  } 
+  return count;
 }
 
 template<class Item, class Cmp>
 template<class eclass_t>
-void equivalence<Item, Cmp>::get_eclasses(std::map<Item, eclass_t, Cmp>& C) {
-    C.clear();
-    for(auto mi = container.begin(); mi != container.end(); ++mi) { 
-        C[operator[](mi->first)].insert(mi->first); 
-   } 
+std::map<Item, eclass_t, Cmp> equivalence<Item, Cmp>::get_eclasses() {
+  std::map<Item, eclass_t, Cmp> classes;
+  for(const auto& item : container) { 
+    classes[operator[](item.first)].insert(item.first); 
+  } 
+  return classes;
 }
-
-/*
-template<class Item, class Cmp>
-template<class eclass_t>
-void equivalence<Item,Cmp>::get_eclasses(map<Item,eclass_t,Cmp>& C) const {
-    C.clear();
-    for(typename map_t::const_iterator mi=begin();mi!=end();++mi)
-        C[mi->second].insert(mi->first);
-}
-*/
 
 #endif

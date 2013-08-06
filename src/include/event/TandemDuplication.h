@@ -1,9 +1,6 @@
 #ifndef TANDEMDUPLICATION_H_
 #define TANDEMDUPLICATION_H_
 
-#include <string>
-#include <utility>
-
 template <class mcolor_t>
 struct TandemDuplication {
   typedef std::pair<vertex_t, vertex_t> arc_t;

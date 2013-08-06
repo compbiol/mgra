@@ -45,8 +45,6 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
   bool stop = true; 
 
   while (stop) {
-    //FIXME: is_duplication_vertice work is a long while. And uses iff prevent duplication vertex. x -> ... -> y -> z -> t , 
-    //if z - end path and edge colors z->t, y->z  complimentary, but t - is duplication vertex and 2-break down all colors.       
     stop = false; 
 
     if (is_next) { 
@@ -58,7 +56,7 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
     if (processed.find(current) == processed.end() && !graph.is_duplication_vertex(current) && !graph.is_indel_vertex(current)) {     
       processed.insert(current);
       Mularcs<Mcolor> new_edges = graph.get_adjacent_multiedges(current);
-      Mcolor previous_color = new_edges.get_multicolor(previous); //->second;
+      Mcolor previous_color = new_edges.get_multicolor(previous); 
       new_edges.erase(previous);
     
       if (new_edges.size() == 1 && graph.get_complement_color(previous_color) == new_edges.cbegin()->second) {

@@ -12,7 +12,7 @@ namespace writer {
 } 
 
 template<class graph_t, class conf_t>
-  void writer::Wdots<graph_t, conf_t>::save_dot(const graph_t& graph, const conf_t& cfg, size_t stage) { 
+void writer::Wdots<graph_t, conf_t>::save_dot(const graph_t& graph, const conf_t& cfg, size_t stage) { 
   std::string dotname = cfg.get_graphname() + toString(stage) + ".dot";
   std::ofstream dot(dotname.c_str());
 
@@ -74,7 +74,7 @@ template<class graph_t, class conf_t>
 } 
 
 template<class graph_t, class conf_t>
-  void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const conf_t& cfg, size_t stage) { 
+void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const conf_t& cfg, size_t stage) { 
   std::string dotname = cfg.get_graphname() + toString(stage);
 
   equivalence<vertex_t> CC; // connected components
@@ -91,8 +91,7 @@ template<class graph_t, class conf_t>
 
   CC.update();    
   
-  std::map<std::string, std::set<std::string> > components;
-  CC.get_eclasses(components);
+  std::map<std::string, std::set<std::string> > components = CC.get_eclasses<std::set<std::string> >(); 
   
   size_t i = 0; 
   for(auto it = components.cbegin(); it != components.cend(); ++it) { 
@@ -165,7 +164,7 @@ template<class graph_t, class conf_t>
 } 
 
 template<class graph_t, class conf_t>
-  void writer::Wdots<graph_t, conf_t>::write_legend_dot(const conf_t& cfg) { 
+void writer::Wdots<graph_t, conf_t>::write_legend_dot(const conf_t& cfg) { 
   std::ofstream output("legend.dot");
 
   output << "digraph Legend {" << std::endl;

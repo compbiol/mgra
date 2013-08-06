@@ -21,7 +21,6 @@
 
 #include "mbgraph.h"
 #include "mularcs.h"
-#include "utility/sym_map.h"
 
 #include "genome_match.h" //FIXME REMOVE LATER
 
@@ -47,8 +46,7 @@ struct mbgraph_with_colors: public MBGraph {
   }
 
   inline mcolor_t get_complement_color(const mcolor_t& color) const { 
-    assert(color.is_one_to_one_match());
-    assert (CColorM.find(color) != CColorM.end());
+    assert(color.is_one_to_one_match() && CColorM.find(color) != CColorM.end());
     return CColorM.find(color)->second;
   } 
   
@@ -82,8 +80,8 @@ struct mbgraph_with_colors: public MBGraph {
 private: 
   inline mcolor_t compute_complement_color(const mcolor_t& color) const {
       mcolor_t answer; 
-      for(size_t j = 0; j < size_graph(); ++j) { 
-	if (!color.in_color(j)) { 
+      for(size_t j = 0; j < count_local_graphs(); ++j) { 
+	if (!color.defined(j)) { 
 	  answer.insert(j);
 	} 
       } 
@@ -92,7 +90,7 @@ private:
 
 private:
   mcolor_t complete_color;
-  sym_map<mcolor_t> CColorM; //complementary multicolor
+  std::map<mcolor_t, mcolor_t> CColorM; //complementary multicolor
   std::set<mcolor_t> all_T_color; //all T-consistent colors
   std::set<mcolor_t> DiColor; // directed colors
 }; 
@@ -124,9 +122,9 @@ mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<Genome>& ge
     }
   }
    
-  for (auto id = DiColor.begin(); id != DiColor.end(); ++id) {
-    all_T_color.insert(*id);
-    all_T_color.insert(compute_complement_color(*id));
+  for (const auto &vtc : DiColor) {
+    all_T_color.insert(vtc);
+    all_T_color.insert(compute_complement_color(vtc));
   }
 }
 
@@ -198,7 +196,7 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
   }
 
   Mularcs<mcolor_t> output;
-  for (size_t i = 0; i < size_graph(); ++i) {
+  for (size_t i = 0; i < count_local_graphs(); ++i) {
     if (local_graph[i].defined(u)) { 
       std::pair<partgraph_t::const_iterator, partgraph_t::const_iterator> iters = local_graph[i].equal_range(u);
       for (auto it = iters.first; it != iters.second; ++it) { 
@@ -209,14 +207,14 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
   
   if (split_bad_colors) { 
     Mularcs<mcolor_t> split; 
-    for(auto im = output.cbegin(); im != output.cend(); ++im) {
-      if (!is_vec_T_color(im->second) && im->second.size() < size_graph()) {
-	auto C = split_color(im->second);
-	for(auto ic = C.begin(); ic != C.end(); ++ic) {
-	  split.insert(im->first, *ic); 
+    for(const auto &arc : output) {
+      if (!is_vec_T_color(arc.second) && arc.second.size() < count_local_graphs()) {
+	auto colors = split_color(arc.second);
+	for(const auto &color : colors) {
+	  split.insert(arc.first, color); 
 	}
       } else { 
-	split.insert(im->first, im->second); 
+	split.insert(arc.first, arc.second); 
       }
     }
     return split; 
@@ -234,42 +232,42 @@ SplitColor(Q) представляет Q в виде дизъюнктного о
 */
 template<class mcolor_t>
 std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& color) const {
-    std::set<mcolor_t> S;
+  std::set<mcolor_t> S;
 
-    if (is_vec_T_color(color)) {
-	S.insert(color);
-	return S;
-    }
-
-    equivalence<size_t> EQ;
-    for(auto iq = color.cbegin(); iq != color.cend(); ++iq) { 
-	EQ.addrel(iq->first, iq->first);
-    } 
-
-    for (const auto &vtc: DiColor) { 
-	mcolor_t C(vtc, color, mcolor_t::Intersection);
-	if (C.size() >= 2 && C.size() == vtc.size() ) {
-	    for (auto iq = C.begin(); iq != C.end(); ++iq) {
-		EQ.addrel(iq->first, C.begin()->first);
-	    }
-	}
-    }
-
-    EQ.update();
-    std::map<size_t, mcolor_t> cls; 
-    EQ.get_eclasses(cls);
-    for(const auto &col : cls) {
-	S.insert(col.second);
-    }
+  if (is_vec_T_color(color)) {
+    S.insert(color);
     return S;
+  }
+
+  equivalence<size_t> EQ;
+  for(auto iq = color.cbegin(); iq != color.cend(); ++iq) { 
+    EQ.addrel(iq->first, iq->first);
+  } 
+
+  for (const auto &vtc: DiColor) { 
+    mcolor_t C(vtc, color, mcolor_t::Intersection);
+    if (C.size() >= 2 && C.size() == vtc.size() ) {
+      for (auto iq = C.cbegin(); iq != C.cend(); ++iq) {
+	EQ.addrel(iq->first, C.cbegin()->first);
+      }
+    }
+  }
+
+  EQ.update();
+  std::map<size_t, mcolor_t> cls = EQ.get_eclasses<mcolor_t>(); 
+  for(const auto &col : cls) {
+    S.insert(col.second);
+  }
+  return S;
 } 
 
 template<class mcolor_t>
 void mbgraph_with_colors<mcolor_t>::update_complement_color(const std::vector<mcolor_t>& colors) {
   for(auto it = colors.begin(); it != colors.end(); ++it) { 
-    if (!CColorM.defined(*it)) { 
+    if (CColorM.count(*it) == 0) { 
       mcolor_t temp = compute_complement_color(*it);  
-      CColorM.insert(*it, temp);
+      CColorM.insert(std::make_pair(*it, temp));
+      CColorM.insert(std::make_pair(temp, *it));
     } 
   } 
 } 

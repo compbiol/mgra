@@ -20,77 +20,70 @@
 #define MBGRAPH_HISTORY_H_
 
 #include "mbgraph_colors.h"
-#include "genome_match.h"
 
-//#include "2break.h"
+#include "2break.h"
 #include "Insdel.h"
 #include "TandemDuplication.h"
-
-#define member(S,x) ((S).find(x)!=(S).end())
 
 template<class mcolor_t>
 struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> { 
 
-	mbgraph_with_history(const std::vector<Genome>& genomes, const ProblemInstance<Mcolor>& cfg)
-	: mbgraph_with_colors<mcolor_t>(genomes, cfg) 
-	{ 
-	} 
+  mbgraph_with_history(const std::vector<Genome>& genomes, const ProblemInstance<Mcolor>& cfg)
+   : mbgraph_with_colors<mcolor_t>(genomes, cfg) 
+    { 
+    } 
 
-	//2-break operations
-	void apply_two_break(const TwoBreak<mcolor_t>& break2, bool record = true);
-	//bool is_linear() const; 
+  //2-break operations
+  void apply_two_break(const TwoBreak<mcolor_t>& break2, bool record = true);
+  //bool is_linear() const; 
 
-	inline size_t get_count_2breaks() const { 
-		return break2_history.size(); 
-	} 
+  inline size_t get_count_2breaks() const { 
+    return break2_history.size(); 
+  } 
 
-	inline typename std::list<TwoBreak<mcolor_t> >::const_reverse_iterator crbegin_2break_history() const { 
-		return break2_history.crbegin();
-	} 
+  inline typename std::list<TwoBreak<mcolor_t> >::const_reverse_iterator crbegin_2break_history() const { 
+    return break2_history.crbegin();
+  } 
 	
-	inline typename std::list<TwoBreak<mcolor_t> >::const_reverse_iterator crend_2break_history() const { 
-		return break2_history.crend(); 
-	}
+  inline typename std::list<TwoBreak<mcolor_t> >::const_reverse_iterator crend_2break_history() const { 
+    return break2_history.crend(); 
+  }
 
-	//Insertion/Deletion operations
-	void apply_ins_del(const InsDel<mcolor_t>& insdel, bool record = true);
+  //Insertion/Deletion operations
+  void apply_ins_del(const InsDel<mcolor_t>& insdel, bool record = true);
 
-	inline size_t get_count_insdel() const { 
-		return insdel_history.size(); 
-	} 
+  inline size_t get_count_insdel() const { 
+    return insdel_history.size(); 
+  } 
 
-	inline typename std::list<InsDel<mcolor_t> >::const_iterator begin_insdel_history() const { 
-		return insdel_history.cbegin();
-	} 
+  inline typename std::list<InsDel<mcolor_t> >::const_iterator begin_insdel_history() const { 
+    return insdel_history.cbegin();
+  } 
 	
-	inline typename std::list<InsDel<mcolor_t> >::const_iterator end_insdel_history() const { 
-		return insdel_history.cend(); 
-	}
+  inline typename std::list<InsDel<mcolor_t> >::const_iterator end_insdel_history() const { 
+    return insdel_history.cend(); 
+  }
 
-	//(Reverse) tandem duplication operations
-	void apply_tandem_duplication(const TandemDuplication<mcolor_t>& dupl, bool record = true);
+  //(Reverse) tandem duplication operations
+  void apply_tandem_duplication(const TandemDuplication<mcolor_t>& dupl, bool record = true);
 
-	inline size_t get_count_tandem_duplication() const { 
-		return tandem_dupl_history.size(); 
-	} 
+  inline size_t get_count_tandem_duplication() const { 
+    return tandem_dupl_history.size(); 
+  } 
 
-	inline typename std::list<TandemDuplication<mcolor_t> >::const_iterator begin_tandem_duplication_history() const { 
-		return tandem_dupl_history.cbegin();
-	} 
+  inline typename std::list<TandemDuplication<mcolor_t> >::const_iterator begin_tandem_duplication_history() const { 
+    return tandem_dupl_history.cbegin();
+  } 
 	
-	inline typename std::list<TandemDuplication<mcolor_t> >::const_iterator end_tandem_duplication_history() const { 
-		return tandem_dupl_history.cend(); 
-	}
+  inline typename std::list<TandemDuplication<mcolor_t> >::const_iterator end_tandem_duplication_history() const { 
+    return tandem_dupl_history.cend(); 
+  }
 	 
-private: 
-	std::list<TwoBreak<mcolor_t> > break2_history;
-	std::list<InsDel<mcolor_t> > insdel_history;		
-	std::list<TandemDuplication<mcolor_t> > tandem_dupl_history;		
+ private: 
+  std::list<TwoBreak<mcolor_t> > break2_history;
+  std::list<InsDel<mcolor_t> > insdel_history;		
+  std::list<TandemDuplication<mcolor_t> > tandem_dupl_history;		
 };
-
-
-
-typedef std::list<TwoBreak<Mcolor> > transform_t;
 
 template<class mcolor_t>
 void mbgraph_with_history<mcolor_t>::apply_two_break(const TwoBreak<mcolor_t>& break2, bool record) { 
@@ -122,11 +115,11 @@ void mbgraph_with_history<mcolor_t>::apply_ins_del(const InsDel<mcolor_t>& insde
   }
  
   for (auto ic = insdel.cbegin_mcolor(); ic != insdel.cend_mcolor(); ++ic) {
-	if (insdel.is_deletion_oper()) {
-		erase_edge(ic->first, insdel.get_edge().first, insdel.get_edge().second);
-	} else {
-		add_edge(ic->first, insdel.get_edge().first, insdel.get_edge().second);
-	} 
+    if (insdel.is_deletion_oper()) {
+      erase_edge(ic->first, insdel.get_edge().first, insdel.get_edge().second);
+    } else {
+      add_edge(ic->first, insdel.get_edge().first, insdel.get_edge().second);
+    } 
   }
 } 
 

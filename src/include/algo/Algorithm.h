@@ -9,8 +9,6 @@
 #include "writer/Wstats.h"
 #include "writer/Wdots.h"
 
-typedef std::list<vertex_t> path_t;
-
 template<class graph_t>
 struct Algorithm { 
 	Algorithm(graph_t& gr) //FIXME: get const
@@ -58,8 +56,8 @@ private:
 	//Stage 9: process complete but non-T-consistent tandem duplication and reverse tandem duplication by splitting colors
 
 	//Not uses stage: 
-	bool cut_free_ends(); 
-	bool find_reliable_path(); 
+	//bool cut_free_ends(); 
+	//bool find_reliable_path(); 
 private:
 	//Save information
 	void save_information(size_t stage, const ProblemInstance<Mcolor>& cfg);

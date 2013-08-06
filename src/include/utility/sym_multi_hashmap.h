@@ -1,10 +1,7 @@
 #ifndef SYM_MULTIHASHMAP_H_
 #define SYM_MULTIHASHMAP_H_
 
-#include <unordered_map>
-#include <utility>
 #include <functional>
-#include <iostream>
 
 template<class item_class, class Hash = std::hash<item_class> >
 struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class, Hash> {
@@ -42,16 +39,6 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
     return multi_hashmap::end();
   } 
 
-  const item_class& operator[] (const item_class& x) const {
-    auto ix = find(x);
-    if (ix == end()) {
-      std::cerr << "sym_multi_hashmap::operator[] error: undefined element " << x << std::endl;
-      abort();
-    }
-    return ix->second;
-  }
-
-	
   void erase(const item_class& x, const item_class& y) {
     if (!defined(x)) {
       std::cerr << "sym_multi_hashmap::erase() error: unmapped pair (" << x << "," << y << ")" << std::endl;
@@ -68,6 +55,15 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
       multi_hashmap::erase(rem);
     }
     --card;
+  }
+
+  const item_class& operator[] (const item_class& x) const { //FIXME deleted
+    auto ix = find(x);
+    if (ix == end()) {
+      std::cerr << "sym_multi_hashmap::operator[] error: undefined element " << x << std::endl;
+      abort();
+    }
+    return ix->second;
   }
 
   size_t size() const {

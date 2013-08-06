@@ -1,12 +1,6 @@
 #ifndef TREE_H_ 
 #define TREE_H_
 
-#include <unordered_map>
-#include <set>
-#include <vector>
-#include <string>
-#include <memory>
-
 #include "mcolor.h"
 
 template<class type_data>

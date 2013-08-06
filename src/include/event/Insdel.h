@@ -19,9 +19,6 @@
 #ifndef INSDEL_H_
 #define INSDEL_H_
 
-#include <string>
-#include <utility>
-
 template<class mcolor_t>
 struct InsDel {
   typedef std::pair<vertex_t, vertex_t> arc_t;

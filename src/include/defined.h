@@ -10,11 +10,28 @@
 
 #include <algorithm>
 
+#include <string>
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
+#include <memory>
+#include <utility>
 #include <cassert>
+
+#include "utility/sym_hashmap.h"
+#include "utility/sym_multi_hashmap.h"
+
+#include "utility/equivalence.h"
+
+typedef std::string vertex_t;
+typedef sym_multi_hashmap<vertex_t> partgraph_t;
+typedef sym_hashmap<vertex_t> obverse_graph_t;
+typedef std::list<vertex_t> path_t;
+typedef std::pair<vertex_t, vertex_t> arc_t;
+
+const vertex_t Infty = "oo"; 
 
 template <typename T>
 __attribute__((always_inline)) inline std::string toString(T val) { 

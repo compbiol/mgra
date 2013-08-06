@@ -27,25 +27,26 @@
 #include <array> 
 
 #include <iterator>   // ostream_iterator etc.
-using namespace std;
 
 #include "reader.h"
 #include "algo/Algorithm.h"
 #include "Wdots.h"
 #include "mbgraph_history.h"
 
+#define member(S,x) ((S).find(x)!=(S).end())
+
 std::vector<std::string> genome_match::number_to_genome;
 genome_match::gen2num genome_match::genome_to_number;   
 
-typedef sym_multi_hashmap<vertex_t> partgraph_t;
-
 std::ofstream outlog("/dev/null");
+
+typedef std::list<TwoBreak<Mcolor> > transform_t;
 
 std::vector<partgraph_t> RG; // recovered genomes
 std::vector<transform_t> RT; // and transformations
 
 bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph);
-set <vertex_t> getchrset;
+std::set<vertex_t> getchrset;
 
 std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG, const std::string& x) {
     path_t path;
@@ -55,14 +56,14 @@ std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const 
     getchrset.insert(x);
 
     for(vertex_t y = graph.get_obverse_vertex(x); ; ) {
-	if( member(getchrset,y) ) {
+	if (member(getchrset,y) ) {
 	    circular = true;
 	    break; // circ
 	}
 	getchrset.insert(y);
 
 	{
-	    string xx = y;
+	    std::string xx = y;
 	    xx.resize(xx.size()-1);
 	    if( *y.rbegin()=='t' ) {
 		path.push_back("-"+xx);
@@ -89,7 +90,7 @@ std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const 
     }
 
     if( !circular && PG.defined(x) ) {
-	for(string y = x;PG.defined(y);) {
+	for(std::string y = x; PG.defined(y);) {
 	    y = PG[y];
 	    getchrset.insert(y);
 
@@ -116,41 +117,43 @@ std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const 
 
 
 std::list< std::set<vertex_t> > pg_empty;
-void splitchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG, set< pair<path_t,bool> >& AllChr, const bool Xonly = false, list< set<vertex_t> >& CircChr = pg_empty) {
+void splitchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG, std::set<std::pair<path_t, bool> >& AllChr, bool Xonly = false, std::list<std::set<vertex_t> >& CircChr = pg_empty) {
 
     if (&CircChr != &pg_empty) { 
 	CircChr.clear();
     } 
     AllChr.clear();
-    std::set<orf_t> processed;
+    std::set<std::string> processed;
 
     for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
-	const string& x = *is;
+	const std::string& x = *is;
 	
-	if( member(processed,x) ) continue;
+	if (member(processed, x)) { 
+	  continue;
+	}
        
-        pair< path_t, bool > pathb = getchr(graph, PG, x);
+        std::pair<path_t, bool> pathb = getchr(graph, PG, x);
 
 	AllChr.insert( pathb );
 
-        copy(getchrset.begin(),getchrset.end(),inserter(processed,processed.end()));
+        std::copy(getchrset.begin(), getchrset.end(), std::inserter(processed, processed.end()));
 
-	if( pathb.second && (&CircChr != &pg_empty) ) {
+	if (pathb.second && (&CircChr != &pg_empty)) {
 	    CircChr.push_back(getchrset);
 	}
     }
 }
 
 std::pair<size_t, size_t> numchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG) {
-    std::set< pair<path_t, bool> > AllChr;
+    std::set<std::pair<path_t, bool> > AllChr;
     std::list<std::set<vertex_t> > CircChr;
     splitchr(graph, PG, AllChr, false, CircChr);
-    return std::make_pair(AllChr.size(),CircChr.size());
+    return std::make_pair(AllChr.size(), CircChr.size());
 }
 
 //rename and move to namespace writer
 void printchr(const std::string& outname, const std::set<std::pair<path_t, bool> >& AllChr, bool isEmptyTarget) { 
-	ofstream out((outname + ".gen").c_str());
+	std::ofstream out((outname + ".gen").c_str());
 
 	out << "# Genome " << outname << std::endl;
 
@@ -166,7 +169,7 @@ void printchr(const std::string& outname, const std::set<std::pair<path_t, bool>
 	size_t lcirc = 0;
 
 	for(auto ia = AllChr.cbegin(); ia != AllChr.cend(); ++ia) {
-		out << endl;
+		out << std::endl;
 
 		const path_t& path = ia->first;
 
@@ -215,7 +218,7 @@ void printchr(const std::string& outname, const std::set<std::pair<path_t, bool>
 			}
 		}
 
-		out << "$" << endl;
+		out << "$" << std::endl;
 	}
 
 	out << std::endl << "# Reconstructed genome " << outname << " has " << AllChr.size() << " " << ChrTitle << "s" << std::endl;
@@ -231,14 +234,13 @@ void printchr(const std::string& outname, const std::set<std::pair<path_t, bool>
 
 // fill in OP container with endpoints of q-obverse paths,
 // starting and ending at OP
-void get_obverse_paths(const mbgraph_with_history<Mcolor>& graph, map< vertex_t, set<vertex_t> >& OP, const Mcolor Q) {
-    map< vertex_t, set<int> > processed;
+void get_obverse_paths(const mbgraph_with_history<Mcolor>& graph, std::map<vertex_t, std::set<vertex_t> >& OP, const Mcolor Q) {
+    std::map<vertex_t, std::set<int> > processed;
 
     for(auto iq = Q.cbegin(); iq != Q.cend(); ++iq) {
         const partgraph_t& PG = graph.get_local_graph(iq->first);
 
 	for(auto ip = OP.begin(); ip != OP.end(); ++ip) {
-
             const vertex_t& x = ip->first;
 
 	    if( x==Infty || member(processed[x], iq->first) ) continue;
@@ -279,7 +281,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
     size_t CircSize = numchr(graph, PG).second;
     if( CircSize == 0 ) return D;
 
-    outlog << "Eliminating " << CircSize << " circular chromosomes in " << genome_match::mcolor_to_name(Q) << endl;
+    outlog << "Eliminating " << CircSize << " circular chromosomes in " << genome_match::mcolor_to_name(Q) << std::endl;
 
     /*
     transform_t p1,p2;
@@ -298,7 +300,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 
     partgraph_t T = PG; // reconstructed genome ("bad")
 
-    transform_t::iterator start = TG.begin();
+    auto start = TG.begin();
 
     // looking for de-circularizig 2-breaks
     for(auto it = start; it != TG.end();) {
@@ -312,7 +314,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 	    }
     
 	    if( C != Q ) {
-		outlog << "Impossible multicolor in the transformation!" << endl;
+		outlog << "Impossible multicolor in the transformation!" << std::endl;
 		break;
 	    }
 	}
@@ -321,31 +323,24 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 
         size_t ccsize = numchr(graph, T).second;
 
-	//bool hotfix = ( it->OldArc[0] == arc_t("770h","770t") );
-
-	if( ccsize >= CircSize /* && !hotfix */ ) {
+	if( ccsize >= CircSize) {
 	    ++it;
 	    continue;
 	}
 
-
-	//TwoBreak t = *it;
-	//t.normalize();
-
 	outlog << "Found problematic 2-break: ";// << *it << "\t";
 
 	// move t over to beginning
-	for(transform_t::iterator jt=it;jt!=TG.begin();) {
+	for(auto jt=it;jt!=TG.begin();) {
 
-	    transform_t::iterator kt = jt--; // jt, kt are successive, *kt == t
+	    auto kt = jt--; // jt, kt are successive, *kt == t
 
 	    const TwoBreak<Mcolor>& t = *kt;
 	    const TwoBreak<Mcolor>& s = *jt;
-	    //s.normalize();
 
 //            outlog << "... trying to swap with " << s << endl;
 
-	    pair<vertex_t,vertex_t> p1, q1, p2, q2;
+	    std::pair<vertex_t,vertex_t> p1, q1, p2, q2;
 
 	    bool usearc = false;
 
@@ -435,7 +430,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 
 
 	if( ccsize < CircSize ) {
-	    outlog << " SUCCEDED" << endl;
+	    outlog << " SUCCEDED" << std::endl;
 
 	    // move t away from the transformation TG and save it to D
             TG.begin()->apply_single(PG);
@@ -451,7 +446,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 	}
 	else {  // did not succeed
 	    start++;
-	    outlog << " FAILED" << endl;
+	    outlog << " FAILED" << std::endl;
 	}
 
 	T = PG;
@@ -461,7 +456,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
     }
     //if( start == TG.end() ) {
     if( CircSize>0 ) {
-	outlog << "Unable to de-circularize ;-(" << endl;
+	outlog << "Unable to de-circularize ;-(" << std::endl;
     }
 
     return D;
@@ -623,7 +618,7 @@ int main(int argc, char* argv[]) {
  	    ++i; 
 	}
     
-	outlog << "Final 2-break distances from the root X: " << endl;
+	outlog << "Final 2-break distances from the root X: " << std::endl;
 	
 	i = 0; 
 	for(auto im = graph.cbegin_T_color(); im != graph.cend_T_color(); ++im) {
@@ -662,8 +657,8 @@ bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph) {
 
     size_t NC = graph.count_vec_T_color();
 
-    for(int i=0; i < graph.size_graph() - 1; ++i) {
-	if( graph.get_local_graph(i) != graph.get_local_graph(i + 1)) {//FIXME
+    for(auto it = graph.begin_local_graphs(); it != graph.end_local_graphs() - 1; ++it) { 
+	if (*it != *(it + 1)) {
 	    std::cout << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl;
 	    return false;
 	}
@@ -672,7 +667,7 @@ bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph) {
     RG.clear(); RG.resize(NC);
     RT.clear(); RT.resize(NC);
 
-    for(int i=0; i < NC; ++i) { 
+    for(size_t i = 0; i < NC; ++i) { 
 	RG[i] = graph.get_local_graph(0);
     } 
 
@@ -714,7 +709,7 @@ bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph) {
 	    if (Q == *im) {
 		bool samechr = true;
 
-		set< string > Vert;
+		std::set<vertex_t> Vert;
 		if (it->get_arc(0).first != Infty) Vert.insert(it->get_arc(0).first);
 		if (it->get_arc(0).second != Infty) Vert.insert(it->get_arc(0).second);
 		if (it->get_arc(1).first != Infty) Vert.insert(it->get_arc(1).first);
@@ -746,14 +741,14 @@ bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph) {
 	outlog << std::endl;
     }
 
-    vector< size_t > tot(3);
-    outlog << "% Number of reversals / translocations / fissions+fusions: " << endl;
+    std::vector<size_t> tot(3);
+    outlog << "% Number of reversals / translocations / fissions+fusions: " << std::endl;
     for(size_t j = 0; j < NC; ++j) {
 	tot[0] += RTF[j][0];
 	tot[1] += RTF[j][1];
 	tot[2] += RTF[j][2];
     }
-    outlog << "Total\t&\t" << tot[0] << " & " << tot[1] << " & " << tot[2] << " &\t" << tot[0]+tot[1]+tot[2] << " \\\\" << endl;
+    outlog << "Total\t&\t" << tot[0] << " & " << tot[1] << " & " << tot[2] << " &\t" << tot[0]+tot[1]+tot[2] << " \\\\" << std::endl;
 
     return true;
 }

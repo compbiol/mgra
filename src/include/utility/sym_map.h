@@ -1,5 +1,5 @@
 /*
-** Module: Symmetric maps ver. 1.5
+** Module: Symmetric maps ver. 1.3
 **
 ** This file is part of the
 ** Multiple Genome Rearrangements and Ancestors (MGRA)
@@ -25,12 +25,12 @@
 #include <iostream>
 
 template<class item_class, class order = std::less<item_class> >
-struct sym_map : public std::map<item_class, item_class, order> {
-  typedef std::map<item_class, item_class, order> mymap;
-  typedef typename mymap::const_iterator const_iterator;
+  struct sym_map : public std::map<item_class, item_class, order> {
+  typedef std::map<item_class, item_class, order> map_t;
+  typedef typename map_t::const_iterator const_iterator;
 
-  using mymap::end;
-  using mymap::find;
+  using map_t::end;
+  using map_t::find;
 
   sym_map() {
     card = 0;
@@ -41,8 +41,8 @@ struct sym_map : public std::map<item_class, item_class, order> {
   }
 
   void insert(const item_class& x,const item_class& y) {
-    mymap::insert(std::make_pair(x, y));
-    mymap::insert(std::make_pair(y, x));
+    map_t::insert(std::make_pair(x, y));
+    map_t::insert(std::make_pair(y, x));
     ++card;
   }
 
@@ -51,28 +51,18 @@ struct sym_map : public std::map<item_class, item_class, order> {
       std::cerr << std::endl << "symmap::erase() error: unmapped element (" << x << ")" << std::endl;
       abort();
     }
-    mymap::erase(mymap::find(x));
-    mymap::erase(x);
+    map_t::erase(map_t::find(x));
+    map_t::erase(x);
     --card;
   }
 
-  const item_class& operator [] (const item_class& x) const {
-    auto ix = find(x);
-    if (ix == end()) {
-      std::cerr << "symmap::operator[] error: undefined element " << x << std::endl;
-      abort();
-    }
-    return ix->second;
-  }
-
-	
   void erase(const item_class& x, const item_class& y) {
-    if(!defined(x) || mymap::operator[](x) != y) {
+    if(!defined(x) || map_t::operator[](x) != y) {
       std::cerr << "symmap::erase() error: unmapped pair (" << x << "," << y << ")" << std::endl;
       abort();
     }
-    mymap::erase(x);
-    mymap::erase(y);
+    map_t::erase(x);
+    map_t::erase(y);
     --card;
   }
 
@@ -85,23 +75,11 @@ struct sym_map : public std::map<item_class, item_class, order> {
   }
 
   void clear() {
-    mymap::clear();
+    map_t::clear();
     card = 0;
   }
 
-  void pop(item_class& x, item_class& y) {
-    if (!card) {
-      std::cerr << "symmap::extract error: empty symmap!\n";
-      abort();
-    }
-    x = mymap::begin()->first;
-    y = mymap::begin()->second;
-    mymap::erase(x);
-    mymap::erase(y);
-    --card;
-  }
-
-private:
+ private:
   size_t card;
 };
 

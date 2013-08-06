@@ -1,16 +1,6 @@
 #ifndef MCOLOR_H_
 #define MCOLOR_H_
 
-#include <iostream>
-#include <algorithm> 
-#include <map>
-#include <set>
-#include <utility>
-
-#include "utility/equivalence.h"
-
-#define member(S,x) ((S).find(x)!=(S).end()) //FIXME: DELETED
-
 struct Mcolor {
   enum Construct {Difference, Union, Intersection};
 	
@@ -87,14 +77,8 @@ struct Mcolor {
     return true;
   } 
 
-
-  inline size_t find(size_t i) const { //FIXME
-    assert(main_color.find(i) != main_color.end());
-    return main_color.find(i)->second;					
-  } 
-
-  inline bool in_color(size_t j) const { 
-    return (main_color.find(j) != main_color.end());
+  inline bool defined(size_t i) const { 
+    return (main_color.count(i) != 0);
   } 
 
   inline bool empty() const { 
@@ -103,14 +87,6 @@ struct Mcolor {
 
   inline size_t size() const { 
     return main_color.size();
-  } 
-	
-  inline iter begin() { 
-    return main_color.begin();
-  } 
-
-  inline iter end() { 
-    return main_color.end();
   } 
 
   inline citer cbegin() const { 

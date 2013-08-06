@@ -19,20 +19,8 @@
 #ifndef MBGRAPH_H_
 #define MBGRAPH_H_
 
-#include <fstream>
-#include <vector>
-#include <set>
-#include <unordered_set>
-#include <cassert>
-
-#include "utility/sym_multi_hashmap.h"
-#include "2break.h"
+#include "defined.h" 
 #include "genome.h"
-
-//typedef std::string vertex_t;
-//typedef sym_multi_hashmap<vertex_t> partgraph_t;
-
-//const vertex_t Infty = "oo"; 
 
 struct MBGraph {
   typedef std::string orf_t;
@@ -69,7 +57,7 @@ struct MBGraph {
   } 
 
   inline vertex_t get_obverse_vertex(const vertex_t& v) const {
-    assert(obverse_edges.find(v) != obverse_edges.cend());
+    assert(obverse_edges.count(v) != 0);
     return obverse_edges.find(v)->second;
   } 
 
@@ -89,25 +77,16 @@ struct MBGraph {
  
   //FIXME IF WE RECONSTRUCT ANCESTORS WITH DUPLICATION EQUAL RANGE
   inline vertex_t get_adjecent_vertex(size_t index, const vertex_t& first) const {  
-    assert(index < local_graph.size());
-    assert(local_graph[index].find(first) != local_graph[index].cend());
+    assert(index < local_graph.size() && (local_graph[index].count(first) != 0));
     return local_graph[index].find(first)->second;
   } 	 
-	
-        inline partgraph_t get_local_graph(size_t index) const { 
-	  return local_graph[index];
-	} 
-	
-	inline partgraph_t get_obverce_graph() const {
-		return obverse_edges;
-	}  
 
-  inline size_t size_graph() const { 
+  inline size_t count_local_graphs() const { //FIXME THINK
     return local_graph.size();
   } 
 
-  inline size_t count_vertex() const { 
-    return vertex_set.size();
+  inline partgraph_t get_local_graph(size_t index) const {  //FIXME THINK
+    return local_graph[index];
   } 
 
   inline std::set<vertex_t>::iterator begin() { 
@@ -118,11 +97,11 @@ struct MBGraph {
     return vertex_set.end();
   }
 		
-  inline std::set<vertex_t>::const_iterator begin_vertices() const { 
+  inline std::set<vertex_t>::const_iterator begin_vertices() const { //FIXME THINK
     return vertex_set.cbegin();
   } 
 	
-  inline std::set<vertex_t>::const_iterator end_vertices() const { 
+  inline std::set<vertex_t>::const_iterator end_vertices() const { //FIXME THINK
     return vertex_set.cend();
   }
 
@@ -184,9 +163,10 @@ private:
       }  
     } 
   }
-protected:
+
+protected:		
   std::set<vertex_t> vertex_set;  // set of vertices //hash set? 
-  partgraph_t obverse_edges; //OBverse relation 
+  obverse_graph_t obverse_edges; //OBverse relation 
   std::vector<partgraph_t> local_graph; // local graphs of each color 
 };	
 

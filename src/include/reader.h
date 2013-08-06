@@ -1,8 +1,6 @@
 #ifndef READER_H_
 #define READER_H_
 
-#include <cstdlib>
-
 #include "pconf.h"
 #include "genome.h"
 #include "mcolor.h"

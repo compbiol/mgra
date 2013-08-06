@@ -56,8 +56,7 @@ void writer::Wstats::print_connected_components(const mbgraph_with_history<Mcolo
 
 	C.update();
 
-	std::map<vertex_t, std::set<vertex_t> > cls;
-	C.get_eclasses(cls);
+	std::map<vertex_t, std::set<vertex_t> > cls = C.get_eclasses<std::set<vertex_t> >();
 
 	std::map<size_t, size_t> stx;
 	for(auto ic = cls.begin(); ic != cls.end(); ++ic) {
@@ -126,12 +125,12 @@ void writer::Wstats::print_fair_edges(const mbgraph_with_history<Mcolor>& MBG, S
 #ifndef HG_TONLY // adding other colors
 	std::set<Mcolor> proc;
 	for(auto ih = Hcount.cbegin(); ih != Hcount.cend(); ++ih) {
-		if (!member(proc, ih->first.first)) {
+		if (proc.find(ih->first.first) == proc.end()) {
 			HCrow.push_back(ih->first.first);
 			proc.insert(ih->first.first);
 		}
 
-		if (!member(proc, ih->first.second)) {
+		if (proc.find(ih->first.second) == proc.end()) {
 			HCrow.push_back(ih->first.second);
 			proc.insert(ih->first.second);
 		}
@@ -235,7 +234,7 @@ void writer::Wstats::print_not_compl_characters(const std::vector<std::string>& 
 
 void writer::Wstats::print_estimated_dist(size_t stage, const ProblemInstance<Mcolor>& cfg, const mbgraph_with_history<Mcolor>& graph) { 
 	ofstat << "% Estimated distances:" << std::endl << std::endl;
-	print_start_table(graph.size_graph());
+	/*print_start_table(graph.count_local_graphs());
 	ofstat << "Stage " << stage;
 	for(size_t i = 0; i < cfg.get_count_genomes(); ++i) { 
 		ofstat << " & " << cfg.get_priority_name(i); 
@@ -246,19 +245,19 @@ void writer::Wstats::print_estimated_dist(size_t stage, const ProblemInstance<Mc
 	for(size_t i = 0; i < cfg.get_count_genomes(); ++i) { 
 		ofstat << cfg.get_priority_name(i) << " & "; 
 		
-		for(size_t j = 0; j < graph.size_graph(); ++j) {
+		for(size_t j = 0; j < graph.count_local_graphs(); ++j) {
 			if (j > i) {
 				ofstat << genome_dist(graph.get_local_graph(i), graph.get_local_graph(j), graph.get_obverce_graph())[2]; //FIXME
 			}
 
-			if (j == graph.size_graph() - 1) { 
+			if (j == graph.count_local_graphs() - 1) { 
 				ofstat << "\\\\";
 			} else { 
 				ofstat << " & ";			
 			} 
 		}
 		ofstat << std::endl;
-	}
+	}*/
 	print_close_table();
 } 
 

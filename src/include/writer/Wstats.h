@@ -6,7 +6,7 @@
 
 #include "mbgraph_history.h"
 #include "estimate.h"
-#include "gen_dist.h"
+//#include "gen_dist.h"
 #include "pconf.h"
 #include "reader.h"
 

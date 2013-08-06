@@ -380,7 +380,7 @@ void Statistics<graph_t>::count_chromosomes() {
 	std::string y = graph.get_obverse_vertex(*is);
 
 	while (true) {
-	  if (member(processed, y)) {
+	  if (processed.count(y) != 0) {
 	    ++circular_chr[i];
 	    break;
 	  }
@@ -392,7 +392,7 @@ void Statistics<graph_t>::count_chromosomes() {
 	  }
 	  
 	  y = graph.get_adjecent_vertex(i, y);
-	  if (member(processed, y)) {
+	  if (processed.count(y) != 0) {
 	    ++circular_chr[i];
 	    break;
 	  }
@@ -406,7 +406,7 @@ void Statistics<graph_t>::count_chromosomes() {
 	  while (processed.find(y) == processed.end()) {
 	    processed.insert(y);
 	    y = graph.get_obverse_vertex(y);
-	    if (member(processed, y)) { 
+	    if (processed.count(y) != 0) { 
 	      break;
 	    } 
 

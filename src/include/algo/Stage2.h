@@ -17,11 +17,11 @@ bool Algorithm<graph_t>::canformQ(const vertex_t& x, const Mcolor& Q) const {
   // OR 
   // if every intersection Q \cap QQ = \emptyset or QQ.
 
-  Mularcs<Mcolor> M = graph.get_adjacent_multiedges(x, split_bad_colors);
-    
-  for(auto im = M.cbegin(); im != M.cend(); ++im) { 
-    Mcolor C(Q, im->second, Mcolor::Intersection); 
-    if (C.size() > 0 && C.size() < im->second.size()) { 
+  Mularcs<Mcolor> mularcs = graph.get_adjacent_multiedges(x, split_bad_colors);
+
+  for(const auto &arc : mularcs) { 
+    Mcolor C(Q, arc.second, Mcolor::Intersection); 
+    if (C.size() > 0 && C.size() < arc.second.size()) { 
       return false;
     } 
   }
@@ -43,7 +43,7 @@ bool Algorithm<graph_t>::is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>&
 	  mobilQ = canformQ(ix->first, QQ);
 	} 
       }
-	
+	// FIXME : NEEED LAMBDA
       if (!mobilQ) { 
 	for(auto iy = Cy.cbegin(); (iy != Cy.cend()) && !mobilQ; ++iy) { 
 	  //std::cerr << "MOBIL: " << y << "-" << iy->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
@@ -64,8 +64,8 @@ bool Algorithm<graph_t>::stage2() {
   do {
     number_rear = 0; 
 	
-    for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {  
-      const vertex_t& x = *is;
+    for(const auto &x : graph) {  
+      //const vertex_t& x = *is;
 
       if (graph.is_duplication_vertex(x) || graph.is_indel_vertex(x)) { 
 	continue; 

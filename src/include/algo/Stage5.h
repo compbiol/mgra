@@ -84,7 +84,7 @@ bool Algorithm<graph_t>::stage5_1() {
 	     // let check what would happen with (be-)edge e=(p.first,t.first)
 
 	     Mcolor T = Q;
-	     for(size_t i = 0; i < graph.size_graph(); ++i) {
+	     for(size_t i = 0; i < graph.count_local_graphs(); ++i) {
 	       if (graph.is_exist_edge(i, p.first) && graph.get_adjecent_vertex(i, p.first) == t.first) {
 		 T.insert(i);
 	       }
@@ -153,7 +153,7 @@ bool Algorithm<graph_t>::stage5_1() {
            }
 			    
 	   // N.B. we have CC[p.first] == CC[q.first] == ie->first
-	   if (member(processed, CC[p.second]) || member(processed, CC[q.second]) || CC[p.second] != CC[q.second]){ 
+	   if ((processed.count(CC[p.second]) != 0) || (processed.count(CC[q.second]) != 0) || CC[p.second] != CC[q.second]) { 
 		continue;
 	   }
 
@@ -186,12 +186,11 @@ bool Algorithm<graph_t>::stage5_2() {
  do {
    number_rear = 0;
 
-   for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
-     if (graph.is_indel_vertex(*is) || graph.is_duplication_vertex(*is)) {
+   for(const auto &x : graph) {
+     if (graph.is_indel_vertex(x) || graph.is_duplication_vertex(x)) {
 	continue;
      }
 
-     const vertex_t& x = *is;     
      Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
      bool next = false;
 

@@ -8,8 +8,8 @@ void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_his
 	if (stage == 0) { 
 		println("Initial graph:");
 #ifdef VERSION2
-		println("... Unique blocks: " + toString(graph.count_vertex() / 2));
-		println("... Vertex: " + toString(graph.count_vertex()));
+		println("... Unique blocks: " + toString(graph.size() / 2));
+		println("... Vertex: " + toString(graph.size()));
 #endif
 	}  else { 
 		println("After Stage " + toString(stage) + " graph:");

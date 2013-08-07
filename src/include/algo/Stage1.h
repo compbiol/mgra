@@ -22,11 +22,11 @@ bool Algorithm<graph_t>::stage1() {
 	  }  		    
 	}
 
-	if (!((*path.begin() == *path.rbegin()) && (*path.begin() != Infty) 
-	    && (graph.is_duplication_vertex(*path.begin()) || graph.is_indel_vertex(*path.begin())) 
-	      && (path.size() % 2 == 0))) {
+	//if (!((*path.begin() == *path.rbegin()) && (*path.begin() != Infty) 
+	//    && (graph.is_duplication_vertex(*path.begin()) || graph.is_indel_vertex(*path.begin())) 
+	//      && (path.size() % 2 == 0))) {
 	  number_rear += process_simple_path(path);
-	}
+	//}
       }
     } 
 
@@ -130,7 +130,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 
     if (*path.begin() == *path.rbegin()) {
       if (path.size() % 2 == 0) {
-	assert(*path.begin() == Infty);
+	//assert(*path.begin() == Infty);
 	//if (*path.begin() != Infty) {
 	//std::cerr << "ERROR: Semi-cycle w/o infinity! " << *path.begin() << std::endl;
 	//exit(1);
@@ -138,13 +138,14 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 
 	if (process_color == graph.get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin())) { 
 	  //std::cerr << "... semi-cycle, fusion applied" << std::endl;
+	  const vertex_t& self_v = *(path.begin());
 	  const vertex_t& x0 = *(++path.begin());
 	  const vertex_t& y0 = *(++path.rbegin());
 
 	  Mularcs<Mcolor> mul = graph.get_adjacent_multiedges(x0, split_bad_colors);
-	  auto colors = mul.equal_range(Infty);
+	  auto colors = mul.equal_range(self_v);
 	  for (auto it = colors.first; it != colors.second; ++it) { 
-	    graph.apply_two_break(TwoBreak<Mcolor>(Infty, x0, Infty, y0, it->second));
+	    graph.apply_two_break(TwoBreak<Mcolor>(self_v, x0, self_v, y0, it->second));
 	    ++number_rear;
 	  } 
 	
@@ -152,18 +153,19 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  *path.begin() = y0;
 	} else {
 	  //std::cerr << "... semi-cycle, fission applied" << std::endl;
+	  const vertex_t& self_v = *(path.begin());
 	  const vertex_t& y0 = *(++path.rbegin());
 	  const vertex_t& y1 = *(++++path.rbegin());
 
 	  Mularcs<Mcolor> mul = graph.get_adjacent_multiedges(y0, split_bad_colors);
 	  auto pair = mul.equal_range(y1);
 	  for (auto it = pair.first; it != pair.second; ++it) { 
- 	    graph.apply_two_break(TwoBreak<Mcolor>(y0, y1, Infty, Infty, it->second));
+ 	    graph.apply_two_break(TwoBreak<Mcolor>(y0, y1, self_v, self_v, it->second));
 	    ++number_rear;
 	  }
         
 	  path.erase(--path.end());
-	  *path.rbegin() = Infty;
+	  *path.rbegin() = self_v;
 	}
 
 	if (path.size() < 4) { 

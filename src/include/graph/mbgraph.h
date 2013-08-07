@@ -81,6 +81,10 @@ struct MBGraph {
     return local_graph[index].find(first)->second;
   } 	 
 
+  inline size_t size() const { 
+    return vertex_set.size(); 
+  }
+ 
   inline size_t count_local_graphs() const { //FIXME THINK
     return local_graph.size();
   } 

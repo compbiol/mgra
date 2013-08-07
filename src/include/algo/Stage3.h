@@ -22,21 +22,21 @@ bool Algorithm<graph_t>::stage3_1() {
       Mcolor bar_indel_color = graph.get_complement_color(indel_color);
       assert(indel_color == graph.get_adjacent_multiedges(a2).union_multicolors());
 
-      if (graph.is_vec_T_color(bar_indel_color)) {
+      if (graph.is_vec_T_color(bar_indel_color)	
+	|| (split_bad_colors && (graph.split_color(indel_color).size() >= graph.split_color(bar_indel_color).size()))) {
 	//std::cerr << " past vec-TC-color. Done." << std::endl; 
 	InsDel<Mcolor> insertion(a1, a2, bar_indel_color, false);
 	graph.apply_ins_del(insertion);
 	++number_indel_event;
 	++ins; 
-      } else {
-	if (graph.is_vec_T_color(indel_color) || split_bad_colors) { 
+      } else if (graph.is_vec_T_color(indel_color) 
+	|| (split_bad_colors && (graph.split_color(indel_color).size() < graph.split_color(bar_indel_color).size()))) { 
 	  //std::cerr << " past TC-color. Add to viewed edges." << std::endl;
 	  InsDel<Mcolor> bad_insertion(a1, a2, bar_indel_color, false); 
 	  graph.apply_ins_del(bad_insertion, false);
 	  viewed_edges.push_back(bad_insertion);
 	  ++del;
 	  ++number_indel_event;
-	}
       } 
     }
   }
@@ -69,7 +69,9 @@ void Algorithm<graph_t>::remove_past_bad_colors() {
       --it;
       //++number_indel_event;				
       //std::cerr << " yes, it's complete we remove it" << std::endl;
-    } //else {
+    } //else if (color.empty()) { 
+       //std::cerr << a1 << " " << a2 << " " << genome_match::mcolor_to_name(it->get_mcolor()) << std::endl;
+    //} else {
       //std::cerr << " NO, now is bad " << genome_match::mcolor_to_name(color) << std::endl;
     //}
   } 

@@ -85,8 +85,12 @@ struct Mcolor {
     return main_color.empty();
   } 
 
-  inline size_t size() const { 
-    return main_color.size();
+  inline size_t size() const {
+    size_t size = 0; 
+    for (auto col : main_color) { 
+	size += col.second;
+    } 
+    return size;
   } 
 
   inline citer cbegin() const { 

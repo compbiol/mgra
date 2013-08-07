@@ -196,8 +196,8 @@ bool Algorithm<graph_t>::stage4_conv_to_td() {
 			TwoBreak<Mcolor> t(a1, x, a2, y, color);
 			graph.apply_two_break(t);
 			++number_rear;
-	  	} else if (split_bad_colors) {
-			//std::cerr << a1 << " " << x << " " << a2 << " " << y << std::endl;
+	  	} else if (!graph.is_vec_T_color(graph.get_complement_color(color)) && split_bad_colors) {
+			std::cerr << a1 << " " << x << " " << a2 << " " << y << std::endl;
 			std::set<Mcolor> colors = graph.split_color(color);
 			for (const auto& col: colors) { 
 				TwoBreak<Mcolor> t(a1, x, a2, y, col);

@@ -202,13 +202,13 @@ bool Algorithm<graph_t>::stage5_2() {
          Mularcs<Mcolor> My = graph.get_adjacent_multiedges(y);
          My.erase(x);
 
-         for(auto jm = My.cbegin(); (jm != My.cend()) && (!next); ++jm) {
+	 for(auto jm = My.cbegin(); (jm != My.cend()) && (!next); ++jm) {
 	   const vertex_t& z = jm->first;
-	 
-	   if (z != Infty && !graph.is_indel_vertex(z) && !graph.is_duplication_vertex(z)) { 
+	  
+	   if (z != Infty) { 
 	     Mularcs<Mcolor> Cz = graph.get_adjacent_multiedges(z);
 	     vertex_t v = Cz.get_vertex(Q);
-	     if (!v.empty() && Mx.defined(v)) { // find(v) != Mx.cend())) {
+	     if (!v.empty() && Mx.defined(v)) { 
 	       //std::cerr << "Stage 5_2: " << x << " - " << y << "\tX\t" << v << " - " << z << std::endl;
 	       graph.apply_two_break(TwoBreak<Mcolor>(x, y, v, z, Q));
 	       ++number_rear;
@@ -218,10 +218,11 @@ bool Algorithm<graph_t>::stage5_2() {
          }
        }
      }
+     
    }
-
+ 
    if (number_rear != 0) { 
-     isChanged = true; 
+    isChanged = true; 
    } 
  } while (number_rear > 0);
 

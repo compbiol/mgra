@@ -5,7 +5,7 @@
 ** Multiple Genome Rearrangements and Ancestors (MGRA) 
 ** reconstruction software. 
 ** 
-** Copyright (C) 2008,12 by Max Alekseyev <maxal@cse.sc.edu> 
+** Copyright (C) 2008 - 2013 by Max Alekseyev <maxal@cse.sc.edu> 
 **. 
 ** This program is free software; you can redistribute it and/or 
 ** modify it under the terms of the GNU General Public License 
@@ -16,24 +16,8 @@
 ** along with this program; if not, see http://www.gnu.org/licenses/gpl.html 
 */
 
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <sstream>
-#include <string>
-
-#include <list>
-#include <vector>
-#include <array> 
-
-#include <iterator>   // ostream_iterator etc.
-
 #include "reader.h"
 #include "algo/Algorithm.h"
-#include "Wdots.h"
-#include "mbgraph_history.h"
-
-#define member(S,x) ((S).find(x)!=(S).end())
 
 std::vector<std::string> genome_match::number_to_genome;
 genome_match::gen2num genome_match::genome_to_number;   
@@ -42,12 +26,7 @@ std::ofstream outlog("/dev/null");
 
 typedef std::list<TwoBreak<Mcolor> > transform_t;
 
-std::vector<partgraph_t> RG; // recovered genomes
-std::vector<transform_t> RT; // and transformations
-
-bool RecoverGenomes(const mbgraph_with_history<Mcolor>& graph);
 std::set<vertex_t> getchrset;
-
 std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG, const std::string& x) {
     path_t path;
     bool circular = false;
@@ -56,28 +35,29 @@ std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const 
     getchrset.insert(x);
 
     for(vertex_t y = graph.get_obverse_vertex(x); ; ) {
-	if (member(getchrset,y) ) {
+	if (getchrset.find(y) != getchrset.end()) {
 	    circular = true;
 	    break; // circ
 	}
 	getchrset.insert(y);
 
 	{
-	    std::string xx = y;
-	    xx.resize(xx.size()-1);
-	    if( *y.rbegin()=='t' ) {
-		path.push_back("-"+xx);
-	    }
-	    else {
-		path.push_back("+"+xx);
+	    vertex_t xx = y;
+	    xx.resize(xx.size() - 1);
+	    if (*y.rbegin() == 't') {
+		path.push_back("-" + xx);
+	    } else {
+		path.push_back("+" + xx);
 	    }
 	}
 
-	if( !PG.defined(y) ) break; // linear
+	if (!PG.defined(y)) { 
+	  break; // linear
+	} 
 
 	y = PG[y];
 
-	if( member(getchrset,y) ) {
+	if (getchrset.find(y) != getchrset.end()) {
 	    circular = true;
 	    break; // circ
 	}
@@ -89,8 +69,8 @@ std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const 
 	y = graph.get_obverse_vertex(y);
     }
 
-    if( !circular && PG.defined(x) ) {
-	for(std::string y = x; PG.defined(y);) {
+    if (!circular && PG.defined(x)) {
+	for(vertex_t y = x; PG.defined(y);) {
 	    y = PG[y];
 	    getchrset.insert(y);
 
@@ -101,53 +81,48 @@ std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const 
 	    getchrset.insert(y);
 	    {
 		std::string xx = y;
-		xx.resize(xx.size()-1);
-		if( *y.rbegin()=='t' ) {
-		    path.push_front("+"+xx);
-		}
-		else {
-		    path.push_front("-"+xx);
+		xx.resize(xx.size() - 1);
+		if (*y.rbegin() == 't') {
+		    path.push_front("+" + xx);
+		} else {
+		    path.push_front("-" + xx);
 		}
 	    }
 	}
     }
 
-    return std::make_pair( path, circular );
+    return std::make_pair(path, circular);
 }
 
 
 std::list< std::set<vertex_t> > pg_empty;
-void splitchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG, std::set<std::pair<path_t, bool> >& AllChr, bool Xonly = false, std::list<std::set<vertex_t> >& CircChr = pg_empty) {
+void splitchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG, std::set<std::pair<path_t, bool> >& AllChr, std::list<std::set<vertex_t> >& CircChr = pg_empty) {
 
     if (&CircChr != &pg_empty) { 
 	CircChr.clear();
     } 
     AllChr.clear();
-    std::set<vertex_t> processed;
+    std::unordered_set<vertex_t> processed;
 
-    for(const auto &x : graph) { //.begin_vertices(); is != graph.end_vertices(); ++is) {
-	//const std::string& x = *is;
+    for(const auto &x : graph) { 
+	if (processed.find(x) == processed.end()) { 
+	        std::pair<path_t, bool> pathb = getchr(graph, PG, x);
 	
-	if (member(processed, x)) { 
-	  continue;
-	}
-       
-        std::pair<path_t, bool> pathb = getchr(graph, PG, x);
+		AllChr.insert(pathb);
 
-	AllChr.insert( pathb );
-
-        std::copy(getchrset.begin(), getchrset.end(), std::inserter(processed, processed.end()));
-
-	if (pathb.second && (&CircChr != &pg_empty)) {
-	    CircChr.push_back(getchrset);
-	}
+	        std::copy(getchrset.begin(), getchrset.end(), std::inserter(processed, processed.end()));
+	
+		if (pathb.second && (&CircChr != &pg_empty)) {
+		    CircChr.push_back(getchrset);
+		}
+	} 
     }
 }
 
 std::pair<size_t, size_t> numchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG) {
     std::set<std::pair<path_t, bool> > AllChr;
     std::list<std::set<vertex_t> > CircChr;
-    splitchr(graph, PG, AllChr, false, CircChr);
+    splitchr(graph, PG, AllChr, CircChr);
     return std::make_pair(AllChr.size(), CircChr.size());
 }
 
@@ -243,10 +218,12 @@ void get_obverse_paths(const mbgraph_with_history<Mcolor>& graph, std::map<verte
 	for(auto ip = OP.begin(); ip != OP.end(); ++ip) {
             const vertex_t& x = ip->first;
 
-	    if( x==Infty || member(processed[x], iq->first) ) continue;
+	    if (x == Infty || (processed[x].find(iq->first) != processed[x].end())) {
+		continue;
+	    }
 
 	    for(vertex_t y = graph.get_obverse_vertex(ip->first); PG.defined(y);) {
-		if( member(OP,y) ) {
+		if (OP.find(y) != OP.end()) {
 		    ip->second.insert(y);
 		    OP[y].insert(x);
                     processed[y].insert(iq->first);
@@ -308,12 +285,12 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 	{
 	    Mcolor C(it->get_mcolor(), Q, Mcolor::Intersection);
     
-	    if( C.empty() ) {
+	    if (C.empty()) {
 		++it;
 		continue;
 	    }
     
-	    if( C != Q ) {
+	    if (C != Q) {
 		outlog << "Impossible multicolor in the transformation!" << std::endl;
 		break;
 	    }
@@ -486,6 +463,100 @@ void tell_root_besides(const mbgraph_with_history<Mcolor>& graph) {
   std::clog << std::endl;
 }
 
+std::vector<partgraph_t> RG; // recovered genomes
+std::vector<transform_t> RT; // and transformations
+
+///////////////////////////////////////////////////////////////////////////
+void RecoverGenomes(const mbgraph_with_history<Mcolor>& graph) {
+    size_t NC = graph.count_vec_T_consitent_color();
+    RG.resize(NC);
+    RT.resize(NC);
+
+    for(size_t i = 0; i < NC; ++i) { 
+	RG[i] = *(graph.cbegin_local_graphs());
+    } 
+
+    // track changes in the number of chromosomes
+
+    // number of reversals, interchromosomal translocations, and fissions/fusions
+    /*std::vector< std::vector<size_t> > RTF(NC);
+    for(size_t j = 0; j < NC; ++j) { 
+	RTF[j].resize(3);
+    } */
+
+    for(auto it = graph.crbegin_2break_history(); it != graph.crend_2break_history(); ++it) {
+	const Mcolor& Q = it->get_mcolor();
+
+	//std::cerr << "Reverting (" << it->get_arc(0).first << "," << it->get_arc(0).second << ")x(" << it->get_arc(1).first << "," << it->get_arc(1).second << "):{" << genome_match::mcolor_to_name(Q) << "} " << " in";
+
+	size_t i = 0;
+	for(auto im = graph.cbegin_T_consistent_color(); im != graph.cend_T_consistent_color(); ++im) {
+    	
+	    if (!Q.includes(*im)) { 
+	        ++i;
+		continue;
+	    } 
+
+            // TColor[i] is subset of Q
+
+            size_t nchr_old = 0;
+	    if (Q == *im) {
+		nchr_old = numchr(graph, RG[i]).first;
+	    }
+
+	    it->inverse().apply_single(RG[i]);
+
+	    if (Q == *im) {
+		//std::cerr << " " << genome_match::mcolor_to_name(*im);
+		RT[i].push_front(*it);
+	    }
+
+	    if (Q == *im) {
+		bool samechr = true;
+
+		std::unordered_set<vertex_t> vert;
+		if (it->get_arc(0).first != Infty) vert.insert(it->get_arc(0).first);
+		if (it->get_arc(0).second != Infty) vert.insert(it->get_arc(0).second);
+		if (it->get_arc(1).first != Infty) vert.insert(it->get_arc(1).first);
+		if (it->get_arc(1).second != Infty) vert.insert(it->get_arc(1).second);
+    
+		getchr(graph, RG[i], *vert.begin());
+    
+		vert.erase(vert.begin());
+		for(const auto &iv : vert) {
+		    if (getchrset.find(iv) == getchrset.end()) {
+			samechr = false;
+			break;
+		    }
+		}
+
+		size_t nchr_new = numchr(graph, RG[i]).first;
+		/*if (nchr_new != nchr_old) {
+		    ++RTF[i][2];
+		} else {
+		    if (samechr) {
+			++RTF[i][0];
+		    } else { 
+			++RTF[i][1];
+		    } 
+		}*/
+	    }
+	    ++i;
+	}
+	
+	//std::cerr << std::endl;
+    }
+
+    /*std::vector<size_t> tot(3);
+    std::cerr << "% Number of reversals / translocations / fissions+fusions: " << std::endl;
+    for(size_t j = 0; j < NC; ++j) {
+	tot[0] += RTF[j][0];
+	tot[1] += RTF[j][1];
+	tot[2] += RTF[j][2];
+    }
+    std::cerr << "Total\t&\t" << tot[0] << " & " << tot[1] << " & " << tot[2] << " &\t" << tot[0]+tot[1]+tot[2] << " \\\\" << std::endl;*/
+}
+
 ////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[]) {
   std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) ver. 1.5" << std::endl;
@@ -528,24 +599,6 @@ int main(int argc, char* argv[]) {
  
 #ifndef VERSION2  
   if (!PI.get_target().empty()) {
-#if 0
-	// EXPERIMENTAL DEtransform_tCIRCULARIZATION of PI.target
-	transform_t H;
-	for(transform_t::const_iterator ih=TwoBreak::History.begin();ih!=TwoBreak::History.end();++ih) {
-	    H.push_front(ih->inverse());
-	}
-	for(int i=0;i<N;++i) {
-	    transform_t T = decircularize(graph, graph.LG[i],H,TColor[i]); // assume that TColor[i] = { i }
-    
-	    // move to adjacent branches
-	    for(transform_t::const_iterator it = T.begin(); it!=T.end(); ++it) {
-		for(int j=0;j<N;++j) if( j!=i && member(it->MultiColor,j) ) {
-                    it->applySingle(graph.LG[j]);
-		}
-	    }
-	}
-#endif
-
 	partgraph_t PG;
 
 	for(const auto &x : *graph) {
@@ -557,8 +610,8 @@ int main(int argc, char* argv[]) {
 	    bool good = true;
 	    size_t def = 0;
 	    const auto &target = PI.get_target();
-	    for (auto col = target.cbegin(); col != target.cend(); ++col) { 
-		size_t numb_color = col->first; 
+	    for (const auto &col : target) { 
+		size_t numb_color = col.first; 
 		if (graph->is_exist_edge(numb_color, x)) {
 		    ++def;
 		    if (y == Infty) { 
@@ -580,39 +633,30 @@ int main(int argc, char* argv[]) {
 	splitchr(*graph, PG, GN);
 	printchr(genome_match::mcolor_to_name(PI.get_target()), GN, PI.get_target().empty());
 
-	//for(int i=0;i<N;++i) {
-	//    set< pair<path_t,bool> > GN;
-	//    splitchr(graph.LG[i], GN);
-	//    printchr(sname[i].substr(0,1) + "_m",GN, PI.get_target().empty());
-	//}
-
-
     } else {  /* empty target */
+        for(auto it = graph->cbegin_local_graphs(); it != graph->cend_local_graphs() - 1; ++it) { 
+	  if (*it != *(it + 1)) {
+	    std::cout << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; //FIXME clog
+	    exit(1);
+	  }
+        }
 
-	const size_t NC = graph->count_vec_T_consitent_color();
-    
-	RG.resize(NC);
-	RT.resize(NC);
-    
-	if( !RecoverGenomes(*graph) ) exit(1);
-    
+	RecoverGenomes(*graph);
+     
 	// T-transformation complete, we procede with recovering the ancestral genomes
-    
-	outlog << "Initial 2-break distances from the root X: " << std::endl;
-	
-	// FIXME: check that the order in which circular chromosomes are eliminated
-    
+	//std::cerr << "Initial 2-break distances from the root X: " << std::endl;
+
+	// FIXME: check that the order in which circular chromosomes are eliminated    
 	size_t i = 0; 
-	for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im) {
-    
+	for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im) {    
 	    transform_t T = decircularize(*graph, RG[i], RT[i], *im);
     
 	    // move to adjacent branches
-	    for (transform_t::const_iterator it = T.cbegin(); it != T.cend(); ++it) {
+	    for (const auto &it : T) {
 		size_t j = 0; 
 		for (auto jt = graph->cbegin_T_consistent_color(); jt != graph->cend_T_consistent_color(); ++jt) {
 		    if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && graph->are_adjacent_branches(*im, *jt)) {
-			RT[j].push_back(*it);
+			RT[j].push_back(it);
 		    }
 		    ++j; 
 		}
@@ -620,7 +664,7 @@ int main(int argc, char* argv[]) {
  	    ++i; 
 	}
     
-	outlog << "Final 2-break distances from the root X: " << std::endl;
+	//std::cerr << "Final 2-break distances from the root X: " << std::endl;
 	
 	i = 0; 
 	for(auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im) {
@@ -629,10 +673,10 @@ int main(int argc, char* argv[]) {
 	    printchr(genome_match::mcolor_to_name(*im), GN, PI.get_target().empty());
         
 	    std::ofstream tr((genome_match::mcolor_to_name(*im) + ".trs").c_str());
-	    for(auto it = RT[i].begin(); it != RT[i].end(); ++it) {
-		tr << it->get_arc(0).first << " " << it->get_arc(0).second << "\t" 
-		   << it->get_arc(1).first << " " << it->get_arc(1).second << "\t" 
-	  	   << genome_match::mcolor_to_name(it->get_mcolor()) << std::endl;
+	    for(const auto &event : RT[i]) {
+		tr << event.get_arc(0).first << " " << event.get_arc(0).second << "\t" 
+		   << event.get_arc(1).first << " " << event.get_arc(1).second << "\t" 
+	  	   << genome_match::mcolor_to_name(event.get_mcolor()) << std::endl;
 	    }
 	    tr.close();
      	    ++i; 
@@ -642,104 +686,3 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-
-
-///////////////////////////////////////////////////////////////////////////
-bool RecoverGenomes(const mbgraph_with_history<Mcolor>& graph) {
-    size_t NC = graph.count_vec_T_consitent_color();
-
-    for(auto it = graph.cbegin_local_graphs(); it != graph.cend_local_graphs() - 1; ++it) { 
-	if (*it != *(it + 1)) {
-	    std::cout << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl;
-	    return false;
-	}
-    }
-
-    RG.clear(); RG.resize(NC);
-    RT.clear(); RT.resize(NC);
-
-    for(size_t i = 0; i < NC; ++i) { 
-	RG[i] = *(graph.cbegin_local_graphs());
-    } 
-
-    // track changes in the number of chromosomes
-
-    // number of reversals, interchromosomal translocations, and fissions/fusions
-    std::vector< std::vector<size_t> > RTF(NC);
-    for(size_t j=0; j < NC; ++j) { 
-	RTF[j].resize(3);
-    } 
-
-    for(auto it = graph.crbegin_2break_history(); it != graph.crend_2break_history(); ++it) {
-	const Mcolor& Q = it->get_mcolor();
-
-	outlog << "Reverting (" << it->get_arc(0).first << "," << it->get_arc(0).second << ")x(" << it->get_arc(1).first << "," << it->get_arc(1).second << "):{" << genome_match::mcolor_to_name(it->get_mcolor()) << "} " << " in";
-
-	size_t i = 0;
-	for(auto im = graph.cbegin_T_consistent_color(); im != graph.cend_T_consistent_color(); ++im) {
-    	
-	    if (!Q.includes(*im)) { 
-	        ++i;
-		continue;
-	    } 
-
-            // TColor[i] is subset of Q
-
-            size_t nchr_old = 0;
-	    if (Q == *im) {
-		nchr_old = numchr(graph, RG[i]).first;
-	    }
-
-	    it->inverse().apply_single(RG[i]);
-
-	    if (Q == *im) {
-		outlog << " " << genome_match::mcolor_to_name(*im);
-		RT[i].push_front(*it);
-	    }
-
-	    if (Q == *im) {
-		bool samechr = true;
-
-		std::set<vertex_t> Vert;
-		if (it->get_arc(0).first != Infty) Vert.insert(it->get_arc(0).first);
-		if (it->get_arc(0).second != Infty) Vert.insert(it->get_arc(0).second);
-		if (it->get_arc(1).first != Infty) Vert.insert(it->get_arc(1).first);
-		if (it->get_arc(1).second != Infty) Vert.insert(it->get_arc(1).second);
-    
-		getchr(graph, RG[i],*Vert.begin());
-    
-		for(auto iv = ++Vert.begin(); iv != Vert.end(); ++iv) {
-		    if (!member(getchrset,*iv)) {
-			samechr = false;
-			break;
-		    }
-		}
-
-		size_t nchr_new = numchr(graph, RG[i]).first;
-		if (nchr_new != nchr_old) {
-		    ++RTF[i][2];
-		} else {
-		    if (samechr) {
-			++RTF[i][0];
-		    } else { 
-			++RTF[i][1];
-		    } 
-		}
-	    }
-	    ++i;
-	}
-	
-	outlog << std::endl;
-    }
-
-    std::vector<size_t> tot(3);
-    outlog << "% Number of reversals / translocations / fissions+fusions: " << std::endl;
-    for(size_t j = 0; j < NC; ++j) {
-	tot[0] += RTF[j][0];
-	tot[1] += RTF[j][1];
-	tot[2] += RTF[j][2];
-    }
-    outlog << "Total\t&\t" << tot[0] << " & " << tot[1] << " & " << tot[2] << " &\t" << tot[0]+tot[1]+tot[2] << " \\\\" << std::endl;
-
-    return true;
-}

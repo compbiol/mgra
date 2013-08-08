@@ -22,13 +22,12 @@
 #include "mbgraph.h"
 #include "mularcs.h"
 
-#include "genome_match.h" //FIXME REMOVE LATER
-
 template<class mcolor_t>
 struct mbgraph_with_colors: public MBGraph { 
   typedef typename std::set<mcolor_t>::const_iterator citer; 
 
-  mbgraph_with_colors(const std::vector<Genome>& genomes, const ProblemInstance<Mcolor>& cfg); 
+  template<class pconf_t>
+  mbgraph_with_colors(const std::vector<Genome>& genomes, const pconf_t& cfg); 
 
   bool is_simple_vertex(const vertex_t& v) const;
   bool is_indel_vertex(const vertex_t& v) const;  
@@ -45,12 +44,13 @@ struct mbgraph_with_colors: public MBGraph {
 
   inline mcolor_t get_complement_color(const mcolor_t& color) { 
     assert(color.is_one_to_one_match()); 
-    if (CColorM.find(color) == CColorM.end()) { 
+    if (compliment_colors.count(color) == 0) { 
       mcolor_t temp = compute_complement_color(color);  
-      CColorM.insert(std::make_pair(color, temp));
-      CColorM.insert(std::make_pair(temp, color));
+      compliment_colors.insert(std::make_pair(color, temp));
+      compliment_colors.insert(std::make_pair(temp, color));
+      return temp;
     }  
-    return CColorM.find(color)->second;
+    return compliment_colors.find(color)->second;
   } 
   
   inline mcolor_t get_min_complement_color(const mcolor_t& color) {
@@ -62,72 +62,73 @@ struct mbgraph_with_colors: public MBGraph {
   }	
 
   inline bool is_T_consistent_color(const mcolor_t& color) const { 
-    return (all_T_color.count(color) > 0);
+    return (T_consistent_colors.count(color) > 0);
   } 
 
   inline size_t count_vec_T_consitent_color() const { 
-    return DiColor.size();
+    return vec_T_consistent_colors.size();
   } 
   
   inline bool is_vec_T_consistent_color(const mcolor_t& color) const {
-    return (DiColor.count(color) > 0);
+    return (vec_T_consistent_colors.count(color) > 0);
   }
 
   inline citer cbegin_T_consistent_color() const { 
-    return DiColor.cbegin(); 
+    return vec_T_consistent_colors.cbegin(); 
   } 
 
   inline citer cend_T_consistent_color() const { 
-    return DiColor.cend(); 
+    return vec_T_consistent_colors.cend(); 
   } 
 private: 
   inline mcolor_t compute_complement_color(const mcolor_t& color) const {
-      mcolor_t answer; 
-      for(size_t j = 0; j < count_local_graphs(); ++j) { 
-	if (!color.defined(j)) { 
-	  answer.insert(j);
-	} 
+    mcolor_t answer; 
+    for(size_t j = 0; j < count_local_graphs(); ++j) { 
+      if (!color.defined(j)) { 
+	answer.insert(j);
       } 
-      return answer;
+    } 
+    return answer;
   }
 
 private:
   mcolor_t complete_color;
-  std::map<mcolor_t, mcolor_t> CColorM; //complementary multicolor
-  std::set<mcolor_t> all_T_color; //all T-consistent colors
-  std::set<mcolor_t> DiColor; // directed colors
+  std::map<mcolor_t, mcolor_t> compliment_colors;
+  std::set<mcolor_t> T_consistent_colors;
+  std::set<mcolor_t> vec_T_consistent_colors;
 }; 
 
 template<class mcolor_t>
-mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<Genome>& genomes, const ProblemInstance<Mcolor>& cfg) 
+template<class pconf_t>
+mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<Genome>& genomes, const pconf_t& cfg) 
 : MBGraph(genomes)
 {
   for (size_t i = 0; i < genomes.size(); ++i) {
     complete_color.insert(i);
-    DiColor.insert(mcolor_t(i));
+    vec_T_consistent_colors.insert(mcolor_t(i));
   }
 
   for (auto it = cfg.cbegin_trees(); it != cfg.cend_trees(); ++it) {
-    it->build_vec_T_consistent_colors(DiColor);
+    it->build_vec_T_consistent_colors(vec_T_consistent_colors);
   }
 
-  DiColor.erase(complete_color);
-  DiColor.erase(cfg.get_target());
+  vec_T_consistent_colors.erase(complete_color);
+  vec_T_consistent_colors.erase(cfg.get_target());
   
   //check consistency
-  for (auto id = DiColor.cbegin(); id != DiColor.cend(); ++id) {
-    for(auto jd = id; jd != DiColor.end(); ++jd) {
-      mcolor_t C(*id, *jd, mcolor_t::Intersection);
-      if (!C.empty() && C.size() != id->size() && C.size() != jd->size()) {
-	DiColor.erase(jd++);
+  for (auto id = vec_T_consistent_colors.cbegin(); id != vec_T_consistent_colors.cend(); ++id) {
+    for(auto jd = id; jd != vec_T_consistent_colors.end(); ++jd) {
+      mcolor_t color(*id, *jd, mcolor_t::Intersection);
+      if (!color.empty() && color.size() != id->size() && color.size() != jd->size()) {
+	vec_T_consistent_colors.erase(jd++);
 	--jd;
       }
     }
   }
    
-  for (const auto &vtc : DiColor) {
-    all_T_color.insert(vtc);
-    all_T_color.insert(compute_complement_color(vtc));
+  for (const auto &vtc : vec_T_consistent_colors) {
+    T_consistent_colors.insert(vtc);
+    T_consistent_colors.insert(compute_complement_color(vtc));
   }
 }
 
@@ -159,7 +160,7 @@ bool mbgraph_with_colors<mcolor_t>::is_indel_vertex(const vertex_t& v) const {
   mcolor_t un = get_adjacent_multiedges(v).union_multicolors();
 	
   if (!un.is_one_to_one_match() || (un == complete_color)) {
-	return false; 
+    return false; 
   }  
 
   return true; 
@@ -235,60 +236,59 @@ SplitColor(Q) представляет Q в виде дизъюнктного о
 */
 template<class mcolor_t>
 std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& color) const {
-  std::set<mcolor_t> S;
+  std::set<mcolor_t> answer;
 
   if (is_vec_T_consistent_color(color)) {
-    S.insert(color);
-    return S;
-  }
+    answer.insert(color);
+  } else { 
+    equivalence<size_t> equiv;
+    for(auto iq = color.cbegin(); iq != color.cend(); ++iq) { 
+      equiv.addrel(iq->first, iq->first);
+    } 
 
-  equivalence<size_t> EQ;
-  for(auto iq = color.cbegin(); iq != color.cend(); ++iq) { 
-    EQ.addrel(iq->first, iq->first);
-  } 
-
-  for (const auto &vtc: DiColor) { 
-    mcolor_t C(vtc, color, mcolor_t::Intersection);
-    if (C.size() >= 2 && C.size() == vtc.size() ) {
-      for (auto iq = C.cbegin(); iq != C.cend(); ++iq) {
-	EQ.addrel(iq->first, C.cbegin()->first);
+    for (const auto &vtc: vec_T_consistent_colors) { 
+      mcolor_t inter_color(vtc, color, mcolor_t::Intersection);
+      if (inter_color.size() >= 2 && inter_color.size() == vtc.size() ) {
+        for (const auto &col : inter_color) { 
+	 equiv.addrel(col.first, inter_color.cbegin()->first);
+        }
       }
     }
-  }
 
-  EQ.update();
-  std::map<size_t, mcolor_t> cls = EQ.get_eclasses<mcolor_t>(); 
-  for(const auto &col : cls) {
-    S.insert(col.second);
+    equiv.update();
+    std::map<size_t, mcolor_t> classes = equiv.get_eclasses<mcolor_t>(); 
+    for(const auto &col : classes) {
+      answer.insert(col.second);
+    }
   }
-  return S;
+  return answer;
 } 
 
 template<class mcolor_t>
-bool mbgraph_with_colors<mcolor_t>::are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const {
-  if (!is_T_consistent_color(A) || !is_T_consistent_color(B)) { 
+bool mbgraph_with_colors<mcolor_t>::are_adjacent_branches(const mcolor_t& mcolor_a, const mcolor_t & mcolor_b) const {
+  if (!is_T_consistent_color(mcolor_a) || !is_T_consistent_color(mcolor_b)) { 
     return false;
   } 
 
-  mcolor_t Q1; 
-  mcolor_t Q2;
+  mcolor_t color1; 
+  mcolor_t color2;
   
-  if (A.size() >= B.size()) {
-    Q1 = A;
-    Q2 = B;
+  if (mcolor_a.size() >= mcolor_b.size()) {
+    color1 = mcolor_a;
+    color2 = mcolor_b;
   } else {
-    Q1 = B;
-    Q2 = A;
+    color1 = mcolor_b;
+    color2 = mcolor_a;
   }
   
-  mcolor_t C(Q1, Q2, mcolor_t::Difference);
+  mcolor_t diff_color(color1, color2, mcolor_t::Difference);
   
-  if (C.size() == Q1.size() - Q2.size() && is_T_consistent_color(C)) { 		
+  if (diff_color.size() == color1.size() - color2.size() && is_T_consistent_color(diff_color)) { 		
     return true;
   } 
   
-  mcolor_t M(Q1, Q2, mcolor_t::Union); 
-  if (M.size() == Q1.size() + Q2.size() && is_T_consistent_color(M)) { 	
+  mcolor_t union_color(color1, color2, mcolor_t::Union); 
+  if (union_color.size() == color1.size() + color2.size() && is_T_consistent_color(union_color)) { 	
     return true;
   } 
   

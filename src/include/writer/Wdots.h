@@ -81,7 +81,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const
     CC.addrel(x, x); 
   } 
   
-  for(auto lc = graph.begin_local_graphs(); lc != graph.end_local_graphs(); ++lc) { 
+  for(auto lc = graph.cbegin_local_graphs(); lc != graph.cend_local_graphs(); ++lc) { 
     for(auto il = lc->cbegin(); il != lc->cend(); ++il) {
       CC.addrel(il->first, il->second);
     }

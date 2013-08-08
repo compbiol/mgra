@@ -48,11 +48,11 @@ struct Genome {
     return main_genome.size();
   } 
 
-  inline std::map<coord_t, gene_t>::const_iterator cbegin() const { 
+  inline std::map<coord_t, gene_t>::const_iterator begin() const { 
     return main_genome.cbegin();	
   } 
 
-  inline std::map<coord_t, gene_t>::const_iterator cend() const { 
+  inline std::map<coord_t, gene_t>::const_iterator end() const { 
     return main_genome.cend();
   } 
 private: 

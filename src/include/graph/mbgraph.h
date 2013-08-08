@@ -31,12 +31,12 @@ struct MBGraph {
     std::unordered_set<orf_t> blocks;
 
     for (const auto& genome : genomes) { 
-      for(auto it = genome.cbegin(); it != genome.cend(); ++it) {
-	if (blocks.count(it->second.first) == 0) { 
-	  obverse_edges.insert(it->second.first + "t", it->second.first + "h");
-	  blocks.insert(it->second.first);
-	  vertex_set.insert(it->second.first + "t"); 
-	  vertex_set.insert(it->second.first + "h"); 
+      for(const auto &orf : genome) {
+	if (blocks.count(orf.second.first) == 0) { 
+	  obverse_edges.insert(orf.second.first + "t", orf.second.first + "h");
+	  blocks.insert(orf.second.first);
+	  vertex_set.insert(orf.second.first + "t"); 
+	  vertex_set.insert(orf.second.first + "h"); 
 	} 
       }
     } 
@@ -85,11 +85,11 @@ struct MBGraph {
     return vertex_set.size(); 
   }
  
-  inline size_t count_local_graphs() const { //FIXME THINK
+  inline size_t count_local_graphs() const { 
     return local_graph.size();
   } 
 
-  inline partgraph_t get_local_graph(size_t index) const {  //FIXME THINK
+  inline partgraph_t get_local_graph(size_t index) const {
     return local_graph[index];
   } 
 
@@ -100,20 +100,20 @@ struct MBGraph {
   inline std::set<vertex_t>::iterator end() { 
     return vertex_set.end();
   }
-		
-  inline std::set<vertex_t>::const_iterator begin_vertices() const { //FIXME THINK
+
+  inline std::set<vertex_t>::const_iterator begin() const { 
     return vertex_set.cbegin();
   } 
 	
-  inline std::set<vertex_t>::const_iterator end_vertices() const { //FIXME THINK
+  inline std::set<vertex_t>::const_iterator end() const { 
     return vertex_set.cend();
   }
-
-  inline std::vector<partgraph_t>::const_iterator begin_local_graphs() const { 
+		
+  inline std::vector<partgraph_t>::const_iterator cbegin_local_graphs() const { 
     return local_graph.cbegin();
   } 
 	
-  inline std::vector<partgraph_t>::const_iterator end_local_graphs() const { 
+  inline std::vector<partgraph_t>::const_iterator cend_local_graphs() const { 
     return local_graph.cend(); 
   } 
 
@@ -123,13 +123,13 @@ private:
     vertex_t current_vertex; // is rightmost vertex of the previous block
     vertex_t prev_chr;
 
-    for(auto iter = genome.cbegin(); iter != genome.cend(); ++iter) {
-      if (blocks.find(iter->second.first) != blocks.end()) { 
-	if (iter->first.first == prev_chr) {
-          if (iter->second.second > 0) {
-	    local_graph[index].insert(current_vertex, iter->second.first + "t");
+    for (const auto &orf : genome) {
+      if (blocks.find(orf.second.first) != blocks.end()) { 
+	if (orf.first.first == prev_chr) {
+          if (orf.second.second > 0) {
+	    local_graph[index].insert(current_vertex, orf.second.first + "t");
 	  } else {
-	    local_graph[index].insert(current_vertex, iter->second.first + "h");
+	    local_graph[index].insert(current_vertex, orf.second.first + "h");
 	  }
 	} else { // new chromosome detected				 
 	  if (!first_vertex.empty()) { 
@@ -141,19 +141,19 @@ private:
 	    } 
 	  }
 
-	  if (iter->second.second > 0) { 
-	    first_vertex = iter->second.first + "t"; 
+	  if (orf.second.second > 0) { 
+	    first_vertex = orf.second.first + "t"; 
 	  } else { 
-	    first_vertex = iter->second.first + "h";
+	    first_vertex = orf.second.first + "h";
 	  } 
 
-	  prev_chr = iter->first.first;
+	  prev_chr = orf.first.first;
 	} 
 		
-	if (iter->second.second > 0) { 
-	  current_vertex = iter->second.first + "h"; 
+	if (orf.second.second > 0) { 
+	  current_vertex = orf.second.first + "h"; 
 	} else { 
-	  current_vertex = iter->second.first + "t";
+	  current_vertex = orf.second.first + "t";
 	} 
       } 
     }
@@ -169,9 +169,9 @@ private:
   }
 
 protected:		
-  std::set<vertex_t> vertex_set;  // set of vertices //hash set? 
-  obverse_graph_t obverse_edges; //OBverse relation 
-  std::vector<partgraph_t> local_graph; // local graphs of each color 
+  std::set<vertex_t> vertex_set; //set of vertice
+  obverse_graph_t obverse_edges; //obverse relation 
+  std::vector<partgraph_t> local_graph; //local graphs of each color 
 };	
 
 #endif

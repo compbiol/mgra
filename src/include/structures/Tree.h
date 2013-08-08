@@ -35,7 +35,7 @@ struct BinaryTree {
 	root.get_nodes(info, cfg);	
   }
 
-  void get_dicolors(std::set<Mcolor>& dicolor) const {
+  void build_vec_T_consistent_colors(std::set<Mcolor>& dicolor) const {
 	Mcolor color = root.get_dicolors(dicolor);	
 	dicolor.insert(color); 
   }

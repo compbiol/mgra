@@ -42,11 +42,11 @@ void writer::Wstats::print_connected_components(const mbgraph_with_history<Mcolo
 	// count connected components in the graph
 	equivalence<vertex_t> C;
 	
-	for(auto is = MBG.begin_vertices(); is != MBG.end_vertices(); ++is) {
-		C.addrel(*is, *is);
+	for(const auto &x : MBG) { 
+		C.addrel(x, x);
 	} 
 
-	for(auto lc = MBG.begin_local_graphs(); lc != MBG.end_local_graphs(); ++lc) { 
+	for(auto lc = MBG.cbegin_local_graphs(); lc != MBG.cend_local_graphs(); ++lc) { 
 		for(auto il = lc->cbegin(); il != lc->cend(); ++il) {
 			if (il->first != Infty && il->second != Infty) { 
 				C.addrel(il->first, il->second);	
@@ -195,10 +195,10 @@ void writer::Wstats::print_fair_edges(const mbgraph_with_history<Mcolor>& MBG, S
 void writer::Wstats::print_complete_edges(const mbgraph_with_history<Mcolor>& graph) { 
 	size_t nc = 0;
 	ofstat << "... complete multiedges:";
-	for(auto it = graph.begin_vertices(); it != graph.end_vertices(); ++it) {
-		Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*it);
-		if (M.size() == 1 && M.cbegin()->second == graph.get_complete_color() && (*it < M.cbegin()->first || M.cbegin()->first == Infty)) {
-			ofstat << " " << *it << "~" << M.cbegin()->first;
+	for(const auto &x : graph) {
+		Mularcs<Mcolor> M = graph.get_adjacent_multiedges(x);
+		if (M.size() == 1 && M.cbegin()->second == graph.get_complete_color() && (x < M.cbegin()->first || M.cbegin()->first == Infty)) {
+			ofstat << " " << x << "~" << M.cbegin()->first;
 			++nc;
 		}
     	}

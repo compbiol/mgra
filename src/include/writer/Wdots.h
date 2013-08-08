@@ -24,9 +24,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(const graph_t& graph, const conf_t
   int infv = 0;
   size_t ncls = 0;
   std::unordered_set<vertex_t> mark; // vertex set
-  for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
-    const std::string& x = *is;
-
+  for(const auto &x : graph) { 
     Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
 
     if (Mx.size() == 1 && Mx.cbegin()->second == graph.get_complete_color()) { 
@@ -34,14 +32,14 @@ void writer::Wdots<graph_t, conf_t>::save_dot(const graph_t& graph, const conf_t
     } 
 
     for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
-      const std::string& y = im->first;
+      const vertex_t& y = im->first;
 
       if (mark.find(y) != mark.end()) { 
 	continue; // already output
       }    
 
       const Mcolor& C = im->second;
-      bool vec_T_color = graph.is_vec_T_color(C);
+      bool vec_T_color = graph.is_vec_T_consistent_color(C);
       for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
 	for (size_t i = 0; i < ic->second; ++i) { 
 	  /*************** output edge (x,y) **************** */
@@ -79,8 +77,8 @@ void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const
 
   equivalence<vertex_t> CC; // connected components
   		
-  for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
-    CC.addrel(*is, *is);
+  for(const auto &x : graph) { 
+    CC.addrel(x, x); 
   } 
   
   for(auto lc = graph.begin_local_graphs(); lc != graph.end_local_graphs(); ++lc) { 
@@ -131,7 +129,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const
 	} 
 
 	const Mcolor& C = im->second;
-	bool vec_T_color = graph.is_vec_T_color(C);
+	bool vec_T_color = graph.is_vec_T_consistent_color(C);
 	for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
 	  for (size_t i = 0; i < ic->second; ++i) { 
 	    dot << "\t\"" << x << "\"\t--\t\"";

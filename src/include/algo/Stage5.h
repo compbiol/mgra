@@ -12,7 +12,7 @@ bool Algorithm<graph_t>::stage5_1() {
    //std::cerr << "Stage 5_1: splitting into connected components" << std::endl;
 
    // go over all T-consistent multicolors
-   for(auto ic = graph.cbegin_T_color(); ic != graph.cend_T_color(); ++ic) {
+   for(auto ic = graph->cbegin_T_consistent_color(); ic != graph->cend_T_consistent_color(); ++ic) {
      const Mcolor& Q = *ic;
 
      bool repeat = true;
@@ -22,18 +22,18 @@ bool Algorithm<graph_t>::stage5_1() {
        equivalence<vertex_t> CC; // connected components
        std::map<vertex_t, vertex_t> QQ; // multiedges of colors !Q (!*ic)
 		    
-       for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {    
-	 Mularcs<Mcolor> M = graph.get_adjacent_multiedges(*is);
+       for(const auto &x : *graph) { //is = graph->begin_vertices(); is != graph->end_vertices(); ++is) {    
+	 Mularcs<Mcolor> M = graph->get_adjacent_multiedges(x); //*is);
 
-	 if (M.size() == 1 && M.cbegin()->second == graph.get_complete_color()) { 
+	 if (M.size() == 1 && M.cbegin()->second == graph->get_complete_color()) { 
 	   continue; // ignore complete multiedges
 	 } 
 
 	 for(auto im = M.cbegin(); im != M.cend(); ++im) {    
 	   if (im->second == *ic) { // edges of color Q (*ic)
-	     QQ.insert(std::make_pair(*is, im->first));
+	     QQ.insert(std::make_pair(x, im->first));
 	   } else if (im->first != Infty) { // reg. edges of color !Q (!*ic)
-	     CC.addrel(*is, im->first);
+	     CC.addrel(x, im->first);
 	   }
 	 }
        }
@@ -70,8 +70,8 @@ bool Algorithm<graph_t>::stage5_1() {
 	   const arc_t& p = *(ie->second.begin());
 	   arc_t q;
 
-	   if (graph.is_indel_vertex(p.first) || graph.is_indel_vertex(p.second) 
-		|| graph.is_duplication_vertex(p.first) || graph.is_duplication_vertex(p.second)) {
+	   if (graph->is_indel_vertex(p.first) || graph->is_indel_vertex(p.second) 
+		|| graph->is_duplication_vertex(p.first) || graph->is_duplication_vertex(p.second)) {
 		continue;
            }
 
@@ -84,13 +84,13 @@ bool Algorithm<graph_t>::stage5_1() {
 	     // let check what would happen with (be-)edge e=(p.first,t.first)
 
 	     Mcolor T = Q;
-	     for(size_t i = 0; i < graph.count_local_graphs(); ++i) {
-	       if (graph.is_exist_edge(i, p.first) && graph.get_adjecent_vertex(i, p.first) == t.first) {
+	     for(size_t i = 0; i < graph->count_local_graphs(); ++i) {
+	       if (graph->is_exist_edge(i, p.first) && graph->get_adjecent_vertex(i, p.first) == t.first) {
 		 T.insert(i);
 	       }
 	     } 
 	     // if e is enriched to T-consistent color, great!
-	     if (T.size() > Q.size() && graph.is_T_consistent_color(T) ) {
+	     if (T.size() > Q.size() && graph->is_T_consistent_color(T) ) {
 	       //std::cerr << "perfect edge is found" << std::endl;
 	       q = t;
 	       found = true;
@@ -116,13 +116,13 @@ bool Algorithm<graph_t>::stage5_1() {
 		continue;
            }
 
-	   if ((q.first != Infty && (graph.is_indel_vertex(q.first) || graph.is_duplication_vertex(q.first)))  
-		|| (q.second != Infty && (graph.is_indel_vertex(q.second) || graph.is_duplication_vertex(q.second)))) {
+	   if ((q.first != Infty && (graph->is_indel_vertex(q.first) || graph->is_duplication_vertex(q.first)))  
+		|| (q.second != Infty && (graph->is_indel_vertex(q.second) || graph->is_duplication_vertex(q.second)))) {
 		continue;
            }
 
         
-	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q));
+	   graph->apply_two_break(TwoBreak<Mcolor>(p, q, Q));
 	   ++number_rear;
 			    
 	   //std::cerr << "Stage 5_1: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
@@ -142,13 +142,13 @@ bool Algorithm<graph_t>::stage5_1() {
 	   arc_t p = *(ie->second.begin());
 	   arc_t q = *(ie->second.rbegin());
 
-	   if (graph.is_indel_vertex(p.first) || graph.is_indel_vertex(p.second) 
-		|| graph.is_duplication_vertex(p.first) || graph.is_duplication_vertex(p.second)) {
+	   if (graph->is_indel_vertex(p.first) || graph->is_indel_vertex(p.second) 
+		|| graph->is_duplication_vertex(p.first) || graph->is_duplication_vertex(p.second)) {
 		continue;
            }
 
-	   if (graph.is_indel_vertex(q.first) || graph.is_indel_vertex(q.second) 
-		|| graph.is_duplication_vertex(q.first) || graph.is_duplication_vertex(q.second)) {
+	   if (graph->is_indel_vertex(q.first) || graph->is_indel_vertex(q.second) 
+		|| graph->is_duplication_vertex(q.first) || graph->is_duplication_vertex(q.second)) {
 		continue;
            }
 			    
@@ -157,7 +157,7 @@ bool Algorithm<graph_t>::stage5_1() {
 		continue;
 	   }
 
-	   graph.apply_two_break(TwoBreak<Mcolor>(p, q, Q));
+	   graph->apply_two_break(TwoBreak<Mcolor>(p, q, Q));
 	   ++number_rear;
 
 	   //std::cerr << "Stage 222.2: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << endl;
@@ -186,31 +186,31 @@ bool Algorithm<graph_t>::stage5_2() {
  do {
    number_rear = 0;
 
-   for(const auto &x : graph) {
-     if (graph.is_indel_vertex(x) || graph.is_duplication_vertex(x)) {
+   for(const auto &x : *graph) {
+     if (graph->is_indel_vertex(x) || graph->is_duplication_vertex(x)) {
 	continue;
      }
 
-     Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
+     Mularcs<Mcolor> Mx = graph->get_adjacent_multiedges(x);
      bool next = false;
 
      for(auto im = Mx.cbegin(); (im != Mx.cend()) && (!next); ++im) {
        const vertex_t& y = im->first;
        const Mcolor& Q = im->second;
 
-       if (graph.is_vec_T_color(Q) && y != Infty && !graph.is_indel_vertex(y) && !graph.is_duplication_vertex(y)) { 
-         Mularcs<Mcolor> My = graph.get_adjacent_multiedges(y);
+       if (graph->is_vec_T_consistent_color(Q) && y != Infty && !graph->is_indel_vertex(y) && !graph->is_duplication_vertex(y)) { 
+         Mularcs<Mcolor> My = graph->get_adjacent_multiedges(y);
          My.erase(x);
 
 	 for(auto jm = My.cbegin(); (jm != My.cend()) && (!next); ++jm) {
 	   const vertex_t& z = jm->first;
 	  
 	   if (z != Infty) { 
-	     Mularcs<Mcolor> Cz = graph.get_adjacent_multiedges(z);
+	     Mularcs<Mcolor> Cz = graph->get_adjacent_multiedges(z);
 	     vertex_t v = Cz.get_vertex(Q);
 	     if (!v.empty() && Mx.defined(v)) { 
 	       //std::cerr << "Stage 5_2: " << x << " - " << y << "\tX\t" << v << " - " << z << std::endl;
-	       graph.apply_two_break(TwoBreak<Mcolor>(x, y, v, z, Q));
+	       graph->apply_two_break(TwoBreak<Mcolor>(x, y, v, z, Q));
 	       ++number_rear;
 	       next = true;
 	     }

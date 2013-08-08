@@ -21,9 +21,12 @@
 
 #include "mbgraph_colors.h"
 
+#include "genome_match.h" //FIXME REMOVE LATER
+
 #include "2break.h"
 #include "Insdel.h"
 #include "TandemDuplication.h"
+
 
 template<class mcolor_t>
 struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> { 

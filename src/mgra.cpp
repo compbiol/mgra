@@ -45,7 +45,7 @@ typedef std::list<TwoBreak<Mcolor> > transform_t;
 std::vector<partgraph_t> RG; // recovered genomes
 std::vector<transform_t> RT; // and transformations
 
-bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph);
+bool RecoverGenomes(const mbgraph_with_history<Mcolor>& graph);
 std::set<vertex_t> getchrset;
 
 std::pair<path_t, bool> getchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG, const std::string& x) {
@@ -123,10 +123,10 @@ void splitchr(const mbgraph_with_history<Mcolor>& graph, const partgraph_t& PG, 
 	CircChr.clear();
     } 
     AllChr.clear();
-    std::set<std::string> processed;
+    std::set<vertex_t> processed;
 
-    for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
-	const std::string& x = *is;
+    for(const auto &x : graph) { //.begin_vertices(); is != graph.end_vertices(); ++is) {
+	//const std::string& x = *is;
 	
 	if (member(processed, x)) { 
 	  continue;
@@ -466,7 +466,7 @@ void tell_root_besides(const mbgraph_with_history<Mcolor>& graph) {
   // tell where the root resides
   std::clog << "the root resides in between:";
 
-  std::set<Mcolor> T(graph.cbegin_T_color(), graph.cend_T_color()); 
+  std::set<Mcolor> T(graph.cbegin_T_consistent_color(), graph.cend_T_consistent_color()); 
 
   for (auto it = T.begin(); it != T.end(); ++it) {
     for (auto jt = it; ++jt != T.end(); ) {
@@ -512,21 +512,20 @@ int main(int argc, char* argv[]) {
 	std::clog << "Genome " << PI.get_priority_name(i) << " blocks: " << genomes[i].size() << std::endl;
   } 
 
-  mbgraph_with_history<Mcolor> graph(genomes, PI); 
+  std::shared_ptr<mbgraph_with_history<Mcolor> > graph(new mbgraph_with_history<Mcolor>(genomes, PI)); 
 
-  std::clog << "vecT-consistent colors: " << graph.count_vec_T_color() << std::endl;
-  for (auto id = graph.cbegin_T_color(); id != graph.cend_T_color(); ++id) {
+  std::clog << "vecT-consistent colors: " << graph->count_vec_T_consitent_color() << std::endl;
+  for (auto id = graph->cbegin_T_consistent_color(); id != graph->cend_T_consistent_color(); ++id) {
     std::clog << "\t" << genome_match::mcolor_to_name(*id);  ///FIXME: CHANGE
   }
   std::clog << std::endl;
 
-  tell_root_besides(graph); 	
+  tell_root_besides(*graph); 	
 
   Algorithm<mbgraph_with_history<Mcolor> > main_algo(graph);
 
-  main_algo.main_algorithm(PI); 
-  graph = main_algo.get_graph(); 
-
+  main_algo.convert_to_identity_bgraph(PI); 
+ 
 #ifndef VERSION2  
   if (!PI.get_target().empty()) {
 #if 0
@@ -549,32 +548,36 @@ int main(int argc, char* argv[]) {
 
 	partgraph_t PG;
 
-	//ofstream cf("st1comp.res");
-	for(auto is = graph.begin_vertices(); is != graph.end_vertices(); ++is) {
-	    const std::string& x = *is;
-	    if( PG.defined(x) ) continue;
+	for(const auto &x : *graph) {
+	    if (PG.defined(x)) { 
+		continue;
+	    }
 
-	    std::string y = Infty;
+	    vertex_t y = Infty;
 	    bool good = true;
-	    int def = 0;
-	    const Mcolor& target = PI.get_target();
-	    for (auto i = target.cbegin(); i != target.cend(); ++i) { 
-		int j = i->first; 
-		if (graph.is_exist_edge(j, x)) {
-		    def++;
-		    if (y == Infty) y = graph.get_adjecent_vertex(j, x);
-		    if( y != graph.get_adjecent_vertex(j, x) ) good = false;
+	    size_t def = 0;
+	    const auto &target = PI.get_target();
+	    for (auto col = target.cbegin(); col != target.cend(); ++col) { 
+		size_t numb_color = col->first; 
+		if (graph->is_exist_edge(numb_color, x)) {
+		    ++def;
+		    if (y == Infty) { 
+			y = graph->get_adjecent_vertex(numb_color, x);
+		    } 
+
+		    if (y != graph->get_adjecent_vertex(numb_color, x)) { 
+			good = false;
+		    }
 		}
 	    }
-	    if( good && def == target.size() && y!=Infty ) {
-                PG.insert(x,y);
-		//cf << x << "\t" << y << endl;
+
+	    if (good && def == target.size() && y != Infty) {
+                PG.insert(x, y);
 	    }
 	}
-	//cf.close();
-
+	
 	std::set< std::pair<path_t, bool> > GN;
-	splitchr(graph, PG, GN);
+	splitchr(*graph, PG, GN);
 	printchr(genome_match::mcolor_to_name(PI.get_target()), GN, PI.get_target().empty());
 
 	//for(int i=0;i<N;++i) {
@@ -586,12 +589,12 @@ int main(int argc, char* argv[]) {
 
     } else {  /* empty target */
 
-	const size_t NC = graph.count_vec_T_color();
+	const size_t NC = graph->count_vec_T_consitent_color();
     
 	RG.resize(NC);
 	RT.resize(NC);
     
-	if( !RecoverGenomes(graph) ) exit(1);
+	if( !RecoverGenomes(*graph) ) exit(1);
     
 	// T-transformation complete, we procede with recovering the ancestral genomes
     
@@ -600,16 +603,15 @@ int main(int argc, char* argv[]) {
 	// FIXME: check that the order in which circular chromosomes are eliminated
     
 	size_t i = 0; 
-	for (auto im = graph.cbegin_T_color(); im != graph.cend_T_color(); ++im) { 
-	    //for(int i = 0; i < NC; ++i) {
+	for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im) {
     
-	    transform_t T = decircularize(graph, RG[i], RT[i], *im);//colors.TColor[i]);
+	    transform_t T = decircularize(*graph, RG[i], RT[i], *im);
     
 	    // move to adjacent branches
 	    for (transform_t::const_iterator it = T.cbegin(); it != T.cend(); ++it) {
 		size_t j = 0; 
-		for (auto jt = graph.cbegin_T_color(); jt != graph.cend_T_color(); ++jt) {
-		    if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && graph.are_adjacent_branches(*im, *jt)) {
+		for (auto jt = graph->cbegin_T_consistent_color(); jt != graph->cend_T_consistent_color(); ++jt) {
+		    if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && graph->are_adjacent_branches(*im, *jt)) {
 			RT[j].push_back(*it);
 		    }
 		    ++j; 
@@ -621,9 +623,9 @@ int main(int argc, char* argv[]) {
 	outlog << "Final 2-break distances from the root X: " << std::endl;
 	
 	i = 0; 
-	for(auto im = graph.cbegin_T_color(); im != graph.cend_T_color(); ++im) {
+	for(auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im) {
     	    std::set<std::pair<path_t, bool> > GN;
-	    splitchr(graph, RG[i], GN);
+	    splitchr(*graph, RG[i], GN);
 	    printchr(genome_match::mcolor_to_name(*im), GN, PI.get_target().empty());
         
 	    std::ofstream tr((genome_match::mcolor_to_name(*im) + ".trs").c_str());
@@ -643,21 +645,10 @@ int main(int argc, char* argv[]) {
 
 
 ///////////////////////////////////////////////////////////////////////////
-bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph) {
+bool RecoverGenomes(const mbgraph_with_history<Mcolor>& graph) {
+    size_t NC = graph.count_vec_T_consitent_color();
 
-    /*
-    for(int i=0;i<N;++i) {
-      for( partgraph_t::const_iterator il=LG[i].begin();il!=LG[i].end();++il) {
-	 if( il->first > il->second) continue;
-         cout << il->first << "-" << il->second << " ";
-      }
-      cout << endl;
-    }
-    */
-
-    size_t NC = graph.count_vec_T_color();
-
-    for(auto it = graph.begin_local_graphs(); it != graph.end_local_graphs() - 1; ++it) { 
+    for(auto it = graph.cbegin_local_graphs(); it != graph.cend_local_graphs() - 1; ++it) { 
 	if (*it != *(it + 1)) {
 	    std::cout << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl;
 	    return false;
@@ -668,7 +659,7 @@ bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph) {
     RT.clear(); RT.resize(NC);
 
     for(size_t i = 0; i < NC; ++i) { 
-	RG[i] = graph.get_local_graph(0);
+	RG[i] = *(graph.cbegin_local_graphs());
     } 
 
     // track changes in the number of chromosomes
@@ -685,7 +676,7 @@ bool RecoverGenomes(mbgraph_with_history<Mcolor>& graph) {
 	outlog << "Reverting (" << it->get_arc(0).first << "," << it->get_arc(0).second << ")x(" << it->get_arc(1).first << "," << it->get_arc(1).second << "):{" << genome_match::mcolor_to_name(it->get_mcolor()) << "} " << " in";
 
 	size_t i = 0;
-	for(auto im = graph.cbegin_T_color(); im != graph.cend_T_color(); ++im) {
+	for(auto im = graph.cbegin_T_consistent_color(); im != graph.cend_T_consistent_color(); ++im) {
     	
 	    if (!Q.includes(*im)) { 
 	        ++i;

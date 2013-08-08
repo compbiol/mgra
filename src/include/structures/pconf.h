@@ -33,11 +33,11 @@ struct ProblemInstance {
   std::string mcolor_to_name(const mcolor_t& temp) const;
 
   inline bool is_genome_name(const std::string& i) const {
-    return (genome_number.find(i) != genome_number.end());
+    return (genome_number.count(i) != 0);
   } 
 
   inline size_t get_genome_number(const std::string& str) const {
-    assert (genome_number.find(str) != genome_number.end()); 
+    assert (genome_number.count(str) != 0); 
     return genome_number.find(str)->second;
   } 
 

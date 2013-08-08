@@ -11,18 +11,14 @@
 
 template<class graph_t>
 struct Algorithm { 
-	Algorithm(graph_t& gr) //FIXME: get const
+	Algorithm(const std::shared_ptr<graph_t>& gr) //FIXME: get const
 	: graph(gr) 
 	, canformQoo(true)
 	, split_bad_colors(false)
 	, write_stats("stats.txt") {  
 	} 
 
-	void main_algorithm(const ProblemInstance<Mcolor>& cfg);
-	
-	graph_t get_graph() { 	
-		return graph;
-	} 
+	void convert_to_identity_bgraph(const ProblemInstance<Mcolor>& cfg);
 
 private: 
 	//Stage 1: loop over vertices  
@@ -62,7 +58,7 @@ private:
 	//Save information
 	void save_information(size_t stage, const ProblemInstance<Mcolor>& cfg);
 private: 
-	graph_t graph; 
+	std::shared_ptr<graph_t> graph; 
 
 	bool canformQoo;  // safe choice, at later stages may change to false
 	bool split_bad_colors;
@@ -74,7 +70,7 @@ private:
 };
 
 template<class graph_t>
-void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
+void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor>& cfg) {
   save_information(0, cfg);
   std::array<bool, 11> print_dots;
   print_dots.fill(true);
@@ -302,11 +298,8 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
 
       auto completion = cfg.get_completion();
       for(auto il = completion.begin(); il != completion.end(); ++il) {
-	graph.apply_two_break(*il);
+	graph->apply_two_break(*il);
       }
-
-      Statistics<graph_t> st(graph); 
-      graph.update_complement_color(st.get_new_color());
 
       process_compl = false;
       isChanged = true;
@@ -325,28 +318,26 @@ void Algorithm<graph_t>::main_algorithm(const ProblemInstance<Mcolor>& cfg) {
   }
 #endif 
 
-  write_dots.save_dot(graph, cfg, 99);
+  write_dots.save_dot(*graph, cfg, 99);
 
 #ifndef VERSION2
   Statistics<graph_t> st(graph);
-  write_stats.print_fair_edges(graph, st);
+  write_stats.print_fair_edges(*graph, st);
 #else 
-  write_dots.save_components(graph, cfg, 5);
+  write_dots.save_components(*graph, cfg, 5);
 #endif
 
-  write_stats.histStat(graph);
+  write_stats.histStat(*graph);
 }  
 
 template<class graph_t>
 void Algorithm<graph_t>::save_information(size_t stage, const ProblemInstance<Mcolor>& cfg) { 
   Statistics<graph_t> st(graph); 
 
-  graph.update_complement_color(st.get_new_color());
-
   st.count_other();   
   auto p = st.get_compl_stat();
-  write_stats.print_all_statistics(stage, st, cfg, graph);
-  write_dots.save_dot(graph, cfg, stage);
+  write_stats.print_all_statistics(stage, st, cfg, *graph);
+  write_dots.save_dot(*graph, cfg, stage);
 } 
 
 #include "Stage1.h" 

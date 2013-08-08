@@ -17,11 +17,11 @@ bool Algorithm<graph_t>::canformQ(const vertex_t& x, const Mcolor& Q) const {
   // OR 
   // if every intersection Q \cap QQ = \emptyset or QQ.
 
-  Mularcs<Mcolor> mularcs = graph.get_adjacent_multiedges(x, split_bad_colors);
+  Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(x, split_bad_colors);
 
   for(const auto &arc : mularcs) { 
-    Mcolor C(Q, arc.second, Mcolor::Intersection); 
-    if (C.size() > 0 && C.size() < arc.second.size()) { 
+    Mcolor color(Q, arc.second, Mcolor::Intersection); 
+    if (color.size() > 0 && color.size() < arc.second.size()) { 
       return false;
     } 
   }
@@ -31,16 +31,16 @@ bool Algorithm<graph_t>::canformQ(const vertex_t& x, const Mcolor& Q) const {
 // test "mobility" of central edge
 // can it be ever find neighboring edge of the same multicolor
 template<class graph_t>
-bool Algorithm<graph_t>::is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>& Cx, const Mularcs<Mcolor>& Cy) const {
+bool Algorithm<graph_t>::is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>& mularcs_x, const Mularcs<Mcolor>& mularcs_y) const {
   bool mobilQ = false;
 
-  auto arcs = Cx.equal_range(y); 
+  auto arcs = mularcs_x.equal_range(y); 
 
   for (auto jc = arcs.first; (jc != arcs.second) && !mobilQ; ++jc) { 
-    if (graph.is_vec_T_color(jc->second)) { //cental sub-edge
+    if (graph->is_vec_T_consistent_color(jc->second)) { //cental sub-edge
       const Mcolor& QQ = jc->second; // color of central sub-edge (QQ is sub-multicolor of Q)
 
-      for(auto ix = Cx.cbegin(); (ix != Cx.cend()) && !mobilQ; ++ix) { 
+      for(auto ix = mularcs_x.cbegin(); (ix != mularcs_x.cend()) && !mobilQ; ++ix) { 
 	if (ix->first != y) { 
 	  //std::cerr << "MOBIL: " << x << "-" << ix->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
 	  mobilQ = canformQ(ix->first, QQ);
@@ -48,14 +48,13 @@ bool Algorithm<graph_t>::is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>&
       }
 	// FIXME : NEEED LAMBDA
       if (!mobilQ) { 
-	for(auto iy = Cy.cbegin(); (iy != Cy.cend()) && !mobilQ; ++iy) { 
+	for(auto iy = mularcs_y.cbegin(); (iy != mularcs_y.cend()) && !mobilQ; ++iy) { 
 	  //std::cerr << "MOBIL: " << y << "-" << iy->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
 	  mobilQ = canformQ(iy->first, QQ);
 	}
       }
     } 
   }
-
   return mobilQ; 
 } 
 
@@ -67,30 +66,29 @@ bool Algorithm<graph_t>::stage2() {
   do {
     number_rear = 0; 
 	
-    for(const auto &x : graph) {  
-      if (graph.is_duplication_vertex(x) || graph.is_indel_vertex(x)) { 
+    for(const auto &x : *graph) {  
+      if (graph->is_duplication_vertex(x) || graph->is_indel_vertex(x)) { 
 	continue; 
       } 
 
-      Mularcs<Mcolor> M = graph.get_adjacent_multiedges(x);
-      Mularcs<Mcolor> Cx = graph.get_adjacent_multiedges(x, split_bad_colors);	
+      Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(x);
+      Mularcs<Mcolor> mularcs_x = graph->get_adjacent_multiedges(x, split_bad_colors);	
       
       bool found = false;
-      for(auto im = M.cbegin(); (im != M.cend()) && !found; ++im) {
+      for(auto im = mularcs.cbegin(); (im != mularcs.cend()) && !found; ++im) {
 	const vertex_t& y = im->first; // Q == im->second - color of central edge
 
-	if (im->first != Infty && !graph.is_duplication_vertex(im->first) && !graph.is_indel_vertex(im->first)) { 
+	if (y != Infty && !graph->is_duplication_vertex(y) && !graph->is_indel_vertex(y)) { 
+	  Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges(y, split_bad_colors);
+	  mularcs_y.erase(x);
 	
-	  Mularcs<Mcolor> Cy = graph.get_adjacent_multiedges(y, split_bad_colors);
-	  Cy.erase(x);
-	
-	  if (!is_mobil_edge(y, Cx, Cy)) {
+	  if (!is_mobil_edge(y, mularcs_x, mularcs_y)) {
 	    //std::cerr << "NOT MOBIL" << std::endl;
-	    for (auto ix = Cx.cbegin(); ix != Cx.cend(); ++ix) { 
-              vertex_t v = Cy.get_vertex(ix->second);
-	      if (ix->first != y && graph.is_vec_T_color(ix->second) && !v.empty()) { 
-	        //std::cerr << " Sub-multiedge " << genome_match::mcolor_to_name(ix->second) << std::endl;
-	        graph.apply_two_break(TwoBreak<Mcolor>(x, ix->first, y, v, ix->second));
+	    for (const auto &arc : mularcs_x) { 
+              vertex_t v = mularcs_y.get_vertex(arc.second);
+	      if (arc.first != y && graph->is_vec_T_consistent_color(arc.second) && !v.empty()) { 
+	        //std::cerr << " Sub-multiedge " << genome_match::mcolor_to_name(arc.second) << std::endl;
+	        graph->apply_two_break(TwoBreak<Mcolor>(x, arc.first, y, v, arc.second));
 	        found = true;
 	        ++number_rear;
 	      }

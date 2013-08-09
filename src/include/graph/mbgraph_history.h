@@ -30,11 +30,14 @@
 
 template<class mcolor_t>
 struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> { 
+  typedef std::list<TwoBreak<mcolor_t> > transform_t;
 
   mbgraph_with_history(const std::vector<Genome>& genomes, const ProblemInstance<Mcolor>& cfg)
    : mbgraph_with_colors<mcolor_t>(genomes, cfg) 
     { 
     } 
+
+  std::vector<transform_t> get_vec_TC_events() const;
 
   //2-break operations
   void apply_two_break(const TwoBreak<mcolor_t>& break2, bool record = true);
@@ -88,6 +91,22 @@ struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> {
   std::list<TandemDuplication<mcolor_t> > tandem_dupl_history;		
 };
 
+template<class mcolor_t>
+std::vector<std::list<TwoBreak<mcolor_t> > > mbgraph_with_history<mcolor_t>::get_vec_TC_events() const {
+    std::vector<transform_t> transformations(this->vec_T_consistent_colors.size()); 
+    for(auto it = crbegin_2break_history(); it != crend_2break_history(); ++it) {
+	const Mcolor& Q = it->get_mcolor();
+	size_t i = 0; 
+	for(const auto &color : this->vec_T_consistent_colors) {
+	  if (Q == color) {
+	    transformations[i].push_front(*it);
+          }
+	  ++i;
+	} 
+    } 
+    return transformations;
+}
+ 
 template<class mcolor_t>
 void mbgraph_with_history<mcolor_t>::apply_two_break(const TwoBreak<mcolor_t>& break2, bool record) { 
   if (record) {

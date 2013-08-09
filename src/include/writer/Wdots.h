@@ -3,12 +3,12 @@
 
 namespace writer {
   template<class graph_t, class conf_t>
-    struct Wdots { 
-      // Save .dot file and output statistics of synteny blocks representing breakpoints
-      void save_dot(const graph_t& graph, const conf_t& cfg, size_t stage);
-      void save_components(const graph_t& graph, const conf_t& cfg, size_t stage);
-      void write_legend_dot(const conf_t& cfg);
-    }; 
+  struct Wdots { 
+    // Save .dot file and output statistics of synteny blocks representing breakpoints
+    void save_dot(const graph_t& graph, const conf_t& cfg, size_t stage);
+    void save_components(const graph_t& graph, const conf_t& cfg, size_t stage);
+    void write_legend_dot(const conf_t& cfg);
+  }; 
 } 
 
 template<class graph_t, class conf_t>

@@ -31,18 +31,20 @@ struct MBGraph {
     std::unordered_set<orf_t> blocks;
 
     for (const auto& genome : genomes) { 
-      for(const auto &orf : genome) {
-	if (blocks.count(orf.second.first) == 0) { 
-	  obverse_edges.insert(orf.second.first + "t", orf.second.first + "h");
-	  blocks.insert(orf.second.first);
-	  vertex_set.insert(orf.second.first + "t"); 
-	  vertex_set.insert(orf.second.first + "h"); 
-	} 
+      for(const auto &chromosome : genome) {
+	for(const auto &orf : chromosome.second) {
+	  if (blocks.count(orf.second.first) == 0) { 
+	    obverse_edges.insert(orf.second.first + "t", orf.second.first + "h");
+	    blocks.insert(orf.second.first);
+	    vertex_set.insert(orf.second.first + "t"); 
+	    vertex_set.insert(orf.second.first + "h"); 
+	  }
+        } 
       }
-    } 
+    }
 
     for(size_t i = 0; i < genomes.size(); ++i) {
-      add_edges(i, genomes[i], blocks);
+      add_edges(i, genomes[i]); 
     }	
   } 
 
@@ -118,54 +120,29 @@ struct MBGraph {
   } 
 
 private:
-  void add_edges(size_t index, const Genome& genome, const std::unordered_set<orf_t>& blocks) {
-    vertex_t first_vertex; //in chromosome
-    vertex_t current_vertex; // is rightmost vertex of the previous block
-    vertex_t prev_chr;
+  void add_edges(size_t index, const Genome& genome) {
+    auto rearLambda = [] (const std::pair<orf_t, int> & orf) -> vertex_t { 
+      return ((orf.second > 0)?(orf.first + "h"):(orf.first + "t"));
+    };
 
-    for (const auto &orf : genome) {
-      if (blocks.find(orf.second.first) != blocks.end()) { 
-	if (orf.first.first == prev_chr) {
-          if (orf.second.second > 0) {
-	    local_graph[index].insert(current_vertex, orf.second.first + "t");
-	  } else {
-	    local_graph[index].insert(current_vertex, orf.second.first + "h");
-	  }
-	} else { // new chromosome detected				 
-	  if (!first_vertex.empty()) { 
-	    if (genome.isCircular(prev_chr)) {
-		local_graph[index].insert(first_vertex, current_vertex);
-	    } else { 
-		local_graph[index].insert(first_vertex, Infty);
-		local_graph[index].insert(current_vertex, Infty);
-	    } 
-	  }
+    auto frontLambda = [] (const std::pair<orf_t, int> & orf) -> vertex_t { 
+      return ((orf.second > 0)?(orf.first + "t"):(orf.first + "h"));
+    };
 
-	  if (orf.second.second > 0) { 
-	    first_vertex = orf.second.first + "t"; 
-	  } else { 
-	    first_vertex = orf.second.first + "h";
-	  } 
+    for (const auto &chromosome : genome) {
+      vertex_t current_vertex = rearLambda(chromosome.second.begin()->second);
+      for (auto gene = (++chromosome.second.begin()); gene != chromosome.second.end(); ++gene) { 
+        local_graph[index].insert(current_vertex, frontLambda(gene->second));	
+        current_vertex = rearLambda(gene->second);
+      }
 
-	  prev_chr = orf.first.first;
-	} 
-		
-	if (orf.second.second > 0) { 
-	  current_vertex = orf.second.first + "h"; 
-	} else { 
-	  current_vertex = orf.second.first + "t";
-	} 
-      } 
-    }
-
-    if (!first_vertex.empty()) { 
-      if (genome.isCircular(prev_chr)) {
-        local_graph[index].insert(first_vertex, current_vertex);
+      if (chromosome.second.is_circular()) {
+	local_graph[index].insert(frontLambda(chromosome.second.begin()->second), rearLambda((--chromosome.second.end())->second)); 
       } else { 
-	local_graph[index].insert(first_vertex, Infty);
-	local_graph[index].insert(current_vertex, Infty);
-      }  
-    } 
+	local_graph[index].insert(frontLambda(chromosome.second.begin()->second), Infty);
+	local_graph[index].insert(rearLambda((--chromosome.second.end())->second), Infty); 
+      }
+    }
   }
 
 protected:		

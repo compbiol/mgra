@@ -91,7 +91,7 @@ private:
     return answer;
   }
 
-private:
+protected:
   mcolor_t complete_color;
   std::map<mcolor_t, mcolor_t> compliment_colors;
   std::set<mcolor_t> T_consistent_colors;

@@ -21,6 +21,8 @@
 #include <utility>
 #include <cassert>
 
+#include "functional"
+
 #include "utility/sym_hashmap.h"
 #include "utility/sym_multi_hashmap.h"
 

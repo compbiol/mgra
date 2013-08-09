@@ -22,42 +22,77 @@
 #define GENOME_H_
 
 #include "defined.h"
- 
+
+struct Chromosome { 
+  typedef std::string orf_t;
+  typedef std::pair<orf_t, int> gene_t;
+
+  Chromosome () 
+  : isCircular(false) 
+  { 
+  }
+
+  inline void insert(const orf_t& gene, size_t offset, int sign) { 
+	auto gen = gene_t(gene, sign);
+	main_chromosome.insert(std::make_pair(offset, gen));
+  } 
+
+  inline void do_circular() { 
+	isCircular = true; 
+  } 
+
+  inline std::map<size_t, gene_t>::const_iterator begin() const { 
+    return main_chromosome.cbegin();	
+  } 
+
+  inline std::map<size_t, gene_t>::const_iterator end() const { 
+    return main_chromosome.cend();
+  } 
+
+  inline size_t size() const {
+    return main_chromosome.size();      
+  } 
+
+  inline bool is_circular() const { 
+    return isCircular;
+  }
+private: 
+  bool isCircular; 
+  std::map<size_t, gene_t> main_chromosome;
+}; 
+
 struct Genome {
   typedef std::string orf_t;
-  typedef std::pair<size_t, size_t> span_t; 	// interval in absolute coordinates
   typedef std::pair<std::string, size_t> coord_t; // (contig, offset)
   typedef std::pair<orf_t, int> gene_t;
-  typedef std::pair<std::string, span_t> cpan_t;  // (chr, start, end)
-
+  
   inline void insert(const orf_t& gene, const std::string& chromosome, size_t offset, int sign, size_t start, size_t end) {
     const coord_t& p = std::make_pair(chromosome, offset);
     const gene_t& orf = std::make_pair(gene, sign);   
-    main_genome.insert(std::make_pair(p, orf));
+    main_genome[chromosome].insert(gene, offset, sign);
   }   
 	
   inline void registrate_circular_chr(std::string name) { 
-    circular_chromosome.insert(name);
+    main_genome[name].do_circular();
   }  
 
-  inline bool isCircular(std::string name) const {
-    return (circular_chromosome.count(name) != 0);
-  } 
-
   inline size_t size() const { 
-    return main_genome.size();
-  } 
+    size_t sz = 0; 
+    for (const auto &chromosome: main_genome) { 
+      sz += chromosome.second.size(); 
+    } 
+    return sz; 
+  }
 
-  inline std::map<coord_t, gene_t>::const_iterator begin() const { 
+  inline std::map<std::string, Chromosome>::const_iterator begin() const { 
     return main_genome.cbegin();	
   } 
 
-  inline std::map<coord_t, gene_t>::const_iterator end() const { 
+  inline std::map<std::string, Chromosome>::const_iterator end() const { 
     return main_genome.cend();
   } 
 private: 
-  std::map<coord_t, gene_t> main_genome; 
-  std::unordered_set<std::string> circular_chromosome;  //set of circular chromosomes
+  std::map<std::string, Chromosome> main_genome;
 };
 
 #endif

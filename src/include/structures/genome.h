@@ -32,9 +32,18 @@ struct Chromosome {
   { 
   }
 
+  Chromosome (const std::list<gene_t> & path, bool is_circ) 
+  : isCircular(is_circ) 
+  {
+    size_t offset = 0; 
+    for (const auto & gene : path) { 
+      main_chromosome.insert(std::make_pair(offset++, gene));
+    }  
+  }
+
   inline void insert(const orf_t& gene, size_t offset, int sign) { 
-	auto gen = gene_t(gene, sign);
-	main_chromosome.insert(std::make_pair(offset, gen));
+    auto gen = gene_t(gene, sign);
+    main_chromosome.insert(std::make_pair(offset, gen));
   } 
 
   inline void do_circular() { 
@@ -47,6 +56,14 @@ struct Chromosome {
 
   inline std::map<size_t, gene_t>::const_iterator end() const { 
     return main_chromosome.cend();
+  } 
+
+  inline std::map<size_t, gene_t>::const_reverse_iterator crbegin() const { 
+    return main_chromosome.crbegin();	
+  } 
+
+  inline std::map<size_t, gene_t>::const_reverse_iterator crend() const { 
+    return main_chromosome.crend();
   } 
 
   inline size_t size() const {
@@ -71,6 +88,10 @@ struct Genome {
     const gene_t& orf = std::make_pair(gene, sign);   
     main_genome[chromosome].insert(gene, offset, sign);
   }   
+
+  inline void insert(const std::string& name_chr, const Chromosome& chr) {
+    main_genome.insert(std::make_pair(name_chr, chr)); 
+  } 
 	
   inline void registrate_circular_chr(std::string name) { 
     main_genome[name].do_circular();
@@ -83,6 +104,10 @@ struct Genome {
     } 
     return sz; 
   }
+
+  inline size_t count_chromosome() const { 
+    return main_genome.size();
+  } 
 
   inline std::map<std::string, Chromosome>::const_iterator begin() const { 
     return main_genome.cbegin();	

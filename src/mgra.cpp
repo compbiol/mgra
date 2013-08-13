@@ -34,12 +34,11 @@ typedef std::list<TwoBreak<Mcolor> > transform_t;
  * We replace PG with PG' and return the transformation PG -> PG'
  * Transformation may contain only multicolors Q' with Q'\cap Q = 0 or Q.
 */
-transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, transform_t& TG, const Mcolor& Q) {
-    RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(graph);	
-	
+transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, transform_t& TG) {
     // decircularizing sub-transform that is removed
     transform_t D;
 
+    RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(graph, false);	
     size_t CircSize = reductant.numchr(PG).second;
     if (CircSize == 0) {
 	return D;
@@ -48,31 +47,15 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
     //std::cerr << "Eliminating " << CircSize << " circular chromosomes in " << genome_match::mcolor_to_name(Q) << std::endl;
 
     partgraph_t T = PG; // reconstructed genome ("bad")
-
     auto start = TG.begin();
 
     // looking for de-circularizig 2-breaks
     for(auto it = start; it != TG.end();) {
-        // check multicolor
-	{
-	    Mcolor C(it->get_mcolor(), Q, Mcolor::Intersection);
-    
-	    if (C.empty()) {
-		++it;
-		continue;
-	    }
-    
-	    if (C != Q) {
-		//std::cerr << "Impossible multicolor in the transformation!" << std::endl;
-		break;
-	    }
-	}
-
-	it->apply_single(T);
+        it->apply_single(T);
 
         size_t ccsize = reductant.numchr(T).second;
 
-	if( ccsize >= CircSize) {
+	if (ccsize >= CircSize) {
 	    ++it;
 	    continue;
 	}
@@ -80,7 +63,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 	//std::cerr << "Found problematic 2-break: ";// << *it << "\t";
 
 	// move t over to beginning
-	for(auto jt=it;jt!=TG.begin();) {
+	for(auto jt = it; jt != TG.begin();) {
 
 	    auto kt = jt--; // jt, kt are successive, *kt == t
 
@@ -89,7 +72,7 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 
 //            outlog << "... trying to swap with " << s << endl;
 
-	    std::pair<vertex_t,vertex_t> p1, q1, p2, q2;
+	    std::pair<vertex_t, vertex_t> p1, q1, p2, q2;
 
 	    bool usearc = false;
 
@@ -158,10 +141,10 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 	    }
 
 	    {
-		Mcolor C(kt->get_mcolor(), Q, Mcolor::Intersection);
+		Mcolor C(kt->get_mcolor(), it->get_mcolor(), Mcolor::Intersection);
     
                 // N.B. at this point if C is not empty, then C == Q
-		if( !C.empty() ) {
+		if (!C.empty()) {
 		    kt->inverse().apply_single(T);
 
 		    ccsize = reductant.numchr(T).second;
@@ -178,9 +161,8 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 	}
 
 
-	if( ccsize < CircSize ) {
+	if (ccsize < CircSize) {
 	    //std::cerr << " SUCCEDED" << std::endl;
-
 	    // move t away from the transformation TG and save it to D
             TG.begin()->apply_single(PG);
 	    D.push_back(*TG.begin());
@@ -189,11 +171,12 @@ transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, 
 
 	    CircSize = reductant.numchr(PG).second;
 
-	    if( CircSize==0 ) break;
+	    if (CircSize == 0) { 
+	      break;
+	    } 
 
 	    start = TG.begin();
-	}
-	else {  // did not succeed
+	} else {  // did not succeed
 	    start++;
 	    //std::cerr << " FAILED" << std::endl;
 	}
@@ -254,6 +237,7 @@ int main(int argc, char* argv[]) {
 
   /*Reading problem configuration*/
   ProblemInstance<Mcolor> PI(reader::read_cfg_file(name_cfg_file)); 
+
   std::vector<Genome> genomes = reader::read_genomes(PI);
   
   genome_match::init_name_genomes(PI, genomes); //FIXME: IT'S DEBUG
@@ -307,12 +291,12 @@ int main(int argc, char* argv[]) {
 	    }
 	}
 
-        RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph);	
-	std::set<std::pair<path_t, bool> > GN;
-	reductant.splitchr(PG, GN, reductant.pg_empty);
+        RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target());	
+	Genome genome; 
+        reductant.splitchr(PG, genome, reductant.pg_empty);
 
 	writer::Wgenome<std::set<std::pair<path_t, bool> > > writer_genome; 
-	writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(PI.get_target()), GN, PI.get_target().empty());
+        writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(PI.get_target()), genome, PI.get_target().empty());
 
     } else {  /* empty target */
         for(auto it = graph->cbegin_local_graphs(); it != graph->cend_local_graphs() - 1; ++it) { 
@@ -323,8 +307,7 @@ int main(int argc, char* argv[]) {
         }
 
         std::vector<partgraph_t> RG(graph->count_vec_T_consitent_color(), *(graph->cbegin_local_graphs())); // recovered genomes
-       
-        RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph);
+        RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target());
  	reductant.main_algorithm(RG);
     
 	// T-transformation complete, we procede with recovering the ancestral genomes
@@ -333,7 +316,7 @@ int main(int argc, char* argv[]) {
         std::vector<transform_t> RT = graph->get_vec_TC_events(); // recovered transformations
 	size_t i = 0; 
 	for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im, ++i) {    
-	    transform_t T = decircularize(*graph, RG[i], RT[i], *im);
+	    transform_t T = decircularize(*graph, RG[i], RT[i]);
     
 	    // move to adjacent branches
 	    for (const auto &it : T) {
@@ -350,11 +333,11 @@ int main(int argc, char* argv[]) {
       
 	i = 0; 
 	for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im, ++i) {
-    	    std::set<std::pair<path_t, bool> > GN;
-	    reductant.splitchr(RG[i], GN, reductant.pg_empty);
+	    Genome genome; 
+	    reductant.splitchr(RG[i], genome, reductant.pg_empty);
 
-	    writer::Wgenome<std::set<std::pair<path_t, bool> > > writer_genome; 
-	    writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(*im), GN, PI.get_target().empty());
+    	    writer::Wgenome<std::set<std::pair<path_t, bool> > > writer_genome; 
+ 	    writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(*im), genome, PI.get_target().empty());
         
 	    std::ofstream tr((genome_match::mcolor_to_name(*im) + ".trs").c_str());
 	    for(const auto &event : RT[i]) {

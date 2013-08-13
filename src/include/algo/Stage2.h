@@ -21,7 +21,10 @@ bool Algorithm<graph_t>::canformQ(const vertex_t& x, const Mcolor& Q) const {
 
   for(const auto &arc : mularcs) { 
     Mcolor color(Q, arc.second, Mcolor::Intersection); 
-    if (color.size() > 0 && color.size() < arc.second.size()) { 
+    /*if (x == "84h" || x == "39h") { 
+      std::cerr << arc.first << " " << genome_match::mcolor_to_name(arc.second) << " " << genome_match::mcolor_to_name(Q)  << " " << genome_match::mcolor_to_name(color) << std::endl;
+    } */
+    if (color.size() > 0 && color.size() < arc.second.size()) { //FIXME: THINK ABOUT IT 
       return false;
     } 
   }
@@ -36,21 +39,36 @@ bool Algorithm<graph_t>::is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>&
 
   auto arcs = mularcs_x.equal_range(y); 
 
+/*if (y == "39t" || y == "728h") {
+  for (auto jc = arcs.first; (jc != arcs.second) ; ++jc) { 
+    std::cerr << genome_match::mcolor_to_name(jc->second) << std::endl;
+  }
+}*/
+
   for (auto jc = arcs.first; (jc != arcs.second) && !mobilQ; ++jc) { 
     if (graph->is_vec_T_consistent_color(jc->second)) { //cental sub-edge
       const Mcolor& QQ = jc->second; // color of central sub-edge (QQ is sub-multicolor of Q)
 
       for(auto ix = mularcs_x.cbegin(); (ix != mularcs_x.cend()) && !mobilQ; ++ix) { 
 	if (ix->first != y) { 
-	  //std::cerr << "MOBIL: " << x << "-" << ix->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
 	  mobilQ = canformQ(ix->first, QQ);
+/*          if (mobilQ) { 
+if (y == "39t" || y == "728h") {
+	  std::cerr << "MOBIL: " << ix->first << " canForm: " << genome_match::mcolor_to_name(QQ) << " " << QQ.begin()->first<< std::endl;
+}
+	  } */
 	} 
       }
-	// FIXME : NEEED LAMBDA
+	// FIXME : NEAD LAMBDA
       if (!mobilQ) { 
 	for(auto iy = mularcs_y.cbegin(); (iy != mularcs_y.cend()) && !mobilQ; ++iy) { 
-	  //std::cerr << "MOBIL: " << y << "-" << iy->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
 	  mobilQ = canformQ(iy->first, QQ);
+/*          if (mobilQ) { 
+if (y == "39t" || y == "728h") {
+	  std::cerr << "MOBIL: " << y << "-" << iy->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
+}
+
+	  } */
 	}
       }
     } 
@@ -77,12 +95,12 @@ bool Algorithm<graph_t>::stage2() {
       bool found = false;
       for(auto im = mularcs.cbegin(); (im != mularcs.cend()) && !found; ++im) {
 	const vertex_t& y = im->first; // Q == im->second - color of central edge
-
-	if (y != Infty && !graph->is_duplication_vertex(y) && !graph->is_indel_vertex(y)) { 
+	
+        if (y != Infty && !graph->is_duplication_vertex(y) && !graph->is_indel_vertex(y)) { 
 	  Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges(y, split_bad_colors);
 	  mularcs_y.erase(x);
 	
-	  if (!is_mobil_edge(y, mularcs_x, mularcs_y)) {
+          if (!is_mobil_edge(y, mularcs_x, mularcs_y)) {
 	    //std::cerr << "NOT MOBIL" << std::endl;
 	    for (const auto &arc : mularcs_x) { 
               vertex_t v = mularcs_y.get_vertex(arc.second);

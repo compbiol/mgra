@@ -95,6 +95,10 @@ struct MBGraph {
     return local_graph[index];
   } 
 
+  inline obverse_graph_t get_obverse_graph() const {
+     return obverse_edges;
+  }
+ 
   inline std::set<vertex_t>::iterator begin() { 
     return vertex_set.begin();
   } 

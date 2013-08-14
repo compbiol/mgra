@@ -29,7 +29,7 @@ private:
 	//Stage 2: process H-subgraph
 	bool stage2();
 	bool canformQ(const std::string& x, const Mcolor& Q) const;
-	bool is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>& Cx, const Mularcs<Mcolor>& Cy) const;
+	bool is_mobil_edge(const vertex_t& x, const vertex_t& y, const Mularcs<Mcolor>& Cx, const Mularcs<Mcolor>& Cy) const;
 
 	//Stage 3: process insertion/deletion events
 	bool stage3_1();
@@ -63,8 +63,12 @@ private:
 	bool canformQoo;  // safe choice, at later stages may change to false
 	bool split_bad_colors;
 
+        typedef std::tuple<vertex_t, vertex_t, Mcolor> edges_t;
+        typedef std::pair<vertex_t, vertex_t> edges_t1;
 	std::list<InsDel<Mcolor> > viewed_edges; // , Mcolor viewed edges for stage3 
-	
+	std::set<edges_t> viewed_edges1; 
+	std::set<edges_t1> viewed_edges2; 
+
 	writer::Wstats write_stats;
 	writer::Wdots<graph_t, ProblemInstance<Mcolor> > write_dots; 
 };
@@ -119,7 +123,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
     }
 
 
-   if ((cfg.get_stages() >= 4) && !isChanged) { 
+   /*if ((cfg.get_stages() >= 4) && !isChanged) { 
       std::cerr << "Stage: 4 (tandem duplication stage)" << std::endl;
 
       isChanged = stage4_rtd(); 
@@ -132,7 +136,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
 	print_dots[4] = false;
 	save_information(4, cfg);		    
       }
-    }
+    }*/
 
     if ((cfg.get_stages() >= 5) && !isChanged) { // STAGE 5, somewhat unreliable
       std::cerr << "Stage: 5" << std::endl;
@@ -167,24 +171,24 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
       }
     }
 
-    /*if ((cfg.get_stages() >= 7) && !isChanged) {
+    if ((cfg.get_stages() >= 7) && !isChanged) {
       std::cerr << "Stage: 7" << std::endl;
 
       split_bad_colors = true; 
-      isChanged = stage1();
+      isChanged = stage2();
       split_bad_colors = false;
 
       if (print_dots[7] && !isChanged) {
 	print_dots[7] = false;
 	save_information(7, cfg);
       }
-    }*/
+    }
    
-    if ((cfg.get_stages() >= 8) && !isChanged) {
+   if ((cfg.get_stages() >= 8) && !isChanged) {
       std::cerr << "Stage: 8" << std::endl;
 
       split_bad_colors = true; 
-      isChanged = stage2();
+      isChanged = stage1();
       split_bad_colors = false;
 
       if (print_dots[8] && !isChanged) {
@@ -192,6 +196,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
 	save_information(8, cfg);
       }
     }
+   
     
     /*if ((cfg.get_stages() >= 9) && !isChanged) {
       std::cerr << "Stage: 9" << std::endl;

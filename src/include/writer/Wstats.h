@@ -25,7 +25,7 @@ struct Wstats {
 	void histStat(const mbgraph_with_history<Mcolor>& graph); 
 
 	void print_vertex_statistics(const std::vector<size_t>& answer);
-	void print_indel_statistics(const std::array<size_t, 8>& answer); 
+	void print_indel_statistics(const mbgraph_with_history<Mcolor>& graph, const std::map<size_t, std::pair<Mcolor, Mcolor> >& indel); 
 
 	const size_t write_parametres;
 private:

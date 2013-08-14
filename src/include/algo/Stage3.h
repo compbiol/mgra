@@ -28,23 +28,32 @@ bool Algorithm<graph_t>::stage3_1() {
       std::set<Mcolor> split_bar_indel = graph->split_color(bar_indel_color, false);
       assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
 
-      if ((graph->is_vec_T_consistent_color(bar_indel_color) && !graph->is_vec_T_consistent_color(indel_color)) 
-	|| (split_bad_colors && (split_bar_indel.size() == 2) && (split_indel.size() != 2))) {
+      if (graph->is_vec_T_consistent_color(bar_indel_color) 
+	|| (split_bad_colors && (split_bar_indel.size() == 2))) {// && (split_indel.size() != 2))) {
 	//std::cerr << " past vec-TC-color. Done." << std::endl; 
 	for (const auto &col : split_bar_indel) {
 		InsDel<Mcolor> insertion(a1, a2, col, false);
 		graph->apply_ins_del(insertion);
 		++number_indel_event;
 	}
-    } else if ((!graph->is_vec_T_consistent_color(bar_indel_color) && graph->is_vec_T_consistent_color(indel_color))
+      } else if ((!graph->is_vec_T_consistent_color(bar_indel_color) && graph->is_vec_T_consistent_color(indel_color))
 	|| (split_bad_colors && (split_indel.size() == 2) && (split_bar_indel.size() != 2))) { 
 	//std::cerr << " past TC-color. Add to viewed edges." << std::endl;
 	InsDel<Mcolor> bad_insertion(a1, a2, bar_indel_color, false); 
 	graph->apply_ins_del(bad_insertion, false);
 	viewed_edges.push_back(bad_insertion);
+	viewed_edges1.insert(std::make_tuple(a1, a2, bar_indel_color));
+	viewed_edges2.insert(std::make_pair(a1, a2));	
 	++number_indel_event;
-      } 
-    }
+      } else if (split_bad_colors && (split_indel.size() != 2) && (split_bar_indel.size() != 2)) { 
+	InsDel<Mcolor> bad_insertion(a1, a2, bar_indel_color, false); 
+	graph->apply_ins_del(bad_insertion, false);
+	viewed_edges.push_back(bad_insertion);
+	viewed_edges1.insert(std::make_tuple(a1, a2, bar_indel_color));
+	viewed_edges2.insert(std::make_pair(a1, a2));
+	++number_indel_event;
+      }  
+    } 
   }
 
   return (number_indel_event != 0); 
@@ -70,9 +79,9 @@ void Algorithm<graph_t>::remove_past_bad_colors() {
       viewed_edges.erase(it++);
       --it;
       //std::cerr << " yes, it's complete we remove it" << std::endl;
-    } //else if (color.empty()) { 
-       //std::cerr << a1 << " " << a2 << " " << genome_match::mcolor_to_name(it->get_mcolor()) << std::endl;
-    //} else {
+    } else {//if (color.empty()) { 
+       std::cerr << a1 << " " << a2 << " " << genome_match::mcolor_to_name(it->get_mcolor()) << " " << graph->is_T_consistent_color(it->get_mcolor()) << " " << graph->split_color(it->get_mcolor(), false).size() << std::endl;
+    } /*else {*/
       //std::cerr << " NO, now is bad " << genome_match::mcolor_to_name(color) << std::endl;
     //}
   } 

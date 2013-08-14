@@ -36,8 +36,8 @@ struct Statistics {
 
   std::map<std::pair<Mcolor, Mcolor>, size_t> get_Hsubgraph(); //count H-subgraph for stage2 
 
-  std::array<size_t, 8> get_indel_stat() const { 
-    return indel_stat; 
+  std::map<size_t, std::pair<Mcolor, Mcolor> > get_indel_stat() const { 
+    return indel_stats; 
   }
 private:
   void count_compl_multiedges(); //count good edges for stage1
@@ -80,13 +80,12 @@ private:
   std::vector<size_t> circular_chr; 				
 
   //
-  std::array<size_t, 8> indel_stat;
+  std::map<size_t, std::pair<Mcolor, Mcolor>> indel_stats;
 };
 
 template<class graph_t>
 void Statistics<graph_t>::count_indel_statistics() { 
-  indel_stat.fill(0);
-  
+  std::map<std::pair<Mcolor, Mcolor>, size_t> temp;
   std::unordered_set<vertex_t > processed; 
   for (const auto &a1 : *graph) {  
     const vertex_t& a2 = graph->get_obverse_vertex(a1);
@@ -99,29 +98,19 @@ void Statistics<graph_t>::count_indel_statistics() {
 
       Mcolor indel_color = mularcs.union_multicolors(); 
       Mcolor bar_indel_color = graph->get_complement_color(indel_color);
-      size_t count_split_indel = graph->split_color(indel_color, false).size(); 
-      size_t count_split_bar = graph->split_color(bar_indel_color, false).size(); 
       assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
-	
-      if (graph->is_vec_T_consistent_color(indel_color) && !graph->is_vec_T_consistent_color(bar_indel_color)) {
-	++indel_stat[0];
-      } else if (!graph->is_vec_T_consistent_color(indel_color) && graph->is_vec_T_consistent_color(bar_indel_color)) {
-	++indel_stat[1]; 
-      } else if (graph->is_vec_T_consistent_color(bar_indel_color) && graph->is_vec_T_consistent_color(indel_color)) { 
-	++indel_stat[2];
-      } else if (count_split_indel == 2 && count_split_bar != 2) {
-	++indel_stat[3];
-      } else if (count_split_indel != 2 && count_split_bar == 2) { 
-	++indel_stat[4];
-      } else if (count_split_indel == 2 && count_split_bar == 2) { 
-	++indel_stat[5];
-      } else if (count_split_indel == 3 && count_split_bar == 3) { 
-	++indel_stat[6];
-      } else { 
-	++indel_stat[7];
-      } 
+
+      if (temp.count(std::make_pair(bar_indel_color, indel_color)) == 0) {
+        temp.insert(std::make_pair(std::make_pair(bar_indel_color, indel_color), 1));
+      } else { 	
+      	++temp[std::make_pair(bar_indel_color, indel_color)];
+      }
     }
   }
+	
+  for (const auto &stat : temp) {
+    indel_stats.insert(std::make_pair(stat.second, stat.first));
+  } 
 } 
 
 template<class graph_t>
@@ -145,7 +134,7 @@ std::vector<size_t> Statistics<graph_t>::count_all() const {
     Mularcs<Mcolor> current = graph->get_adjacent_multiedges(x); //current is list with adjacent multiedges
     for (auto it = current.cbegin(); it != current.cend(); ++it) {
 	if (!it->second.is_one_to_one_match()) {
-		++dupl_mcolors;
+	  ++dupl_mcolors;
 	}
     } 
   } 

@@ -43,6 +43,10 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
   while (stop) {
     stop = false; 
 
+    /*if (current == "229h" || current == "229t") { 
+	std::cerr << current << std::endl;
+    }*/
+
     if (is_next) { 
       path.push_front(current);
     } else { 
@@ -56,7 +60,7 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
       new_edges.erase(previous);
     
       if (new_edges.size() == 1 && graph->get_complement_color(previous_color) == new_edges.cbegin()->second) {
-	if (split_bad_colors) {
+	if (split_bad_colors && (graph->split_color(new_edges.cbegin()->second, false).size() == 2 || graph->split_color(previous_color, false).size() == 2)) {
 	  previous = current;
 	  current = new_edges.cbegin()->first;  
 	  stop = true;

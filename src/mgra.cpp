@@ -27,173 +27,6 @@ typedef std::list<TwoBreak<Mcolor> > transform_t;
 
 #include "RecoveredGenomes.h"
 
-/* Given a non-linear genome PG of a multicolor Q and a transformation into a linear genome,
- * find linearizing fissions in the transformation, move them to beginning, and apply to PG
- * i.e., try to reorder transformation into: PG -> PG' -> linear genome, where PG' is linear
- * and obtained from PG with fission.
- * We replace PG with PG' and return the transformation PG -> PG'
- * Transformation may contain only multicolors Q' with Q'\cap Q = 0 or Q.
-*/
-transform_t decircularize(mbgraph_with_history<Mcolor>& graph, partgraph_t& PG, transform_t& TG) {
-    // decircularizing sub-transform that is removed
-    transform_t D;
-
-    RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(graph, false);	
-    size_t CircSize = reductant.numchr(PG).second;
-    if (CircSize == 0) {
-	return D;
-    } 
-
-    //std::cerr << "Eliminating " << CircSize << " circular chromosomes in " << genome_match::mcolor_to_name(Q) << std::endl;
-
-    partgraph_t T = PG; // reconstructed genome ("bad")
-    auto start = TG.begin();
-
-    // looking for de-circularizig 2-breaks
-    for(auto it = start; it != TG.end();) {
-        it->apply_single(T);
-
-        size_t ccsize = reductant.numchr(T).second;
-
-	if (ccsize >= CircSize) {
-	    ++it;
-	    continue;
-	}
-
-	//std::cerr << "Found problematic 2-break: ";// << *it << "\t";
-
-	// move t over to beginning
-	for(auto jt = it; jt != TG.begin();) {
-
-	    auto kt = jt--; // jt, kt are successive, *kt == t
-
-	    const TwoBreak<Mcolor>& t = *kt;
-	    const TwoBreak<Mcolor>& s = *jt;
-
-//            outlog << "... trying to swap with " << s << endl;
-
-	    std::pair<vertex_t, vertex_t> p1, q1, p2, q2;
-
-	    bool usearc = false;
-
-	    Mcolor C(t.get_mcolor(), s.get_mcolor(), Mcolor::Intersection);
-	    if (!C.empty()) {
-
-
-		/*
-			 p1=(x1,x2) x (y1,y2)=q1
-			 p2=(x1,y1) x (x3,y3)=q2
-    
-			 into:
-    
-			 (x1,x2) x (x3,y3)
-			 (y3,x2) x (y1,y2)
-		*/
-    
-		for(int j = 0; j < 2; ++j) {    
-		    if (t.get_arc(j) == std::make_pair(jt->get_arc(0).first, jt->get_arc(1).first)) { 
-			usearc = true;
-    
-			p2 = t.get_arc(j);
-			q2 = t.get_arc(1 - j);
-    
-			p1 = jt->get_arc(0);
-			q1 = jt->get_arc(1);
-		    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(1).first, jt->get_arc(0).first)) {
-			usearc = true;
-    
-			p2 = t.get_arc(j);
-			q2 = t.get_arc(1 - j);
-    
-			p1 = jt->get_arc(1);
-			q1 = jt->get_arc(0);
-		    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(0).second, jt->get_arc(1).second)) {
-			usearc = true;
-    
-			p2 = t.get_arc(j);
-			q2 = t.get_arc(1 - j);
-    
-			p1 = std::make_pair(jt->get_arc(0).second, jt->get_arc(0).first);
-			q1 = std::make_pair(jt->get_arc(1).second, jt->get_arc(1).first);
-		    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(1).second, jt->get_arc(0).second)) {
-			usearc = true;
-    
-			p2 = t.get_arc(j);
-			q2 = t.get_arc(1 - j);
-    
-			p1 = std::make_pair(jt->get_arc(1).second, jt->get_arc(1).first);
-			q1 = std::make_pair(jt->get_arc(0).second, jt->get_arc(0).first);
-		    }
-		    if (usearc) break;
-		}
-	    }
-
-	    // TwoBreak t0 = t;
-
-	    if (usearc) {
-		if (t.get_mcolor() != s.get_mcolor()) break;
-		*kt = TwoBreak<Mcolor>(q2.second, p1.second, q1.first, q1.second, t.get_mcolor());
-		*jt = TwoBreak<Mcolor>(p1.first, p1.second, q2.first, q2.second, t.get_mcolor());
-	    } else {
-		TwoBreak<Mcolor> temp = *kt;
-		*kt = *jt;
-                *jt = temp;
-	    }
-
-	    {
-		Mcolor C(kt->get_mcolor(), it->get_mcolor(), Mcolor::Intersection);
-    
-                // N.B. at this point if C is not empty, then C == Q
-		if (!C.empty()) {
-		    kt->inverse().apply_single(T);
-
-		    ccsize = reductant.numchr(T).second;
-		}
-	    }
-
-	    /*
-	    if( CC.size() > ccsize ) {
-		outlog << "Cannot pop:" << endl;
-		outlog << *jt << " , " << t0 << "  -->  " << t << " , " << *kt << endl;
-	    }
-	    */
-
-	}
-
-
-	if (ccsize < CircSize) {
-	    //std::cerr << " SUCCEDED" << std::endl;
-	    // move t away from the transformation TG and save it to D
-            TG.begin()->apply_single(PG);
-	    D.push_back(*TG.begin());
-
-	    TG.erase(TG.begin());
-
-	    CircSize = reductant.numchr(PG).second;
-
-	    if (CircSize == 0) { 
-	      break;
-	    } 
-
-	    start = TG.begin();
-	} else {  // did not succeed
-	    start++;
-	    //std::cerr << " FAILED" << std::endl;
-	}
-
-	T = PG;
-	for(it = TG.begin(); it != start; ++it) {
-	    it->apply_single(T);
-	}
-    }
-   
-    //if (CircSize > 0) {
-	//std::cerr << "Unable to de-circularize ;-(" << std::endl;
-    //}
-
-    return D;
-}
-
 void tell_root_besides(const mbgraph_with_history<Mcolor>& graph) {
   // tell where the root resides
   std::clog << "the root resides in between:";
@@ -260,62 +93,44 @@ int main(int argc, char* argv[]) {
 
   main_algo.convert_to_identity_bgraph(PI); 
  
-  if (!PI.get_target().empty()) {
-        RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target());	
-	Genome genome = reductant.get_genomes()[0]; 
-	writer::Wgenome<std::set<std::pair<path_t, bool> > > writer_genome; 
-        writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(PI.get_target()), genome, PI.get_target().empty());
-    } else {  /* empty target */
-        for(auto it = graph->cbegin_local_graphs(); it != graph->cend_local_graphs() - 1; ++it) { 
-	  if (*it != *(it + 1)) {
-	    std::cout << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; //FIXME clog
-	    exit(1);
-	  }
-        }
-
-        std::vector<partgraph_t> RG(graph->count_vec_T_consitent_color(), *(graph->cbegin_local_graphs())); // recovered genomes
-        RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target());
- 	reductant.main_algorithm(RG);
-    
-	// T-transformation complete, we procede with recovering the ancestral genomes
-	//std::cerr << "Initial 2-break distances from the root X: " << std::endl;
-	// FIXME: check that the order in which circular chromosomes are eliminated    
-        std::vector<transform_t> RT = graph->get_vec_TC_events(); // recovered transformations
-	size_t i = 0; 
-	for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im, ++i) {    
-	    transform_t T = decircularize(*graph, RG[i], RT[i]);
-    
-	    // move to adjacent branches
-	    for (const auto &it : T) {
-		size_t j = 0; 
-		for (auto jt = graph->cbegin_T_consistent_color(); jt != graph->cend_T_consistent_color(); ++jt, ++j) {
-		    if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && graph->are_adjacent_branches(*im, *jt)) {
-			RT[j].push_back(it);
-		    }
-		}
-	    }
-	}
-
-    	//std::cerr << "Final 2-break distances from the root X: " << std::endl;
-      
-	i = 0; 
-	for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im, ++i) {
-	    Genome genome; 
-	    reductant.splitchr(RG[i], genome, reductant.pg_empty);
-
-    	    writer::Wgenome<std::set<std::pair<path_t, bool> > > writer_genome; 
- 	    writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(*im), genome, PI.get_target().empty());
-        
-	    std::ofstream tr((genome_match::mcolor_to_name(*im) + ".trs").c_str());
-	    for(const auto &event : RT[i]) {
-		tr << event.get_arc(0).first << " " << event.get_arc(0).second << "\t" 
-		   << event.get_arc(1).first << " " << event.get_arc(1).second << "\t" 
-	  	   << genome_match::mcolor_to_name(event.get_mcolor()) << std::endl;
-	    }
-	    tr.close(); 
-	}
+  if (PI.get_target().empty()) {
+    for(auto it = graph->cbegin_local_graphs(); it != graph->cend_local_graphs() - 1; ++it) { 
+      if (*it != *(it + 1)) {
+	std::cout << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; //FIXME clog
+	exit(1);
+      }
     }
+  } 
 
-    return 0;
+  RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target());	
+	
+  if (!PI.get_target().empty()) {
+    Genome genome = reductant.get_genomes()[0]; 
+    writer::Wgenome<std::set<std::pair<path_t, bool> > > writer_genome; 
+    writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(PI.get_target()), genome, PI.get_target().empty());
+  } else {  /* empty target */
+    size_t i = 0;
+    //std::vector<Genome> genomes = reductant.get_genomes();
+    std::vector<transform_t> RT = reductant.get_history();
+    for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im, ++i) {
+      Genome genome; 
+      reductant.splitchr(reductant.get_graph(i), genome, reductant.pg_empty);
+
+      writer::Wgenome<std::set<std::pair<path_t, bool> > > writer_genome; 
+      writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(*im), genome, PI.get_target().empty());
+        
+      //writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(*im), genomes[i], PI.get_target().empty());
+        
+      std::ofstream tr((genome_match::mcolor_to_name(*im) + ".trs").c_str());
+      for(const auto &event : RT[i]) {
+	tr << event.get_arc(0).first << " " << event.get_arc(0).second << "\t" 
+	   << event.get_arc(1).first << " " << event.get_arc(1).second << "\t" 
+  	   << genome_match::mcolor_to_name(event.get_mcolor()) << std::endl;
+      }
+      tr.close(); 
+    }
+  }
+
+  return 0;
 }
 

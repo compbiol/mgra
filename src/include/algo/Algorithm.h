@@ -11,7 +11,7 @@
 
 template<class graph_t>
 struct Algorithm { 
-	Algorithm(const std::shared_ptr<graph_t>& gr) //FIXME: get const
+	Algorithm(const std::shared_ptr<graph_t>& gr) 
 	: graph(gr) 
 	, canformQoo(true)
 	, split_bad_colors(false)
@@ -167,7 +167,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
       }
     }
 
-    if ((cfg.get_stages() >= 7) && !isChanged) {
+    /*if ((cfg.get_stages() >= 7) && !isChanged) {
       std::cerr << "Stage: 7" << std::endl;
 
       split_bad_colors = true; 
@@ -178,7 +178,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
 	print_dots[7] = false;
 	save_information(7, cfg);
       }
-    }
+    }*/
    
     if ((cfg.get_stages() >= 8) && !isChanged) {
       std::cerr << "Stage: 8" << std::endl;
@@ -193,7 +193,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
       }
     }
     
-    if ((cfg.get_stages() >= 9) && !isChanged) {
+    /*if ((cfg.get_stages() >= 9) && !isChanged) {
       std::cerr << "Stage: 9" << std::endl;
 
       split_bad_colors = true; 
@@ -210,10 +210,10 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
 	print_dots[9] = false;
 	save_information(9, cfg);
       }
-    }
+    }*/
 
 
-    if ((cfg.get_stages() >= 10) && !isChanged) { 
+    /*if ((cfg.get_stages() >= 10) && !isChanged) { 
       std::cerr << "Stage: 10 (convert from duplication to tandem duplication)" << std::endl;
 
       isChanged = stage4_conv_to_td(); 
@@ -235,7 +235,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
 	print_dots[11] = false;
 	save_information(11, cfg);		    
       }
-    }
+    }*/
 #else
    if ((cfg.get_stages() >= 1) && !isChanged) {
       //std::cerr << "Stage: 1" << std::endl;
@@ -292,7 +292,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
       }
     }
 
-
+#ifndef VERSION21
     if (process_compl && !cfg.get_completion().empty() && !isChanged) {     
       //std::cerr << "Manual Completion Stage" << std::endl;
 
@@ -303,7 +303,8 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
 
       process_compl = false;
       isChanged = true;
-    } 
+    }
+#endif
 #endif
 
   }	

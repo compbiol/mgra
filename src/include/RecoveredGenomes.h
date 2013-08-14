@@ -1,8 +1,9 @@
 #ifndef RECOVEREDGENOMES_H_
 #define RECOVEREDGENOMES_H_
 
-template<class graph_t>
+#include "Decircularizeter.h"
 
+template<class graph_t>
 struct RecoveredGenomes { 
 
   RecoveredGenomes(const graph_t& gr, const Mcolor& target) 
@@ -37,15 +38,20 @@ struct RecoveredGenomes {
 	    }
 	}
     } else {
+      recovered_transformation.resize(graph.count_vec_T_consitent_color());
       recovered_graphs.resize(graph.count_vec_T_consitent_color(), *(graph.cbegin_local_graphs())); 
+
       for(auto it = graph.crbegin_2break_history(); it != graph.crend_2break_history(); ++it) {
 	size_t i = 0;
 	for(auto im = graph.cbegin_T_consistent_color(); im != graph.cend_T_consistent_color(); ++im, ++i) {
 	  if (it->get_mcolor().includes(*im)) { 
 	    it->inverse().apply_single(recovered_graphs[i]);
-	  } 
+	  }
+	  if (it->get_mcolor() == *im) {
+	    recovered_transformation[i].push_front(*it);
+          }
 	}
-      } 
+      }
     }
   }
 
@@ -53,10 +59,12 @@ struct RecoveredGenomes {
 
   Chromosome getchr(const partgraph_t& PG, const vertex_t& x, std::set<vertex_t>& getchrset);
   void splitchr(const partgraph_t& PG, Genome& AllChr, std::list<std::set<vertex_t> >& CircChr);
-
   std::pair<size_t, size_t> numchr(const partgraph_t& PG);
-  void calc_count_2break_type(); 
 
+  inline std::vector<partgraph_t> get_recovered_genome() const { 
+    return recovered_graphs;
+  }
+ 
   std::vector<Genome> get_genomes();
 
 private: 
@@ -69,63 +77,8 @@ public:
 private: 
   const graph_t& graph;
   std::vector<partgraph_t> recovered_graphs;
-  std::vector<partgraph_t> recovered_transformation;
+  std::vector<transform_t> recovered_transformation;
 };
-
-/*void calc_count_2break_type() {
-    // number of reversals, interchromosomal translocations, and fissions/fusions
-    std::array<size_t, 3> RTF;
-    RTF.fill(0);
-
-    for(auto it = graph.crbegin_2break_history(); it != graph.crend_2break_history(); ++it) {
-	const Mcolor& Q = it->get_mcolor();
-	size_t i = 0;
-	for(auto im = graph.cbegin_T_consistent_color(); im != graph.cend_T_consistent_color(); ++im) {
-	   if (!Q.includes(*im)) { 
-	        ++i;
-		continue;
-	    }
-            //size_t nchr_old = 0;
-	    //if (Q == *im) {
-		//nchr_old = numchr(graph, RG[i]).first;
-	    //}
- it->inverse().apply_single(RG[i]);
-
-	    if (Q == *im) {
-		//std::cerr << " " << genome_match::mcolor_to_name(*im);
-		
-		std::unordered_set<vertex_t> vert;
-		if (it->get_arc(0).first != Infty) vert.insert(it->get_arc(0).first);
-		if (it->get_arc(0).second != Infty) vert.insert(it->get_arc(0).second);
-		if (it->get_arc(1).first != Infty) vert.insert(it->get_arc(1).first);
-		if (it->get_arc(1).second != Infty) vert.insert(it->get_arc(1).second);
-    
-		std::set<vertex_t> getchrset;
-		//getchr(RG[i], *vert.begin(), getchrset);
-    
-		//bool samechr = true;
-		vert.erase(vert.begin());
-		for(const auto &iv : vert) {
-		    if (getchrset.find(iv) == getchrset.end()) {
-			samechr = false;
-			break;
-		    }
-		}
-		//size_t nchr_new = numchr(graph, RG[i]).first;
-		if (nchr_new != nchr_old) {
-		    ++RTF[2];
-		} else {
-		    if (samechr) {
-			++RTF[0];
-		    } else { 
-			++RTF[1];
-		    } 
-		}
-	    }  
-std::vector<size_t> tot(3);
-    std::cerr << "% Number of reversals / translocations / fissions+fusions: " << std::endl;
-    std::cerr << "Total\t&\t" << tot[0] << " & " << tot[1] << " & " << tot[2] << " &\t" << tot[0]+tot[1]+tot[2] << " \\\\" << std::endl;
-}*/
 
 template<class graph_t>
 std::vector<Genome> RecoveredGenomes<graph_t>::get_genomes() { 

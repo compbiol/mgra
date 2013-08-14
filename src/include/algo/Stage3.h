@@ -3,11 +3,15 @@
 
 template<class graph_t>
 bool Algorithm<graph_t>::stage3_1() {
-  size_t number_indel_event = 0; 
-  size_t ins = 0;
-  size_t del = 0;
-  size_t not_good = 0;
+  auto is_good_split = [=] (const std::set<Mcolor>& loc_colors) -> bool {
+    for (const auto& c : loc_colors) {
+	if (!graph->is_vec_T_consistent_color(c)) {return false;}
+    } 
+    return true;
+  };
 
+  size_t number_indel_event = 0; 
+  
   std::unordered_set<vertex_t > processed; 
   for (const auto &a1 : *graph) {  
     const vertex_t& a2 = graph->get_obverse_vertex(a1);
@@ -20,33 +24,28 @@ bool Algorithm<graph_t>::stage3_1() {
 
       Mcolor indel_color = mularcs.union_multicolors(); 
       Mcolor bar_indel_color = graph->get_complement_color(indel_color);
+      std::set<Mcolor> split_indel = graph->split_color(indel_color, false);
+      std::set<Mcolor> split_bar_indel = graph->split_color(bar_indel_color, false);
       assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
 
-      if (graph->is_vec_T_consistent_color(bar_indel_color)
-	|| (split_bad_colors && (graph->split_color(indel_color).size() >= graph->split_color(bar_indel_color).size()))) {
+      if ((graph->is_vec_T_consistent_color(bar_indel_color) && !graph->is_vec_T_consistent_color(indel_color)) 
+	|| (split_bad_colors && (split_bar_indel.size() == 2) && (split_indel.size() != 2))) {
 	//std::cerr << " past vec-TC-color. Done." << std::endl; 
-	std::set<Mcolor> colors = graph->split_color(bar_indel_color);
-	for (const auto &col : colors) {
+	for (const auto &col : split_bar_indel) {
 		InsDel<Mcolor> insertion(a1, a2, col, false);
 		graph->apply_ins_del(insertion);
 		++number_indel_event;
 	}
-	//++ins; 
-      } else if (graph->is_vec_T_consistent_color(indel_color) 
-	|| (split_bad_colors && (graph->split_color(indel_color).size() < graph->split_color(bar_indel_color).size()))) { 
+    } else if ((!graph->is_vec_T_consistent_color(bar_indel_color) && graph->is_vec_T_consistent_color(indel_color))
+	|| (split_bad_colors && (split_indel.size() == 2) && (split_bar_indel.size() != 2))) { 
 	//std::cerr << " past TC-color. Add to viewed edges." << std::endl;
 	InsDel<Mcolor> bad_insertion(a1, a2, bar_indel_color, false); 
 	graph->apply_ins_del(bad_insertion, false);
 	viewed_edges.push_back(bad_insertion);
-	//++del;
 	++number_indel_event;
       } 
     }
   }
-
-  //std::cerr << "Attempt worked with " << processed.size() << " vertex" << std::endl;
-  //std::cerr << "have insertion (insert vec-TC-color) " << ins << std::endl; 
-  //std::cerr << "have deletion (insert TC-color) " << del << std::endl;
 
   return (number_indel_event != 0); 
 } 
@@ -60,9 +59,9 @@ void Algorithm<graph_t>::remove_past_bad_colors() {
     //std::cerr << "Start worked with viewed edge " << a1 << " " << a2;
     Mcolor color = graph->get_adjacent_multiedges(a1).get_multicolor(a2);
     if (color == graph->get_complete_color()) {
-      graph->apply_ins_del(it->inverse(), false);
-      
-      std::set<Mcolor> colors = graph->split_color(graph->get_complement_color(it->get_mcolor()));
+
+      graph->apply_ins_del(it->inverse(), false);      
+      std::set<Mcolor> colors = graph->split_color(graph->get_complement_color(it->get_mcolor()), false);
       for (const auto &col : colors) {
 	InsDel<Mcolor> good_deletion(a1, a2, col, true); 
 	graph->apply_ins_del(good_deletion);

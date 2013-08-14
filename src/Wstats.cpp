@@ -16,7 +16,8 @@ void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_his
 	} 
 
 #ifdef VERSION2
-	print_duplication_statistics(info.count_all()); 
+	print_vertex_statistics(info.count_all()); 
+	print_indel_statistics(info.get_indel_stat());
 #endif
 	print_complete_edges(graph);
 	print_connected_components(graph);
@@ -30,12 +31,31 @@ void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_his
 	print_not_compl_characters(info.get_no_compl_stat()); 
 } 
 
-void writer::Wstats::print_duplication_statistics(const std::vector<size_t>& answer) {
+void writer::Wstats::print_vertex_statistics(const std::vector<size_t>& answer) {
   ofstat << "... Duplication vertex: " << answer[0] << std::endl;
   ofstat << "... Insertion/deletion vertex: " << answer[1] << std::endl;
   ofstat << "... Count self loop: " << answer[2] << std::endl;
   ofstat << "... Colors is not one-to-one match: " << answer[3] << std::endl; 
 }
+
+void writer::Wstats::print_indel_statistics(const std::array<size_t, 8>& answer) { 
+  ofstat << std::endl << "% Insertion/Deletions multicolor statistics: " << std::endl << std::endl;
+  
+  print_start_table(2); 
+  ofstat << "Q & \\bar{Q} & count\\\\" << std::endl;
+  ofstat << "\\hline" << std::endl;
+
+  ofstat << "\\vec{T}-consistent & T-consistent & " << answer[0] << "\\\\" << std::endl;
+  ofstat << "T-consistent & \\vec{T}-consistent & " << answer[1] << "\\\\" << std::endl;
+  ofstat << "\\vec{T}-consistent & \\vec{T}-consistent & " << answer[2] << "\\\\" << std::endl;
+  ofstat << "split = 2 & split = * & " << answer[3] << "\\\\" << std::endl;
+  ofstat << "split = * & split = 2 & " << answer[4] << "\\\\" << std::endl;
+  ofstat << "split = 2 & split = 2 & " << answer[5] << "\\\\" << std::endl;
+  ofstat << "split = 3 & split = 3 & " << answer[6] << "\\\\" << std::endl;
+  ofstat << "split = * & split = * & " << answer[7] << "\\\\" << std::endl;
+
+  print_close_table();
+} 
 
 ////////////////////////////////////////////////////////
 void writer::Wstats::print_connected_components(const mbgraph_with_history<Mcolor>& MBG) {

@@ -261,43 +261,10 @@ int main(int argc, char* argv[]) {
   main_algo.convert_to_identity_bgraph(PI); 
  
   if (!PI.get_target().empty()) {
-	partgraph_t PG;
-
-	for(const auto &x : *graph) {
-	    if (PG.defined(x)) { 
-		continue;
-	    }
-
-	    vertex_t y = Infty;
-	    bool good = true;
-	    size_t def = 0;
-	    const auto &target = PI.get_target();
-	    for (const auto &col : target) { 
-		size_t numb_color = col.first; 
-		if (graph->is_exist_edge(numb_color, x)) {
-		    ++def;
-		    if (y == Infty) { 
-			y = graph->get_adjecent_vertex(numb_color, x);
-		    } 
-
-		    if (y != graph->get_adjecent_vertex(numb_color, x)) { 
-			good = false;
-		    }
-		}
-	    }
-
-	    if (good && def == target.size() && y != Infty) {
-                PG.insert(x, y);
-	    }
-	}
-
         RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target());	
-	Genome genome; 
-        reductant.splitchr(PG, genome, reductant.pg_empty);
-
+	Genome genome = reductant.get_genomes()[0]; 
 	writer::Wgenome<std::set<std::pair<path_t, bool> > > writer_genome; 
         writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(PI.get_target()), genome, PI.get_target().empty());
-
     } else {  /* empty target */
         for(auto it = graph->cbegin_local_graphs(); it != graph->cend_local_graphs() - 1; ++it) { 
 	  if (*it != *(it + 1)) {

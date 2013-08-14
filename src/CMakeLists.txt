@@ -12,6 +12,7 @@ set(MGRA_SOURCE mgra.cpp
 set (ERR_NO_UNIX "Cannot build on non Unix systems")
 
 set (DEBUG -DVERSION2)
+set (DEBUG1 -DVERSION21)
 set (WARNS -Wall -Wextra -pedantic-errors)
 set (OPTIMIZE_FLAG " -std=c++0x -O2 -pipe -finline-functions -finline-limit=1000") #-m64 -march=core2
 
@@ -25,7 +26,9 @@ include_directories(${CMAKE_BINARY_DIR}
 		   ) 
 
 if (CMAKE_COMPILER_IS_GNUCXX)	
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG}")# ${DEBUG}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG}")
+	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${DEBUG}")
+	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${DEBUG1}")
 else (CMAKE_COMPILER_IS_GNUCXX)
 	message (FATAL_ERROR ${ERR_NO_UNIX})
 endif (CMAKE_COMPILER_IS_GNUCXX)

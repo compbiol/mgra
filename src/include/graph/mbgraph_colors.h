@@ -35,7 +35,7 @@ struct mbgraph_with_colors: public MBGraph {
   bool is_have_self_loop(const vertex_t& v) const;
 
   Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors = false) const; 
-  std::set<mcolor_t> split_color(const mcolor_t& color) const;
+  std::set<mcolor_t> split_color(const mcolor_t& color, bool only_two = true) const;
   bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
 
   inline mcolor_t get_complete_color() const {
@@ -235,7 +235,7 @@ SplitColor(Q) представляет Q в виде дизъюнктного о
 (Q1,y), (Q2,y), ..., (Qm,y)
 */
 template<class mcolor_t>
-std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& color) const {
+std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& color, bool only_two) const {
   std::set<mcolor_t> answer;
 
   if (is_vec_T_consistent_color(color)) {
@@ -260,6 +260,13 @@ std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& co
     for(const auto &col : classes) {
       answer.insert(col.second);
     }
+
+#ifdef VERSION2
+    if (only_two && (answer.size() > 2)) { 
+      answer.clear(); 
+      answer.insert(color);  	
+    } 
+#endif
   }
   return answer;
 } 

@@ -22,8 +22,8 @@ bool Algorithm<graph_t>::stage5_1() {
        equivalence<vertex_t> CC; // connected components
        std::map<vertex_t, vertex_t> QQ; // multiedges of colors !Q (!*ic)
 		    
-       for(const auto &x : *graph) { //is = graph->begin_vertices(); is != graph->end_vertices(); ++is) {    
-	 Mularcs<Mcolor> M = graph->get_adjacent_multiedges(x); //*is);
+       for(const auto &x : *graph) {
+	 Mularcs<Mcolor> M = graph->get_adjacent_multiedges(x); 
 
 	 if (M.size() == 1 && M.cbegin()->second == graph->get_complete_color()) { 
 	   continue; // ignore complete multiedges
@@ -115,12 +115,6 @@ bool Algorithm<graph_t>::stage5_1() {
 	   if (!found) {
 		continue;
            }
-
-	   if ((q.first != Infty && (graph->is_indel_vertex(q.first) || graph->is_duplication_vertex(q.first)))  
-		|| (q.second != Infty && (graph->is_indel_vertex(q.second) || graph->is_duplication_vertex(q.second)))) {
-		continue;
-           }
-
         
 	   graph->apply_two_break(TwoBreak<Mcolor>(p, q, Q));
 	   ++number_rear;
@@ -141,17 +135,7 @@ bool Algorithm<graph_t>::stage5_1() {
 	 } else if (ie->second.size() == 2 && EI[ie->first].size() == 0) {
 	   arc_t p = *(ie->second.begin());
 	   arc_t q = *(ie->second.rbegin());
-
-	   if (graph->is_indel_vertex(p.first) || graph->is_indel_vertex(p.second) 
-		|| graph->is_duplication_vertex(p.first) || graph->is_duplication_vertex(p.second)) {
-		continue;
-           }
-
-	   if (graph->is_indel_vertex(q.first) || graph->is_indel_vertex(q.second) 
-		|| graph->is_duplication_vertex(q.first) || graph->is_duplication_vertex(q.second)) {
-		continue;
-           }
-			    
+		    
 	   // N.B. we have CC[p.first] == CC[q.first] == ie->first
 	   if ((processed.count(CC[p.second]) != 0) || (processed.count(CC[q.second]) != 0) || CC[p.second] != CC[q.second]) { 
 		continue;

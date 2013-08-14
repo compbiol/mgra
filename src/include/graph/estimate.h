@@ -16,7 +16,11 @@ struct Statistics {
   {
    
     count_compl_multiedges();
-  
+
+#ifdef VERSION2
+    count_indel_statistics();
+#endif   
+
     //count_chromosomes();  
     count_all();
   }	      	
@@ -32,11 +36,15 @@ struct Statistics {
 
   std::map<std::pair<Mcolor, Mcolor>, size_t> get_Hsubgraph(); //count H-subgraph for stage2 
 
+  std::array<size_t, 8> get_indel_stat() const { 
+    return indel_stat; 
+  }
 private:
   void count_compl_multiedges(); //count good edges for stage1
   void count_not_compl_multiedges(); 
   void count_cycles();
   void count_chromosomes();
+  void count_indel_statistics();
 
   __attribute__((always_inline)) inline size_t calc_value(const std::map<Mcolor, size_t>& where, const Mcolor& what) const { 
     if (where.find(what) != where.end()) { 
@@ -70,7 +78,51 @@ private:
   //chromosome
   std::vector<size_t> liniar_chr; 				
   std::vector<size_t> circular_chr; 				
+
+  //
+  std::array<size_t, 8> indel_stat;
 };
+
+template<class graph_t>
+void Statistics<graph_t>::count_indel_statistics() { 
+  indel_stat.fill(0);
+  
+  std::unordered_set<vertex_t > processed; 
+  for (const auto &a1 : *graph) {  
+    const vertex_t& a2 = graph->get_obverse_vertex(a1);
+    Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(a1);
+
+    if (graph->is_indel_vertex(a1) && (processed.count(a1) == 0) && graph->is_indel_vertex(a2) && mularcs.size() != 0)  {
+      //std::cerr << "Start worked with " << a1 << " " << a2;
+      processed.insert(a1); 
+      processed.insert(a2);
+
+      Mcolor indel_color = mularcs.union_multicolors(); 
+      Mcolor bar_indel_color = graph->get_complement_color(indel_color);
+      size_t count_split_indel = graph->split_color(indel_color, false).size(); 
+      size_t count_split_bar = graph->split_color(bar_indel_color, false).size(); 
+      assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
+	
+      if (graph->is_vec_T_consistent_color(indel_color) && !graph->is_vec_T_consistent_color(bar_indel_color)) {
+	++indel_stat[0];
+      } else if (!graph->is_vec_T_consistent_color(indel_color) && graph->is_vec_T_consistent_color(bar_indel_color)) {
+	++indel_stat[1]; 
+      } else if (graph->is_vec_T_consistent_color(bar_indel_color) && graph->is_vec_T_consistent_color(indel_color)) { 
+	++indel_stat[2];
+      } else if (count_split_indel == 2 && count_split_bar != 2) {
+	++indel_stat[3];
+      } else if (count_split_indel != 2 && count_split_bar == 2) { 
+	++indel_stat[4];
+      } else if (count_split_indel == 2 && count_split_bar == 2) { 
+	++indel_stat[5];
+      } else if (count_split_indel == 3 && count_split_bar == 3) { 
+	++indel_stat[6];
+      } else { 
+	++indel_stat[7];
+      } 
+    }
+  }
+} 
 
 template<class graph_t>
 std::vector<size_t> Statistics<graph_t>::count_all() const {

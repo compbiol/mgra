@@ -2,7 +2,6 @@
 #define STAGE_2_H_ 
 
 /*
-canformQ(x,Q) говорит, можно ли из мультицветов мультиребер инцидентных вершине x образовать мультицвет Q.
 can incident multiedges of x form multicolor Q (current don't check T-consistent formation)
 if return false, then Q cannot be formed
 if true - who knows...
@@ -21,9 +20,6 @@ bool Algorithm<graph_t>::canformQ(const vertex_t& x, const Mcolor& Q) const {
 
   for(const auto &arc : mularcs) { 
     Mcolor color(Q, arc.second, Mcolor::Intersection); 
-    /*if (x == "84h" || x == "39h") { 
-      std::cerr << arc.first << " " << genome_match::mcolor_to_name(arc.second) << " " << genome_match::mcolor_to_name(Q)  << " " << genome_match::mcolor_to_name(color) << std::endl;
-    } */
     if (color.size() > 0 && color.size() < arc.second.size()) { //FIXME: THINK ABOUT IT 
       return false;
     } 
@@ -39,12 +35,6 @@ bool Algorithm<graph_t>::is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>&
 
   auto arcs = mularcs_x.equal_range(y); 
 
-/*if (y == "39t" || y == "728h") {
-  for (auto jc = arcs.first; (jc != arcs.second) ; ++jc) { 
-    std::cerr << genome_match::mcolor_to_name(jc->second) << std::endl;
-  }
-}*/
-
   for (auto jc = arcs.first; (jc != arcs.second) && !mobilQ; ++jc) { 
     if (graph->is_vec_T_consistent_color(jc->second)) { //cental sub-edge
       const Mcolor& QQ = jc->second; // color of central sub-edge (QQ is sub-multicolor of Q)
@@ -52,23 +42,14 @@ bool Algorithm<graph_t>::is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>&
       for(auto ix = mularcs_x.cbegin(); (ix != mularcs_x.cend()) && !mobilQ; ++ix) { 
 	if (ix->first != y) { 
 	  mobilQ = canformQ(ix->first, QQ);
-/*          if (mobilQ) { 
-if (y == "39t" || y == "728h") {
-	  std::cerr << "MOBIL: " << ix->first << " canForm: " << genome_match::mcolor_to_name(QQ) << " " << QQ.begin()->first<< std::endl;
-}
-	  } */
+	  //std::cerr << "MOBIL: " << ix->first << " canForm: " << genome_match::mcolor_to_name(QQ) << " " << QQ.begin()->first<< std::endl;
 	} 
       }
 	// FIXME : NEAD LAMBDA
       if (!mobilQ) { 
 	for(auto iy = mularcs_y.cbegin(); (iy != mularcs_y.cend()) && !mobilQ; ++iy) { 
 	  mobilQ = canformQ(iy->first, QQ);
-/*          if (mobilQ) { 
-if (y == "39t" || y == "728h") {
-	  std::cerr << "MOBIL: " << y << "-" << iy->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
-}
-
-	  } */
+	  //std::cerr << "MOBIL: " << y << "-" << iy->first << " canForm: " << genome_match::mcolor_to_name(QQ) << std::endl;
 	}
       }
     } 
@@ -99,8 +80,7 @@ bool Algorithm<graph_t>::stage2() {
         if (y != Infty && !graph->is_duplication_vertex(y) && !graph->is_indel_vertex(y)) { 
 	  Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges(y, split_bad_colors);
 	  mularcs_y.erase(x);
-	
-          if (!is_mobil_edge(y, mularcs_x, mularcs_y)) {
+	  if (!is_mobil_edge(y, mularcs_x, mularcs_y)) {
 	    //std::cerr << "NOT MOBIL" << std::endl;
 	    for (const auto &arc : mularcs_x) { 
               vertex_t v = mularcs_y.get_vertex(arc.second);

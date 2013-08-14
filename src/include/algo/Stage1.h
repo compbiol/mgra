@@ -90,7 +90,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     if (split_bad_colors) {
       Mcolor first = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
       Mcolor second = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*(++++path.begin()));
-      if (graph->split_color(first).size() <= graph->split_color(second).size()) {
+      if (graph->split_color(first, false).size() <= graph->split_color(second, false).size()) {
 	process_color = first;
       } else { 
 	process_color = second;

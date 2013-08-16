@@ -14,25 +14,15 @@ struct Statistics {
   Statistics(const std::shared_ptr<graph_t>& gr)
   : graph(gr) 
   {
-   
+    count_vertex_statistics();   
     count_compl_multiedges();
-
-#ifdef VERSION2
     count_indel_statistics();
-#endif   
-
+    count_cycles();
     //count_chromosomes();  
-    count_all();
   }	      	
  
-  inline void count_other() {
-    count_cycles();
-  }
-
-  std::vector<size_t> count_all() const;
+  std::vector<size_t> count_vertex_statistics() const; //FIXME
   std::vector<std::string> get_compl_stat();   
-  std::vector<std::string> get_no_compl_stat() const;	
-  std::vector<Mcolor> get_new_color() const;
 
   std::map<std::pair<Mcolor, Mcolor>, size_t> get_Hsubgraph(); //count H-subgraph for stage2 
 
@@ -41,10 +31,9 @@ struct Statistics {
   }
 private:
   void count_compl_multiedges(); //count good edges for stage1
-  void count_not_compl_multiedges(); 
+  void count_indel_statistics();
   void count_cycles();
   void count_chromosomes();
-  void count_indel_statistics();
 
   __attribute__((always_inline)) inline size_t calc_value(const std::map<Mcolor, size_t>& where, const Mcolor& what) const { 
     if (where.find(what) != where.end()) { 
@@ -69,7 +58,6 @@ private:
   std::map<Mcolor, size_t> simple_multiedges_count;	// ME[S] = # simple multiedges of multicolor S.
 
   std::map<std::pair<Mcolor, Mcolor>, size_t> Hcount; // count H-subgraphs
-  //std::map<std::pair<Mcolor, Mcolor>, bool> Hmid;   // middle edge is T-consistent?
 	
   //cycles
   std::map<Mcolor, size_t> simple_cycle_count; 		// cycle of simple vertices
@@ -79,42 +67,11 @@ private:
   std::vector<size_t> liniar_chr; 				
   std::vector<size_t> circular_chr; 				
 
-  //
   std::map<size_t, std::pair<Mcolor, Mcolor>> indel_stats;
 };
 
 template<class graph_t>
-void Statistics<graph_t>::count_indel_statistics() { 
-  std::map<std::pair<Mcolor, Mcolor>, size_t> temp;
-  std::unordered_set<vertex_t > processed; 
-  for (const auto &a1 : *graph) {  
-    const vertex_t& a2 = graph->get_obverse_vertex(a1);
-    Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(a1);
-
-    if (graph->is_indel_vertex(a1) && (processed.count(a1) == 0) && graph->is_indel_vertex(a2) && mularcs.size() != 0)  {
-      //std::cerr << "Start worked with " << a1 << " " << a2;
-      processed.insert(a1); 
-      processed.insert(a2);
-
-      Mcolor indel_color = mularcs.union_multicolors(); 
-      Mcolor bar_indel_color = graph->get_complement_color(indel_color);
-      assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
-
-      if (temp.count(std::make_pair(bar_indel_color, indel_color)) == 0) {
-        temp.insert(std::make_pair(std::make_pair(bar_indel_color, indel_color), 1));
-      } else { 	
-      	++temp[std::make_pair(bar_indel_color, indel_color)];
-      }
-    }
-  }
-	
-  for (const auto &stat : temp) {
-    indel_stats.insert(std::make_pair(stat.second, stat.first));
-  } 
-} 
-
-template<class graph_t>
-std::vector<size_t> Statistics<graph_t>::count_all() const {
+std::vector<size_t> Statistics<graph_t>::count_vertex_statistics() const {
   size_t dupl = 0; 
   size_t indel = 0; 
   size_t count_self_loop = 0;
@@ -141,90 +98,6 @@ std::vector<size_t> Statistics<graph_t>::count_all() const {
 
   std::vector<size_t> answer({dupl, indel, count_self_loop, dupl_mcolors});
   return answer;
-} 
-
-template<class graph_t>
-std::vector<std::string> Statistics<graph_t>::get_compl_stat() { 
-  std::multimap<size_t, std::string> answer;
-
-  for(auto im = compl_multiedges_count.cbegin(); im != compl_multiedges_count.cend(); ++im) {
-    const Mcolor& current = graph->get_complement_color(im->first);  // complementary multicolor.
-
-    if (im->first < current) {
-      continue;
-    } 
-	 
-    size_t m1 = calc_value(compl_multiedges_count, current) / 2;
-    size_t m2 = (im->second) / 2;	
-    int paths = calc_value(simple_vertices_count, current) - (calc_value(simple_multiedges_count, current) + calc_value(simple_multiedges_count, im->first)) - calc_value(simple_vertices_alone_count, current) - calc_value(special_cycle_count, current);
-    int cycles = calc_value(simple_cycle_count, current) + calc_value(special_cycle_count, current);
- 	
-    std::ostringstream os;
- 
-    os << "{";		    
-    if (graph->is_T_consistent_color(im->first)) { 
-      os << "\\bf ";
-    } 
-
-    const Mcolor& first = graph->get_min_complement_color(current); 
-    const Mcolor& second = graph->get_complement_color(first);
-
-    os <<  genome_match::mcolor_to_name(first) << " + "  <<  genome_match::mcolor_to_name(second) << "} & " 
-      // multiedges
-       << m1 << " + " << m2 << " = " << m1 + m2 << " & " 
-      // simple vertices
-       << calc_value(simple_vertices_count, current) << " & "  
-      // simple multiedges
-       << calc_value(simple_multiedges_count, current) << " + " << calc_value(simple_multiedges_count, im->first) << " = " << calc_value(simple_multiedges_count, current) + calc_value(simple_multiedges_count, im->first) << " & "
-      // simple paths + cycles
-       << paths << " + " << cycles << " = " << paths + cycles << " & "
-      // irregular multiedges
-       << calc_value(good_irrer_multiedges_count, current) << " + " << calc_value(good_irrer_multiedges_count, im->first) << " = " << calc_value(good_irrer_multiedges_count, current) + calc_value(good_irrer_multiedges_count, im->first);
-	
-	//std::cerr <<  calc_value(simple_vertices_count, current) << " " << calc_value(simple_multiedges_count, current) << " " << calc_value(simple_multiedges_count, im->first) << " " << calc_value(simple_vertices_alone_count, current) << " " << calc_value(special_cycle_count, current) << std::endl;
-    answer.insert(std::make_pair(m1 + m2, os.str()));
-  }
-	
-  std::vector<std::string> output;
-  for(auto it = answer.rbegin(); it != answer.rend(); ++it) {
-    output.push_back(it->second); 
-  }  	
-  return output;
-} 
-
-template<class graph_t>
-std::vector<std::string> Statistics<graph_t>::get_no_compl_stat() const { 
-  std::multimap<size_t, std::string> answer;
-
-  for(auto im = not_compl_multiedges_count.cbegin(); im != not_compl_multiedges_count.cend(); ++im) {
-    size_t vm1 = im->second;
-		
-    std::ostringstream os;
-  
-    os << "{";		    
-    if (graph->is_T_consistent_color(im->first)) { 
-      os << "\\bf ";
-    } 
-    
-    os <<  genome_match::mcolor_to_name(im->first) << "} & " << vm1;
-
-    answer.insert(std::make_pair(vm1, os.str()));
-  } 
-
-  std::vector<std::string> output;
-  for(auto it = answer.rbegin(); it != answer.rend(); ++it) {
-    output.push_back(it->second); 
-  }  	
-  return output;	
-}
-
-template<class graph_t>
-std::vector<Mcolor> Statistics<graph_t>::get_new_color() const { 
-  std::vector<Mcolor> output(compl_multiedges_count.size());
-  for(auto im = compl_multiedges_count.cbegin(); im != compl_multiedges_count.cend(); ++im) { 
-    output.push_back(im->first);
-  }  
-  return output;	
 } 
 
 template<class graph_t>
@@ -277,21 +150,82 @@ void Statistics<graph_t>::count_compl_multiedges() {
 } 
 
 template<class graph_t>
-void Statistics<graph_t>::count_not_compl_multiedges() { 
-  for(const auto &x : *graph) { 
-    Mularcs<Mcolor> current = graph->get_adjacent_multiedges(x);  
-    for (auto jt = current.cbegin(); jt != current.cend(); ++jt) {
-      if (jt->second.is_one_to_one_match()) {
-	continue; 
-      } 
+void Statistics<graph_t>::count_indel_statistics() { 
+  std::map<std::pair<Mcolor, Mcolor>, size_t> temp;
+  std::unordered_set<vertex_t > processed; 
+  for (const auto &a1 : *graph) {  
+    const vertex_t& a2 = graph->get_obverse_vertex(a1);
+    Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(a1);
 
-      ++not_compl_multiedges_count[jt->second]; 
+    if (graph->is_indel_vertex(a1) && (processed.count(a1) == 0) && graph->is_indel_vertex(a2) && mularcs.size() != 0)  {
+      //std::cerr << "Start worked with " << a1 << " " << a2;
+      processed.insert(a1); 
+      processed.insert(a2);
 
-      if (jt->first == Infty) { 
-	++not_compl_multiedges_count[jt->second];		
-      } 
-    } 				 
-  } 	
+      Mcolor indel_color = mularcs.union_multicolors(); 
+      Mcolor bar_indel_color = graph->get_complement_color(indel_color);
+      assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
+
+      if (temp.count(std::make_pair(bar_indel_color, indel_color)) == 0) {
+        temp.insert(std::make_pair(std::make_pair(bar_indel_color, indel_color), 1));
+      } else { 	
+      	++temp[std::make_pair(bar_indel_color, indel_color)];
+      }
+    }
+  }
+	
+  for (const auto &stat : temp) {
+    indel_stats.insert(std::make_pair(stat.second, stat.first));
+  } 
+} 
+
+template<class graph_t>
+std::vector<std::string> Statistics<graph_t>::get_compl_stat() { 
+  std::multimap<size_t, std::string> answer;
+
+  for(auto im = compl_multiedges_count.cbegin(); im != compl_multiedges_count.cend(); ++im) {
+    const Mcolor& current = graph->get_complement_color(im->first);  // complementary multicolor.
+
+    if (im->first < current) {
+      continue;
+    } 
+	 
+    size_t m1 = calc_value(compl_multiedges_count, current) / 2;
+    size_t m2 = (im->second) / 2;	
+    int paths = calc_value(simple_vertices_count, current) - (calc_value(simple_multiedges_count, current) + calc_value(simple_multiedges_count, im->first)) - calc_value(simple_vertices_alone_count, current) - calc_value(special_cycle_count, current);
+    int cycles = calc_value(simple_cycle_count, current) + calc_value(special_cycle_count, current);
+ 	
+    std::ostringstream os;
+ 
+    os << "{";		    
+    if (graph->is_T_consistent_color(im->first)) { 
+      os << "\\bf ";
+    } 
+
+    const Mcolor& first = graph->get_min_complement_color(current); 
+    const Mcolor& second = graph->get_complement_color(first);
+
+    os <<  genome_match::mcolor_to_name(first) << " + "  <<  genome_match::mcolor_to_name(second) << "} & " 
+      // multiedges
+       << m1 << " + " << m2 << " = " << m1 + m2 << " & " 
+      // simple vertices
+       << calc_value(simple_vertices_count, current) << " & "  
+      // simple multiedges
+       << calc_value(simple_multiedges_count, current) << " + " << calc_value(simple_multiedges_count, im->first) << " = " << calc_value(simple_multiedges_count, current) + calc_value(simple_multiedges_count, im->first) << " & "
+      // simple paths + cycles
+       << paths << " + " << cycles << " = " << paths + cycles << " & "
+      // irregular multiedges
+       << calc_value(good_irrer_multiedges_count, current) << " + " << calc_value(good_irrer_multiedges_count, im->first) << " = " << calc_value(good_irrer_multiedges_count, current) + calc_value(good_irrer_multiedges_count, im->first);
+	
+	//std::cerr <<  calc_value(simple_vertices_count, current) << " " << calc_value(simple_multiedges_count, current) << " " << calc_value(simple_multiedges_count, im->first) << " " << calc_value(simple_vertices_alone_count, current) << " " << calc_value(special_cycle_count, current) << std::endl;
+    answer.insert(std::make_pair(m1 + m2, os.str()));
+  }
+	
+  std::vector<std::string> output;
+  for(auto it = answer.rbegin(); it != answer.rend(); ++it) {
+    output.push_back(it->second); 
+  }  	
+  return output;
 } 
 
 template<class graph_t>

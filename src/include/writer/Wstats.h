@@ -32,7 +32,6 @@ private:
 	void print_complete_edges(const mbgraph_with_history<Mcolor>& MBG); 
 	void print_connected_components(const mbgraph_with_history<Mcolor>& MBG);
 	void print_rear_characters(const std::vector<std::string>& info);
-	void print_not_compl_characters(const std::vector<std::string>& info);
 	void print_estimated_dist(size_t stage, const ProblemInstance<Mcolor>& cfg, const mbgraph_with_history<Mcolor>& MBG);
 private: 
 	void print_start_table(size_t count_column);

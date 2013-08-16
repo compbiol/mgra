@@ -102,6 +102,7 @@ int main(int argc, char* argv[]) {
     }
   } 
 
+#ifndef VERSION2 
   RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target());	
 	
   if (!PI.get_target().empty()) {
@@ -130,6 +131,7 @@ int main(int argc, char* argv[]) {
       tr.close(); 
     }
   }
+#endif
 
   return 0;
 }

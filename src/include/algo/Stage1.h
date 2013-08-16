@@ -43,10 +43,6 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
   while (stop) {
     stop = false; 
 
-    /*if (current == "229h" || current == "229t") { 
-	std::cerr << current << std::endl;
-    }*/
-
     if (is_next) { 
       path.push_front(current);
     } else { 
@@ -60,7 +56,8 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
       new_edges.erase(previous);
     
       if (new_edges.size() == 1 && graph->get_complement_color(previous_color) == new_edges.cbegin()->second) {
-	if (split_bad_colors && (graph->split_color(new_edges.cbegin()->second, false).size() == 2 || graph->split_color(previous_color, false).size() == 2)) {
+	if (split_bad_colors && 
+	   (graph->split_color(new_edges.cbegin()->second, false).size() == 2 || graph->split_color(previous_color, false).size() == 2)) {
 	  previous = current;
 	  current = new_edges.cbegin()->first;  
 	  stop = true;
@@ -212,7 +209,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     auto z2 = z3++;
     std::set<Mcolor> colors = graph->split_color(color);
 
-    while(z3 != path.end()) {
+    while (z3 != path.end()) {
       for (const auto &col: colors) {
 	graph->apply_two_break(TwoBreak<Mcolor>(*z0, *z1, *z3, *z2, col));
 	++number_rear;     

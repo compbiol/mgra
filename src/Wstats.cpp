@@ -31,7 +31,6 @@ void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_his
 	//print_estimated_dist(stage, cfg, graph);
 //#endif
 	print_fair_edges(graph, info);
-	print_not_compl_characters(info.get_no_compl_stat()); 
 } 
 
 void writer::Wstats::print_vertex_statistics(const std::vector<size_t>& answer) {
@@ -236,20 +235,6 @@ void writer::Wstats::print_rear_characters(const std::vector<std::string>& info)
 		ofstat << *im << "\\\\" << std::endl;
 	}
 	print_close_table();	
-} 
-
-void writer::Wstats::print_not_compl_characters(const std::vector<std::string>& info) { 
-	if (!info.empty()) { 
-		ofstat << std::endl;
-		ofstat << "% Edges for duplication block:" << std::endl << std::endl;
-		print_start_table(1);
-		ofstat << "Multicolors & multiedges\\\\" << std::endl;
-		ofstat << "\\hline" << std::endl;
-		for(auto im = info.cbegin(); im != info.cend(); ++im) {
-			ofstat << *im << "\\\\" << std::endl;
-		}
-		print_close_table();	
-	} 
 } 
 
 void writer::Wstats::print_estimated_dist(size_t stage, const ProblemInstance<Mcolor>& cfg, const mbgraph_with_history<Mcolor>& graph) { 

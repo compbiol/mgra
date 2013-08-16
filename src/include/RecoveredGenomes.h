@@ -116,14 +116,14 @@ std::vector<Genome> RecoveredGenomes<graph_t>::get_genomes() {
 template<class graph_t>
 Genome RecoveredGenomes<graph_t>::get_genome(size_t index) { 
   Genome genome; 
-  std::unordered_set<vertex_t> processed;
+  std::set<vertex_t> processed;
   std::string name_chr("chr");
   size_t count = 1; 
 
   for(const auto &x : graph) { 
     if (processed.find(x) == processed.end()) { 
-      std::set<vertex_t> getchrset;
-      Chromosome chromosome = get_chromosome(index, x, processed);
+      //std::set<vertex_t> getchrset;
+      Chromosome chromosome = getchr(recovered_graphs[index], x, processed); //get_chromosome(index, x, processed);
       genome.insert(name_chr + toString(count++), chromosome);
     }
   } 

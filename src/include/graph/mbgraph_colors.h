@@ -25,6 +25,7 @@
 template<class mcolor_t>
 struct mbgraph_with_colors: public MBGraph { 
   typedef typename std::set<mcolor_t>::const_iterator citer; 
+  typedef std::pair<vertex_t, vertex_t> arc_t;
 
   template<class pconf_t>
   mbgraph_with_colors(const std::vector<Genome>& genomes, const pconf_t& cfg); 
@@ -34,7 +35,9 @@ struct mbgraph_with_colors: public MBGraph {
   bool is_duplication_vertex(const vertex_t& v) const;
   bool is_have_self_loop(const vertex_t& v) const;
 
-  Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors = false) const; 
+  Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors = false, bool only_two = true) const; 
+  Mularcs<mcolor_t> get_adjacent_multiedges1(const vertex_t& u, const std::map<arc_t, mcolor_t>& viewed_edges, bool split_bad_colors = false) const; 
+
   std::set<mcolor_t> split_color(const mcolor_t& color, bool only_two = true) const;
   bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
 
@@ -96,6 +99,7 @@ protected:
   std::map<mcolor_t, mcolor_t> compliment_colors;
   std::set<mcolor_t> T_consistent_colors;
   std::set<mcolor_t> vec_T_consistent_colors;
+  static std::set<arc_t> pg_empty;
 }; 
 
 template<class mcolor_t>
@@ -193,7 +197,7 @@ bool mbgraph_with_colors<mcolor_t>::is_duplication_vertex(const vertex_t& v) con
 
 
 template<class mcolor_t>
-Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors) const { 
+Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors, bool only_two) const { 
   if (u == Infty) {
     std::cerr << "mularcs ERROR: Infinite input" << std::endl;
     exit(1);
@@ -213,6 +217,42 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
     Mularcs<mcolor_t> split; 
     for(const auto &arc : output) {
       if (!is_vec_T_consistent_color(arc.second) && arc.second.size() < count_local_graphs()) {
+	auto colors = split_color(arc.second, only_two);
+	for(const auto &color : colors) {
+	  split.insert(arc.first, color); 
+	}
+      } else { 
+	split.insert(arc.first, arc.second); 
+      }
+    }
+    return split; 
+  }
+
+  return output;
+} 
+
+template<class mcolor_t>
+Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges1(const vertex_t& u, const std::map<arc_t, mcolor_t>& viewed_edges, bool split_bad_colors) const {
+  if (u == Infty) {
+    std::cerr << "mularcs ERROR: Infinite input" << std::endl;
+    exit(1);
+  }
+
+  Mularcs<mcolor_t> output;
+  for (size_t i = 0; i < count_local_graphs(); ++i) {
+    if (local_graph[i].defined(u)) { 
+      std::pair<partgraph_t::const_iterator, partgraph_t::const_iterator> iters = local_graph[i].equal_range(u);
+      for (auto it = iters.first; it != iters.second; ++it) { 
+	output.insert(it->second, i); 
+      }
+    } 
+  }
+  
+  if (split_bad_colors) { 
+    Mularcs<mcolor_t> split; 
+    for(const auto &arc : output) {
+      if (viewed_edges.count(std::make_pair(u, arc.first)) == 0 && viewed_edges.count(std::make_pair(arc.first, u)) == 0
+	  && !is_vec_T_consistent_color(arc.second) && arc.second.size() < count_local_graphs()) {
 	auto colors = split_color(arc.second);
 	for(const auto &color : colors) {
 	  split.insert(arc.first, color); 

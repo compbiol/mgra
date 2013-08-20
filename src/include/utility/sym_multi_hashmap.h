@@ -18,7 +18,7 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
   }
 
   bool defined(const item_class& x) const {
-    return count(x) != 0;
+    return (multi_hashmap::count(x) != 0);
   }
 
   void insert(const item_class& x, const item_class& y) {

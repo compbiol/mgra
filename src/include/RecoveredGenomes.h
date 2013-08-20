@@ -4,45 +4,36 @@
 #include "Decircularizeter.h"
 
 template<class graph_t>
-struct RecoveredGenomes { 
+struct RecoveredGenomes {
+  typedef std::list<TwoBreak<Mcolor> > transform_t;
 
-  RecoveredGenomes(const graph_t& gr, const Mcolor& target);
+  RecoveredGenomes(const graph_t& gr, const Mcolor& target, const std::map<Mcolor, std::set<arc_t> >& b_edges);
 
-  Chromosome getchr(const partgraph_t& PG, const vertex_t& x, std::set<vertex_t>& getchrset);
-  void splitchr(const partgraph_t& PG, Genome& AllChr, std::list<std::set<vertex_t> >& CircChr);
-  std::pair<size_t, size_t> numchr(const partgraph_t& PG);
-
-  inline std::vector<partgraph_t> get_recovered_genome() const { 
-    return recovered_graphs;
-  }
- 
   std::vector<Genome> get_genomes();
 
   std::vector<transform_t> get_history() const { 
     return recovered_transformation;
   }
 
-  partgraph_t get_graph(size_t index) const {  
-    return recovered_graphs[index];
-  } 
 private: 
   Genome get_genome(size_t index);
-  Chromosome get_chromosome(size_t index, const vertex_t& x, std::unordered_set<vertex_t>& processed);
+  Chromosome get_chromosome(size_t index, const vertex_t& x, std::unordered_set<vertex_t>& chromosome_set);
 
-public: 
-  std::list<std::set<vertex_t> > pg_empty;
- 
 private: 
   const graph_t& graph;
+  const std::map<Mcolor, std::set<arc_t> >& bad_edges;
+  std::vector<std::string> name_genomes;
   std::vector<partgraph_t> recovered_graphs;
   std::vector<transform_t> recovered_transformation;
 };
 
 template<class graph_t>
-RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const Mcolor& target) 
+RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const Mcolor& target, const std::map<Mcolor, std::set<arc_t> >& b_edges)  
 : graph(gr)
+, bad_edges(b_edges)
 {
  if (!target.empty()) { 
+   name_genomes.push_back(genome_match::mcolor_to_name(target));
    recovered_graphs.resize(1);
    for(const auto &x : graph) {
      if (recovered_graphs[0].defined(x)) { 
@@ -59,7 +50,6 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const Mcolor& tar
 	 if (y == Infty) { 
 	   y = graph.get_adjecent_vertex(numb_color, x);
 	 } 
-
 	 if (y != graph.get_adjecent_vertex(numb_color, x)) { 
 	   good = false;
 	 }
@@ -86,11 +76,19 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const Mcolor& tar
 	}
       }
 
-      Decircularizeter<graph_t> dec(graph);
       size_t i = 0; 
       for (auto im = graph.cbegin_T_consistent_color(); im != graph.cend_T_consistent_color(); ++im, ++i) {    
+        name_genomes.push_back(genome_match::mcolor_to_name(*im));
+        std::set<arc_t> edges; 
+        if (bad_edges.count(*im) != 0) {
+          edges = bad_edges.find(*im)->second;
+        } 
+
+        Decircularizeter<graph_t> dec(graph, edges);        
+        //std::cerr << "Initial we have " << dec.count_circular_chromosome(recovered_graphs[i]) << std::endl;
 	transform_t T = dec.decircularize(recovered_graphs[i], recovered_transformation[i]);
-    
+        //std::cerr << "After we have " << dec.count_circular_chromosome(recovered_graphs[i]) << std::endl;
+
 	// move to adjacent branches
 	for (const auto &it : T) {
 	  size_t j = 0; 
@@ -100,8 +98,8 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const Mcolor& tar
 	    }
 	  }
 	}
-      }
-  }
+      } 
+   }
 }
 
 template<class graph_t>
@@ -115,16 +113,19 @@ std::vector<Genome> RecoveredGenomes<graph_t>::get_genomes() {
 
 template<class graph_t>
 Genome RecoveredGenomes<graph_t>::get_genome(size_t index) { 
-  Genome genome; 
-  std::set<vertex_t> processed;
+  Genome genome(name_genomes[index]); 
+  std::unordered_set<vertex_t> processed;
   std::string name_chr("chr");
   size_t count = 1; 
 
   for(const auto &x : graph) { 
     if (processed.find(x) == processed.end()) { 
-      //std::set<vertex_t> getchrset;
-      Chromosome chromosome = getchr(recovered_graphs[index], x, processed); //get_chromosome(index, x, processed);
-      genome.insert(name_chr + toString(count++), chromosome);
+      std::unordered_set<vertex_t> chromosome_set;
+      Chromosome chromosome = get_chromosome(index, x, chromosome_set);
+      if (chromosome.size() != 0) {
+        genome.insert(name_chr + toString(count++), chromosome);
+      } 
+      std::copy(chromosome_set.cbegin(), chromosome_set.cend(), std::inserter(processed, processed.end()));
     }
   } 
 
@@ -132,70 +133,9 @@ Genome RecoveredGenomes<graph_t>::get_genome(size_t index) {
 } 
 
 template<class graph_t>
-Chromosome RecoveredGenomes<graph_t>::get_chromosome(size_t index, const vertex_t& x, std::unordered_set<vertex_t>& processed) { 
-  std::list<std::pair<vertex_t, int> > path;
-  bool circular = false;
-  processed.insert(x);
-
-  auto changer_lambda = [&] (const vertex_t& t, bool flag) -> void {
-    if (flag) { 
-      (*t.rbegin() == 't')?path.push_back(std::make_pair(t.substr(0, t.size() - 1), -1)):path.push_back(std::make_pair(t.substr(0, t.size() - 1), 1));
-    } else { 
-      (*t.rbegin() == 't')?path.push_front(std::make_pair(t.substr(0, t.size() - 1), 1)):path.push_front(std::make_pair(t.substr(0, t.size() - 1), -1));	
-    }  
-  };
-
-  for(vertex_t y = graph.get_obverse_vertex(x); ;) {
-    if (processed.find(y) != processed.end()) {
-      circular = true;
-      break; // circ
-    }
-  
-    processed.insert(y);
-
-    changer_lambda(y, true);
-
-    if (!recovered_graphs[index].defined(y)) { 
-      break; // linear
-    } 
-
-    y = recovered_graphs[index][y]; //FIXME
-
-    if (processed.find(y) != processed.end()) {
-       circular = true;
-       break; // circ
-    }
-    processed.insert(y);
-
-    if (y == Infty) { 
-      break;
-    } 
-    y = graph.get_obverse_vertex(y);
-  }
-
-  if (!circular && recovered_graphs[index].defined(x)) {	
-    vertex_t y = x;
-    while (recovered_graphs[index].defined(y) && (y != Infty)) {
-      y = recovered_graphs[index][y]; //FIXME
-      processed.insert(y);
-
-      if (y != Infty) {
-        y = graph.get_obverse_vertex(y);
-        processed.insert(y);
-        changer_lambda(y, false);
-      }
-    }
-  }
-
-  return Chromosome(path, circular);
-} 
-
-template<class graph_t>
-Chromosome RecoveredGenomes<graph_t>::getchr(const partgraph_t& PG, const vertex_t& x, std::set<vertex_t>& getchrset) {
+Chromosome RecoveredGenomes<graph_t>::get_chromosome(size_t index, const vertex_t& x, std::unordered_set<vertex_t>& chromosome_set) {
     std::list<std::pair<vertex_t, int> > path;
     bool circular = false;
-    getchrset.insert(x);
-
     auto changer_lambda = [&] (const vertex_t& t, bool flag) -> void {
   	if (flag) { 
 	(*t.rbegin() == 't')?path.push_back(std::make_pair(t.substr(0, t.size() - 1), -1)):path.push_back(std::make_pair(t.substr(0, t.size() - 1), 1));
@@ -204,85 +144,93 @@ Chromosome RecoveredGenomes<graph_t>::getchr(const partgraph_t& PG, const vertex
 	}  
     };
 
-    for(vertex_t y = graph.get_obverse_vertex(x); ; ) {
-	if (getchrset.find(y) != getchrset.end()) {
+  /*do { 
+    previous = current; 
+    current = graph.get_obverse_vertex(previous);
+    if (bad_edges.count(std::make_pair(previous, current)) != 0 || bad_edges.count(std::make_pair(current, previous)) != 0) {
+      have_deletion = true;
+    }
+    if (chromosome_set.count(current) == 0) {
+      chromosome_set.insert(current);
+      if (recovered_graphs[index].defined(current)) {
+        previous = current; 
+        current = recovered_graphs[index][previous];
+        changer_lambda(current, true);
+        if (bad_edges.count(std::make_pair(previous, current)) != 0 || bad_edges.count(std::make_pair(current, previous)) != 0) {
+          have_deletion = true;
+        }
+        if (chromosome_set.count(current) != 0) {
+          circular = true;
+        } 
+        chromosome_set.insert(current); 
+      }
+    } else { 
+      circular = true;
+    } 
+  } while ((current != Infty) && recovered_graphs[index].defined(current) && !circular);*/
+  vertex_t current = graph.get_obverse_vertex(x); 
+  vertex_t previous = x;
+  chromosome_set.insert(x);
+  
+    for(;;) {
+	if (chromosome_set.count(current) != 0) {
 	    circular = true;
 	    break; // circ
 	}
-	getchrset.insert(y);
+	chromosome_set.insert(current);
 
-    	changer_lambda(y, true);
+    	changer_lambda(current, true);
 
-	if (!PG.defined(y)) { 
+	if (!recovered_graphs[index].defined(current)) { 
 	  break; // linear
 	} 
 
-	y = PG[y];
+        previous = current;
+	current = recovered_graphs[index][previous]; 
 
-	if (getchrset.find(y) != getchrset.end()) {
+        /*if (bad_edges.count(std::make_pair(previous, current)) != 0 || bad_edges.count(std::make_pair(current, previous)) != 0) {
+          have_deletion = true;
+        }*/
+
+	if (chromosome_set.count(current) != 0) {
 	    circular = true;
 	    break; // circ
 	}
-	getchrset.insert(y);
+	chromosome_set.insert(current);
 
-	if (y == Infty) { 
+	if (current == Infty) { 
 		break;
-	} 
-	y = graph.get_obverse_vertex(y);
+	}
+
+        previous = current;
+	current = graph.get_obverse_vertex(previous); 
+        
+        /*if (bad_edges.count(std::make_pair(previous, current)) != 0 || bad_edges.count(std::make_pair(current, previous)) != 0) {
+          have_deletion = true;
+        }*/
+        
     }
 
-    if (!circular && PG.defined(x)) {	
+    if (!circular && recovered_graphs[index].defined(x)) {	
 	vertex_t y = x;
-	while (PG.defined(y) && (y != Infty)) {
-	    y = PG[y];
-	    getchrset.insert(y);
+	while (recovered_graphs[index].defined(y) && (y != Infty)) {
+	    y = recovered_graphs[index][y];
+	    chromosome_set.insert(y);
 
 	    if (y != Infty) {
 	    	y = graph.get_obverse_vertex(y);
-	    	getchrset.insert(y);
-
+	    	chromosome_set.insert(y);
     	    	changer_lambda(y, false);
 	    }
 	}
-    }
+    } 
+#ifdef VERSION2
+    else if (current == graph.get_obverse_vertex(previous) && circular) {
+      return Chromosome();
+    } 
+#endif
 
     return Chromosome(path, circular);
 }
-
-template<class graph_t>
-void RecoveredGenomes<graph_t>::splitchr(const partgraph_t& PG, Genome& AllChr, std::list<std::set<vertex_t> >& CircChr) {
-
-    if (&CircChr != &pg_empty) { 
-	CircChr.clear();
-    } 
-
-    std::unordered_set<vertex_t> processed;
-    std::string name_chr("chr");
-    size_t count = 1; 
-
-    for(const auto &x : graph) { 
-	if (processed.find(x) == processed.end()) { 
-		std::set<vertex_t> getchrset;
-	        Chromosome chromosome = getchr(PG, x, getchrset);
-	
-		AllChr.insert(name_chr + toString(count++), chromosome);
-
-	        std::copy(getchrset.begin(), getchrset.end(), std::inserter(processed, processed.end()));
-	
-		if (chromosome.is_circular() && (&CircChr != &pg_empty)) {
-		    CircChr.push_back(getchrset);
-		}
-	} 
-    }
-}
-
-template<class graph_t>
-std::pair<size_t, size_t> RecoveredGenomes<graph_t>::numchr(const partgraph_t& PG) {
-    Genome AllChr;
-    std::list<std::set<vertex_t> > CircChr;
-    splitchr(PG, AllChr, CircChr);
-    return std::make_pair(AllChr.count_chromosome(), CircChr.size());
-}
-
 #endif 
 

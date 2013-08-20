@@ -1,5 +1,5 @@
 /* 
-** Module: MGRA main body
+** Module: MGRA 2.0 main body
 **
 ** This file is part of the 
 ** Multiple Genome Rearrangements and Ancestors (MGRA) 
@@ -19,13 +19,10 @@
 #include "reader.h"
 #include "algo/Algorithm.h"
 #include "Wgenome.h"
+#include "RecoveredGenomes.h"
 
 std::vector<std::string> genome_match::number_to_genome;
 genome_match::gen2num genome_match::genome_to_number;   
-
-typedef std::list<TwoBreak<Mcolor> > transform_t;
-
-#include "RecoveredGenomes.h"
 
 void tell_root_besides(const mbgraph_with_history<Mcolor>& graph) {
   // tell where the root resides
@@ -51,8 +48,6 @@ void tell_root_besides(const mbgraph_with_history<Mcolor>& graph) {
   std::clog << std::endl;
 }
 
-
-////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[]) {
   std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) ver. 1.5" << std::endl;
   std::cout << "(c) 2008,12 by Max Alekseyev <maxal@cse.sc.edu>" << std::endl;
@@ -76,7 +71,7 @@ int main(int argc, char* argv[]) {
   genome_match::init_name_genomes(PI, genomes); //FIXME: IT'S DEBUG
 
   for(size_t i = 0; i < genomes.size(); ++i) { 
-	std::clog << "Genome " << PI.get_priority_name(i) << " blocks: " << genomes[i].size() << std::endl;
+    std::clog << "Genome " << PI.get_priority_name(i) << " blocks: " << genomes[i].size() << std::endl;
   } 
 
   std::shared_ptr<mbgraph_with_history<Mcolor> > graph(new mbgraph_with_history<Mcolor>(genomes, PI)); 
@@ -96,43 +91,41 @@ int main(int argc, char* argv[]) {
   if (PI.get_target().empty()) {
     for(auto it = graph->cbegin_local_graphs(); it != graph->cend_local_graphs() - 1; ++it) { 
       if (*it != *(it + 1)) {
-	std::cout << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; //FIXME clog
+	std::clog << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; 
 	exit(1);
       }
     }
   } 
 
-#ifndef VERSION2 
-  RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target());	
-	
-  if (!PI.get_target().empty()) {
-    Genome genome = reductant.get_genomes()[0]; 
-    writer::Wgenome<std::set<std::pair<path_t, bool> > > writer_genome; 
-    writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(PI.get_target()), genome, PI.get_target().empty());
-  } else {  /* empty target */
-    size_t i = 0;
-    //std::vector<Genome> genomes = reductant.get_genomes();
-    std::vector<transform_t> RT = reductant.get_history();
-    for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im, ++i) {
-      Genome genome; 
-      reductant.splitchr(reductant.get_graph(i), genome, reductant.pg_empty);
+  RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target(), main_algo.get_removing_edges());	
 
-      writer::Wgenome<std::set<std::pair<path_t, bool> > > writer_genome; 
-      writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(*im), genome, PI.get_target().empty());
-        
-      //writer_genome.save_genom_in_text_format(genome_match::mcolor_to_name(*im), genomes[i], PI.get_target().empty());
-        
+  if (PI.get_target().empty()) {
+    size_t i = 0;
+    auto recover_transformation = reductant.get_history();
+    for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im, ++i) {
       std::ofstream tr((genome_match::mcolor_to_name(*im) + ".trs").c_str());
-      for(const auto &event : RT[i]) {
-	tr << event.get_arc(0).first << " " << event.get_arc(0).second << "\t" 
-	   << event.get_arc(1).first << " " << event.get_arc(1).second << "\t" 
-  	   << genome_match::mcolor_to_name(event.get_mcolor()) << std::endl;
+      for(const auto &event : recover_transformation[i]) {
+	tr << "(" << event.get_arc(0).first << ", " << event.get_arc(0).second << ") x (" 
+	   << event.get_arc(1).first << ", " << event.get_arc(1).second << ") "  << genome_match::mcolor_to_name(event.get_mcolor()); 
+
+	if (event.get_arc(0).first != Infty && event.get_arc(0).second != Infty && event.get_arc(1).first != Infty && event.get_arc(1).second != Infty) { 
+	  if (event.get_arc(0).first == graph->get_obverse_vertex(event.get_arc(1).first) || event.get_arc(0).second == graph->get_obverse_vertex(event.get_arc(1).second)) {
+	    tr << " # deletion"; 
+	  } else if (event.get_arc(0).first == graph->get_obverse_vertex(event.get_arc(0).second) || event.get_arc(1).first == graph->get_obverse_vertex(event.get_arc(1).second)) {
+	    tr << " # insertion"; 
+	  } 
+	}
+	tr << std::endl;  
       }
       tr.close(); 
-    }
+    } 
   }
-#endif
 
+//#ifndef VERSION2  	
+  writer::Wgenome<Genome> writer_genome;
+  writer_genome.save_genomes(reductant.get_genomes(), PI.get_target().empty()); 
+//#endif
+      
   return 0;
 }
 

@@ -74,22 +74,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(const graph_t& graph, const conf_t
 template<class graph_t, class conf_t>
 void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const conf_t& cfg, size_t stage) { 
   std::string dotname = cfg.get_graphname() + toString(stage);
-
-  equivalence<vertex_t> CC; // connected components
-  		
-  for(const auto &x : graph) { 
-    CC.addrel(x, x); 
-  } 
-  
-  for(auto lc = graph.cbegin_local_graphs(); lc != graph.cend_local_graphs(); ++lc) { 
-    for(auto il = lc->cbegin(); il != lc->cend(); ++il) {
-      CC.addrel(il->first, il->second);
-    }
-  }
-
-  CC.update();    
-  
-  std::map<std::string, std::set<std::string> > components = CC.get_eclasses<std::set<std::string> >(); 
+  std::map<vertex_t, std::set<vertex_t> > components = graph.split_on_components(); 
   
   size_t i = 0; 
   for(auto it = components.cbegin(); it != components.cend(); ++it) { 

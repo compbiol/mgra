@@ -39,6 +39,7 @@ struct mbgraph_with_colors: public MBGraph {
   Mularcs<mcolor_t> get_adjacent_multiedges1(const vertex_t& u, const std::map<arc_t, mcolor_t>& viewed_edges, bool split_bad_colors = false) const; 
 
   std::set<mcolor_t> split_color(const mcolor_t& color, bool only_two = true) const;
+  std::map<vertex_t, std::set<vertex_t> > split_on_components(bool not_drop_complete_edge = true) const;
   bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
 
   inline mcolor_t get_complete_color() const {
@@ -99,7 +100,6 @@ protected:
   std::map<mcolor_t, mcolor_t> compliment_colors;
   std::set<mcolor_t> T_consistent_colors;
   std::set<mcolor_t> vec_T_consistent_colors;
-  static std::set<arc_t> pg_empty;
 }; 
 
 template<class mcolor_t>
@@ -191,10 +191,8 @@ bool mbgraph_with_colors<mcolor_t>::is_duplication_vertex(const vertex_t& v) con
       }
     } 
   }  
-
   return false; 
 } 
-
 
 template<class mcolor_t>
 Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors, bool only_two) const { 
@@ -342,5 +340,31 @@ bool mbgraph_with_colors<mcolor_t>::are_adjacent_branches(const mcolor_t& mcolor
   return false;
 }
 
+template<class mcolor_t>
+std::map<vertex_t, std::set<vertex_t> > mbgraph_with_colors<mcolor_t>::split_on_components(bool not_drop_complete_edge) const { 
+  equivalence<vertex_t> CC; // connected components
+
+  for(const auto &x : vertex_set) {
+    if (!not_drop_complete_edge) { 
+	CC.addrel(x, x);
+    } 
+
+    Mularcs<mcolor_t> mularcs = this->get_adjacent_multiedges(x); 
+
+    if (not_drop_complete_edge && mularcs.size() == 1 && mularcs.cbegin()->second == get_complete_color()) { 
+      continue; // ignore complete multiedges
+    } 
+
+    for(auto im = mularcs.cbegin(); im != mularcs.cend(); ++im) {    
+      if (im->first != Infty) { 
+	CC.addrel(x, im->first);
+      } 
+    }
+  }
+		    
+  CC.update();
+   
+  return CC.get_eclasses<std::set<vertex_t> >(); 
+}
 #endif
 

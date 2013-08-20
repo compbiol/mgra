@@ -43,10 +43,6 @@ struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> {
   void apply_two_break(const TwoBreak<mcolor_t>& break2, bool record = true);
   //bool is_linear() const; 
 
-  inline size_t get_count_2breaks() const { 
-    return break2_history.size(); 
-  } 
-
   inline typename std::list<TwoBreak<mcolor_t> >::const_reverse_iterator crbegin_2break_history() const { 
     return break2_history.crbegin();
   } 
@@ -57,19 +53,7 @@ struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> {
 
   //Insertion/Deletion operations
   void apply_ins_del(const InsDel<mcolor_t>& insdel, bool record = true);
-
-  inline size_t get_count_insdel() const { 
-    return insdel_history.size(); 
-  } 
-
-  inline typename std::list<InsDel<mcolor_t> >::const_iterator begin_insdel_history() const { 
-    return insdel_history.cbegin();
-  } 
-	
-  inline typename std::list<InsDel<mcolor_t> >::const_iterator end_insdel_history() const { 
-    return insdel_history.cend(); 
-  }
-
+ 
   //(Reverse) tandem duplication operations
   void apply_tandem_duplication(const TandemDuplication<mcolor_t>& dupl, bool record = true);
 

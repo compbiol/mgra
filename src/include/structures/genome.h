@@ -83,6 +83,14 @@ struct Genome {
   typedef std::pair<std::string, size_t> coord_t; // (contig, offset)
   typedef std::pair<orf_t, int> gene_t;
   
+  Genome() {
+  } 
+
+  Genome(const std::string& nm) 
+  : name(nm) 
+  {
+  } 
+
   inline void insert(const orf_t& gene, const std::string& chromosome, size_t offset, int sign, size_t start, size_t end) {
     const coord_t& p = std::make_pair(chromosome, offset);
     const gene_t& orf = std::make_pair(gene, sign);   
@@ -109,6 +117,10 @@ struct Genome {
     return main_genome.size();
   } 
 
+  inline std::string get_name() const {  
+    return name;
+  } 
+
   inline std::map<std::string, Chromosome>::const_iterator begin() const { 
     return main_genome.cbegin();	
   } 
@@ -117,6 +129,7 @@ struct Genome {
     return main_genome.cend();
   } 
 private: 
+  std::string name;
   std::map<std::string, Chromosome> main_genome;
 };
 

@@ -49,7 +49,7 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
       path.push_back(current);
     } 
 
-    if (processed.find(current) == processed.end() && !graph->is_duplication_vertex(current) && !graph->is_indel_vertex(current)) {     
+    if (processed.find(current) == processed.end() && !graph->is_duplication_vertex(current)) {     
       processed.insert(current);
       Mularcs<Mcolor> new_edges = graph->get_adjacent_multiedges(current);
       Mcolor previous_color = new_edges.get_multicolor(previous); 
@@ -61,12 +61,10 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
 	  previous = current;
 	  current = new_edges.cbegin()->first;  
 	  stop = true;
-	} else {	
-	  if (graph->is_T_consistent_color(new_edges.cbegin()->second) && graph->is_T_consistent_color(previous_color)) { 
-	    previous = current;
-	    current = new_edges.cbegin()->first; 
-	    stop = true;
-	  } 
+	} else if (graph->is_T_consistent_color(new_edges.cbegin()->second) && graph->is_T_consistent_color(previous_color)) { 
+	  previous = current;
+	  current = new_edges.cbegin()->first; 
+	  stop = true; 
 	}  
       } 
     }

@@ -1,111 +1,95 @@
 #ifndef DECIRCULARIZETER_H_
 #define DECIRCULARIZETER_H_  
 
+typedef std::list<TwoBreak<Mcolor> > transform_t;
+
 template<class graph_t>
 struct Decircularizeter {
-  Decircularizeter(const graph_t& gr) 
+ 
+  Decircularizeter(const graph_t& gr, const std::set<arc_t>& b_edges) 
   : graph(gr)
+  , bad_edges(b_edges)
   { 
   }
 
-  transform_t decircularize(partgraph_t& PG, transform_t& TG);
+  transform_t decircularize(partgraph_t& local_graph, transform_t& transform);
+  size_t count_circular_chromosome(const partgraph_t& local_graph) const;
+
 private: 
-  Chromosome getchr(const partgraph_t& PG, const vertex_t& x, std::set<vertex_t>& getchrset);
-  void splitchr(const partgraph_t& PG, Genome& AllChr, std::list<std::set<vertex_t> >& CircChr);
-  std::pair<size_t, size_t> numchr(const partgraph_t& PG); 
+  bool is_circular_chromosome(const partgraph_t& local_graph, const vertex_t& x, std::unordered_set<vertex_t>& processed) const;
 private: 
   const graph_t& graph;
-//partgraph_t local_genome;
-//transform_t local_transform;
+  const std::set<arc_t>& bad_edges;
 }; 
 
 template<class graph_t>
-Chromosome Decircularizeter<graph_t>::getchr(const partgraph_t& PG, const vertex_t& x, std::set<vertex_t>& getchrset) {
-    std::list<std::pair<vertex_t, int> > path;
-    bool circular = false;
-    getchrset.insert(x);
+bool Decircularizeter<graph_t>::is_circular_chromosome(const partgraph_t& local_graph, const vertex_t& x, std::unordered_set<vertex_t>& processed) const {
+  bool circular = false;
+  bool have_deletion = false;
+  vertex_t current = x; 
+  vertex_t previous = x;
+  processed.insert(x);
 
-    auto changer_lambda = [&] (const vertex_t& t, bool flag) -> void {
-  	if (flag) { 
-	(*t.rbegin() == 't')?path.push_back(std::make_pair(t.substr(0, t.size() - 1), -1)):path.push_back(std::make_pair(t.substr(0, t.size() - 1), 1));
-	} else { 
-	(*t.rbegin() == 't')?path.push_front(std::make_pair(t.substr(0, t.size() - 1), 1)):path.push_front(std::make_pair(t.substr(0, t.size() - 1), -1));	
-	}  
-    };
+  do { 
+    previous = current; 
+    current = graph.get_obverse_vertex(previous);
+    /*if (bad_edges.count(std::make_pair(previous, current)) != 0 || bad_edges.count(std::make_pair(current, previous)) != 0) {
+      have_deletion = true;
+    }*/
+    if (processed.count(current) == 0) {
+      processed.insert(current);
+      if (local_graph.defined(current)) {
+        previous = current; 
+        current = local_graph[previous];
+        /*if (bad_edges.count(std::make_pair(previous, current)) != 0 || bad_edges.count(std::make_pair(current, previous)) != 0) {
+          have_deletion = true;
+        }*/
+        if (processed.count(current) != 0) {
+          circular = true;
+        } 
+        processed.insert(current); 
+      }
+    } else { 
+      circular = true;
+    } 
+  } while ((current != Infty) && local_graph.defined(current) && !circular);
 
-    for(vertex_t y = graph.get_obverse_vertex(x); ; ) {
-	if (getchrset.find(y) != getchrset.end()) {
-	    circular = true;
-	    break; // circ
-	}
-	getchrset.insert(y);
-
-    	changer_lambda(y, true);
-
-	if (!PG.defined(y)) { 
-	  break; // linear
-	} 
-
-	y = PG[y];
-
-	if (getchrset.find(y) != getchrset.end()) {
-	    circular = true;
-	    break; // circ
-	}
-	getchrset.insert(y);
-
-	if (y == Infty) { 
-		break;
-	} 
-	y = graph.get_obverse_vertex(y);
+  if (!circular && local_graph.defined(x)) {	
+    for (vertex_t y = local_graph[x]; local_graph.defined(y) && (y != Infty); y = local_graph[y]) {
+      processed.insert(y);
+      if (y != Infty) {
+    	y = graph.get_obverse_vertex(y);
+	processed.insert(y);
+      }
     }
+  } else if (current == graph.get_obverse_vertex(previous) && circular) {
+    have_deletion = true;
+  } 
+  
+  if (have_deletion) { 
+    return false;
+  } 
 
-    if (!circular && PG.defined(x)) {	
-	vertex_t y = x;
-	while (PG.defined(y) && (y != Infty)) {
-	    y = PG[y];
-	    getchrset.insert(y);
-
-	    if (y != Infty) {
-	    	y = graph.get_obverse_vertex(y);
-	    	getchrset.insert(y);
-
-    	    	changer_lambda(y, false);
-	    }
-	}
-    }
-
-    return Chromosome(path, circular);
+  return circular;
 }
 
 template<class graph_t>
-void Decircularizeter<graph_t>::splitchr(const partgraph_t& PG, Genome& AllChr, std::list<std::set<vertex_t> >& CircChr) {
-    std::unordered_set<vertex_t> processed;
-    std::string name_chr("chr");
-    size_t count = 1; 
-
-    for(const auto &x : graph) { 
-	if (processed.find(x) == processed.end()) { 
-		std::set<vertex_t> getchrset;
-	        Chromosome chromosome = getchr(PG, x, getchrset);
-	
-		AllChr.insert(name_chr + toString(count++), chromosome);
-
-	        std::copy(getchrset.begin(), getchrset.end(), std::inserter(processed, processed.end()));
-	
-		if (chromosome.is_circular()) {
-		    CircChr.push_back(getchrset);
-		}
-	} 
-    }
-}
-
-template<class graph_t>
-std::pair<size_t, size_t> Decircularizeter<graph_t>::numchr(const partgraph_t& PG) {
-    Genome AllChr;
-    std::list<std::set<vertex_t> > CircChr;
-    splitchr(PG, AllChr, CircChr);
-    return std::make_pair(AllChr.count_chromosome(), CircChr.size());
+size_t Decircularizeter<graph_t>::count_circular_chromosome(const partgraph_t& local_graph) const {
+  std::unordered_set<vertex_t> processed;
+  size_t count_chr = 0;
+  
+  for (const auto &x : graph) { 
+    if (processed.count(x) == 0) { 
+      std::unordered_set<vertex_t> chr_set;
+      bool circular = is_circular_chromosome(local_graph, x, chr_set); 
+      std::copy(chr_set.begin(), chr_set.end(), std::inserter(processed, processed.end()));
+      if (circular) {
+        ++count_chr; 
+      }
+    } 
+  }
+  
+  return count_chr;
 }
 
 /* Given a non-linear genome PG of a multicolor Q and a transformation into a linear genome,
@@ -120,7 +104,7 @@ transform_t Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_
     // decircularizing sub-transform that is removed
     transform_t D;
 
-    size_t CircSize = numchr(PG).second;
+    size_t CircSize = count_circular_chromosome(PG);
     if (CircSize == 0) {
 	return D;
     } 
@@ -134,7 +118,7 @@ transform_t Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_
     for(auto it = start; it != TG.end();) {
         it->apply_single(T);
 
-        size_t ccsize = numchr(T).second;
+        size_t ccsize = count_circular_chromosome(T);
 
 	if (ccsize >= CircSize) {
 	    ++it;
@@ -153,7 +137,7 @@ transform_t Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_
 
 //            outlog << "... trying to swap with " << s << endl;
 
-	    std::pair<vertex_t, vertex_t> p1, q1, p2, q2;
+	    arc_t p1, q1, p2, q2;
 
 	    bool usearc = false;
 
@@ -228,7 +212,7 @@ transform_t Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_
 		if (!C.empty()) {
 		    kt->inverse().apply_single(T);
 
-		    ccsize = numchr(T).second;
+		    ccsize = count_circular_chromosome(T);
 		}
 	    }
 
@@ -250,7 +234,7 @@ transform_t Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_
 
 	    TG.erase(TG.begin());
 
-	    CircSize = numchr(PG).second;
+	    CircSize = count_circular_chromosome(PG);
 
 	    if (CircSize == 0) { 
 	      break;

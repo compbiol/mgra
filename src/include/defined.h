@@ -18,6 +18,7 @@
 #include <sstream>
 
 #include <memory>
+#include <limits>
 #include <utility>
 #include <cassert>
 

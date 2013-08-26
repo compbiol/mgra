@@ -1,13 +1,13 @@
 #include "reader.h"
 
-std::vector<Genome> reader::read_genomes(const ProblemInstance<Mcolor>& cfg) { 
+std::vector<structure::Genome> reader::read_genomes(const ProblemInstance<Mcolor>& cfg) { 
 
   if (cfg.get_count_genomes() < 2) {
     std::cerr << "ERROR: at least two input genomes required" << std::endl;
     exit(1);
   }
 	
-  std::vector<Genome> genomes(cfg.get_count_genomes());
+  std::vector<genome_t> genomes(cfg.get_count_genomes());
 
   /*Reading file in current format*/
   if (cfg.get_blk_format() == "infercars") {
@@ -22,8 +22,7 @@ std::vector<Genome> reader::read_genomes(const ProblemInstance<Mcolor>& cfg) {
   return genomes;
 } 
 
-void reader::read_infercars(const ProblemInstance<Mcolor>& cfg, std::vector<Genome>& genome) {
-	
+void reader::read_infercars(const ProblemInstance<Mcolor>& cfg, std::vector<genome_t>& genome) {
   std::ifstream input(cfg.get_blk_file().c_str());
   if(!input) {
     std::cerr << "Unable to open " << cfg.get_blk_file() << std::endl;
@@ -87,7 +86,7 @@ void reader::read_infercars(const ProblemInstance<Mcolor>& cfg, std::vector<Geno
 }
 
 
-void reader::read_grimm(const ProblemInstance<Mcolor>& cfg, std::vector<Genome>& genome) {
+void reader::read_grimm(const ProblemInstance<Mcolor>& cfg, std::vector<genome_t>& genome) {
   std::ifstream input(cfg.get_blk_file().c_str());;
     
   if (!input) {
@@ -120,9 +119,9 @@ void reader::read_grimm(const ProblemInstance<Mcolor>& cfg, std::vector<Genome>&
 	istr >> gene;	
 	if (gene.empty()) {  
 	  break;
-	} else if (gene[0] == '$') { //FIXME
+	} else if (gene[0] == '$') {
 	  break;
-	} else if (gene[0] == '@') { //FIXME
+	} else if (gene[0] == '@') {
 	  genome[number_genome].registrate_circular_chr(chr);
 	  break;
 	} else {

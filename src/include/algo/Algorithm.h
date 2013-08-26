@@ -11,18 +11,21 @@ struct Algorithm {
 	: graph(gr) 
 	, canformQoo(true)
 	, split_bad_colors(false)
-        , max_size_component(25)
+        , max_size_component(28)
 	, write_stats("stats.txt") {  
 	} 
 
 	void convert_to_identity_bgraph(const ProblemInstance<Mcolor>& cfg);
 
-        std::map<Mcolor, std::set<arc_t> > get_removing_edges() const; 
+        edges_t get_bad_edges() const; 
 private: 
+        typedef event::TwoBreak<Mcolor> twobreak_t;
+        typedef event::InsDel<Mcolor> insertion_t;
+	typedef event::TandemDuplication<Mcolor> tandem_duplication_t;
+
 	//Stage 1: loop over vertices  
 	bool stage1(); 
-	vertex_t find_simple_path(path_t& path, std::unordered_set<vertex_t>& processed, const vertex_t& prev, const vertex_t& cur, bool is_next); 	
-	size_t process_simple_path(path_t& path);	
+	vertex_t find_simple_path(path_t& path, std::unordered_set<vertex_t>& processed, const vertex_t& prev, const vertex_t& cur, bool is_next); 	   size_t process_simple_path(path_t& path);	
 
 	//Stage 2: process H-subgraph
 	bool stage2();
@@ -54,6 +57,12 @@ private:
 	size_t calculate_cost(const vertex_t& y, const Mularcs<Mcolor>& mularcs_x, const Mularcs<Mcolor>& mulacrs_y); 
         std::set<arc_t> create_minimal_matching(const std::set<vertex_t>& vertex_set); 
 	size_t process_minimal_matching(const arc_t& matching);
+
+        //Stage 11: Process less relible path
+	bool stage7();
+        vertex_t how_many_paths(const Mularcs<Mcolor>& mularcs, const Mcolor& target_color);
+	vertex_t find_less_simple_path(path_t& path, std::unordered_set<vertex_t>& processed, const vertex_t& prev, const vertex_t& cur, Mcolor vec_color, bool is_next); 	
+	size_t convert_less_simple_path(path_t& path);	
 
 private: 
   std::shared_ptr<graph_t> graph; 
@@ -147,13 +156,26 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
       isChanged = stage1();
       saveInfoLambda(7);
     }
-   
+
     if ((cfg.get_stages() >= 8) && !isChanged) {
       std::cerr << "Stage: 8" << std::endl;
       isChanged = stage6();
       saveInfoLambda(8);
     }
 
+    /*if ((cfg.get_stages() >= 9) && !isChanged) {
+      std::cerr << "Stage: 9" << std::endl;
+      isChanged = stage7();
+      saveInfoLambda(9);
+    }*/
+
+    /*if ((cfg.get_stages() >= 10) && !isChanged) {
+      std::cerr << "Stage: 10" << std::endl;
+      isChanged = stage5_2();
+      saveInfoLambda(10);
+    }*/
+   
+    
     /*if ((cfg.get_stages() >= 4) && !isChanged) { 
       std::cerr << "Stage: 4 (tandem duplication stage)" << std::endl;
 
@@ -233,34 +255,23 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor
   }	
 
   write_dots.save_dot(*graph, cfg, 99);
-  write_stats.print_history_statistics(*graph, get_removing_edges());
+  write_stats.print_history_statistics(*graph, get_bad_edges());
  
-#ifdef VERSION3
-  write_dots.save_components(*graph, cfg, 5);
+#ifdef VERSION2
+  write_dots.save_components(*graph, cfg, 9);
 #endif
 }          
 
 template<class graph_t>
-std::map<Mcolor, std::set<arc_t> > Algorithm<graph_t>::get_removing_edges() const { 
-  std::map<Mcolor, std::set<arc_t> > answer;
+edges_t Algorithm<graph_t>::get_bad_edges() const { 
+  edges_t answer; 
   for (const auto &edge: insertions) { 
-    answer[edge.second].insert(edge.first);
+	answer.insert(edge.first.first, edge.first.second);
+  } 
 
-    /*auto colors = graph->split_color(graph->get_complement_color(edge.second), false);
-    for (const auto &col : colors) {  
-      answer[col].insert(edge.first);
-    }*/
-  } 
   for (const auto &edge: postponed_deletions) {
-    auto colors = graph->split_color(edge.second, false);
-    for (const auto &col : colors) {  
-      answer[col].insert(edge.first);
-    }
-    colors = graph->split_color(graph->get_complement_color(edge.second), false);
-    for (const auto &col : colors) {  
-      answer[col].insert(edge.first);
-    } 
-  } 
+	answer.insert(edge.first.first, edge.first.second);
+  }
   return answer;
 } 
 
@@ -270,7 +281,6 @@ std::map<Mcolor, std::set<arc_t> > Algorithm<graph_t>::get_removing_edges() cons
 #include "Stage4.h"
 #include "Stage5.h"
 #include "Stage6.h"
-
-//#include "Stage99.h"
+#include "Stage7.h"
 
 #endif

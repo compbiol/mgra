@@ -4,7 +4,7 @@
 template<class graph_t>
 size_t Algorithm<graph_t>::calculate_cost(const vertex_t& y, const Mularcs<Mcolor>& mularcs_x, const Mularcs<Mcolor>& mularcs_y) { 
   typedef std::pair<std::pair<vertex_t, Mcolor>, size_t> colacr_t;
-  equivalence<colacr_t> equiv; 
+  utility::equivalence<colacr_t> equiv; 
 
   for (auto arc_x = mularcs_x.cbegin(); arc_x != mularcs_x.cend(); ++arc_x) { 
     if (arc_x->first != y) { 
@@ -44,10 +44,10 @@ std::set<arc_t> Algorithm<graph_t>::create_minimal_matching(const std::set<verte
 
   for(const auto& v : vertex_set) { 
     Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(v); 
-    Mularcs<Mcolor> mularcs_x = graph->get_adjacent_multiedges(v, true, false); 
+    Mularcs<Mcolor> mularcs_x = graph->get_adjacent_multiedges_with_info(v, true, false, false); 
     for (const auto& arc: mularcs) {
       if (arc.first != Infty && weight_edges.count(std::make_pair(v, arc.first)) == 0 && weight_edges.count(std::make_pair(arc.first, v)) == 0) { 
-	Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges(arc.first, true, false);
+	Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges_with_info(arc.first, true, false, false);
 	mularcs_y.erase(v);
 	//std::cerr << "Calculate cost " << v << " " << arc.first << " have " << calculate_cost(arc.first, mularcs_x, mularcs_y) << std::endl;
 	weight_edges.insert(std::make_pair(std::make_pair(v, arc.first), calculate_cost(arc.first, mularcs_x, mularcs_y)));
@@ -117,13 +117,15 @@ template<class graph_t>
 size_t Algorithm<graph_t>::process_minimal_matching(const arc_t& matching) { 
   size_t num_rear = 0; 
   
-  Mularcs<Mcolor> mularcs_x = graph->get_adjacent_multiedges(matching.first, true, false);
+  Mularcs<Mcolor> mularcs_x = graph->get_adjacent_multiedges_with_info(matching.first, true, false, false);
   mularcs_x.erase(matching.second);
-  Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges(matching.second, true, false);
+  Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges_with_info(matching.second, true, false, false);
   mularcs_y.erase(matching.first);
 
+  //std::cerr << "Start process " << matching.first << " " << matching.second << std::endl;
+
   typedef std::pair<std::pair<vertex_t, Mcolor>, size_t> colacr_t;
-  equivalence<colacr_t> equiv; 
+  utility::equivalence<colacr_t> equiv; 
 
   for (auto arc_x = mularcs_x.cbegin(); arc_x != mularcs_x.cend(); ++arc_x) { 
     for (auto arc_y =  mularcs_y.cbegin(); arc_y != mularcs_y.cend(); ++arc_y) { 
@@ -138,46 +140,44 @@ size_t Algorithm<graph_t>::process_minimal_matching(const arc_t& matching) {
   std::map<colacr_t, std::set<colacr_t> > classes = equiv.get_eclasses<std::set<colacr_t> >(); 
   
   for (const auto &color_set : classes) { 
-    std::map<vertex_t, Mcolor> left; 
-    std::map<vertex_t, Mcolor> right; 
+    std::multimap<vertex_t, Mcolor> left; 
+    std::multimap<vertex_t, Mcolor> right; 
     for (const auto &color : color_set.second) { 
       if (color.second == 0) {
-        if (left.count(color.first.first) == 0) {
-	  left.insert(color.first);
-        } else { 
-          left[color.first.first] = Mcolor(left[color.first.first], color.first.second, Mcolor::Union);
-        } 
+        left.insert(color.first);
       } else {
-        if (right.count(color.first.first) == 0) {
-	  right.insert(color.first);
-        } else { 
-          right[color.first.first] = Mcolor(right[color.first.first], color.first.second, Mcolor::Union);
-        } 
+        right.insert(color.first);
       } 
     }
-
+	
     //std::cerr << "go left" << std::endl;
     for (auto l = (++left.cbegin()); l != left.cend(); ++l) { 
-	vertex_t v = graph->get_adjacent_multiedges(left.cbegin()->first, true, false).get_vertex(l->second);
-	assert(!v.empty());
-	graph->apply_two_break(TwoBreak<Mcolor>(left.cbegin()->first, v, matching.first, l->first, l->second));
+        if (left.cbegin()->first != l->first) {
+	  vertex_t v = graph->get_adjacent_multiedges_with_info(left.cbegin()->first, true, false, false).get_vertex(l->second); 
+          assert(!v.empty());
+	  graph->apply_two_break(twobreak_t(left.cbegin()->first, v, matching.first, l->first, l->second));
+          ++num_rear;
+        } 
 	left.begin()->second = Mcolor(left.cbegin()->second, l->second, Mcolor::Union); 
-	++num_rear;
+	
     } 
 
     //std::cerr << "go right" << std::endl;
     for (auto r = (++right.cbegin()); r != right.cend(); ++r) { 
-	vertex_t v = graph->get_adjacent_multiedges(right.cbegin()->first, true, false).get_vertex(r->second);
+      //std::cerr << right.cbegin()->first << " " << r->first << " " << genome_match::mcolor_to_name(r->second) << std::endl;
+      if (right.cbegin()->first != r->first) {
+	vertex_t v = graph->get_adjacent_multiedges_with_info(right.cbegin()->first, true, false, false).get_vertex(r->second);
 	assert(!v.empty()); 
         //std::cerr << right.cbegin()->first << " " << v << " " << matching.second << " " << r->first << " " << genome_match::mcolor_to_name(r->second) << std:: endl;
-	graph->apply_two_break(TwoBreak<Mcolor>(right.cbegin()->first, v, matching.second, r->first, r->second));
-	right.begin()->second = Mcolor(right.cbegin()->second, r->second, Mcolor::Union);
+	graph->apply_two_break(twobreak_t(right.cbegin()->first, v, matching.second, r->first, r->second));
 	++num_rear;
+      } 
+      right.begin()->second = Mcolor(right.cbegin()->second, r->second, Mcolor::Union);
     } 
     //std::cerr << "finally" << std::endl;
     assert(right.cbegin()->second == left.cbegin()->second);
     assert(graph->is_vec_T_consistent_color(right.cbegin()->second));
-    graph->apply_two_break(TwoBreak<Mcolor>(matching.first, left.cbegin()->first, matching.second, right.cbegin()->first, left.cbegin()->second));
+    graph->apply_two_break(twobreak_t(matching.first, left.cbegin()->first, matching.second, right.cbegin()->first, left.cbegin()->second));
     ++num_rear;
   } 
 

@@ -1,14 +1,13 @@
 #ifndef SYM_MULTIHASHMAP_H_
 #define SYM_MULTIHASHMAP_H_
 
-#include <functional>
+namespace utility { 
 
 template<class item_class, class Hash = std::hash<item_class> >
 struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class, Hash> {
   typedef std::unordered_multimap<item_class, item_class, Hash> multi_hashmap;
   typedef typename multi_hashmap::const_iterator const_iterator;
 
-  using multi_hashmap::end;
   using multi_hashmap::find; //REMOVE
   using multi_hashmap::count;
   using multi_hashmap::equal_range;
@@ -19,6 +18,16 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
 
   bool defined(const item_class& x) const {
     return (multi_hashmap::count(x) != 0);
+  }
+
+  bool defined(const item_class& x, const item_class& y) const {
+    std::pair<const_iterator, const_iterator> range = multi_hashmap::equal_range(x);
+    for (auto it = range.first; it != range.second; ++it) { 
+      if (it->second == y) { 
+	return true; 
+      } 
+    } 
+    return false;
   }
 
   void insert(const item_class& x, const item_class& y) {
@@ -59,7 +68,7 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
 
   const item_class& operator[] (const item_class& x) const { //FIXME deleted
     auto ix = find(x);
-    if (ix == end()) {
+    if (ix == multi_hashmap::end()) {
       std::cerr << "sym_multi_hashmap::operator[] error: undefined element " << x << std::endl;
       abort();
     }
@@ -78,8 +87,11 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
     multi_hashmap::clear();
     card = 0;
   }
+
 private:
   size_t card;
 };
+
+} 
 
 #endif

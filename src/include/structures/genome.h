@@ -1,27 +1,7 @@
-/* 
-** Module: Genome generic class
-** Version: 1.1
-**
-** This file is part of the 
-** Multiple Genome Rearrangements and Ancestors (MGRA) 
-** reconstruction software. 
-** 
-** Copyright (C) 2008,09 by Max Alekseyev <maxal@cse.sc.edu> 
-**. 
-** This program is free software; you can redistribute it and/or 
-** modify it under the terms of the GNU General Public License 
-** as published by the Free Software Foundation; either version 2 
-** of the License, or (at your option) any later version. 
-**. 
-** You should have received a copy of the GNU General Public License 
-** along with this program; if not, see http://www.gnu.org/licenses/gpl.html 
-*/
-
-
 #ifndef GENOME_H_
 #define GENOME_H_
 
-#include "defined.h"
+namespace structure { 
 
 struct Chromosome { 
   typedef std::string orf_t;
@@ -82,6 +62,7 @@ struct Genome {
   typedef std::string orf_t;
   typedef std::pair<std::string, size_t> coord_t; // (contig, offset)
   typedef std::pair<orf_t, int> gene_t;
+  typedef structure::Chromosome chromosome_t; 
   
   Genome() {
   } 
@@ -97,7 +78,7 @@ struct Genome {
     main_genome[chromosome].insert(gene, offset, sign);
   }   
 
-  inline void insert(const std::string& name_chr, const Chromosome& chr) {
+  inline void insert(const std::string& name_chr, const chromosome_t& chr) {
     main_genome.insert(std::make_pair(name_chr, chr)); 
   } 
 	
@@ -107,9 +88,9 @@ struct Genome {
 
   inline size_t size() const { 
     size_t sz = 0; 
-    for (const auto &chromosome: main_genome) { 
+    std::for_each(main_genome.begin(), main_genome.end(), [&](const std::pair<std::string, chromosome_t> chromosome) {
       sz += chromosome.second.size(); 
-    } 
+    });
     return sz; 
   }
 
@@ -121,16 +102,17 @@ struct Genome {
     return name;
   } 
 
-  inline std::map<std::string, Chromosome>::const_iterator begin() const { 
+  inline std::map<std::string, chromosome_t>::const_iterator begin() const { 
     return main_genome.cbegin();	
   } 
 
-  inline std::map<std::string, Chromosome>::const_iterator end() const { 
+  inline std::map<std::string, chromosome_t>::const_iterator end() const { 
     return main_genome.cend();
   } 
 private: 
   std::string name;
-  std::map<std::string, Chromosome> main_genome;
+  std::map<std::string, chromosome_t> main_genome;
 };
 
+} 
 #endif

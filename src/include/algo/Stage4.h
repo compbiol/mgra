@@ -40,13 +40,13 @@ bool Algorithm<graph_t>::stage4_td() {
 	    if (graph->is_vec_T_consistent_color(color)) { 
 //std::cerr << "->(" << duplication.rbegin()->first << "," << duplication.rbegin()->second << ") is a vecTC. Process" << std::endl; 
 	      //++vtc; 
-	      TandemDuplication<Mcolor> dupl(duplication, color, true, false);
+	      tandem_duplication_t dupl(duplication, color, true, false);
 	      graph->apply_tandem_duplication(dupl);	
 	      ++number_dupl;
 	    } else if (!graph->is_vec_T_consistent_color(graph->get_complement_color(color)) && split_bad_colors) {
 		std::set<Mcolor> colors = graph->split_color(color);
 		for(const auto &col: colors) {
-		  TandemDuplication<Mcolor> dupl(duplication, col, true, false);
+		  tandem_duplication_t dupl(duplication, col, true, false);
 	          graph->apply_tandem_duplication(dupl);	
 	          ++number_dupl;
 		} 
@@ -142,14 +142,14 @@ bool Algorithm<graph_t>::stage4_rtd() {
       }
 
       if (graph->is_vec_T_consistent_color(color)) { 
-	TandemDuplication<Mcolor> dupl(duplication, color, true, true);
+	tandem_duplication_t dupl(duplication, color, true, true);
 	graph->apply_tandem_duplication(dupl);
 	++number_dupl;
 	//std::cerr << " processed" << std::endl;
       } else if (!graph->is_vec_T_consistent_color(graph->get_complement_color(color)) && split_bad_colors) {
 	std::set<Mcolor> colors = graph->split_color(color);
 	for (const auto &col: colors) {
-		TandemDuplication<Mcolor> dupl(duplication, col, true, true);
+		tandem_duplication_t dupl(duplication, col, true, true);
 		graph->apply_tandem_duplication(dupl);
 		++number_dupl;
 	} 
@@ -193,14 +193,14 @@ bool Algorithm<graph_t>::stage4_conv_to_td() {
 	  if (x != y && x != graph->get_obverse_vertex(y)) {
 	  	if (graph->is_vec_T_consistent_color(color)) { 
 			//std::cerr << a1 << " " << x << " " << a2 << " " << y << std::endl;
-			TwoBreak<Mcolor> t(a1, x, a2, y, color);
+			twobreak_t t(a1, x, a2, y, color);
 			graph->apply_two_break(t);
 			++number_rear;
 	  	} else if (!graph->is_vec_T_consistent_color(graph->get_complement_color(color)) && split_bad_colors) {
-			std::cerr << a1 << " " << x << " " << a2 << " " << y << std::endl;
+			//std::cerr << a1 << " " << x << " " << a2 << " " << y << std::endl;
 			std::set<Mcolor> colors = graph->split_color(color);
 			for (const auto& col: colors) { 
-				TwoBreak<Mcolor> t(a1, x, a2, y, col);
+				twobreak_t t(a1, x, a2, y, col);
 				graph->apply_two_break(t);
 				++number_rear;
 			}

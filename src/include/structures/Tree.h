@@ -3,10 +3,12 @@
 
 #include "mcolor.h"
 
+//namespace structure { 
+
 template<class type_data>
 struct BinaryTree { 
   struct Node { 
-    //std::vector<std::string> data;     
+    std::string name;   
     std::vector<size_t> data;
     std::shared_ptr<Node> left_child;    
     std::shared_ptr<Node> right_child; 
@@ -46,6 +48,16 @@ private:
 
 template<class type_data>
 BinaryTree<type_data>::Node::Node(const std::string& tree, const std::unordered_map<std::string, size_t>& genome_number) {
+  int i = 0; 
+  for (i = tree.length() - 1; tree[i] != ':' && tree[i] != ')' && i >= 0;--i) 
+    ; 
+
+  std::string new_tree = tree; 
+  if (i > 0 && tree[i] == ':') {
+    name = tree.substr(i + 1, tree.length() - i - 1);
+    new_tree = tree.substr(0, i); 
+  } 
+
   if (tree[0] == '(') {
     //non-trivial tree
     if (tree[tree.size() - 1] != ')') {
@@ -75,15 +87,32 @@ BinaryTree<type_data>::Node::Node(const std::string& tree, const std::unordered_
       exit(3);
     }
   } else {
-    //single node
-    for(size_t j = 0; j < tree.size(); ++j) {
-      std::string c = tree.substr(j, 1);
-      if (genome_number.count(c) == 0) {
-	std::cerr << "ERROR: Unknown genome in (sub)tree: " << tree << std::endl;
-	exit(3);
+    /*
+    if (new_tree[0] == '{' && new_tree[new_tree.size() - 1] == '}') {
+      size_t start = 1;
+      for(size_t j = 1; j < new_tree.size() - 1; ++j) {
+        if (new_tree[j] == ',') {
+          std::string str = new_tree.substr(start, new_tree.size() - start - 1);
+          data.push_back(genome_number.find(str)->second);
+          start = j + 1;  
+        } 
+      } 
+    } else {
+      if (genome_number.count(new_tree) == 0) {
+	data.push_back(genome_number.find(new_tree)->second);
+      } 
+    } 
+    */
+      //single node
+      for(size_t j = 0; j < tree.size(); ++j) {
+        std::string c = tree.substr(j, 1);
+        if (genome_number.count(c) == 0) {
+	  std::cerr << "ERROR: Unknown genome in (sub)tree: " << tree << std::endl;
+	  exit(3);
+        }
+        data.push_back(genome_number.find(c)->second);
       }
-      data.push_back(genome_number.find(c)->second);
-    }
+   
     left_child = nullptr;
     right_child = nullptr;
   }
@@ -163,4 +192,6 @@ Mcolor BinaryTree<type_data>::Node::get_dicolors(std::set<Mcolor>& dicolor) cons
 
 	return result;
 } 
+
+//}
 #endif

@@ -1,23 +1,7 @@
-/* 
-** Module: Insertion/deletions operation support
-**
-** This file is part of the 
-** Multiple Genome Rearrangements and Ancestors (MGRA) 
-** reconstruction software. 
-** 
-** Copyright (C) 2008 - 2013 by Max Alekseyev <maxal@cse.sc.edu>
-**. 
-** This program is free software; you can redistribute it and/or 
-** modify it under the terms of the GNU General Public License 
-** as published by the Free Software Foundation; either version 2 
-** of the License, or (at your option) any later version. 
-**. 
-** You should have received a copy of the GNU General Public License 
-** along with this program; if not, see http://www.gnu.org/licenses/gpl.html 
-*/
-
 #ifndef INSDEL_H_
 #define INSDEL_H_
+
+namespace event { 
 
 template<class mcolor_t>
 struct InsDel {
@@ -54,29 +38,20 @@ struct InsDel {
     return mcolor; 
   } 
 
-  inline citer cbegin_mcolor() const { 
+  inline citer begin() const { 
     return mcolor.cbegin();
   } 
 
-  inline citer cend_mcolor() const { 
+  inline citer end() const { 
     return mcolor.cend();
   } 
 
-  friend std::ostream& operator << (std::ostream& os, const InsDel& t) {
-    if (t.is_deletion) { 
-	os << "Deletion "; 
-    } else { 
-	os << "Insertion ";
-    } 
-    os << "(" << t.edge.first << "," << t.edge.second << "):{" 
-      << genome_match::mcolor_to_name(t.mcolor) << "}";    
-    return os;
-  }
- 
 private: 
   arc_t edge; // (x1, y1)
   mcolor_t mcolor; 
-  bool is_deletion; 
+  bool is_deletion; //FIXME: remove, only insertion
 };
+
+}
 #endif
 

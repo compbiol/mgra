@@ -18,15 +18,15 @@ bool Algorithm<graph_t>::stage5_1() {
       while(repeat) {
 	repeat = false;
 
-	equivalence<vertex_t> CC; // connected components
-	std::unordered_map<vertex_t, vertex_t> QQ; // multiedges of colors !Q (!*ic)
+	utility::equivalence<vertex_t> CC; // connected components in all colors different from Q
+	std::unordered_map<vertex_t, vertex_t> QQ; // multiedges of colors Q (*ic)
 	for(const auto &x : *graph) {
 	  Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(x); 
 	  if (mularcs.size() != 1) { 
 	    for(const auto &arc : mularcs) {    
-	      if (arc.second == *ic) { // edges of color Q (*ic)
+	      if (arc.second == Q) { // edges of color Q (*ic)
 		QQ.insert(std::make_pair(x, arc.first));
-	      } else if (arc.first != Infty) { // reg. edges of color !Q (!*ic)
+	      } else if (arc.first != Infty) { // reg. edges of color !Q (*ic)
 		CC.addrel(x, arc.first);
 	      }
 	    }
@@ -49,7 +49,7 @@ bool Algorithm<graph_t>::stage5_1() {
 	    EC[CC[edge.first]].insert(edge); 
 	  }
 	}
-		
+      
 	std::unordered_set<vertex_t> processed;
 	// reg. edges between diff. connected components of color Q
 	for (const auto &reg_edge : EC) {
@@ -61,10 +61,6 @@ bool Algorithm<graph_t>::stage5_1() {
 	  if (reg_edge.second.size() == 1) {
 	    const arc_t& p = *(reg_edge.second.begin());
 	    arc_t q;
-
-	    if (graph->is_indel_vertex(p.first) || graph->is_indel_vertex(p.second)) {
-	      continue;
-	    }
 
 	    // look for irregular edges
 	    bool found = false;
@@ -111,7 +107,7 @@ bool Algorithm<graph_t>::stage5_1() {
 		processed.insert(CC[q.second]);
 	      } 
 	      //std::cerr << "Stage 5_1: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << std::endl;
-	      graph->apply_two_break(TwoBreak<Mcolor>(p, q, Q));
+	      graph->apply_two_break(twobreak_t(p, q, Q));
 	      ++number_rear;			   
 	      repeat = true;
             }
@@ -120,13 +116,22 @@ bool Algorithm<graph_t>::stage5_1() {
 	    const arc_t& q = *(reg_edge.second.rbegin());
 
 	    // N.B. we have CC[p.first] == CC[q.first] == ie->first
+//#ifndef VERSION2
 	    if ((processed.count(CC[p.second]) == 0) && (processed.count(CC[q.second]) == 0) && CC[p.second] == CC[q.second]) { 
 	      processed.insert({CC[p.first], CC[q.first], CC[p.second], CC[q.second]});
-	      graph->apply_two_break(TwoBreak<Mcolor>(p, q, Q));
+	      graph->apply_two_break(twobreak_t(p, q, Q));
 	      ++number_rear;
 	      repeat = true;
 	      //std::cerr << "Stage 222.2: " << p.first << " - " << p.second << "\tX\t" << q.first << " - " << q.second << endl;
-	    }
+	    } 
+//#else
+/*            if (processed.count(CC[p.second]) == 0 && processed.count(CC[q.second]) == 0) { 
+              processed.insert({CC[p.first], CC[q.first], CC[p.second], CC[q.second]});
+	      graph->apply_two_break(twobreak_t(p, q, Q));
+	      ++number_rear;
+	      repeat = true;      
+            } */
+//#endif
 	  }
 	}
       }
@@ -150,7 +155,7 @@ bool Algorithm<graph_t>::stage5_2() {
     number_rear = 0;
 
     for(const auto &x : *graph) {
-      if (graph->is_duplication_vertex(x) || graph->is_indel_vertex(x)) {
+      if (graph->is_duplication_vertex(x)) {
 	continue;
       }
 
@@ -161,7 +166,7 @@ bool Algorithm<graph_t>::stage5_2() {
 	const vertex_t& y = im->first;
 	const Mcolor& Q = im->second;
 
-	if (graph->is_vec_T_consistent_color(Q) && y != Infty && !graph->is_duplication_vertex(y) && !graph->is_indel_vertex(y)) { 
+	if (graph->is_vec_T_consistent_color(Q) && y != Infty && !graph->is_duplication_vertex(y)) { 
 	  Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges(y);
 	  mularcs_y.erase(x);
 
@@ -171,8 +176,11 @@ bool Algorithm<graph_t>::stage5_2() {
 	      const vertex_t& v = graph->get_adjacent_multiedges(z).get_vertex(Q); 
 	      if (!v.empty() && mularcs_x.defined(v)) { 
 		//std::cerr << "Stage 5_2: " << x << " - " << y << "\tX\t" << v << " - " << z << std::endl;
-		graph->apply_two_break(TwoBreak<Mcolor>(x, y, v, z, Q));
-		++number_rear;
+                auto colors = graph->split_color(Q, false);
+                for (const auto &col : colors) { 
+		  graph->apply_two_break(twobreak_t(x, y, v, z, col));
+		  ++number_rear;
+                } 
 		next = true;
 	      }
 	    }

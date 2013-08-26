@@ -22,16 +22,14 @@
 #include <utility>
 #include <cassert>
 
-#include "functional"
+#include <functional>
 
-#include "utility/sym_hashmap.h"
 #include "utility/sym_multi_hashmap.h"
-
 #include "utility/equivalence.h"
 
 typedef std::string vertex_t;
-typedef sym_multi_hashmap<vertex_t> partgraph_t;
-typedef sym_hashmap<vertex_t> obverse_graph_t;
+typedef utility::sym_multi_hashmap<vertex_t> edges_t;
+typedef utility::sym_multi_hashmap<vertex_t> partgraph_t;
 typedef std::list<vertex_t> path_t;
 typedef std::pair<vertex_t, vertex_t> arc_t;
 
@@ -57,6 +55,10 @@ __attribute__((always_inline)) inline std::string trim(std::string s, const std:
   return s.erase(0, s.find_first_not_of(drop));
 }
 
+#include "genome.h"
+#include "mcolor.h"
+#include "mularcs.h"
+//#include pconf and tree
 
 #endif
 

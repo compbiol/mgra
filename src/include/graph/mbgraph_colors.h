@@ -1,50 +1,19 @@
-/* 
-** Module: Mutiple Breakpoint Graph with vec-T-consistent and T-consistent multicolors support
-**
-** This file is part of the 
-** Multiple Genome Rearrangements and Ancestors (MGRA) 
-** reconstruction software. 
-** 
-** Copyright (C) 2008 - 2013 by Max Alekseyev <maxal@cse.sc.edu>
-**. 
-** This program is free software; you can redistribute it and/or 
-** modify it under the terms of the GNU General Public License 
-** as published by the Free Software Foundation; either version 2 
-** of the License, or (at your option) any later version. 
-**. 
-** You should have received a copy of the GNU General Public License 
-** along with this program; if not, see http://www.gnu.org/licenses/gpl.html 
-*/
-
 #ifndef MBGRAPH_COLOR_H_
 #define MBGRAPH_COLOR_H_
 
 #include "mbgraph.h"
-#include "mularcs.h"
 
 template<class mcolor_t>
 struct mbgraph_with_colors: public MBGraph { 
   typedef typename std::set<mcolor_t>::const_iterator citer; 
   typedef std::pair<vertex_t, vertex_t> arc_t;
 
-  template<class pconf_t>
-  mbgraph_with_colors(const std::vector<Genome>& genomes, const pconf_t& cfg); 
+  template<class conf_t>
+  mbgraph_with_colors(const std::vector<MBGraph::genome_t>& genomes, const conf_t& cfg); 
 
-  bool is_simple_vertex(const vertex_t& v) const;
-  bool is_indel_vertex(const vertex_t& v) const;  
-  bool is_duplication_vertex(const vertex_t& v) const;
-  bool is_have_self_loop(const vertex_t& v) const;
-
-  Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors = false, bool only_two = true) const; 
-  Mularcs<mcolor_t> get_adjacent_multiedges1(const vertex_t& u, const std::map<arc_t, mcolor_t>& viewed_edges, bool split_bad_colors = false) const; 
-
-  std::set<mcolor_t> split_color(const mcolor_t& color, bool only_two = true) const;
-  std::map<vertex_t, std::set<vertex_t> > split_on_components(bool not_drop_complete_edge = true) const;
-  bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
-
-  inline mcolor_t get_complete_color() const {
-    return complete_color;
-  }
+  Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u) const; 
+  Mularcs<mcolor_t> get_adjacent_multiedges_with_info(const vertex_t& u, bool split_bad_colors = false, bool with_bad_edge = true, bool only_two = true);
+  std::set<mcolor_t> split_color(const mcolor_t& color, bool only_two = true);
 
   inline mcolor_t get_complement_color(const mcolor_t& color) { 
     assert(color.is_one_to_one_match()); 
@@ -64,6 +33,22 @@ struct mbgraph_with_colors: public MBGraph {
     } 
     return temp;
   }	
+
+  inline void registrate_viewed_edge(const vertex_t &u, const vertex_t& v) {
+    not_mobile_edges.insert(u, v);
+  } 
+
+  bool is_simple_vertex(const vertex_t& v) const;
+  bool is_indel_vertex(const vertex_t& v) const;  
+  bool is_duplication_vertex(const vertex_t& v) const;
+  bool is_have_self_loop(const vertex_t& v) const;
+
+  std::map<vertex_t, std::set<vertex_t> > split_on_components(bool not_drop_complete_edge = true) const;
+  bool are_adjacent_branches(const mcolor_t& A, const mcolor_t & B) const;
+
+  inline mcolor_t get_complete_color() const {
+    return complete_color;
+  }
 
   inline bool is_T_consistent_color(const mcolor_t& color) const { 
     return (T_consistent_colors.count(color) > 0);
@@ -100,11 +85,13 @@ protected:
   std::map<mcolor_t, mcolor_t> compliment_colors;
   std::set<mcolor_t> T_consistent_colors;
   std::set<mcolor_t> vec_T_consistent_colors;
+  edges_t not_mobile_edges;
+  std::map<std::pair<mcolor_t, bool>, std::set<mcolor_t> > hashing_split_colors;
 }; 
 
 template<class mcolor_t>
-template<class pconf_t>
-mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<Genome>& genomes, const pconf_t& cfg) 
+template<class conf_t>
+mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<MBGraph::genome_t>& genomes, const conf_t& cfg) 
 : MBGraph(genomes)
 {
   for (size_t i = 0; i < genomes.size(); ++i) {
@@ -195,7 +182,7 @@ bool mbgraph_with_colors<mcolor_t>::is_duplication_vertex(const vertex_t& v) con
 } 
 
 template<class mcolor_t>
-Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const vertex_t& u, bool split_bad_colors, bool only_two) const { 
+Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const vertex_t& u) const { 
   if (u == Infty) {
     std::cerr << "mularcs ERROR: Infinite input" << std::endl;
     exit(1);
@@ -211,10 +198,18 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
     } 
   }
   
+  return output;
+} 
+
+template<class mcolor_t>
+Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges_with_info(const vertex_t& u, bool split_bad_colors, bool with_bad_edge, bool only_two) { 
+  Mularcs<mcolor_t> output = get_adjacent_multiedges(u);
+  
   if (split_bad_colors) { 
     Mularcs<mcolor_t> split; 
     for(const auto &arc : output) {
-      if (!is_vec_T_consistent_color(arc.second) && arc.second.size() < count_local_graphs()) {
+      if ((!with_bad_edge || (with_bad_edge && !not_mobile_edges.defined(u, arc.first))) 
+	   && !is_vec_T_consistent_color(arc.second) && arc.second.size() < count_local_graphs()) {
 	auto colors = split_color(arc.second, only_two);
 	for(const auto &color : colors) {
 	  split.insert(arc.first, color); 
@@ -230,83 +225,45 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const v
 } 
 
 template<class mcolor_t>
-Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges1(const vertex_t& u, const std::map<arc_t, mcolor_t>& viewed_edges, bool split_bad_colors) const {
-  if (u == Infty) {
-    std::cerr << "mularcs ERROR: Infinite input" << std::endl;
-    exit(1);
-  }
-
-  Mularcs<mcolor_t> output;
-  for (size_t i = 0; i < count_local_graphs(); ++i) {
-    if (local_graph[i].defined(u)) { 
-      std::pair<partgraph_t::const_iterator, partgraph_t::const_iterator> iters = local_graph[i].equal_range(u);
-      for (auto it = iters.first; it != iters.second; ++it) { 
-	output.insert(it->second, i); 
-      }
-    } 
-  }
-  
-  if (split_bad_colors) { 
-    Mularcs<mcolor_t> split; 
-    for(const auto &arc : output) {
-      if (viewed_edges.count(std::make_pair(u, arc.first)) == 0 && viewed_edges.count(std::make_pair(arc.first, u)) == 0
-	  && !is_vec_T_consistent_color(arc.second) && arc.second.size() < count_local_graphs()) {
-	auto colors = split_color(arc.second);
-	for(const auto &color : colors) {
-	  split.insert(arc.first, color); 
-	}
-      } else { 
-	split.insert(arc.first, arc.second); 
-      }
-    }
-    return split; 
-  }
-
-  return output;
-} 
-
-/*
-SplitColor(Q) представляет Q в виде дизъюнктного объединения T-consistent мультицветов, т.е. Q = Q1 U ... U Qm
-где каждый Qi является T-consistent и все они попарно не пересекаются. SplitColor(Q) возвращает множество { Q1, Q2, ..., Qm }
-(в частности, когда Q является T-consistent, имеем m=1 и Q1=Q).
-Теперь, когда SplitBadColors = true, то и ребро (x,y) имеет мультицвет Q, то MBG.mulcols(x) будет содежать вместо (Q,x) пары:
-(Q1,y), (Q2,y), ..., (Qm,y)
-*/
-template<class mcolor_t>
-std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& color, bool only_two) const {
-  std::set<mcolor_t> answer;
-
+std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& color, bool only_two) {
   if (is_vec_T_consistent_color(color)) {
-    answer.insert(color);
+    return std::set<mcolor_t>({color}); 
   } else { 
-    equivalence<size_t> equiv;
-    for(auto iq = color.cbegin(); iq != color.cend(); ++iq) { 
-      equiv.addrel(iq->first, iq->first);
-    } 
+    std::set<mcolor_t> answer;
+    
+    if (hashing_split_colors.count(std::make_pair(color, only_two)) != 0) {
+      answer = hashing_split_colors.find(std::make_pair(color, only_two))->second;
+    } else {   
+      utility::equivalence<size_t> equiv;
+      std::for_each(color.cbegin(), color.cend(), [&] (const std::pair<size_t, size_t>& col) -> void {
+        equiv.addrel(col.first, col.first);
+      }); 
 
-    for (const auto &vtc: vec_T_consistent_colors) { 
-      mcolor_t inter_color(vtc, color, mcolor_t::Intersection);
-      if (inter_color.size() >= 2 && inter_color.size() == vtc.size() ) {
-        for (const auto &col : inter_color) { 
-	 equiv.addrel(col.first, inter_color.cbegin()->first);
+      for (const auto &vtc: vec_T_consistent_colors) { 
+        mcolor_t inter_color(vtc, color, mcolor_t::Intersection);
+        if (inter_color.size() >= 2 && inter_color.size() == vtc.size()) {
+          std::for_each(inter_color.cbegin(), inter_color.cend(), [&] (const std::pair<size_t, size_t>& col) -> void {
+            equiv.addrel(col.first, inter_color.cbegin()->first);
+          });
         }
       }
-    }
 
-    equiv.update();
-    std::map<size_t, mcolor_t> classes = equiv.get_eclasses<mcolor_t>(); 
-    for(const auto &col : classes) {
-      answer.insert(col.second);
-    }
+      equiv.update();
+      std::map<size_t, mcolor_t> classes = equiv.get_eclasses<mcolor_t>(); 
+      for(const auto &col : classes) {
+        answer.insert(col.second);
+      }
 
 #ifdef VERSION2
-    if (only_two && (answer.size() > 2)) { 
-      answer.clear(); 
-      answer.insert(color);  	
-    } 
+      if (only_two && (answer.size() > 2)) { 
+        answer.clear(); 
+        answer.insert(color);  	
+      } 
 #endif
+      hashing_split_colors.insert(std::make_pair(std::make_pair(color, only_two), answer));
+    }
+    return answer;
   }
-  return answer;
 } 
 
 template<class mcolor_t>
@@ -342,11 +299,11 @@ bool mbgraph_with_colors<mcolor_t>::are_adjacent_branches(const mcolor_t& mcolor
 
 template<class mcolor_t>
 std::map<vertex_t, std::set<vertex_t> > mbgraph_with_colors<mcolor_t>::split_on_components(bool not_drop_complete_edge) const { 
-  equivalence<vertex_t> CC; // connected components
+  utility::equivalence<vertex_t> connected_components; // connected components
 
   for(const auto &x : vertex_set) {
     if (!not_drop_complete_edge) { 
-	CC.addrel(x, x);
+	connected_components.addrel(x, x);
     } 
 
     Mularcs<mcolor_t> mularcs = this->get_adjacent_multiedges(x); 
@@ -355,16 +312,17 @@ std::map<vertex_t, std::set<vertex_t> > mbgraph_with_colors<mcolor_t>::split_on_
       continue; // ignore complete multiedges
     } 
 
-    for(auto im = mularcs.cbegin(); im != mularcs.cend(); ++im) {    
-      if (im->first != Infty) { 
-	CC.addrel(x, im->first);
+    std::for_each(mularcs.cbegin(), mularcs.cend(), [&] (const std::pair<vertex_t, mcolor_t>& arc) -> void {    
+      if (arc.first != Infty) { 
+	connected_components.addrel(x, arc.first);
       } 
-    }
+    });
   }
 		    
-  CC.update();
+  connected_components.update();
    
-  return CC.get_eclasses<std::set<vertex_t> >(); 
+  return connected_components.get_eclasses<std::set<vertex_t> >(); 
 }
+
 #endif
 

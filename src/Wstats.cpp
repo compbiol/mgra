@@ -6,34 +6,28 @@ writer::Wstats::Wstats(std::string name_file) {
 
 void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_history<Mcolor> >& info, const ProblemInstance<Mcolor>& cfg, const mbgraph_with_history<Mcolor>& graph) { 
 	if (stage == 0) { 
-		ofstat << "Initial graph:" << std::endl;
-#ifdef VERSION2
-		ofstat << "... Unique blocks: " << toString(graph.size() / 2) << std::endl;
-		ofstat << "... Vertex: " << toString(graph.size()) << std::endl;
-#endif
+  	  ofstat << "Initial graph:" << std::endl;
+	  ofstat << "... Unique blocks: " << toString(graph.size() / 2) << std::endl;
+	  ofstat << "... Vertex: " << toString(graph.size()) << std::endl;
 	}  else { 
-		ofstat << "After Stage " << toString(stage) << " graph:" << std::endl;
+   	  ofstat << "After Stage " << toString(stage) << " graph:" << std::endl;
 	} 
 
-#ifdef VERSION2
-	print_vertex_statistics(info.count_vertex_statistics()); 
-#endif
+	print_vertex_statistics(info.get_vertex_statistics()); 
 
 	print_complete_edges(graph);
 	print_connected_components(graph);
 
 	print_rear_characters(info.get_compl_stat()); 
-#ifdef VERSION2
-	print_indel_statistics(graph, info.get_indel_stat());
-#endif
+	print_indel_statistics(info.get_indel_stat());
+	print_fair_edges(graph, info);
 
 //#ifndef VERSION2
 	//print_estimated_dist(stage, cfg, graph);
 //#endif
-	print_fair_edges(graph, info);
 } 
 
-void writer::Wstats::print_vertex_statistics(const std::vector<size_t>& answer) {
+void writer::Wstats::print_vertex_statistics(const std::array<size_t, 4>& answer) {
   ofstat << "... Duplication vertex: " << answer[0] << std::endl;
   ofstat << "... Insertion/deletion vertex: " << answer[1] << std::endl;
   ofstat << "... Count self loop: " << answer[2] << std::endl;
@@ -70,29 +64,33 @@ void writer::Wstats::print_connected_components(const mbgraph_with_history<Mcolo
 }
 
 void writer::Wstats::print_rear_characters(const std::vector<std::string>& info) { 
-	ofstat << std::endl;
-	ofstat << "% Rearrangement characters:" << std::endl << std::endl;
-	print_start_table(5); 
-	ofstat << "Multicolors & multiedges & simple vertices & simple multiedges & simple paths+cycles & irreg. multiedges\\\\" << std::endl;
-	ofstat << "\\hline" << std::endl;
+  ofstat << std::endl;
+  ofstat << "% Rearrangement characters:" << std::endl << std::endl;
+  print_start_table(6); 
+  ofstat << "Multicolors & multiedges & simple vertices & simple multiedges & simple paths+cycles & irreg. multiedges\\\\" << std::endl;
+  ofstat << "\\hline" << std::endl;
 
-	for(auto im = info.cbegin(); im != info.cend(); ++im) {
-		ofstat << *im << "\\\\" << std::endl;
-	}
-	print_close_table();	
+  for(auto im = info.cbegin(); im != info.cend(); ++im) {
+    ofstat << *im << "\\\\" << std::endl;
+  }
+  print_close_table();	
 } 
 
-void writer::Wstats::print_indel_statistics(const mbgraph_with_history<Mcolor>& graph, const std::map<size_t, std::pair<Mcolor, Mcolor> >& indels) {
+void writer::Wstats::print_indel_statistics(const std::multimap<size_t, std::tuple<Mcolor, Mcolor, size_t, size_t> >& indels) {
   ofstat << std::endl << "% Insertion/Deletion characters: " << std::endl << std::endl;
   
-  print_start_table(3); 
-  ofstat << "insert multicolor Q + \\bar{Q} & count & size of split Q & size of split \\bar{Q} \\\\" << std::endl;
+  print_start_table(5); 
+  ofstat << "insert multicolor Q + \\bar{Q} & number edges & number operations & size of split Q & size of split \\bar{Q} \\\\" << std::endl;
   ofstat << "\\hline" << std::endl;
 
   for (auto line = indels.crbegin(); line != indels.crend(); ++line) { 
-    ofstat << "{" << genome_match::mcolor_to_name(line->second.first) << " + " << genome_match::mcolor_to_name(line->second.second) << "} & " 
-	<< line->first	<< " & " << graph.split_color(line->second.first, false).size() 
-	<< " & " << graph.split_color(line->second.second, false).size() << "\\\\" << std::endl;
+    Mcolor color_f; 
+    Mcolor color_s; 
+    size_t first = 0; 
+    size_t second = 0;
+    std::tie(color_f, color_s, first, second) = line->second;
+    ofstat << "{" << genome_match::mcolor_to_name(color_f) << " + " << genome_match::mcolor_to_name(color_s) << "} & " 
+	<< line->first	<< " & " << (line->first * std::min(first, second)) << " & " << first << " & " << second << "\\\\" << std::endl;
   } 
 
   print_close_table();
@@ -118,6 +116,7 @@ void writer::Wstats::print_fair_edges(const mbgraph_with_history<Mcolor>& MBG, S
 		}
 	}
 
+	//print_start_table(HCrow.size());
 	ofstat << "\\begin{table}[h]" << std::endl;
 	ofstat << "\\centering \\begin{tabular}{|c||"; //FIXME::why twice
 	for(int i = 0; i < HCrow.size(); ++i) { 
@@ -164,10 +163,10 @@ void writer::Wstats::print_fair_edges(const mbgraph_with_history<Mcolor>& MBG, S
 		ofstat << " \\\\" << std::endl;
 		ofstat << "\\hline" << std::endl;
 	}
-	print_close_table(false);
+	print_close_table();
 }
 
-void writer::Wstats::print_history_statistics(const mbgraph_with_history<Mcolor>& graph, const std::map<Mcolor, std::set<arc_t> >& bad_edges) {
+void writer::Wstats::print_history_statistics(const mbgraph_with_history<Mcolor>& graph, const edges_t& bad_edges) {
   std::map<Mcolor, size_t> n2br;
   std::map<Mcolor, size_t> nins;
   std::map<Mcolor, size_t> ndel; 
@@ -176,28 +175,32 @@ void writer::Wstats::print_history_statistics(const mbgraph_with_history<Mcolor>
   size_t del = 0;
 
   for(auto il = graph.crbegin_2break_history(); il != graph.crend_2break_history(); ++il) {
-#ifdef VERSION2
     if (il->get_arc(0).first == Infty || il->get_arc(0).second == Infty 
         || il->get_arc(1).first == Infty || il->get_arc(1).second == Infty) {
       ++n2br[il->get_mcolor()];
       ++tbr;
-    } else if (il->get_arc(0).first == graph.get_obverse_vertex(il->get_arc(1).first)) { 
-      ++ndel[il->get_mcolor()];
-      ++del;
-    } else if (il->get_arc(0).second == graph.get_obverse_vertex(il->get_arc(1).second)) {  
-      ++ndel[il->get_mcolor()];
-      ++del;
-    } else if (il->get_arc(0).first == graph.get_obverse_vertex(il->get_arc(0).second)) {  
-      ++nins[il->get_mcolor()];
-      ++ins;
-    } else if (il->get_arc(1).first == graph.get_obverse_vertex(il->get_arc(1).second)) { 
-      ++nins[il->get_mcolor()];
-      ++ins;
     } else { 
-#endif
-      ++n2br[il->get_mcolor()];
-      ++tbr;
-//    }
+      const vertex_t& p = il->get_arc(0).first;
+      const vertex_t& q = il->get_arc(0).second;
+      const vertex_t& x = il->get_arc(1).first;
+      const vertex_t& y = il->get_arc(1).second;
+      if (p == graph.get_obverse_vertex(x) && bad_edges.defined(p, x)) { 
+        ++ndel[il->get_mcolor()];
+        ++del;
+      } else if (q == graph.get_obverse_vertex(y) && bad_edges.defined(q, y)) {  
+        ++ndel[il->get_mcolor()];
+        ++del;
+      } else if (p == graph.get_obverse_vertex(q) && bad_edges.defined(p, q)) {  
+        ++nins[il->get_mcolor()];
+        ++ins;
+      } else if (x == graph.get_obverse_vertex(y) && bad_edges.defined(y, x)) { 
+        ++nins[il->get_mcolor()];
+        ++ins;
+      } else { 
+        ++n2br[il->get_mcolor()];
+        ++tbr;
+      }
+    }
   }
 
   ofstat << std::endl << "Total number of 2-breaks: " << tbr << std::endl;
@@ -207,7 +210,6 @@ void writer::Wstats::print_history_statistics(const mbgraph_with_history<Mcolor>
   }
   ofstat << std::endl;
 
-#ifdef VERSION2
   ofstat << std::endl << "Total number of insertion events: " << ins << std::endl;
   for(const auto &event : nins) {
     ofstat << genome_match::mcolor_to_name(event.first) << "\t" << event.second << std::endl;
@@ -219,39 +221,34 @@ void writer::Wstats::print_history_statistics(const mbgraph_with_history<Mcolor>
     ofstat << genome_match::mcolor_to_name(event.first) << "\t" << event.second << std::endl;
   }
   ofstat << std::endl;
-#endif
 
-#ifdef VERSION3
-  ofstat << std::endl << "Total number of (reverse) tandem duplication: " << graph.get_count_tandem_duplication() << std::endl;
-
+  size_t c_td = 0; 
   std::map<Mcolor, size_t> ntd;
+  for(auto il = graph.begin_tandem_duplication_history(); il != graph.end_tandem_duplication_history(); ++il) {
+    ++c_td;
+    ++ntd[il->get_mcolor()];
+  }
 
-	for(auto il = graph.begin_tandem_duplication_history(); il != graph.end_tandem_duplication_history(); ++il) {
-		++ntd[il->get_mcolor()];
-	}
-
-	for(auto im = ntd.begin(); im != ntd.end(); ++im) {
-		ofstat << genome_match::mcolor_to_name(im->first) << "\t" << im->second << std::endl;
-	}
+  ofstat << std::endl << "Total number of (reverse) tandem duplication: " << c_td << std::endl;
+  for(auto im = ntd.begin(); im != ntd.end(); ++im) {
+    ofstat << genome_match::mcolor_to_name(im->first) << "\t" << im->second << std::endl;
+  }
 	
-	ofstat << std::endl;
-#endif
+  ofstat << std::endl;
 }
 
 void writer::Wstats::print_start_table(size_t count_column) { 
 	ofstat << "\\begin{table}[h]" << std::endl;
 	ofstat << "\\centering \\begin{tabular}{|c|";
-	for(size_t i = 0; i < count_column; ++i) { 
+	for(size_t i = 0; i < count_column - 1; ++i) { 
 		ofstat << "c|";
 	} 
 	ofstat << "}" << std::endl;
 	ofstat << "\\hline" << std::endl;	
 } 
 
-void writer::Wstats::print_close_table(bool flag) { 
-	if (flag) { 
-		ofstat << "\\hline" << std::endl;
-	} 
+void writer::Wstats::print_close_table() { 
+ 	ofstat << "\\hline" << std::endl;
 	ofstat << "\\end{tabular}" << std::endl;
 	ofstat << "\\end{table}" << std::endl;
 	ofstat << std::endl;

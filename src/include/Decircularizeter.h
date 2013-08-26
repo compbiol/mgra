@@ -1,12 +1,13 @@
 #ifndef DECIRCULARIZETER_H_
 #define DECIRCULARIZETER_H_  
 
-typedef std::list<TwoBreak<Mcolor> > transform_t;
-
 template<class graph_t>
 struct Decircularizeter {
- 
-  Decircularizeter(const graph_t& gr, const std::set<arc_t>& b_edges) 
+  typedef event::TwoBreak<Mcolor> twobreak_t; 
+  typedef std::list<twobreak_t> transform_t;
+
+  
+  Decircularizeter(const graph_t& gr, const edges_t& b_edges) 
   : graph(gr)
   , bad_edges(b_edges)
   { 
@@ -19,7 +20,7 @@ private:
   bool is_circular_chromosome(const partgraph_t& local_graph, const vertex_t& x, std::unordered_set<vertex_t>& processed) const;
 private: 
   const graph_t& graph;
-  const std::set<arc_t>& bad_edges;
+  const edges_t& bad_edges;
 }; 
 
 template<class graph_t>
@@ -33,17 +34,14 @@ bool Decircularizeter<graph_t>::is_circular_chromosome(const partgraph_t& local_
   do { 
     previous = current; 
     current = graph.get_obverse_vertex(previous);
-    /*if (bad_edges.count(std::make_pair(previous, current)) != 0 || bad_edges.count(std::make_pair(current, previous)) != 0) {
-      have_deletion = true;
-    }*/
     if (processed.count(current) == 0) {
       processed.insert(current);
       if (local_graph.defined(current)) {
         previous = current; 
         current = local_graph[previous];
-        /*if (bad_edges.count(std::make_pair(previous, current)) != 0 || bad_edges.count(std::make_pair(current, previous)) != 0) {
+        if (bad_edges.defined(previous, current)) {
           have_deletion = true;
-        }*/
+        }
         if (processed.count(current) != 0) {
           circular = true;
         } 
@@ -62,10 +60,8 @@ bool Decircularizeter<graph_t>::is_circular_chromosome(const partgraph_t& local_
 	processed.insert(y);
       }
     }
-  } else if (current == graph.get_obverse_vertex(previous) && circular) {
-    have_deletion = true;
   } 
-  
+
   if (have_deletion) { 
     return false;
   } 
@@ -100,7 +96,7 @@ size_t Decircularizeter<graph_t>::count_circular_chromosome(const partgraph_t& l
  * Transformation may contain only multicolors Q' with Q'\cap Q = 0 or Q.
 */
 template<class graph_t>
-transform_t Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_t& TG) {
+std::list<event::TwoBreak<Mcolor> > Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_t& TG) {
     // decircularizing sub-transform that is removed
     transform_t D;
 
@@ -132,8 +128,8 @@ transform_t Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_
 
 	    auto kt = jt--; // jt, kt are successive, *kt == t
 
-	    const TwoBreak<Mcolor>& t = *kt;
-	    const TwoBreak<Mcolor>& s = *jt;
+	    const twobreak_t& t = *kt;
+	    const twobreak_t& s = *jt;
 
 //            outlog << "... trying to swap with " << s << endl;
 
@@ -197,10 +193,10 @@ transform_t Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_
 
 	    if (usearc) {
 		if (t.get_mcolor() != s.get_mcolor()) break;
-		*kt = TwoBreak<Mcolor>(q2.second, p1.second, q1.first, q1.second, t.get_mcolor());
-		*jt = TwoBreak<Mcolor>(p1.first, p1.second, q2.first, q2.second, t.get_mcolor());
+		*kt = twobreak_t(q2.second, p1.second, q1.first, q1.second, t.get_mcolor());
+		*jt = twobreak_t(p1.first, p1.second, q2.first, q2.second, t.get_mcolor());
 	    } else {
-		TwoBreak<Mcolor> temp = *kt;
+		twobreak_t temp = *kt;
 		*kt = *jt;
                 *jt = temp;
 	    }

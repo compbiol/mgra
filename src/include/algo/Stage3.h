@@ -21,17 +21,22 @@ bool Algorithm<graph_t>::stage3() {
       assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
 
       if (graph->is_vec_T_consistent_color(bar_indel_color) 
-	|| (split_bad_colors && ((split_bar_indel.size() == 2) || (split_indel.size() == split_bar_indel.size())))) { 
-	//std::cerr << "Insertion: " << a1 << " " << a2 << " color: " << genome_match::mcolor_to_name(bar_indel_color) << std::endl;
+	|| (split_bad_colors && (split_bar_indel.size() == std::min(split_bar_indel.size(), split_indel.size())))) { 
+#ifdef LOG_ENABLED
+	std::cerr << "Insertion: " << a1 << " " << a2 << " color: " << genome_match::mcolor_to_name(bar_indel_color) << std::endl;
+#endif
 	for (const auto &col : split_bar_indel) {
-	  graph->apply_ins_del(InsDel<Mcolor>(a1, a2, col, false));
+	  graph->apply_ins_del(insertion_t(a1, a2, col, false));
 	  insertions.insert(std::make_pair(std::make_pair(a1, a2), col));
 	  ++number_indel_event;
 	}
       } else if ((!graph->is_vec_T_consistent_color(bar_indel_color) && graph->is_vec_T_consistent_color(indel_color))
-	|| (split_bad_colors && (split_indel.size() == 2) && (split_bar_indel.size() > 2))) { 
-	//std::cerr << "Postponed deletion: " << a1 << " " << a2 << " color: " << genome_match::mcolor_to_name(bar_indel_color) << std::endl;
-	graph->apply_ins_del(InsDel<Mcolor>(a1, a2, bar_indel_color, false), false);
+	|| (split_bad_colors && (split_indel.size() == std::min(split_bar_indel.size(), split_indel.size())))) { 
+#ifdef LOG_ENABLED
+	std::cerr << "Postponed deletion: " << a1 << " " << a2 << " color: " << genome_match::mcolor_to_name(bar_indel_color) << std::endl;
+#endif
+	graph->apply_ins_del(insertion_t(a1, a2, bar_indel_color, false));
+        graph->registrate_viewed_edge(a1, a2);
 	postponed_deletions.insert(std::make_pair(std::make_pair(a1, a2), bar_indel_color));
 	++number_indel_event;
       } 

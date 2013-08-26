@@ -16,7 +16,7 @@ bool Algorithm<graph_t>::canformQ(const vertex_t& x, const Mcolor& Q) const {
   // OR 
   // if every intersection Q \cap QQ = \emptyset or QQ.
 
-  Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(x, split_bad_colors);
+  Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges_with_info(x, split_bad_colors);
   bool canform = true;
  
   for(auto arc = mularcs.cbegin(); (arc != mularcs.cend()) && canform; ++arc) { 
@@ -38,7 +38,7 @@ template<class graph_t>
 bool Algorithm<graph_t>::is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>& mularcs_x, const Mularcs<Mcolor>& mularcs_y) const {
   bool mobilQ = false;
   auto arcs = mularcs_x.equal_range(y); 
-
+  
   for (auto jc = arcs.first; (jc != arcs.second) && !mobilQ; ++jc) { 
     if (graph->is_vec_T_consistent_color(jc->second)) { //cental sub-edge
       const Mcolor& QQ = jc->second; // color of central sub-edge (QQ is sub-multicolor of Q)
@@ -70,19 +70,19 @@ bool Algorithm<graph_t>::stage2() {
     number_rear = 0; 
 	
     for(const auto &x : *graph) {  
-      if (graph->is_duplication_vertex(x)|| graph->is_indel_vertex(x)) { 
+      if (graph->is_duplication_vertex(x)) { 
 	continue; 
       } 
 
       Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(x);
-      Mularcs<Mcolor> mularcs_x = graph->get_adjacent_multiedges1(x, postponed_deletions, split_bad_colors);	
+      Mularcs<Mcolor> mularcs_x = graph->get_adjacent_multiedges_with_info(x, split_bad_colors, true);	
       
       bool found = false;
       for(auto im = mularcs.cbegin(); (im != mularcs.cend()) && !found; ++im) {
 	const vertex_t& y = im->first; // Q == im->second - color of central edge
 
-	if (y != Infty && !graph->is_duplication_vertex(y) && !graph->is_indel_vertex(y)) { 
-	  Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges1(y, postponed_deletions, split_bad_colors);
+	if (y != Infty && !graph->is_duplication_vertex(y)) { 
+	  Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges_with_info(y, split_bad_colors, true);
 	  mularcs_y.erase(x);
 
 	  if (postponed_deletions.count(std::make_pair(x, y)) != 0 || postponed_deletions.count(std::make_pair(y, x)) != 0 || !is_mobil_edge(y, mularcs_x, mularcs_y)) {
@@ -91,7 +91,7 @@ bool Algorithm<graph_t>::stage2() {
               const vertex_t& v = mularcs_y.get_vertex(arc.second);
 	      if (arc.first != y && graph->is_vec_T_consistent_color(arc.second) && !v.empty()) { 
                 //std::cerr << " Sub-multiedge " << v << " " << genome_match::mcolor_to_name(arc.second) << std::endl;
-	        graph->apply_two_break(TwoBreak<Mcolor>(x, arc.first, y, v, arc.second));
+	        graph->apply_two_break(twobreak_t(x, arc.first, y, v, arc.second));
 	        found = true;
 	        ++number_rear;
 	      }

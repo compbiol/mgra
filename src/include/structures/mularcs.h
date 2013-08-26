@@ -12,10 +12,6 @@ struct Mularcs {
     mularcs.insert(std::make_pair(v, mc));	
   } 
 
-  inline void insert(const citer& begin, const citer& end) { 
-    mularcs.insert(begin, end);	
-  } 
-
   inline void insert(const vertex_t& v, size_t i) {
     if (mularcs.find(v) != mularcs.end()) { 
       mularcs.find(v)->second.insert(i);
@@ -34,9 +30,9 @@ struct Mularcs {
  
   inline vertex_t get_vertex(const mcolor_t& color) const { 
     vertex_t v = "";
-    for (auto ir = mularcs.cbegin(); ir != mularcs.cend(); ++ir) {
-      if (ir->second == color) { 
-        v = ir->first;
+    for (const auto & arc : mularcs) {
+      if (arc.second == color) { 
+        v = arc.first;
       }
     }
     return v;   

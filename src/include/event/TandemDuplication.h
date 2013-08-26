@@ -1,6 +1,8 @@
 #ifndef TANDEMDUPLICATION_H_
 #define TANDEMDUPLICATION_H_
 
+namespace event { 
+
 template <class mcolor_t>
 struct TandemDuplication {
   typedef std::pair<vertex_t, vertex_t> arc_t;
@@ -31,11 +33,11 @@ struct TandemDuplication {
     return mcolor; 
   } 
 
-  inline citer cbegin_mcolor() const { 
+  inline citer begin() const { 
     return mcolor.cbegin();
   } 
 
-  inline citer cend_mcolor() const { 
+  inline citer end() const { 
     return mcolor.cend();
   } 
 
@@ -47,26 +49,13 @@ struct TandemDuplication {
     return edges.cend();
   }
 
-  friend std::ostream& operator << (std::ostream& os, const TandemDuplication& t) {
-    if (t.is_deletion) { 
-	os << "Deletion "; 
-    } else { 
-	os << "Insertion ";
-    } 
-
-    for (auto it = t.edges.cbegin(); it != t.edges.cend(); ++it) { 
-	os << "(" << it->first << "," << it->second << ")";
-    } 
-
-    os << ":{" << genome_match::mcolor_to_name(t.mcolor) << "}";    
-    return os;
-  }
- 
 private: 
   std::vector<arc_t> edges; 
   mcolor_t mcolor; 
   bool is_reverse;
   bool is_deletion; 
 }; 
+
+} 
 
 #endif 

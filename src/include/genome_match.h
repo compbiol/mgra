@@ -1,14 +1,15 @@
 #ifndef GENOME_MATCH_ 
 #define GENOME_MATCH_ 
 
+#include "defined.h"
 #include "pconf.h"
-#include "genome.h"
-#include "mcolor.h"
 
 struct genome_match { 
+  typedef structure::Genome genome_t;
+  
   typedef std::unordered_map<std::string, size_t> gen2num; 
  
-  static void init_name_genomes(const ProblemInstance<Mcolor>& cfg, const std::vector<Genome>& genomes) {
+  static void init_name_genomes(const ProblemInstance<Mcolor>& cfg, const std::vector<genome_t>& genomes) {
     number_to_genome.resize(genomes.size());
 	
     for(size_t i = 0; i < genomes.size(); ++i) { 

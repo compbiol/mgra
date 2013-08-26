@@ -63,6 +63,8 @@ int main(int argc, char* argv[]) {
     name_cfg_file = argv[1];
   } 
 
+  typedef structure::Genome Genome;
+  
   /*Reading problem configuration*/
   ProblemInstance<Mcolor> PI(reader::read_cfg_file(name_cfg_file)); 
 
@@ -97,7 +99,12 @@ int main(int argc, char* argv[]) {
     }
   } 
 
-  RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target(), main_algo.get_removing_edges());	
+#ifdef VERSION2
+  std::clog << "Start reconstruct genomes." << std::endl;
+#endif
+
+  auto bad_edges = main_algo.get_bad_edges();
+  RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target(), bad_edges); 
 
   if (PI.get_target().empty()) {
     size_t i = 0;
@@ -105,13 +112,21 @@ int main(int argc, char* argv[]) {
     for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im, ++i) {
       std::ofstream tr((genome_match::mcolor_to_name(*im) + ".trs").c_str());
       for(const auto &event : recover_transformation[i]) {
-	tr << "(" << event.get_arc(0).first << ", " << event.get_arc(0).second << ") x (" 
-	   << event.get_arc(1).first << ", " << event.get_arc(1).second << ") "  << genome_match::mcolor_to_name(event.get_mcolor()); 
+        const vertex_t& p = event.get_arc(0).first;
+        const vertex_t& q = event.get_arc(0).second;
+        const vertex_t& x = event.get_arc(1).first;
+        const vertex_t& y = event.get_arc(1).second;
+      
+	tr << "(" << p << ", " << q << ") x (" << x << ", " << y << ") " << genome_match::mcolor_to_name(event.get_mcolor()); 
 
-	if (event.get_arc(0).first != Infty && event.get_arc(0).second != Infty && event.get_arc(1).first != Infty && event.get_arc(1).second != Infty) { 
-	  if (event.get_arc(0).first == graph->get_obverse_vertex(event.get_arc(1).first) || event.get_arc(0).second == graph->get_obverse_vertex(event.get_arc(1).second)) {
+	if (p != Infty && q != Infty && x != Infty && y != Infty) { 
+	  if (p == graph->get_obverse_vertex(x) && bad_edges.defined(p, x)) { 
 	    tr << " # deletion"; 
-	  } else if (event.get_arc(0).first == graph->get_obverse_vertex(event.get_arc(0).second) || event.get_arc(1).first == graph->get_obverse_vertex(event.get_arc(1).second)) {
+          } else if (q == graph->get_obverse_vertex(y) && bad_edges.defined(q, y)) {
+	    tr << " # deletion"; 
+	  } else if (p == graph->get_obverse_vertex(q) && bad_edges.defined(p, q)) { 
+	    tr << " # insertion"; 
+          } else if (x == graph->get_obverse_vertex(y) && bad_edges.defined(x, y)) {
 	    tr << " # insertion"; 
 	  } 
 	}
@@ -121,10 +136,8 @@ int main(int argc, char* argv[]) {
     } 
   }
 
-//#ifndef VERSION2  	
   writer::Wgenome<Genome> writer_genome;
   writer_genome.save_genomes(reductant.get_genomes(), PI.get_target().empty()); 
-//#endif
       
   return 0;
 }

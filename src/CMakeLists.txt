@@ -11,6 +11,8 @@ set(MGRA_SOURCE mgra.cpp
 
 set (ERR_NO_UNIX "Cannot build on non Unix systems")
 
+#-DLOG_ENABLED 
+
 set (DEBUG -DVERSION2)
 set (WARNS -Wall -Wextra -pedantic-errors)
 set (OPTIMIZE_FLAG " -std=c++0x -O2 -pipe -finline-functions -finline-limit=1000") #-m64 -march=core2

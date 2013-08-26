@@ -1,24 +1,9 @@
-/* 
-** Module: MGRA Configurations support
-** Version: 1.1
-**
-** This file is part of the 
-** Multiple Genome Rearrangements and Ancestors (MGRA) 
-** reconstruction software. 
-** 
-** Copyright (C) 2008,12 by Max Alekseyev <maxal@cse.sc.edu> 
-**. 
-** This program is free software; you can redistribute it and/or 
-** modify it under the terms of the GNU General Public License 
-** as published by the Free Software Foundation; either version 2 
-** of the License, or (at your option) any later version. 
-**. 
-** You should have received a copy of the GNU General Public License 
-** along with this program; if not, see http://www.gnu.org/licenses/gpl.html 
-*/
-
 #ifndef PCONF_H_
 #define PCONF_H_
+
+/* 
+** Configurations support
+*/
 
 #include "defined.h"
 #include "2break.h"
@@ -26,7 +11,9 @@
 
 /*This structures containes information from *.cfg file */
 template<class mcolor_t>
-struct ProblemInstance {
+struct Config {
+  typedef event::TwoBreak<mcolor_t> twobreak_t; 
+  
   ProblemInstance(const std::unordered_map<std::string, std::vector<std::string> >& input); 
 
   mcolor_t name_to_mcolor(const std::string& temp) const;
@@ -81,7 +68,7 @@ struct ProblemInstance {
     return target;		
   } 
 
-  inline std::list<TwoBreak<mcolor_t> > get_completion() const { 
+  inline std::list<twobreak_t> get_completion() const { 
     return completion;
   } 
 
@@ -115,7 +102,7 @@ private:
 
   mcolor_t target; 		
 	
-  std::list<TwoBreak<mcolor_t> > completion;
+  std::list<twobreak_t> completion;
 
   std::vector<std::string> RGBcolors;
   int RGBcoeff; 
@@ -176,9 +163,9 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 	  exit(1);
 	}			} 
     } else if (option.first == "[Trees]") {
-      for (const auto &str_tree : option.second) { 
-	trees.push_back(BinaryTree<std::string>(str_tree, genome_number));	
-      } 
+      std::for_each(option.second.cbegin(), option.second.cend(), [&](const std::string& str) -> void {
+        trees.push_back(BinaryTree<std::string>(str, genome_number));	
+      });
     } else if (option.first == "[Graphs]") {
       for(const auto &str : option.second) {
 	std::istringstream is(str);
@@ -220,7 +207,7 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 	is >> mc[0] >> mc[1] >> mc[2] >> mc[3] >> mc[4];
 	std::remove_if(mc[4].begin(), mc[4].end(), (int(*)(int)) isspace); //FIXME NOT WORKED		
 	mcolor_t color = name_to_mcolor(mc[4]);
-	completion.push_back(TwoBreak<mcolor_t>(mc[0], mc[1], mc[2], mc[3], color));
+	completion.push_back(twobreak_t(mc[0], mc[1], mc[2], mc[3], color));
       }
     } else if (option.first == "[Genomes]") {
       continue;  
@@ -264,8 +251,9 @@ void ProblemInstance<mcolor_t>::init_basic_rgb_colors(bool flag) {
 
     RGBcoeff = (number_colors - 1) / (get_count_genomes() - 1);
   } else { 
-    for(size_t i = 0; i < number_colors; ++i) 
-      RGBcolors.push_back(toString(i + 1));
+    for(size_t i = 0; i < number_colors; ++i) {
+      RGBcolors.push_back(toString(i + 1)); 
+    } 
     RGBcoeff = 1;
   }
 } 
@@ -303,13 +291,13 @@ std::string ProblemInstance<mcolor_t>::mcolor_to_name(const mcolor_t& color) con
     answer += "}";
   } 
 
-  for (const auto& col: color) {
+  std::for_each(color.cbegin(), color.cend(), [&] (const std::pair<size_t,size_t> col) -> void {
     const std::string& sym = priority_name[col.first]; 
     for(size_t i = 0; i < col.second; ++i) { 
       answer += (sym + ",");
-    } 
-  }
-
+    }
+  });  
+ 
   answer[answer.size() - 1] = '}';
   return answer; 
 }

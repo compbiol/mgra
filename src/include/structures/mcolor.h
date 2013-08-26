@@ -93,14 +93,6 @@ struct Mcolor {
     return size;
   } 
 
-  inline citer begin() const { 
-    return main_color.cbegin();
-  } 
-
-  inline citer end() const { 
-    return main_color.cend();
-  } 
-
   inline citer cbegin() const { 
     return main_color.cbegin();
   } 

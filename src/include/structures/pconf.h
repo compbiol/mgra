@@ -11,7 +11,7 @@
 
 /*This structures containes information from *.cfg file */
 template<class mcolor_t>
-struct Config {
+struct ProblemInstance {
   typedef event::TwoBreak<mcolor_t> twobreak_t; 
   
   ProblemInstance(const std::unordered_map<std::string, std::vector<std::string> >& input); 

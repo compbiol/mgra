@@ -5,12 +5,13 @@
 
 template<class graph_t>
 struct RecoveredGenomes {
+  typedef structure::Mcolor mcolor_t;
   typedef structure::Genome genome_t;
   typedef structure::Chromosome chromosome_t;
-  typedef event::TwoBreak<Mcolor> twobreak_t; 
+  typedef event::TwoBreak<mcolor_t> twobreak_t; 
   typedef std::list<twobreak_t> transform_t;
 
-  RecoveredGenomes(const graph_t& gr, const Mcolor& target, const edges_t& b_edges);
+  RecoveredGenomes(const graph_t& gr, const mcolor_t& target, const edges_t& b_edges);
 
   std::vector<genome_t> get_genomes();
 
@@ -31,7 +32,7 @@ private:
 };
 
 template<class graph_t>
-RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const Mcolor& target, const edges_t& b_edges)  
+RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const mcolor_t& target, const edges_t& b_edges)  
 : graph(gr)
 , bad_edges(b_edges)
 {

@@ -12,11 +12,11 @@ bool Algorithm<graph_t>::stage1() {
       if (graph->is_simple_vertex(v)) { 
 	path_t path({v});
 	std::unordered_set<vertex_t> processed({v, Infty}); // we count oo as already processed
-	Mularcs<Mcolor> current = graph->get_adjacent_multiedges(v);
+	const mularcs_t& current = graph->get_adjacent_multiedges(v);
 
 	for(auto im = current.cbegin(); im != current.cend(); ++im) {	
 	  bool is_next = (im == current.cbegin()); 
-	  vertex_t current = find_simple_path(path, processed, v, im->first, is_next);
+	  const vertex_t& current = find_simple_path(path, processed, v, im->first, is_next);
 	  if (current == v) { 
 	    break; // got a cycle from x to x, cannot extend it 
 	  }  		    
@@ -51,8 +51,8 @@ vertex_t Algorithm<graph_t>::find_simple_path(path_t& path, std::unordered_set<v
 
     if (processed.find(current) == processed.end() && !graph->is_duplication_vertex(current)) {     
       processed.insert(current);
-      Mularcs<Mcolor> new_edges = graph->get_adjacent_multiedges(current);
-      Mcolor previous_color = new_edges.get_multicolor(previous); 
+      mularcs_t new_edges = graph->get_adjacent_multiedges(current);
+      const auto &previous_color = new_edges.get_multicolor(previous); 
       new_edges.erase(previous);
     
       if (new_edges.size() == 1 && graph->get_complement_color(previous_color) == new_edges.cbegin()->second) {
@@ -87,18 +87,19 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     std::cerr << std::endl;
 #endif
 
-    Mcolor process_color; 
+    mcolor_t process_color; 
     if (split_bad_colors) {
-      Mcolor first = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
-      Mcolor second = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*(++++path.begin()));
+      // FIXME add const 
+      const auto& first = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
+      const auto& second = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*(++++path.begin()));
       if (graph->split_color(first, false).size() <= graph->split_color(second, false).size()) {
 	process_color = first;
       } else { 
 	process_color = second;
       }
     } else { 
-      Mcolor first = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
-      Mcolor second = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*(++++path.begin()));
+      const auto& first = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
+      const auto& second = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*(++++path.begin()));
       if (graph->is_vec_T_consistent_color(first)) {
 	process_color = first;
       } else { 
@@ -129,8 +130,8 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  const vertex_t& x0 = *(++path.begin());
 	  const vertex_t& y0 = *(++path.rbegin());
 
-	  Mularcs<Mcolor> mul = graph->get_adjacent_multiedges_with_info(x0, split_bad_colors);
-	  auto colors = mul.equal_range(self_v);
+	  mularcs_t mul = graph->get_adjacent_multiedges_with_info(x0, split_bad_colors);
+	  const auto& colors = mul.equal_range(self_v);
 	  for (auto it = colors.first; it != colors.second; ++it) { 
 	    graph->apply_two_break(twobreak_t(self_v, x0, self_v, y0, it->second));
 	    ++number_rear;
@@ -146,8 +147,8 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  const vertex_t& y0 = *(++path.rbegin());
 	  const vertex_t& y1 = *(++++path.rbegin());
 
-	  Mularcs<Mcolor> mul = graph->get_adjacent_multiedges_with_info(y0, split_bad_colors);
-	  auto pair = mul.equal_range(y1);
+	  mularcs_t mul = graph->get_adjacent_multiedges_with_info(y0, split_bad_colors);
+	  const auto& pair = mul.equal_range(y1);
 	  for (auto it = pair.first; it != pair.second; ++it) { 
  	    graph->apply_two_break(twobreak_t(y0, y1, self_v, self_v, it->second));
 	    ++number_rear;
@@ -168,7 +169,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 #endif 
     }
 
-    Mcolor color = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
+    auto color = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
     while (process_color != color) {
       // multicolor of (z1,z2). N.B.: x2 is NOT oo
 #ifdef LOG_ENABLED
@@ -218,7 +219,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     auto z0 = z3++;
     auto z1 = z3++;
     auto z2 = z3++;
-    auto colors = graph->split_color(color);
+    const auto& colors = graph->split_color(color);
 
     while (z3 != path.end()) {
       for (const auto &col: colors) {

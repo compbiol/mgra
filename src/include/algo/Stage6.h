@@ -2,14 +2,14 @@
 #define STAGE6_H_ 
 
 template<class graph_t>
-size_t Algorithm<graph_t>::calculate_cost(const vertex_t& y, const Mularcs<Mcolor>& mularcs_x, const Mularcs<Mcolor>& mularcs_y) { 
-  typedef std::pair<std::pair<vertex_t, Mcolor>, size_t> colacr_t;
+size_t Algorithm<graph_t>::calculate_cost(const vertex_t& y, const mularcs_t& mularcs_x, const mularcs_t& mularcs_y) { 
+  typedef std::pair<std::pair<vertex_t, mcolor_t>, size_t> colacr_t;
   utility::equivalence<colacr_t> equiv; 
 
   for (auto arc_x = mularcs_x.cbegin(); arc_x != mularcs_x.cend(); ++arc_x) { 
     if (arc_x->first != y) { 
-      for (auto arc_y =  mularcs_y.cbegin(); arc_y != mularcs_y.cend(); ++arc_y) { 
-        Mcolor color(arc_x->second, arc_y->second, Mcolor::Intersection);
+      for (auto arc_y = mularcs_y.cbegin(); arc_y != mularcs_y.cend(); ++arc_y) { 
+        mcolor_t color(arc_x->second, arc_y->second, mcolor_t::Intersection);
         if (color.size() > 0) { 
 	  equiv.addrel(std::make_pair(*arc_x, 0), std::make_pair(*arc_y, 1));
         } 
@@ -18,7 +18,7 @@ size_t Algorithm<graph_t>::calculate_cost(const vertex_t& y, const Mularcs<Mcolo
   }
   
   equiv.update();
-  std::map<colacr_t, std::set<colacr_t> > classes = equiv.get_eclasses<std::set<colacr_t> >(); 
+  const std::map<colacr_t, std::set<colacr_t> >& classes = equiv.get_eclasses<std::set<colacr_t> >(); 
 
   size_t count_U = 0; 
   for (const auto &color_set : classes) { 
@@ -43,11 +43,11 @@ std::set<arc_t> Algorithm<graph_t>::create_minimal_matching(const std::set<verte
   std::map<arc_t, size_t> weight_edges; 
 
   for(const auto& v : vertex_set) { 
-    Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(v); 
-    Mularcs<Mcolor> mularcs_x = graph->get_adjacent_multiedges_with_info(v, true, false, false); 
+    mularcs_t mularcs = graph->get_adjacent_multiedges(v); //FIXME
+    const mularcs_t& mularcs_x = graph->get_adjacent_multiedges_with_info(v, true, false, false); 
     for (const auto& arc: mularcs) {
       if (arc.first != Infty && weight_edges.count(std::make_pair(v, arc.first)) == 0 && weight_edges.count(std::make_pair(arc.first, v)) == 0) { 
-	Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges_with_info(arc.first, true, false, false);
+	mularcs_t mularcs_y = graph->get_adjacent_multiedges_with_info(arc.first, true, false, false);
 	mularcs_y.erase(v);
 	//std::cerr << "Calculate cost " << v << " " << arc.first << " have " << calculate_cost(arc.first, mularcs_x, mularcs_y) << std::endl;
 	weight_edges.insert(std::make_pair(std::make_pair(v, arc.first), calculate_cost(arc.first, mularcs_x, mularcs_y)));
@@ -117,19 +117,19 @@ template<class graph_t>
 size_t Algorithm<graph_t>::process_minimal_matching(const arc_t& matching) { 
   size_t num_rear = 0; 
   
-  Mularcs<Mcolor> mularcs_x = graph->get_adjacent_multiedges_with_info(matching.first, true, false, false);
+  mularcs_t mularcs_x = graph->get_adjacent_multiedges_with_info(matching.first, true, false, false);
   mularcs_x.erase(matching.second);
-  Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges_with_info(matching.second, true, false, false);
+  mularcs_t mularcs_y = graph->get_adjacent_multiedges_with_info(matching.second, true, false, false);
   mularcs_y.erase(matching.first);
 
   //std::cerr << "Start process " << matching.first << " " << matching.second << std::endl;
 
-  typedef std::pair<std::pair<vertex_t, Mcolor>, size_t> colacr_t;
+  typedef std::pair<std::pair<vertex_t, mcolor_t>, size_t> colacr_t;
   utility::equivalence<colacr_t> equiv; 
 
   for (auto arc_x = mularcs_x.cbegin(); arc_x != mularcs_x.cend(); ++arc_x) { 
     for (auto arc_y =  mularcs_y.cbegin(); arc_y != mularcs_y.cend(); ++arc_y) { 
-      Mcolor color(arc_x->second, arc_y->second, Mcolor::Intersection);
+      mcolor_t color(arc_x->second, arc_y->second, mcolor_t::Intersection);
       if (color.size() > 0) { 
 	equiv.addrel(std::make_pair(*arc_x, 0), std::make_pair(*arc_y, 1));
       } 
@@ -137,11 +137,11 @@ size_t Algorithm<graph_t>::process_minimal_matching(const arc_t& matching) {
   }
   
   equiv.update();
-  std::map<colacr_t, std::set<colacr_t> > classes = equiv.get_eclasses<std::set<colacr_t> >(); 
+  const std::map<colacr_t, std::set<colacr_t> >& classes = equiv.get_eclasses<std::set<colacr_t> >(); 
   
   for (const auto &color_set : classes) { 
-    std::multimap<vertex_t, Mcolor> left; 
-    std::multimap<vertex_t, Mcolor> right; 
+    std::multimap<vertex_t, mcolor_t> left; 
+    std::multimap<vertex_t, mcolor_t> right; 
     for (const auto &color : color_set.second) { 
       if (color.second == 0) {
         left.insert(color.first);
@@ -158,7 +158,7 @@ size_t Algorithm<graph_t>::process_minimal_matching(const arc_t& matching) {
 	  graph->apply_two_break(twobreak_t(left.cbegin()->first, v, matching.first, l->first, l->second));
           ++num_rear;
         } 
-	left.begin()->second = Mcolor(left.cbegin()->second, l->second, Mcolor::Union); 
+	left.begin()->second = mcolor_t(left.cbegin()->second, l->second, mcolor_t::Union); 
 	
     } 
 
@@ -172,7 +172,7 @@ size_t Algorithm<graph_t>::process_minimal_matching(const arc_t& matching) {
 	graph->apply_two_break(twobreak_t(right.cbegin()->first, v, matching.second, r->first, r->second));
 	++num_rear;
       } 
-      right.begin()->second = Mcolor(right.cbegin()->second, r->second, Mcolor::Union);
+      right.begin()->second = mcolor_t(right.cbegin()->second, r->second, mcolor_t::Union);
     } 
     //std::cerr << "finally" << std::endl;
     assert(right.cbegin()->second == left.cbegin()->second);
@@ -187,7 +187,7 @@ size_t Algorithm<graph_t>::process_minimal_matching(const arc_t& matching) {
 template<class graph_t>
 bool Algorithm<graph_t>::stage6() { 
   size_t number_break = 0;
-  std::map<vertex_t, std::set<vertex_t> > classes = graph->split_on_components();
+  const std::map<vertex_t, std::set<vertex_t> >& classes = graph->split_on_components();
   for (const auto &vertex_set : classes) { 
     if (vertex_set.second.size() <= max_size_component) { 
       std::set<arc_t> matching = create_minimal_matching(vertex_set.second);

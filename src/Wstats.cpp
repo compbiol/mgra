@@ -1,10 +1,6 @@
 #include "writer/Wstats.h"
 
-writer::Wstats::Wstats(std::string name_file) {
-	ofstat.open(name_file); 
-} 
-
-void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_history<Mcolor> >& info, const ProblemInstance<Mcolor>& cfg, const mbgraph_with_history<Mcolor>& graph) { 
+void writer::Wstats::print_all_statistics(size_t stage, Statistics<mbgraph_with_history<mcolor_t> >& info, const ProblemInstance<mcolor_t>& cfg, const mbgraph_with_history<mcolor_t>& graph) { 
 	if (stage == 0) { 
   	  ofstat << "Initial graph:" << std::endl;
 	  ofstat << "... Unique blocks: " << toString(graph.size() / 2) << std::endl;
@@ -20,25 +16,17 @@ void writer::Wstats::print_all_statistics(int stage, Statistics<mbgraph_with_his
 
 	print_rear_characters(info.get_compl_stat()); 
 	print_indel_statistics(info.get_indel_stat());
-	print_fair_edges(graph, info);
+	
+//print_fair_edges(graph, info);
+//print_estimated_dist(stage, cfg, graph);
 
-//#ifndef VERSION2
-	//print_estimated_dist(stage, cfg, graph);
-//#endif
 } 
 
-void writer::Wstats::print_vertex_statistics(const std::array<size_t, 4>& answer) {
-  ofstat << "... Duplication vertex: " << answer[0] << std::endl;
-  ofstat << "... Insertion/deletion vertex: " << answer[1] << std::endl;
-  ofstat << "... Count self loop: " << answer[2] << std::endl;
-  ofstat << "... Colors is not one-to-one match: " << answer[3] << std::endl; 
-}
-
-void writer::Wstats::print_complete_edges(const mbgraph_with_history<Mcolor>& graph) { 
+void writer::Wstats::print_complete_edges(const mbgraph_with_history<mcolor_t>& graph) { 
   size_t nc = 0;
   ofstat << "... complete multiedges:";
   for(const auto &x : graph) {
-    Mularcs<Mcolor> mularcs = graph.get_adjacent_multiedges(x);
+    const mularcs_t& mularcs = graph.get_adjacent_multiedges(x);
     if (mularcs.size() == 1 && mularcs.cbegin()->second == graph.get_complete_color() 
 	&& (x < mularcs.cbegin()->first || mularcs.cbegin()->first == Infty)) {
       ofstat << " " << x << "~" << mularcs.cbegin()->first;
@@ -48,8 +36,8 @@ void writer::Wstats::print_complete_edges(const mbgraph_with_history<Mcolor>& gr
   ofstat << "\t(total: " << nc << ")" << std::endl;
 } 
 
-void writer::Wstats::print_connected_components(const mbgraph_with_history<Mcolor>& graph) {
-  std::map<vertex_t, std::set<vertex_t> > classes = graph.split_on_components(false);
+void writer::Wstats::print_connected_components(const mbgraph_with_history<mcolor_t>& graph) {
+  const std::map<vertex_t, std::set<vertex_t> >& classes = graph.split_on_components(false);
   std::map<size_t, size_t> stx;
 
   for(const auto &component : classes) {
@@ -76,7 +64,7 @@ void writer::Wstats::print_rear_characters(const std::vector<std::string>& info)
   print_close_table();	
 } 
 
-void writer::Wstats::print_indel_statistics(const std::multimap<size_t, std::tuple<Mcolor, Mcolor, size_t, size_t> >& indels) {
+void writer::Wstats::print_indel_statistics(const std::multimap<size_t, std::tuple<mcolor_t, mcolor_t, size_t, size_t> >& indels) {
   ofstat << std::endl << "% Insertion/Deletion characters: " << std::endl << std::endl;
   
   print_start_table(5); 
@@ -84,8 +72,8 @@ void writer::Wstats::print_indel_statistics(const std::multimap<size_t, std::tup
   ofstat << "\\hline" << std::endl;
 
   for (auto line = indels.crbegin(); line != indels.crend(); ++line) { 
-    Mcolor color_f; 
-    Mcolor color_s; 
+    mcolor_t color_f; 
+    mcolor_t color_s; 
     size_t first = 0; 
     size_t second = 0;
     std::tie(color_f, color_s, first, second) = line->second;
@@ -96,80 +84,10 @@ void writer::Wstats::print_indel_statistics(const std::multimap<size_t, std::tup
   print_close_table();
 } 
 
-void writer::Wstats::print_fair_edges(const mbgraph_with_history<Mcolor>& MBG, Statistics<mbgraph_with_history<Mcolor>>& info) {
-	// output H-subgraphs count
-	ofstat << std::endl << "% Fair multi-edges count: " << std::endl << std::endl;
-
-	std::map<std::pair<Mcolor, Mcolor>, size_t> Hcount = info.get_Hsubgraph();
-	std::list<Mcolor> HCrow; 	//the set of multicolors that appear in H-subraphs
-
-	std::set<Mcolor> proc;
-	for(auto ih = Hcount.cbegin(); ih != Hcount.cend(); ++ih) {
-		if (proc.find(ih->first.first) == proc.end()) {
-			HCrow.push_back(ih->first.first);
-			proc.insert(ih->first.first);
-		}
-
-		if (proc.find(ih->first.second) == proc.end()) {
-			HCrow.push_back(ih->first.second);
-			proc.insert(ih->first.second);
-		}
-	}
-
-	//print_start_table(HCrow.size());
-	ofstat << "\\begin{table}[h]" << std::endl;
-	ofstat << "\\centering \\begin{tabular}{|c||"; //FIXME::why twice
-	for(int i = 0; i < HCrow.size(); ++i) { 
-		ofstat << "c|";
-	} 
-	ofstat << "}" << std::endl;
-	ofstat << "\\hline" << std::endl;
-
-	for(auto ic = HCrow.cbegin(); ic != HCrow.cend(); ++ic) {
-		ofstat << " & ${";
-		if (MBG.is_T_consistent_color(*ic)) {
-			ofstat << "\\bf ";
-		} 
-		ofstat <<  genome_match::mcolor_to_name(*ic) << "+}$";
-	}
-
-	ofstat << "\\\\" << std::endl;
-	ofstat << "\\hline \\hline" << std::endl;
-
-	for(auto Q1 = HCrow.cbegin(); Q1 != HCrow.cend(); ++Q1) {
-		ofstat << "${";
-		if (MBG.is_T_consistent_color(*Q1)) {
-			ofstat << "\\bf ";
-		} 
-		ofstat << genome_match::mcolor_to_name(*Q1) << "+}$"; 
-
-		for(auto Q2 = HCrow.cbegin(); Q2 != HCrow.cend(); ++Q2) {
-			ofstat << " & ";
-
-			if (Hcount.find(std::make_pair(*Q1, *Q2)) != Hcount.end()) {
-				ofstat << " "; //"${";
-
-				if (MBG.are_adjacent_branches(*Q1, *Q2)) { 
-					ofstat << "{\\cellcolor[gray]{.9}}";
-				} 
-
-				ofstat << Hcount[std::make_pair(*Q1, *Q2)] << " "; 
-			}
-
-			if (*Q1 == *Q2) {
-				ofstat << "$\\star$";
-			}
-		}
-		ofstat << " \\\\" << std::endl;
-		ofstat << "\\hline" << std::endl;
-	}
-	print_close_table();
-}
-
-void writer::Wstats::print_history_statistics(const mbgraph_with_history<Mcolor>& graph, const edges_t& bad_edges) {
-  std::map<Mcolor, size_t> n2br;
-  std::map<Mcolor, size_t> nins;
-  std::map<Mcolor, size_t> ndel; 
+void writer::Wstats::print_history_statistics(const mbgraph_with_history<mcolor_t>& graph, const edges_t& bad_edges) {
+  std::map<mcolor_t, size_t> n2br;
+  std::map<mcolor_t, size_t> nins;
+  std::map<mcolor_t, size_t> ndel; 
   size_t tbr = 0;
   size_t ins = 0; 
   size_t del = 0;
@@ -223,7 +141,7 @@ void writer::Wstats::print_history_statistics(const mbgraph_with_history<Mcolor>
   ofstat << std::endl;
 
   size_t c_td = 0; 
-  std::map<Mcolor, size_t> ntd;
+  std::map<mcolor_t, size_t> ntd;
   for(auto il = graph.begin_tandem_duplication_history(); il != graph.end_tandem_duplication_history(); ++il) {
     ++c_td;
     ++ntd[il->get_mcolor()];
@@ -236,23 +154,6 @@ void writer::Wstats::print_history_statistics(const mbgraph_with_history<Mcolor>
 	
   ofstat << std::endl;
 }
-
-void writer::Wstats::print_start_table(size_t count_column) { 
-	ofstat << "\\begin{table}[h]" << std::endl;
-	ofstat << "\\centering \\begin{tabular}{|c|";
-	for(size_t i = 0; i < count_column - 1; ++i) { 
-		ofstat << "c|";
-	} 
-	ofstat << "}" << std::endl;
-	ofstat << "\\hline" << std::endl;	
-} 
-
-void writer::Wstats::print_close_table() { 
- 	ofstat << "\\hline" << std::endl;
-	ofstat << "\\end{tabular}" << std::endl;
-	ofstat << "\\end{table}" << std::endl;
-	ofstat << std::endl;
-} 
 
 /*void writer::Wstats::print_postponed_deletion_statistics(const std::map<arc_t, Mcolor>& postponed_deletions) {
   ofstat << std::endl << "Total number of postponed deletions: " << postponed_deletions.size() << std::endl;
@@ -335,25 +236,74 @@ void writer::Wstats::print_bad_complete_edges(const mbgraph_with_history<Mcolor>
 	print_close_table();
 } */
 
-/*if (bad_edges.count(il->get_mcolor()) != 0) {
-       const auto &edges = bad_edges.find(il->get_mcolor())->second;
-       if (il->get_arc(0).first == graph.get_obverse_vertex(il->get_arc(1).first) 
-          && (edges.count(std::make_pair(il->get_arc(0).first, il->get_arc(1).first)) != 0 || edges.count(std::make_pair(il->get_arc(1).first, il->get_arc(0).first)) != 0)) { 
-         ++ndel[il->get_mcolor()];
-         ++del;
-       } else if (il->get_arc(0).second == graph.get_obverse_vertex(il->get_arc(1).second) 
-	  && (edges.count(std::make_pair(il->get_arc(0).second, il->get_arc(1).second)) != 0 || edges.count(std::make_pair(il->get_arc(1).second, il->get_arc(0).second)) != 0)) {
-         ++ndel[il->get_mcolor()];
-         ++del;
-      } else if (il->get_arc(0).first == graph.get_obverse_vertex(il->get_arc(0).second) 
-	  && (edges.count(std::make_pair(il->get_arc(0).first, il->get_arc(0).second)) != 0 || edges.count(std::make_pair(il->get_arc(0).second, il->get_arc(0).first)) != 0)) {
-         ++nins[il->get_mcolor()];
-         ++ins;
-      } else if (il->get_arc(1).first == graph.get_obverse_vertex(il->get_arc(1).second)
-          && (edges.count(std::make_pair(il->get_arc(1).first, il->get_arc(1).second)) != 0 || edges.count(std::make_pair(il->get_arc(1).second, il->get_arc(1).first)) != 0)) { 
-         ++nins[il->get_mcolor()];
-         ++ins;
-      } else {
-         ++n2br[il->get_mcolor()];
-         ++tbr;
-} */
+/*
+void writer::Wstats::print_fair_edges(const mbgraph_with_history<Mcolor>& MBG, Statistics<mbgraph_with_history<Mcolor>>& info) {
+	// output H-subgraphs count
+	ofstat << std::endl << "% Fair multi-edges count: " << std::endl << std::endl;
+
+	std::map<std::pair<Mcolor, Mcolor>, size_t> Hcount = info.get_Hsubgraph();
+	std::list<Mcolor> HCrow; 	//the set of multicolors that appear in H-subraphs
+
+	std::set<Mcolor> proc;
+	for(auto ih = Hcount.cbegin(); ih != Hcount.cend(); ++ih) {
+		if (proc.find(ih->first.first) == proc.end()) {
+			HCrow.push_back(ih->first.first);
+			proc.insert(ih->first.first);
+		}
+
+		if (proc.find(ih->first.second) == proc.end()) {
+			HCrow.push_back(ih->first.second);
+			proc.insert(ih->first.second);
+		}
+	}
+
+	//print_start_table(HCrow.size());
+	ofstat << "\\begin{table}[h]" << std::endl;
+	ofstat << "\\centering \\begin{tabular}{|c||"; //FIXME::why twice
+	for(int i = 0; i < HCrow.size(); ++i) { 
+		ofstat << "c|";
+	} 
+	ofstat << "}" << std::endl;
+	ofstat << "\\hline" << std::endl;
+
+	for(auto ic = HCrow.cbegin(); ic != HCrow.cend(); ++ic) {
+		ofstat << " & ${";
+		if (MBG.is_T_consistent_color(*ic)) {
+			ofstat << "\\bf ";
+		} 
+		ofstat <<  genome_match::mcolor_to_name(*ic) << "+}$";
+	}
+
+	ofstat << "\\\\" << std::endl;
+	ofstat << "\\hline \\hline" << std::endl;
+
+	for(auto Q1 = HCrow.cbegin(); Q1 != HCrow.cend(); ++Q1) {
+		ofstat << "${";
+		if (MBG.is_T_consistent_color(*Q1)) {
+			ofstat << "\\bf ";
+		} 
+		ofstat << genome_match::mcolor_to_name(*Q1) << "+}$"; 
+
+		for(auto Q2 = HCrow.cbegin(); Q2 != HCrow.cend(); ++Q2) {
+			ofstat << " & ";
+
+			if (Hcount.find(std::make_pair(*Q1, *Q2)) != Hcount.end()) {
+				ofstat << " "; //"${";
+
+				if (MBG.are_adjacent_branches(*Q1, *Q2)) { 
+					ofstat << "{\\cellcolor[gray]{.9}}";
+				} 
+
+				ofstat << Hcount[std::make_pair(*Q1, *Q2)] << " "; 
+			}
+
+			if (*Q1 == *Q2) {
+				ofstat << "$\\star$";
+			}
+		}
+		ofstat << " \\\\" << std::endl;
+		ofstat << "\\hline" << std::endl;
+	}
+	print_close_table();
+}
+*/

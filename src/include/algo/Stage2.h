@@ -7,7 +7,7 @@ if return false, then Q cannot be formed
 if true - who knows...
 */
 template<class graph_t>
-bool Algorithm<graph_t>::canformQ(const vertex_t& x, const Mcolor& Q) const {
+bool Algorithm<graph_t>::canformQ(const vertex_t& x, const mcolor_t& Q) const {
   if (x == Infty) {
     return canformQoo;
   }
@@ -16,14 +16,14 @@ bool Algorithm<graph_t>::canformQ(const vertex_t& x, const Mcolor& Q) const {
   // OR 
   // if every intersection Q \cap QQ = \emptyset or QQ.
 
-  Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges_with_info(x, split_bad_colors);
+  const mularcs_t& mularcs = graph->get_adjacent_multiedges_with_info(x, split_bad_colors);
   bool canform = true;
  
   for(auto arc = mularcs.cbegin(); (arc != mularcs.cend()) && canform; ++arc) { 
     if (postponed_deletions.count(std::make_pair(x, arc->first)) != 0 || postponed_deletions.count(std::make_pair(arc->first, x)) != 0) { 
       canform = false;
     } else { 
-      Mcolor color(Q, arc->second, Mcolor::Intersection); 
+      mcolor_t color(Q, arc->second, mcolor_t::Intersection); 
       if (color.size() > 0 && color.size() < arc->second.size()) { 
         canform = false;
       }
@@ -35,13 +35,13 @@ bool Algorithm<graph_t>::canformQ(const vertex_t& x, const Mcolor& Q) const {
 // test "mobility" of central edge
 // can it be ever find neighboring edge of the same multicolor
 template<class graph_t>
-bool Algorithm<graph_t>::is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>& mularcs_x, const Mularcs<Mcolor>& mularcs_y) const {
+bool Algorithm<graph_t>::is_mobil_edge(const vertex_t& y, const mularcs_t& mularcs_x, const mularcs_t& mularcs_y) const {
   bool mobilQ = false;
-  auto arcs = mularcs_x.equal_range(y); 
+  const auto& arcs = mularcs_x.equal_range(y); 
   
   for (auto jc = arcs.first; (jc != arcs.second) && !mobilQ; ++jc) { 
     if (graph->is_vec_T_consistent_color(jc->second)) { //cental sub-edge
-      const Mcolor& QQ = jc->second; // color of central sub-edge (QQ is sub-multicolor of Q)
+      const auto& QQ = jc->second; // color of central sub-edge (QQ is sub-multicolor of Q)
   
       for(auto ix = mularcs_x.cbegin(); (ix != mularcs_x.cend()) && !mobilQ; ++ix) { 
 	if (ix->first != y) { 
@@ -74,15 +74,15 @@ bool Algorithm<graph_t>::stage2() {
 	continue; 
       } 
 
-      Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(x);
-      Mularcs<Mcolor> mularcs_x = graph->get_adjacent_multiedges_with_info(x, split_bad_colors, true);	
+      const mularcs_t& mularcs = graph->get_adjacent_multiedges(x);
+      mularcs_t mularcs_x = graph->get_adjacent_multiedges_with_info(x, split_bad_colors, true);//FIXME	
       
       bool found = false;
       for(auto im = mularcs.cbegin(); (im != mularcs.cend()) && !found; ++im) {
 	const vertex_t& y = im->first; // Q == im->second - color of central edge
 
 	if (y != Infty && !graph->is_duplication_vertex(y)) { 
-	  Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges_with_info(y, split_bad_colors, true);
+	  mularcs_t mularcs_y = graph->get_adjacent_multiedges_with_info(y, split_bad_colors, true);
 	  mularcs_y.erase(x);
 
 	  if (postponed_deletions.count(std::make_pair(x, y)) != 0 || postponed_deletions.count(std::make_pair(y, x)) != 0 || !is_mobil_edge(y, mularcs_x, mularcs_y)) {

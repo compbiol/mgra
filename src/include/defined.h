@@ -57,6 +57,7 @@ __attribute__((always_inline)) inline std::string trim(std::string s, const std:
 
 #include "genome.h"
 #include "mcolor.h"
+typedef std::pair<vertex_t, structure::Mcolor> edge_t; //FIXME CHECK on all
 #include "mularcs.h"
 //#include pconf and tree
 

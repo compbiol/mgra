@@ -1,6 +1,8 @@
 #ifndef MULARCS_H_
 #define MULARCS_H_
 
+namespace structure { 
+
 template<class mcolor_t>
 struct Mularcs { 
   typedef std::multimap<vertex_t, mcolor_t> map_t; 
@@ -97,4 +99,5 @@ private:
   map_t mularcs;
 }; 
 
+}
 #endif

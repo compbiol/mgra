@@ -24,15 +24,15 @@
 std::vector<std::string> genome_match::number_to_genome;
 genome_match::gen2num genome_match::genome_to_number;   
 
-void tell_root_besides(const mbgraph_with_history<Mcolor>& graph) {
+void tell_root_besides(const mbgraph_with_history<structure::Mcolor>& graph) {
   // tell where the root resides
   std::clog << "the root resides in between:";
 
-  std::set<Mcolor> T(graph.cbegin_T_consistent_color(), graph.cend_T_consistent_color()); 
+  std::set<structure::Mcolor> T(graph.cbegin_T_consistent_color(), graph.cend_T_consistent_color()); 
 
   for (auto it = T.begin(); it != T.end(); ++it) {
     for (auto jt = it; ++jt != T.end(); ) {
-      Mcolor C(*it, *jt, Mcolor::Intersection);
+      structure::Mcolor C(*it, *jt, structure::Mcolor::Intersection);
       if (C.size() == it->size()) {
 	T.erase(it++);
 	jt = it;
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
   typedef structure::Genome Genome;
   
   /*Reading problem configuration*/
-  ProblemInstance<Mcolor> PI(reader::read_cfg_file(name_cfg_file)); 
+  ProblemInstance<structure::Mcolor> PI(reader::read_cfg_file(name_cfg_file)); 
 
   std::vector<Genome> genomes = reader::read_genomes(PI);
   
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     std::clog << "Genome " << PI.get_priority_name(i) << " blocks: " << genomes[i].size() << std::endl;
   } 
 
-  std::shared_ptr<mbgraph_with_history<Mcolor> > graph(new mbgraph_with_history<Mcolor>(genomes, PI)); 
+  std::shared_ptr<mbgraph_with_history<structure::Mcolor> > graph(new mbgraph_with_history<structure::Mcolor>(genomes, PI)); 
 
   std::clog << "vecT-consistent colors: " << graph->count_vec_T_consitent_color() << std::endl;
   for (auto id = graph->cbegin_T_consistent_color(); id != graph->cend_T_consistent_color(); ++id) {
@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
 
   tell_root_besides(*graph); 	
 
-  Algorithm<mbgraph_with_history<Mcolor> > main_algo(graph);
+  Algorithm<mbgraph_with_history<structure::Mcolor> > main_algo(graph);
 
   main_algo.convert_to_identity_bgraph(PI); 
  
@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
 #endif
 
   auto bad_edges = main_algo.get_bad_edges();
-  RecoveredGenomes<mbgraph_with_history<Mcolor> > reductant(*graph, PI.get_target(), bad_edges); 
+  RecoveredGenomes<mbgraph_with_history<structure::Mcolor> > reductant(*graph, PI.get_target(), bad_edges); 
 
   if (PI.get_target().empty()) {
     size_t i = 0;

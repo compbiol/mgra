@@ -4,6 +4,9 @@
 namespace writer {
   template<class graph_t, class conf_t>
   struct Wdots { 
+    typedef structure::Mcolor mcolor_t;
+    typedef structure::Mularcs<mcolor_t> mularcs_t;
+
     // Save .dot file and output statistics of synteny blocks representing breakpoints
     void save_dot(const graph_t& graph, const conf_t& cfg, size_t stage);
     void save_components(const graph_t& graph, const conf_t& cfg, size_t stage);
@@ -25,7 +28,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(const graph_t& graph, const conf_t
   size_t ncls = 0;
   std::unordered_set<vertex_t> mark; // vertex set
   for(const auto &x : graph) { 
-    Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
+    const mularcs_t& Mx = graph.get_adjacent_multiedges(x);
 
     if (Mx.size() == 1 && Mx.cbegin()->second == graph.get_complete_color()) { 
       continue; // trivial cycle
@@ -38,7 +41,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(const graph_t& graph, const conf_t
 	continue; // already output
       }    
 
-      const Mcolor& C = im->second;
+      const mcolor_t& C = im->second;
       bool vec_T_color = graph.is_vec_T_consistent_color(C);
       for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
 	for (size_t i = 0; i < ic->second; ++i) { 
@@ -100,7 +103,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const
 	continue;
       } 
 
-      Mularcs<Mcolor> Mx = graph.get_adjacent_multiedges(x);
+      const mularcs_t& Mx = graph.get_adjacent_multiedges(x);
 
       if (Mx.size() == 1 && Mx.cbegin()->second == graph.get_complete_color()) { 
 	continue; // trivial cycle
@@ -113,7 +116,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const
 	  continue; // already output
 	} 
 
-	const Mcolor& C = im->second;
+	const mcolor_t& C = im->second;
 	bool vec_T_color = graph.is_vec_T_consistent_color(C);
 	for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
 	  for (size_t i = 0; i < ic->second; ++i) { 

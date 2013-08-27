@@ -93,11 +93,11 @@ protected:
 
 private:
   void add_edges(size_t index, const genome_t& genome) {
-    auto rearLambda = [] (const std::pair<orf_t, int> & orf) -> vertex_t { 
+    const auto rearLambda = [] (const std::pair<orf_t, int> & orf) -> vertex_t { 
       return ((orf.second > 0)?(orf.first + "h"):(orf.first + "t"));
     };
 
-    auto frontLambda = [] (const std::pair<orf_t, int> & orf) -> vertex_t { 
+    const auto frontLambda = [] (const std::pair<orf_t, int> & orf) -> vertex_t { 
       return ((orf.second > 0)?(orf.first + "t"):(orf.first + "h"));
     };
 

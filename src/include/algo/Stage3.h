@@ -8,16 +8,15 @@ bool Algorithm<graph_t>::stage3() {
   std::unordered_set<vertex_t > processed; 
   for (const auto &a1 : *graph) {  
     const vertex_t& a2 = graph->get_obverse_vertex(a1);
-    Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(a1);
+    const mularcs_t& mularcs = graph->get_adjacent_multiedges(a1);
 
     if (graph->is_indel_vertex(a1) && (processed.count(a1) == 0) && graph->is_indel_vertex(a2) && mularcs.size() != 0)  {
-      processed.insert(a1); 
-      processed.insert(a2);
-
-      Mcolor indel_color = mularcs.union_multicolors(); 
-      Mcolor bar_indel_color = graph->get_complement_color(indel_color);
-      std::set<Mcolor> split_indel = graph->split_color(indel_color, false);
-      std::set<Mcolor> split_bar_indel = graph->split_color(bar_indel_color, false);
+      processed.insert({a1, a2}); 
+      
+      const auto& indel_color = mularcs.union_multicolors(); 
+      const auto& bar_indel_color = graph->get_complement_color(indel_color);
+      const auto& split_indel = graph->split_color(indel_color, false);
+      const auto& split_bar_indel = graph->split_color(bar_indel_color, false);
       assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
 
       if (graph->is_vec_T_consistent_color(bar_indel_color) 

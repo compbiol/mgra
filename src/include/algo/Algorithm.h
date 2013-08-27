@@ -15,13 +15,15 @@ struct Algorithm {
 	, write_stats("stats.txt") {  
 	} 
 
-	void convert_to_identity_bgraph(const ProblemInstance<Mcolor>& cfg);
+	void convert_to_identity_bgraph(const ProblemInstance<structure::Mcolor>& cfg);
 
         edges_t get_bad_edges() const; 
 private: 
-        typedef event::TwoBreak<Mcolor> twobreak_t;
-        typedef event::InsDel<Mcolor> insertion_t;
-	typedef event::TandemDuplication<Mcolor> tandem_duplication_t;
+        typedef structure::Mcolor mcolor_t; 
+        typedef structure::Mularcs<mcolor_t> mularcs_t; 
+        typedef event::TwoBreak<mcolor_t> twobreak_t;
+        typedef event::InsDel<mcolor_t> insertion_t;
+	typedef event::TandemDuplication<mcolor_t> tandem_duplication_t;
 
 	//Stage 1: loop over vertices  
 	bool stage1(); 
@@ -29,8 +31,8 @@ private:
 
 	//Stage 2: process H-subgraph
 	bool stage2();
-	bool canformQ(const vertex_t& x, const Mcolor& Q) const;
-	bool is_mobil_edge(const vertex_t& y, const Mularcs<Mcolor>& mularcs_x, const Mularcs<Mcolor>& mularcs_y) const;
+	bool canformQ(const vertex_t& x, const mcolor_t& Q) const;
+	bool is_mobil_edge(const vertex_t& y, const mularcs_t& mularcs_x, const mularcs_t& mularcs_y) const;
 
 	//Stage 3: process insertion/deletion events
 	bool stage3();
@@ -54,14 +56,14 @@ private:
 
  	//Stage 10: Force stage
 	bool stage6();
-	size_t calculate_cost(const vertex_t& y, const Mularcs<Mcolor>& mularcs_x, const Mularcs<Mcolor>& mulacrs_y); 
+	size_t calculate_cost(const vertex_t& y, const mularcs_t& mularcs_x, const mularcs_t& mulacrs_y); 
         std::set<arc_t> create_minimal_matching(const std::set<vertex_t>& vertex_set); 
 	size_t process_minimal_matching(const arc_t& matching);
 
         //Stage 11: Process less relible path
 	bool stage7();
-        vertex_t how_many_paths(const Mularcs<Mcolor>& mularcs, const Mcolor& target_color);
-	vertex_t find_less_simple_path(path_t& path, std::unordered_set<vertex_t>& processed, const vertex_t& prev, const vertex_t& cur, Mcolor vec_color, bool is_next); 	
+        vertex_t how_many_paths(const mularcs_t& mularcs, const mcolor_t& target_color);
+	vertex_t find_less_simple_path(path_t& path, std::unordered_set<vertex_t>& processed, const vertex_t& prev, const vertex_t& cur, const mcolor_t& vec_color, bool is_next); 	
 	size_t convert_less_simple_path(path_t& path);	
 
 private: 
@@ -71,15 +73,15 @@ private:
   bool split_bad_colors;
   const size_t max_size_component;
 
-  std::map<arc_t, Mcolor> postponed_deletions; 
-  std::multimap<arc_t, Mcolor> insertions;
+  std::map<arc_t, mcolor_t> postponed_deletions; 
+  std::multimap<arc_t, mcolor_t> insertions;
 
   writer::Wstats write_stats;
-  writer::Wdots<graph_t, ProblemInstance<Mcolor> > write_dots; 
+  writer::Wdots<graph_t, ProblemInstance<mcolor_t> > write_dots; 
 };
 
 template<class graph_t>
-void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<Mcolor>& cfg) {
+void Algorithm<graph_t>::convert_to_identity_bgraph(const ProblemInstance<structure::Mcolor>& cfg) {
   std::array<bool, 11> print_dots;
   print_dots.fill(true);
   bool isChanged = false;

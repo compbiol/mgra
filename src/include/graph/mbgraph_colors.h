@@ -5,20 +5,20 @@
 
 template<class mcolor_t>
 struct mbgraph_with_colors: public MBGraph { 
+  typedef structure::Mularcs<mcolor_t> mularcs_t;
   typedef typename std::set<mcolor_t>::const_iterator citer; 
-  typedef std::pair<vertex_t, vertex_t> arc_t;
-
+  
   template<class conf_t>
   mbgraph_with_colors(const std::vector<MBGraph::genome_t>& genomes, const conf_t& cfg); 
 
-  Mularcs<mcolor_t> get_adjacent_multiedges(const vertex_t& u) const; 
-  Mularcs<mcolor_t> get_adjacent_multiedges_with_info(const vertex_t& u, bool split_bad_colors = false, bool with_bad_edge = true, bool only_two = true);
+  mularcs_t get_adjacent_multiedges(const vertex_t& u) const; 
+  mularcs_t get_adjacent_multiedges_with_info(const vertex_t& u, bool split_bad_colors = false, bool with_bad_edge = true, bool only_two = true);
   std::set<mcolor_t> split_color(const mcolor_t& color, bool only_two = true);
 
   inline mcolor_t get_complement_color(const mcolor_t& color) { 
     assert(color.is_one_to_one_match()); 
     if (compliment_colors.count(color) == 0) { 
-      mcolor_t temp = compute_complement_color(color);  
+      const mcolor_t& temp = compute_complement_color(color);  
       compliment_colors.insert(std::make_pair(color, temp));
       compliment_colors.insert(std::make_pair(temp, color));
       return temp;
@@ -27,7 +27,7 @@ struct mbgraph_with_colors: public MBGraph {
   } 
   
   inline mcolor_t get_min_complement_color(const mcolor_t& color) {
-    mcolor_t temp = get_complement_color(color);
+    const mcolor_t& temp = get_complement_color(color);
     if (temp.size() > color.size() || (temp.size() == color.size() && temp > color)) {	
       return color;
     } 
@@ -125,7 +125,7 @@ mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<MBGraph::ge
 
 template<class mcolor_t>
 bool mbgraph_with_colors<mcolor_t>::is_simple_vertex(const vertex_t& v) const {
-  Mularcs<mcolor_t> mularcs = get_adjacent_multiedges(v);
+  const mularcs_t& mularcs = get_adjacent_multiedges(v);
   if (mularcs.size() == 2 && mularcs.cbegin()->second.is_one_to_one_match() && mularcs.crbegin()->second.is_one_to_one_match() 
       && !is_duplication_vertex(v) && !is_indel_vertex(v)) {
 	return true;  
@@ -135,7 +135,7 @@ bool mbgraph_with_colors<mcolor_t>::is_simple_vertex(const vertex_t& v) const {
 
 template<class mcolor_t>
 bool mbgraph_with_colors<mcolor_t>::is_have_self_loop(const vertex_t& v) const {
-  Mularcs<mcolor_t> mularcs = get_adjacent_multiedges(v);
+  const mularcs_t& mularcs = get_adjacent_multiedges(v);
   if (mularcs.defined(v)) {
      return true;
   } 
@@ -148,7 +148,7 @@ bool mbgraph_with_colors<mcolor_t>::is_indel_vertex(const vertex_t& v) const {
     return false; 
   }  
  
-  mcolor_t un = get_adjacent_multiedges(v).union_multicolors();
+  const mcolor_t& un = get_adjacent_multiedges(v).union_multicolors();
 	
   if (!un.is_one_to_one_match() || (un == complete_color)) {
     return false; 
@@ -163,7 +163,7 @@ bool mbgraph_with_colors<mcolor_t>::is_duplication_vertex(const vertex_t& v) con
     return true;
   } 
 
-  Mularcs<mcolor_t> mularcs = get_adjacent_multiedges(v);
+  const mularcs_t& mularcs = get_adjacent_multiedges(v);
   for(auto im = mularcs.cbegin(); im != mularcs.cend(); ++im) { 
     if (!im->second.is_one_to_one_match()) {
 	return true; 
@@ -182,35 +182,33 @@ bool mbgraph_with_colors<mcolor_t>::is_duplication_vertex(const vertex_t& v) con
 } 
 
 template<class mcolor_t>
-Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const vertex_t& u) const { 
+structure::Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges(const vertex_t& u) const { 
   if (u == Infty) {
     std::cerr << "mularcs ERROR: Infinite input" << std::endl;
     exit(1);
   }
 
-  Mularcs<mcolor_t> output;
+  mularcs_t output;
   for (size_t i = 0; i < count_local_graphs(); ++i) {
-    if (local_graph[i].defined(u)) { 
-      std::pair<partgraph_t::const_iterator, partgraph_t::const_iterator> iters = local_graph[i].equal_range(u);
-      for (auto it = iters.first; it != iters.second; ++it) { 
-	output.insert(it->second, i); 
-      }
-    } 
+    std::pair<partgraph_t::const_iterator, partgraph_t::const_iterator> iters = local_graph[i].equal_range(u);
+    for (auto it = iters.first; it != iters.second; ++it) { 
+      output.insert(it->second, i); 
+    }
   }
   
   return output;
 } 
 
 template<class mcolor_t>
-Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges_with_info(const vertex_t& u, bool split_bad_colors, bool with_bad_edge, bool only_two) { 
-  Mularcs<mcolor_t> output = get_adjacent_multiedges(u);
+structure::Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges_with_info(const vertex_t& u, bool split_bad_colors, bool with_bad_edge, bool only_two) { 
+  mularcs_t&& output = get_adjacent_multiedges(u);
   
   if (split_bad_colors) { 
-    Mularcs<mcolor_t> split; 
+    mularcs_t split; 
     for(const auto &arc : output) {
       if ((!with_bad_edge || (with_bad_edge && !not_mobile_edges.defined(u, arc.first))) 
 	   && !is_vec_T_consistent_color(arc.second) && arc.second.size() < count_local_graphs()) {
-	auto colors = split_color(arc.second, only_two);
+	const auto& colors = split_color(arc.second, only_two);
 	for(const auto &color : colors) {
 	  split.insert(arc.first, color); 
 	}
@@ -221,7 +219,7 @@ Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges_with_in
     return split; 
   }
 
-  return output;
+  return std::move(output);
 } 
 
 template<class mcolor_t>
@@ -249,7 +247,7 @@ std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& co
       }
 
       equiv.update();
-      std::map<size_t, mcolor_t> classes = equiv.get_eclasses<mcolor_t>(); 
+      const std::map<size_t, mcolor_t>& classes = equiv.get_eclasses<mcolor_t>(); 
       for(const auto &col : classes) {
         answer.insert(col.second);
       }
@@ -306,7 +304,7 @@ std::map<vertex_t, std::set<vertex_t> > mbgraph_with_colors<mcolor_t>::split_on_
 	connected_components.addrel(x, x);
     } 
 
-    Mularcs<mcolor_t> mularcs = this->get_adjacent_multiedges(x); 
+    const mularcs_t& mularcs = get_adjacent_multiedges(x); 
 
     if (not_drop_complete_edge && mularcs.size() == 1 && mularcs.cbegin()->second == get_complete_color()) { 
       continue; // ignore complete multiedges

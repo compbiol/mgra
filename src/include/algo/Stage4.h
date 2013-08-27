@@ -4,28 +4,23 @@
 template<class graph_t>
 bool Algorithm<graph_t>::stage4_td() { 
   size_t number_dupl = 0;  
-  //size_t vtc = 0; 
-  //size_t bvtc = 0; 
-  //size_t tc = 0;
-  //size_t not_tandem = 0; 
-
   std::unordered_set<vertex_t> processed;
 
   for (const auto &v : *graph) {
     if (graph->is_duplication_vertex(v) && !graph->is_have_self_loop(v)) {
-      Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(v); 
+      mularcs_t mularcs = graph->get_adjacent_multiedges(v); 
       bool find = false; 
 
       for (auto im = mularcs.cbegin(); im != mularcs.cend() && !find; ++im) {
 	if (im->first != Infty && im->second.is_one_to_one_match()) {
 	  vertex_t current = im->first;
-	  const Mcolor& color = im->second;	
+	  const auto& color = im->second;	
 	  std::vector<arc_t> duplication({std::make_pair(v, current)}); 
 	 
 	  bool is_go = true;    
 	  while (v != graph->get_obverse_vertex(current) && is_go) {	
 	    current = graph->get_obverse_vertex(current); 
-	    Mularcs<Mcolor> current_mularcs = graph->get_adjacent_multiedges(current);
+	    mularcs_t current_mularcs = graph->get_adjacent_multiedges(current);
 	    is_go = false; 
 	    for (auto is = current_mularcs.cbegin(); (is != current_mularcs.cend()) && !is_go; ++is) {
 	      if (is->first != Infty && is->second.how_much_includes(color) >= 2) {
@@ -44,7 +39,7 @@ bool Algorithm<graph_t>::stage4_td() {
 	      graph->apply_tandem_duplication(dupl);	
 	      ++number_dupl;
 	    } else if (!graph->is_vec_T_consistent_color(graph->get_complement_color(color)) && split_bad_colors) {
-		std::set<Mcolor> colors = graph->split_color(color);
+		auto colors = graph->split_color(color);
 		for(const auto &col: colors) {
 		  tandem_duplication_t dupl(duplication, col, true, false);
 	          graph->apply_tandem_duplication(dupl);	
@@ -70,10 +65,6 @@ bool Algorithm<graph_t>::stage4_td() {
 template<class graph_t>
 bool Algorithm<graph_t>::stage4_rtd() {
   size_t number_dupl = 0; 	
-  //size_t vtc = 0; 
-  //size_t bvtc = 0; 
-  //size_t tc = 0; 
-
   std::unordered_set<vertex_t> processed;
 
   for (const auto &v : *graph) {
@@ -81,14 +72,14 @@ bool Algorithm<graph_t>::stage4_rtd() {
       //std::cerr << "vertex " << *it;
       std::vector<arc_t> duplication({std::make_pair(v, v)}); 
 		
-      Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(v); 
+      mularcs_t mularcs = graph->get_adjacent_multiedges(v); 
       vertex_t current = graph->get_obverse_vertex(v);
-      const Mcolor& color = mularcs.get_multicolor(v); 
+      const auto& color = mularcs.get_multicolor(v); 
       bool flag = true; 
 
       while (flag) {
 	flag = false; 
-	Mularcs<Mcolor> current_mularcs = graph->get_adjacent_multiedges(current);
+	mularcs_t current_mularcs = graph->get_adjacent_multiedges(current);
 	for (auto im = current_mularcs.cbegin(); (im != current_mularcs.cend()) && !flag; ++im) { 
 	  if (im->second.how_much_includes(color) == 2) {
 	    flag = true; 
@@ -103,7 +94,7 @@ bool Algorithm<graph_t>::stage4_rtd() {
 
       //std::cerr << " --> " << current;
 			
-      Mularcs<Mcolor> current_mularcs = graph->get_adjacent_multiedges(current);
+      mularcs_t current_mularcs = graph->get_adjacent_multiedges(current);
       std::unordered_set<vertex_t> count_included;
 
       for (const auto &arc : current_mularcs) { 
@@ -121,8 +112,8 @@ bool Algorithm<graph_t>::stage4_rtd() {
 	duplication.push_back(std::make_pair(*count_included.begin(), current));
 	duplication.push_back(std::make_pair(v, *count_included.begin()));	
       } else {	
-	Mcolor first = current_mularcs.get_multicolor(*count_included.begin());			
-	Mcolor second = current_mularcs.get_multicolor(*(++count_included.begin()));
+	auto first = current_mularcs.get_multicolor(*count_included.begin());			
+	auto second = current_mularcs.get_multicolor(*(++count_included.begin()));
 	if (first == color && second != color) {
 	  duplication.push_back(std::make_pair(*count_included.begin(), current));
 	  duplication.push_back(std::make_pair(v, *count_included.begin()));
@@ -147,7 +138,7 @@ bool Algorithm<graph_t>::stage4_rtd() {
 	++number_dupl;
 	//std::cerr << " processed" << std::endl;
       } else if (!graph->is_vec_T_consistent_color(graph->get_complement_color(color)) && split_bad_colors) {
-	std::set<Mcolor> colors = graph->split_color(color);
+	auto colors = graph->split_color(color);
 	for (const auto &col: colors) {
 		tandem_duplication_t dupl(duplication, col, true, true);
 		graph->apply_tandem_duplication(dupl);
@@ -176,13 +167,12 @@ bool Algorithm<graph_t>::stage4_conv_to_td() {
     const vertex_t& a2 = graph->get_obverse_vertex(a1);
   
     if ((processed.count(a1) == 0) && graph->is_duplication_vertex(a1) && graph->is_duplication_vertex(a2)) {		
-      processed.insert(a1); 
-      processed.insert(a2);
-      Mularcs<Mcolor> mularcs_a1 = graph->get_adjacent_multiedges(a1); 
-      Mularcs<Mcolor> mularcs_a2 = graph->get_adjacent_multiedges(a2);
+      processed.insert({a1, a2});
+      mularcs_t mularcs_a1 = graph->get_adjacent_multiedges(a1); 
+      mularcs_t mularcs_a2 = graph->get_adjacent_multiedges(a2);
 
       if (mularcs_a1.size() == 2 && mularcs_a1.size() == mularcs_a2.size()) { 
-        Mcolor color(mularcs_a1.cbegin()->second, mularcs_a1.crbegin()->second, Mcolor::Intersection);
+        mcolor_t color(mularcs_a1.cbegin()->second, mularcs_a1.crbegin()->second, mcolor_t::Intersection);
 	if (((mularcs_a1.cbegin()->second == color && mularcs_a1.crbegin()->second != color)
 	    || (mularcs_a1.cbegin()->second != color && mularcs_a1.crbegin()->second == color))
 	    && ((mularcs_a2.cbegin()->second == color && mularcs_a2.crbegin()->second != color)
@@ -198,7 +188,7 @@ bool Algorithm<graph_t>::stage4_conv_to_td() {
 			++number_rear;
 	  	} else if (!graph->is_vec_T_consistent_color(graph->get_complement_color(color)) && split_bad_colors) {
 			//std::cerr << a1 << " " << x << " " << a2 << " " << y << std::endl;
-			std::set<Mcolor> colors = graph->split_color(color);
+			auto colors = graph->split_color(color);
 			for (const auto& col: colors) { 
 				twobreak_t t(a1, x, a2, y, col);
 				graph->apply_two_break(t);

@@ -3,7 +3,8 @@
 
 template<class graph_t>
 struct Decircularizeter {
-  typedef event::TwoBreak<Mcolor> twobreak_t; 
+  typedef structure::Mcolor mcolor_t; 
+  typedef event::TwoBreak<mcolor_t> twobreak_t; 
   typedef std::list<twobreak_t> transform_t;
 
   
@@ -96,7 +97,7 @@ size_t Decircularizeter<graph_t>::count_circular_chromosome(const partgraph_t& l
  * Transformation may contain only multicolors Q' with Q'\cap Q = 0 or Q.
 */
 template<class graph_t>
-std::list<event::TwoBreak<Mcolor> > Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_t& TG) {
+std::list<event::TwoBreak<structure::Mcolor> > Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_t& TG) {
     // decircularizing sub-transform that is removed
     transform_t D;
 
@@ -137,7 +138,7 @@ std::list<event::TwoBreak<Mcolor> > Decircularizeter<graph_t>::decircularize(par
 
 	    bool usearc = false;
 
-	    Mcolor C(t.get_mcolor(), s.get_mcolor(), Mcolor::Intersection);
+	    mcolor_t C(t.get_mcolor(), s.get_mcolor(), mcolor_t::Intersection);
 	    if (!C.empty()) {
 
 
@@ -202,7 +203,7 @@ std::list<event::TwoBreak<Mcolor> > Decircularizeter<graph_t>::decircularize(par
 	    }
 
 	    {
-		Mcolor C(kt->get_mcolor(), it->get_mcolor(), Mcolor::Intersection);
+		mcolor_t C(kt->get_mcolor(), it->get_mcolor(), mcolor_t::Intersection);
     
                 // N.B. at this point if C is not empty, then C == Q
 		if (!C.empty()) {

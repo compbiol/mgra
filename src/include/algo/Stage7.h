@@ -12,9 +12,9 @@ bool Algorithm<graph_t>::stage7() {
       if (graph->is_simple_vertex(v)) { 
 	path_t path({v});
 	std::unordered_set<vertex_t> processed({v, Infty}); // we count oo as already processed
-	Mularcs<Mcolor> current = graph->get_adjacent_multiedges(v);
+	const mularcs_t& current = graph->get_adjacent_multiedges(v);
 
-	Mcolor vec_color; 
+	mcolor_t vec_color; 
         if (graph->is_vec_T_consistent_color(current.cbegin()->second)) {
           vec_color = current.cbegin()->second;
         } else if (graph->is_vec_T_consistent_color(current.cbegin()->second)) {
@@ -44,7 +44,7 @@ bool Algorithm<graph_t>::stage7() {
 } 
 
 template<class graph_t>
-vertex_t Algorithm<graph_t>::how_many_paths(const Mularcs<Mcolor>& mularcs, const Mcolor& target_color) {
+vertex_t Algorithm<graph_t>::how_many_paths(const mularcs_t& mularcs, const mcolor_t& target_color) {
   //size_t num = 0;
   vertex_t v;  
   for (const auto& arc : mularcs) {
@@ -59,13 +59,13 @@ vertex_t Algorithm<graph_t>::how_many_paths(const Mularcs<Mcolor>& mularcs, cons
 } 
 
 template<class graph_t>
-vertex_t Algorithm<graph_t>::find_less_simple_path(path_t& path, std::unordered_set<vertex_t>& processed, const vertex_t& prev, const vertex_t& cur, Mcolor vec_color, bool is_next) { 
+vertex_t Algorithm<graph_t>::find_less_simple_path(path_t& path, std::unordered_set<vertex_t>& processed, const vertex_t& prev, const vertex_t& cur, const mcolor_t& vec_color, bool is_next) { 
   vertex_t previous  = prev;
   vertex_t current = cur;
   bool stop = true; 
-  auto testColorLambda = [&] (const Mularcs<Mcolor>& mularcs) -> bool {
+  auto testColorLambda = [&] (const mularcs_t& mularcs) -> bool {
     bool flag = true;
-    std::for_each(mularcs.cbegin(), mularcs.cend(), [&] (const std::pair<vertex_t, Mcolor>& arc) -> bool {
+    std::for_each(mularcs.cbegin(), mularcs.cend(), [&] (const edge_t& arc) -> bool {
       if (!graph->is_vec_T_consistent_color(arc.second)) {
         flag = false;
       } 
@@ -84,8 +84,8 @@ vertex_t Algorithm<graph_t>::find_less_simple_path(path_t& path, std::unordered_
 
     if (processed.find(current) == processed.end() && !graph->is_duplication_vertex(current)) {     
       processed.insert(current);
-      Mularcs<Mcolor> new_edges = graph->get_adjacent_multiedges(current);
-      Mcolor previous_color = new_edges.get_multicolor(previous); 
+      mularcs_t new_edges = graph->get_adjacent_multiedges(current);
+      const auto &previous_color = new_edges.get_multicolor(previous); 
       new_edges.erase(previous);
       
       if (new_edges.size() == 2) { // && testColorLambda(new_edges)) { 
@@ -93,8 +93,8 @@ vertex_t Algorithm<graph_t>::find_less_simple_path(path_t& path, std::unordered_
            const auto& arc_f = *new_edges.cbegin();
            const auto& arc_s = *(++new_edges.cbegin()); 
 
-           Mularcs<Mcolor> mul_f = graph->get_adjacent_multiedges(arc_f.first); 
-           Mularcs<Mcolor> mul_s = graph->get_adjacent_multiedges(arc_s.first);   
+           const mularcs_t& mul_f = graph->get_adjacent_multiedges(arc_f.first); 
+           const mularcs_t& mul_s = graph->get_adjacent_multiedges(arc_s.first);   
           
            const vertex_t& x = mul_f.get_vertex(previous_color);
            const vertex_t& y = mul_s.get_vertex(previous_color);
@@ -155,9 +155,6 @@ vertex_t Algorithm<graph_t>::find_less_simple_path(path_t& path, std::unordered_
       }
     }
   }  
-             
-           
-
   return current;
 } 
 
@@ -176,11 +173,11 @@ size_t Algorithm<graph_t>::convert_less_simple_path(path_t& path) {
         vertex_t current = *(++path.begin()); 
         vertex_t next = *(++++path.begin()); 
         for(auto ip = (++++++path.begin()); ip != path.end(); ++ip) {
-	  Mularcs<Mcolor> mul_f = graph->get_adjacent_multiedges(current);
+	  mularcs_t mul_f = graph->get_adjacent_multiedges(current);
           if (mul_f.size() == 3) {
             mul_f.erase(previous);
             mul_f.erase(next);  
-            Mularcs<Mcolor> mul_s = graph->get_adjacent_multiedges(next);
+            mularcs_t mul_s = graph->get_adjacent_multiedges(next);
             mul_s.erase(current); 
             mul_s.erase(*ip);
             if (mul_f.begin()->second != mul_s.begin()->second) {

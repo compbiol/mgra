@@ -1,6 +1,8 @@
 #ifndef MCOLOR_H_
 #define MCOLOR_H_
 
+namespace structure { 
+
 struct Mcolor {
   enum Construct {Difference, Union, Intersection};
 	
@@ -201,4 +203,6 @@ private:
 private: 
   map_t main_color;
 };
+
+} 
 #endif

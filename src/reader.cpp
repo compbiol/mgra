@@ -1,6 +1,6 @@
 #include "reader.h"
 
-std::vector<structure::Genome> reader::read_genomes(const ProblemInstance<Mcolor>& cfg) { 
+std::vector<structure::Genome> reader::read_genomes(const ProblemInstance<mcolor_t>& cfg) { 
 
   if (cfg.get_count_genomes() < 2) {
     std::cerr << "ERROR: at least two input genomes required" << std::endl;
@@ -22,7 +22,7 @@ std::vector<structure::Genome> reader::read_genomes(const ProblemInstance<Mcolor
   return genomes;
 } 
 
-void reader::read_infercars(const ProblemInstance<Mcolor>& cfg, std::vector<genome_t>& genome) {
+void reader::read_infercars(const ProblemInstance<mcolor_t>& cfg, std::vector<genome_t>& genome) {
   std::ifstream input(cfg.get_blk_file().c_str());
   if(!input) {
     std::cerr << "Unable to open " << cfg.get_blk_file() << std::endl;
@@ -86,7 +86,7 @@ void reader::read_infercars(const ProblemInstance<Mcolor>& cfg, std::vector<geno
 }
 
 
-void reader::read_grimm(const ProblemInstance<Mcolor>& cfg, std::vector<genome_t>& genome) {
+void reader::read_grimm(const ProblemInstance<mcolor_t>& cfg, std::vector<genome_t>& genome) {
   std::ifstream input(cfg.get_blk_file().c_str());;
     
   if (!input) {

@@ -12,7 +12,7 @@ bool Algorithm<graph_t>::stage5_1() {
     //std::cerr << "Stage 5_1: splitting into connected components" << std::endl;
     // go over all T-consistent multicolors
     for(auto ic = graph->cbegin_T_consistent_color(); ic != graph->cend_T_consistent_color(); ++ic) {
-      const Mcolor& Q = *ic;
+      const auto& Q = *ic;
 
       bool repeat = true;
       while(repeat) {
@@ -21,7 +21,7 @@ bool Algorithm<graph_t>::stage5_1() {
 	utility::equivalence<vertex_t> CC; // connected components in all colors different from Q
 	std::unordered_map<vertex_t, vertex_t> QQ; // multiedges of colors Q (*ic)
 	for(const auto &x : *graph) {
-	  Mularcs<Mcolor> mularcs = graph->get_adjacent_multiedges(x); 
+	  mularcs_t mularcs = graph->get_adjacent_multiedges(x); 
 	  if (mularcs.size() != 1) { 
 	    for(const auto &arc : mularcs) {    
 	      if (arc.second == Q) { // edges of color Q (*ic)
@@ -68,7 +68,7 @@ bool Algorithm<graph_t>::stage5_1() {
 	    for(auto ii = EI[reg_edge.first].cbegin(); (ii != EI[reg_edge.first].cend()) && !found; ++ii) {
 	      const arc_t& ireg_edge = *ii; // edge
 	      // let check what would happen with (be-)edge e=(p.first, irreg.first)
-	      Mcolor color = Q;
+	      mcolor_t color = Q;
 	      for(size_t i = 0; i < graph->count_local_graphs(); ++i) {
 		if (graph->is_exist_edge(i, p.first) && graph->get_adjecent_vertex(i, p.first) == ireg_edge.first) {
 		  color.insert(i);
@@ -159,15 +159,15 @@ bool Algorithm<graph_t>::stage5_2() {
 	continue;
       }
 
-      Mularcs<Mcolor> mularcs_x = graph->get_adjacent_multiedges(x);
+      const mularcs_t& mularcs_x = graph->get_adjacent_multiedges(x);
       bool next = false;
 
       for(auto im = mularcs_x.cbegin(); (im != mularcs_x.cend()) && (!next); ++im) {
 	const vertex_t& y = im->first;
-	const Mcolor& Q = im->second;
+	const mcolor_t& Q = im->second;
 
 	if (graph->is_vec_T_consistent_color(Q) && y != Infty && !graph->is_duplication_vertex(y)) { 
-	  Mularcs<Mcolor> mularcs_y = graph->get_adjacent_multiedges(y);
+	  mularcs_t mularcs_y = graph->get_adjacent_multiedges(y);
 	  mularcs_y.erase(x);
 
 	  for(auto jm = mularcs_y.cbegin(); (jm != mularcs_y.cend()) && (!next); ++jm) {
@@ -176,7 +176,7 @@ bool Algorithm<graph_t>::stage5_2() {
 	      const vertex_t& v = graph->get_adjacent_multiedges(z).get_vertex(Q); 
 	      if (!v.empty() && mularcs_x.defined(v)) { 
 		//std::cerr << "Stage 5_2: " << x << " - " << y << "\tX\t" << v << " - " << z << std::endl;
-                auto colors = graph->split_color(Q, false);
+                const auto &colors = graph->split_color(Q, false);
                 for (const auto &col : colors) { 
 		  graph->apply_two_break(twobreak_t(x, y, v, z, col));
 		  ++number_rear;

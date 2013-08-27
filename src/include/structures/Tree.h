@@ -7,6 +7,7 @@
 
 template<class type_data>
 struct BinaryTree { 
+  typedef structure::Mcolor mcolor_t;
   struct Node { 
     std::string name;   
     std::vector<size_t> data;
@@ -24,7 +25,7 @@ struct BinaryTree {
     template<class cofg_t>
     std::string/*std::set<std::string>*/ get_nodes(std::vector<std::string>& info, const cofg_t& cfg) const;
 
-    Mcolor get_dicolors(std::set<Mcolor>& dicolor) const; 
+    mcolor_t get_dicolors(std::set<mcolor_t>& dicolor) const; 
   };
 
   BinaryTree(const std::string& st, const std::unordered_map<std::string, size_t>& genome_number) 
@@ -37,8 +38,8 @@ struct BinaryTree {
 	root.get_nodes(info, cfg);	
   }
 
-  void build_vec_T_consistent_colors(std::set<Mcolor>& dicolor) const {
-	Mcolor color = root.get_dicolors(dicolor);	
+  void build_vec_T_consistent_colors(std::set<mcolor_t>& dicolor) const {
+	const mcolor_t& color = root.get_dicolors(dicolor);	
 	dicolor.insert(color); 
   }
 
@@ -167,28 +168,28 @@ std::string/*std::set<std::string>*/ BinaryTree<type_data>::Node::get_nodes(std:
 }
 
 template<class type_data>
-Mcolor BinaryTree<type_data>::Node::get_dicolors(std::set<Mcolor>& dicolor) const {
+structure::Mcolor BinaryTree<type_data>::Node::get_dicolors(std::set<mcolor_t>& dicolor) const {
 	if (!left_child && !right_child) { 
-		Mcolor temp; 
+		mcolor_t temp; 
 		for(auto it = data.cbegin(); it != data.cend(); ++it) {	
 			temp.insert(*it); 
     		}
 		return temp;
 	} 
 
-	Mcolor first;  
+	mcolor_t first;  
 	if (left_child) {
 		first = left_child->get_dicolors(dicolor);
 		dicolor.insert(first);
 	}
 
-	Mcolor second; 
+	mcolor_t second; 
 	if (right_child) {
 		second = right_child->get_dicolors(dicolor);
 		dicolor.insert(second);
 	}
 
-	Mcolor result(first, second, Mcolor::Union);
+	mcolor_t result(first, second, mcolor_t::Union);
 
 	return result;
 } 

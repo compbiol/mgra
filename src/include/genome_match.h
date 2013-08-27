@@ -6,10 +6,11 @@
 
 struct genome_match { 
   typedef structure::Genome genome_t;
+  typedef structure::Mcolor mcolor_t;
   
   typedef std::unordered_map<std::string, size_t> gen2num; 
  
-  static void init_name_genomes(const ProblemInstance<Mcolor>& cfg, const std::vector<genome_t>& genomes) {
+  static void init_name_genomes(const ProblemInstance<mcolor_t>& cfg, const std::vector<genome_t>& genomes) {
     number_to_genome.resize(genomes.size());
 	
     for(size_t i = 0; i < genomes.size(); ++i) { 
@@ -27,8 +28,8 @@ struct genome_match {
     return genome_to_number.find(s)->second;
   }
 
-  static Mcolor name_to_mcolor(const std::string& name) {
-    Mcolor current;
+  static mcolor_t name_to_mcolor(const std::string& name) {
+    mcolor_t current;
 
     for (size_t j = 0; j < name.size(); ++j) {
       std::string t = name.substr(j, 1);
@@ -42,7 +43,7 @@ struct genome_match {
     return current;
   }
 
-  static std::string mcolor_to_name(const Mcolor& S) {
+  static std::string mcolor_to_name(const mcolor_t& S) {
     if (S.empty()) { 
       return "\\ensuremath{\\emptyset}";
     }

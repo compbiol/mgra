@@ -1,5 +1,5 @@
-#ifndef STAGE3_1_H_
-#define STAGE3_1_H_
+#ifndef STAGE3_H_
+#define STAGE3_H_
 
 template<class graph_t>
 bool Algorithm<graph_t>::stage3() {
@@ -15,55 +15,53 @@ bool Algorithm<graph_t>::stage3() {
       
       const auto& indel_color = mularcs.union_multicolors(); 
       const auto& bar_indel_color = graph->get_complement_color(indel_color);
-      const auto& split_indel = graph->split_color(indel_color, false);
-      const auto& split_bar_indel = graph->split_color(bar_indel_color, false);
       assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
+      graph->apply_ins_del(insertion_t(a1, a2, bar_indel_color, false));
+      ++number_indel_event;
 
-      if (graph->is_vec_T_consistent_color(bar_indel_color) 
-	|| (split_bad_colors && (split_bar_indel.size() == std::min(split_bar_indel.size(), split_indel.size())))) { 
-#ifdef LOG_ENABLED
-	std::cerr << "Insertion: " << a1 << " " << a2 << " color: " << genome_match::mcolor_to_name(bar_indel_color) << std::endl;
-#endif
-	for (const auto &col : split_bar_indel) {
-	  graph->apply_ins_del(insertion_t(a1, a2, col, false));
-	  insertions.insert(std::make_pair(std::make_pair(a1, a2), col));
-	  ++number_indel_event;
-	}
-      } else if ((!graph->is_vec_T_consistent_color(bar_indel_color) && graph->is_vec_T_consistent_color(indel_color))
-	|| (split_bad_colors && (split_indel.size() == std::min(split_bar_indel.size(), split_indel.size())))) { 
-#ifdef LOG_ENABLED
-	std::cerr << "Postponed deletion: " << a1 << " " << a2 << " color: " << genome_match::mcolor_to_name(bar_indel_color) << std::endl;
-#endif
-	graph->apply_ins_del(insertion_t(a1, a2, bar_indel_color, false));
+#ifdef ROOT_LEAF
+      if (!bar_indel_color.includes(graph->get_root_color())) { 
+        insertions.insert(a1, a2);
+      } else { 
         graph->registrate_viewed_edge(a1, a2);
-	postponed_deletions.insert(std::make_pair(std::make_pair(a1, a2), bar_indel_color));
-	++number_indel_event;
-      } 
+	postponed_deletions.insert(a1, a2);
+      }
+#endif
+ 
+      size_t degree_split_indel = graph->max_degree_split_color(indel_color);
+      size_t degree_split_bar_indel = graph->max_degree_split_color(bar_indel_color); 	
+      if (degree_split_bar_indel == std::min(degree_split_bar_indel, degree_split_indel)) { 
+        insertions.insert(a1, a2);
+      } else if (degree_split_indel == std::min(degree_split_bar_indel, degree_split_indel)) { 
+        graph->registrate_viewed_edge(a1, a2);
+	postponed_deletions.insert(a1, a2);
+      }
     } 
   }
   return (number_indel_event != 0); 
 } 
 
-/*template<class graph_t>
-void Algorithm<graph_t>::remove_postponed_deletions() {
-  for (auto edge = postponed_deletions.begin(); edge != postponed_deletions.end();) { 
-    const vertex_t& a1 = edge->first.first; 
-    const vertex_t& a2 = edge->first.second;
+template<class graph_t>
+size_t Algorithm<graph_t>::check_postponed_deletions() const {
+  size_t bad_postponed_deletion = 0;
 
-    Mcolor color = graph->get_adjacent_multiedges(a1).get_multicolor(a2);
-    if (color == graph->get_complete_color()) { 
-      //std::cerr << "Start worked with viewed edge " << a1 << " " << a2 << " it's complete we remove it" << std::endl;
-      graph->apply_ins_del(InsDel<Mcolor>(a1, a2, edge->second, true), false);      
-      std::set<Mcolor> colors = graph->split_color(graph->get_complement_color(edge->second), false);
-      for (const auto &col : colors) {
-	InsDel<Mcolor> good_deletion(a1, a2, col, true); 
-	graph->apply_ins_del(good_deletion);
-      }
-      postponed_deletions.erase(edge++);
-    } else {
-      //std::cerr << a1 << " " << a2 << " " << genome_match::mcolor_to_name(edge->second) << std::endl; 
-      ++edge;
-    }  
-  } 
-}*/
+  for (const auto& edge : postponed_deletions) {
+    const vertex_t& a1 = edge.first; 
+    const vertex_t& a2 = edge.second;
+
+    const auto& mularcs = graph->get_adjacent_multiedges(a1);
+    const auto& pair = mularcs.equal_range(a2);
+    mcolor_t color;
+    for (auto it = pair.first; it != pair.second; ++it) {
+      color = mcolor_t(color, it->second, mcolor_t::Union); 
+    } 
+
+    if (color != graph->get_complete_color()) {    
+      std::cerr << a1 << " " << a2 << std::endl;
+      ++bad_postponed_deletion; 
+    } 
+  }
+
+  return bad_postponed_deletion;
+}
 #endif

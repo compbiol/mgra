@@ -1,5 +1,5 @@
-#ifndef STAGE4_1_ 
-#define STAGE4_1_ 
+#ifndef STAGE4_H_ 
+#define STAGE4_H_ 
 
 template<class graph_t>
 bool Algorithm<graph_t>::stage4_td() { 
@@ -33,8 +33,6 @@ bool Algorithm<graph_t>::stage4_td() {
 
 	  if (v == graph->get_obverse_vertex(current)) {
 	    if (graph->is_vec_T_consistent_color(color)) { 
-//std::cerr << "->(" << duplication.rbegin()->first << "," << duplication.rbegin()->second << ") is a vecTC. Process" << std::endl; 
-	      //++vtc; 
 	      tandem_duplication_t dupl(duplication, color, true, false);
 	      graph->apply_tandem_duplication(dupl);	
 	      ++number_dupl;
@@ -52,12 +50,6 @@ bool Algorithm<graph_t>::stage4_td() {
       }
     }
   } 
-
-  //std::cerr << "we have tandem duplication " << vtc + bvtc + tc << std::endl;
-  //std::cerr << "vec-TC-color tandem duplication " << vtc << std::endl;
-  //std::cerr << "TC-color tandem duplication " << bvtc << std::endl;
-  //std::cerr << "both TC-color tandem duplication " << tc << std::endl;
-  //std::cerr << "Not tandem duplication " << not_tandem << std::endl;
 
   return (number_dupl != 0); 
 } 
@@ -149,11 +141,6 @@ bool Algorithm<graph_t>::stage4_rtd() {
       }		
     } 
   }
-
-  //std::cerr << "We have self-loops: " << vtc + bvtc + tc << std::endl; 
-  //std::cerr << "vec-TC-color self-loops: " << vtc << std::endl; 
-  //std::cerr << "bar vec-TC-color self loops: " << bvtc << std::endl; 
-  //std::cerr << "both is TC in self-loop: " << tc << std::endl; 
 
   return (number_dupl != 0); 
 } 

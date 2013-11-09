@@ -8,8 +8,9 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
   typedef std::unordered_multimap<item_class, item_class, Hash> multi_hashmap;
   typedef typename multi_hashmap::const_iterator const_iterator;
 
+  using multi_hashmap::begin;
+  using multi_hashmap::end;
   using multi_hashmap::find; //REMOVE
-  using multi_hashmap::count;
   using multi_hashmap::equal_range;
   
   sym_multi_hashmap() {
@@ -67,7 +68,7 @@ struct sym_multi_hashmap: public std::unordered_multimap<item_class, item_class,
   }
 
   const item_class& operator[] (const item_class& x) const { //FIXME deleted
-    auto ix = find(x);
+    auto ix = multi_hashmap::find(x);
     if (ix == multi_hashmap::end()) {
       std::cerr << "sym_multi_hashmap::operator[] error: undefined element " << x << std::endl;
       abort();

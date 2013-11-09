@@ -3,11 +3,12 @@
 
 #include "mcolor.h"
 
-//namespace structure { 
+namespace structure { 
 
 template<class type_data>
 struct BinaryTree { 
   typedef structure::Mcolor mcolor_t;
+
   struct Node { 
     std::string name;   
     std::vector<size_t> data;
@@ -47,10 +48,12 @@ private:
   Node root; 
 };
 
+}
+
 template<class type_data>
-BinaryTree<type_data>::Node::Node(const std::string& tree, const std::unordered_map<std::string, size_t>& genome_number) {
+structure::BinaryTree<type_data>::Node::Node(const std::string& tree, const std::unordered_map<std::string, size_t>& genome_number) {
   int i = 0; 
-  for (i = tree.length() - 1; tree[i] != ':' && tree[i] != ')' && i >= 0;--i) 
+  for (i = tree.length() - 1; tree[i] != ':' && tree[i] != ')' && i >= 0; --i) 
     ; 
 
   std::string new_tree = tree; 
@@ -121,7 +124,7 @@ BinaryTree<type_data>::Node::Node(const std::string& tree, const std::unordered_
 
 template<class type_data>
 template<class cfg_t>
-std::string/*std::set<std::string>*/ BinaryTree<type_data>::Node::get_nodes(std::vector<std::string>& info, const cfg_t& cfg) const  {
+std::string/*std::set<std::string>*/ structure::BinaryTree<type_data>::Node::get_nodes(std::vector<std::string>& info, const cfg_t& cfg) const  {
 	if (!left_child && !right_child) { 
 		//std::set<std::string> lists;
 		std::string temp = ""; 
@@ -168,7 +171,7 @@ std::string/*std::set<std::string>*/ BinaryTree<type_data>::Node::get_nodes(std:
 }
 
 template<class type_data>
-structure::Mcolor BinaryTree<type_data>::Node::get_dicolors(std::set<mcolor_t>& dicolor) const {
+structure::Mcolor structure::BinaryTree<type_data>::Node::get_dicolors(std::set<mcolor_t>& dicolor) const {
 	if (!left_child && !right_child) { 
 		mcolor_t temp; 
 		for(auto it = data.cbegin(); it != data.cend(); ++it) {	
@@ -194,5 +197,4 @@ structure::Mcolor BinaryTree<type_data>::Node::get_dicolors(std::set<mcolor_t>& 
 	return result;
 } 
 
-//}
 #endif

@@ -1,39 +1,34 @@
 #include "writer/Wstats.h"
 
-void writer::Wstats::print_all_statistics(size_t stage, Statistics<mbgraph_with_history<mcolor_t> >& info, const ProblemInstance<mcolor_t>& cfg, const mbgraph_with_history<mcolor_t>& graph) { 
-	if (stage == 0) { 
-  	  ofstat << "Initial graph:" << std::endl;
-	  ofstat << "... Unique blocks: " << toString(graph.size() / 2) << std::endl;
-	  ofstat << "... Vertex: " << toString(graph.size()) << std::endl;
-	}  else { 
-   	  ofstat << "After Stage " << toString(stage) << " graph:" << std::endl;
-	} 
+void writer::Wstats::print_all_statistics(size_t stage, Statistics<mbgraph_with_history<mcolor_t> >& info, const mbgraph_with_history<mcolor_t>& graph) { 
+  if (stage == 0) { 
+    ofstat << "Initial graph:" << std::endl;
+    ofstat << "... Unique blocks: " << toString(graph.size() / 2) << std::endl;
+    ofstat << "... Vertex: " << toString(graph.size()) << std::endl;
+  }  else { 
+    ofstat << "After Stage " << toString(stage) << " graph:" << std::endl;
+  } 
 
-	print_vertex_statistics(info.get_vertex_statistics()); 
+  print_vertex_statistics(info.get_vertex_statistics()); 
+ 
+  print_complete_edges(info.get_complete_edge());
+  print_connected_components(graph);
 
-	print_complete_edges(graph);
-	print_connected_components(graph);
-
-	print_rear_characters(info.get_compl_stat()); 
-	print_indel_statistics(info.get_indel_stat());
+  print_rear_characters(info.get_compl_stat()); 
+  print_indel_statistics(info.get_indel_stat());
 	
 //print_fair_edges(graph, info);
 //print_estimated_dist(stage, cfg, graph);
 
 } 
 
-void writer::Wstats::print_complete_edges(const mbgraph_with_history<mcolor_t>& graph) { 
+void writer::Wstats::print_complete_edges(const std::vector<arc_t>& edges) { 
   size_t nc = 0;
   ofstat << "... complete multiedges:";
-  for(const auto &x : graph) {
-    const mularcs_t& mularcs = graph.get_adjacent_multiedges(x);
-    if (mularcs.size() == 1 && mularcs.cbegin()->second == graph.get_complete_color() 
-	&& (x < mularcs.cbegin()->first || mularcs.cbegin()->first == Infty)) {
-      ofstat << " " << x << "~" << mularcs.cbegin()->first;
-      ++nc;
-    }
-  }
-  ofstat << "\t(total: " << nc << ")" << std::endl;
+  for(const auto& edge : edges) {
+    ofstat << " " << edge.first << "~" << edge.second;
+  } 
+  ofstat << "\t(total: " << edges.size() << ")" << std::endl;
 } 
 
 void writer::Wstats::print_connected_components(const mbgraph_with_history<mcolor_t>& graph) {
@@ -64,7 +59,7 @@ void writer::Wstats::print_rear_characters(const std::vector<std::string>& info)
   print_close_table();	
 } 
 
-void writer::Wstats::print_indel_statistics(const std::multimap<size_t, std::tuple<mcolor_t, mcolor_t, size_t, size_t> >& indels) {
+void writer::Wstats::print_indel_statistics(const std::vector<std::pair<std::pair<mcolor_t, mcolor_t>, std::array<size_t, 3> > >& indels) {
   ofstat << std::endl << "% Insertion/Deletion characters: " << std::endl << std::endl;
   
   print_start_table(5); 
@@ -72,13 +67,9 @@ void writer::Wstats::print_indel_statistics(const std::multimap<size_t, std::tup
   ofstat << "\\hline" << std::endl;
 
   for (auto line = indels.crbegin(); line != indels.crend(); ++line) { 
-    mcolor_t color_f; 
-    mcolor_t color_s; 
-    size_t first = 0; 
-    size_t second = 0;
-    std::tie(color_f, color_s, first, second) = line->second;
-    ofstat << "{" << genome_match::mcolor_to_name(color_f) << " + " << genome_match::mcolor_to_name(color_s) << "} & " 
-	<< line->first	<< " & " << (line->first * std::min(first, second)) << " & " << first << " & " << second << "\\\\" << std::endl;
+    const std::array<size_t, 3>& temp = line->second;
+    ofstat << "{" << genome_match::mcolor_to_name(line->first.first) << " + " << genome_match::mcolor_to_name(line->first.second) << "} & " 
+	<< temp[0]	<< " & " << (temp[0] * std::min(temp[1], temp[2])) << " & " << temp[1] << " & " << temp[2] << "\\\\" << std::endl;
   } 
 
   print_close_table();

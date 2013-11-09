@@ -30,7 +30,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(const graph_t& graph, const conf_t
   for(const auto &x : graph) { 
     const mularcs_t& Mx = graph.get_adjacent_multiedges(x);
 
-    if (Mx.size() == 1 && Mx.cbegin()->second == graph.get_complete_color()) { 
+    if (Mx.number_unique_edge() == 1 && Mx.union_multicolors() == graph.get_complete_color()) { 
       continue; // trivial cycle
     } 
 
@@ -105,7 +105,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const
 
       const mularcs_t& Mx = graph.get_adjacent_multiedges(x);
 
-      if (Mx.size() == 1 && Mx.cbegin()->second == graph.get_complete_color()) { 
+      if (Mx.number_unique_edge() == 1 && Mx.union_multicolors() == graph.get_complete_color()) { 
 	continue; // trivial cycle
       } 
       

@@ -48,6 +48,15 @@ struct Mularcs {
     } 
   } 
 
+  inline size_t number_unique_edge() const {
+    std::unordered_set<vertex_t> processed; 
+    for (const auto &arc : mularcs) { 
+      processed.insert(arc.first);
+    }
+    return processed.size();
+
+  } 
+
   inline std::pair<citer, citer> equal_range(const vertex_t& v) const {
     return mularcs.equal_range(v);
   } 

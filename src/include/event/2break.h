@@ -1,13 +1,18 @@
 #ifndef TWOBREAK_H_
 #define TWOBREAK_H_
 
+#include "Event.h"
+
 namespace event { 
 
 template<class mcolor_t>
-struct TwoBreak {
+struct TwoBreak : public event::Event {
   typedef std::pair<vertex_t, vertex_t> arc_t;
   typedef typename mcolor_t::citer citer; 
-	
+
+  TwoBreak() { 
+  } 
+  	
   TwoBreak(const arc_t& a1, const arc_t& a2, const mcolor_t& Q)
   : arcs({a1, a2}) 
   , mcolor(Q) 
@@ -19,7 +24,19 @@ struct TwoBreak {
   , mcolor(Q) 
   {
   }
-    
+ 
+  inline void change_vertex(size_t index, const vertex_t& v) {
+    if (index == 0) {
+      arcs[0].first = v; 
+    } else if (index == 1) {
+      arcs[0].second = v; 
+    } else if (index == 2) {
+      arcs[1].first = v; 
+    } else if (index == 3) {
+      arcs[1].second = v; 
+    } 
+  }
+   
   inline TwoBreak inverse() const {
     return TwoBreak(arcs[0].first, arcs[1].first, arcs[0].second, arcs[1].second, mcolor);
   }
@@ -27,6 +44,18 @@ struct TwoBreak {
   inline arc_t get_arc(size_t index) const { 
     assert(index < 2); 
     return arcs[index];
+  } 
+
+  inline vertex_t get_vertex(size_t index) const { 
+    if (index == 0) {
+      return arcs[0].first; 
+    } else if (index == 1) {
+      return arcs[0].second; 
+    } else if (index == 2) {
+      return arcs[1].first; 
+    } else if (index == 3) {
+      return arcs[1].second; 
+    } 
   } 
 
   inline mcolor_t get_mcolor() const { 

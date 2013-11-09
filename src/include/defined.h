@@ -20,19 +20,15 @@
 #include <memory>
 #include <limits>
 #include <utility>
-#include <cassert>
 
 #include <functional>
+
+#include <cassert>
 
 #include "utility/sym_multi_hashmap.h"
 #include "utility/equivalence.h"
 
 typedef std::string vertex_t;
-typedef utility::sym_multi_hashmap<vertex_t> edges_t;
-typedef utility::sym_multi_hashmap<vertex_t> partgraph_t;
-typedef std::list<vertex_t> path_t;
-typedef std::pair<vertex_t, vertex_t> arc_t;
-
 const vertex_t Infty = "oo"; 
 
 template <typename T>
@@ -57,9 +53,14 @@ __attribute__((always_inline)) inline std::string trim(std::string s, const std:
 
 #include "genome.h"
 #include "mcolor.h"
-typedef std::pair<vertex_t, structure::Mcolor> edge_t; //FIXME CHECK on all
 #include "mularcs.h"
-//#include pconf and tree
+#include "Tree.h"
+
+typedef utility::sym_multi_hashmap<vertex_t> edges_t;
+typedef utility::sym_multi_hashmap<vertex_t> partgraph_t;
+typedef std::list<vertex_t> path_t;
+typedef std::pair<vertex_t, vertex_t> arc_t;
+typedef std::pair<vertex_t, structure::Mcolor> edge_t; //FIXME CHECK on all
 
 #endif
 

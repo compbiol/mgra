@@ -17,7 +17,7 @@ struct Wstats {
   { 
   } 
 
-  void print_all_statistics(size_t stage, Statistics<mbgraph_with_history<mcolor_t> >& info, const ProblemInstance<mcolor_t>& cfg, const mbgraph_with_history<mcolor_t>& graph); 
+  void print_all_statistics(size_t stage, Statistics<mbgraph_with_history<mcolor_t> >& info, const mbgraph_with_history<mcolor_t>& graph); 
   void print_history_statistics(const mbgraph_with_history<mcolor_t>& graph, const edges_t& bad_edges);
 
   //void print_postponed_deletion_statistics(const std::map<arc_t, Mcolor>& postponed_deletions);
@@ -30,10 +30,10 @@ private:
     ofstat << "... Colors is not one-to-one match: " << answer[3] << std::endl; 
   } 
 
-  void print_complete_edges(const mbgraph_with_history<mcolor_t>& graph); 
+  void print_complete_edges(const std::vector<arc_t>& edges); 
   void print_connected_components(const mbgraph_with_history<mcolor_t>& graph);
   void print_rear_characters(const std::vector<std::string>& info);
-  void print_indel_statistics(const std::multimap<size_t, std::tuple<mcolor_t, mcolor_t, size_t, size_t> >& indel); 
+  void print_indel_statistics(const std::vector<std::pair<std::pair<mcolor_t, mcolor_t>, std::array<size_t, 3> > >& indel); 
 
   //void print_fair_edges(const mbgraph_with_history<Mcolor>& graph, Statistics<mbgraph_with_history<Mcolor>>& info);	
   //void print_estimated_dist(size_t stage, const ProblemInstance<Mcolor>& cfg, const mbgraph_with_history<Mcolor>& graph);

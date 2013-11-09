@@ -3,6 +3,8 @@
 
 #include "mbgraph.h"
 
+#include "genome_match.h"
+
 template<class mcolor_t>
 struct mbgraph_with_colors: public MBGraph { 
   typedef structure::Mularcs<mcolor_t> mularcs_t;
@@ -11,10 +13,8 @@ struct mbgraph_with_colors: public MBGraph {
   template<class conf_t>
   mbgraph_with_colors(const std::vector<MBGraph::genome_t>& genomes, const conf_t& cfg); 
 
-  mularcs_t get_adjacent_multiedges(const vertex_t& u) const; 
-  mularcs_t get_adjacent_multiedges_with_info(const vertex_t& u, bool split_bad_colors = false, bool with_bad_edge = true, bool only_two = true);
-  std::set<mcolor_t> split_color(const mcolor_t& color, bool only_two = true);
-
+  mularcs_t get_adjacent_multiedges_with_info(const vertex_t& u, bool with_bad_edge = true);
+  
   inline mcolor_t get_complement_color(const mcolor_t& color) { 
     assert(color.is_one_to_one_match()); 
     if (compliment_colors.count(color) == 0) { 
@@ -37,6 +37,17 @@ struct mbgraph_with_colors: public MBGraph {
   inline void registrate_viewed_edge(const vertex_t &u, const vertex_t& v) {
     not_mobile_edges.insert(u, v);
   } 
+
+  inline void update_number_of_splits(size_t ns) {
+    if (ns == 3) { 
+      number_of_splits = this->count_local_graphs() + 1; 
+    } else { 
+      number_of_splits = ns;  
+    } 
+  } 
+
+  mularcs_t get_adjacent_multiedges(const vertex_t& u) const; 
+  size_t max_degree_split_color(const mcolor_t& color) const;
 
   bool is_simple_vertex(const vertex_t& v) const;
   bool is_indel_vertex(const vertex_t& v) const;  
@@ -62,12 +73,24 @@ struct mbgraph_with_colors: public MBGraph {
     return (vec_T_consistent_colors.count(color) > 0);
   }
 
-  inline citer cbegin_T_consistent_color() const { 
+  inline citer cbegin_Tconsistent_color() const { //FIXME change
+    return T_consistent_colors.cbegin(); 
+  } 
+
+  inline citer cend_Tconsistent_color() const { //FIXME change 
+    return T_consistent_colors.cend(); 
+  } 
+
+  inline citer cbegin_T_consistent_color() const { //FIXME change
     return vec_T_consistent_colors.cbegin(); 
   } 
 
-  inline citer cend_T_consistent_color() const { 
+  inline citer cend_T_consistent_color() const { //FIXME change 
     return vec_T_consistent_colors.cend(); 
+  } 
+
+  inline mcolor_t get_root_color() const {
+    return remove_color;
   } 
 private: 
   inline mcolor_t compute_complement_color(const mcolor_t& color) const {
@@ -80,30 +103,84 @@ private:
     return answer;
   }
 
+  std::set<mcolor_t> split_color(const mcolor_t& color);
 protected:
+  size_t number_of_splits; 
   mcolor_t complete_color;
+  mcolor_t remove_color; 
   std::map<mcolor_t, mcolor_t> compliment_colors;
   std::set<mcolor_t> T_consistent_colors;
   std::set<mcolor_t> vec_T_consistent_colors;
   edges_t not_mobile_edges;
-  std::map<std::pair<mcolor_t, bool>, std::set<mcolor_t> > hashing_split_colors;
+  std::map<std::pair<mcolor_t, size_t>, std::set<mcolor_t> > hashing_split_colors;
 }; 
 
 template<class mcolor_t>
 template<class conf_t>
 mbgraph_with_colors<mcolor_t>::mbgraph_with_colors(const std::vector<MBGraph::genome_t>& genomes, const conf_t& cfg) 
 : MBGraph(genomes)
+, number_of_splits(1)
 {
   for (size_t i = 0; i < genomes.size(); ++i) {
     complete_color.insert(i);
     vec_T_consistent_colors.insert(mcolor_t(i));
   }
 
+#ifdef ROOT_LEAF
+  remove_color = mcolor_t(genomes.size() - 1);
+  
+  std::set<mcolor_t> nodes_color;
+  for (auto it = cfg.cbegin_trees(); it != cfg.cend_trees(); ++it) {
+    it->build_vec_T_consistent_colors(nodes_color);
+  }
+
+  for (const auto& color : nodes_color) {    
+    if (color.includes(remove_color)) {
+      vec_T_consistent_colors.insert(get_complement_color(color));
+    } else {
+      vec_T_consistent_colors.insert(color);
+    } 
+  } 
+
+  vec_T_consistent_colors.erase(remove_color);
+#endif
+
+#ifdef VERSION2  
+  std::set<mcolor_t> nodes_color;
+  for (auto it = cfg.cbegin_trees(); it != cfg.cend_trees(); ++it) {
+    it->build_vec_T_consistent_colors(nodes_color);
+  }
+
+  nodes_color.erase(complete_color);
+
+  mcolor_t root_color = complete_color;
+  size_t est = (complete_color.size() / 2 + complete_color.size() % 2);
+ 
+  for (const auto& color : nodes_color) {
+    if (color.size() >= est && root_color.size() >= color.size()) { 
+      root_color = color;
+    }   
+  } 
+
+  remove_color = root_color;
+  
+  for (const auto& color : nodes_color) {
+    const auto& temp = compute_complement_color(color);   
+    if (!color.includes(root_color)) {
+      vec_T_consistent_colors.insert(color);
+    } else if (!temp.includes(root_color)) { 
+      vec_T_consistent_colors.insert(temp);
+    } 
+    T_consistent_colors.insert(color);
+    T_consistent_colors.insert(temp);
+  } 
+#else 
   for (auto it = cfg.cbegin_trees(); it != cfg.cend_trees(); ++it) {
     it->build_vec_T_consistent_colors(vec_T_consistent_colors);
   }
-
   vec_T_consistent_colors.erase(complete_color);
+#endif
+
   vec_T_consistent_colors.erase(cfg.get_target());
   
   //check consistency
@@ -136,10 +213,7 @@ bool mbgraph_with_colors<mcolor_t>::is_simple_vertex(const vertex_t& v) const {
 template<class mcolor_t>
 bool mbgraph_with_colors<mcolor_t>::is_have_self_loop(const vertex_t& v) const {
   const mularcs_t& mularcs = get_adjacent_multiedges(v);
-  if (mularcs.defined(v)) {
-     return true;
-  } 
-  return false;
+  return mularcs.defined(v);
 } 
  
 template<class mcolor_t>
@@ -190,25 +264,25 @@ structure::Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multied
 
   mularcs_t output;
   for (size_t i = 0; i < count_local_graphs(); ++i) {
-    std::pair<partgraph_t::const_iterator, partgraph_t::const_iterator> iters = local_graph[i].equal_range(u);
+    auto iters = local_graph[i].equal_range(u);
     for (auto it = iters.first; it != iters.second; ++it) { 
       output.insert(it->second, i); 
     }
   }
-  
+
   return output;
 } 
 
 template<class mcolor_t>
-structure::Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges_with_info(const vertex_t& u, bool split_bad_colors, bool with_bad_edge, bool only_two) { 
+structure::Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multiedges_with_info(const vertex_t& u, bool with_bad_edge) { 
   mularcs_t&& output = get_adjacent_multiedges(u);
   
-  if (split_bad_colors) { 
+  if (number_of_splits != 1) { 
     mularcs_t split; 
     for(const auto &arc : output) {
       if ((!with_bad_edge || (with_bad_edge && !not_mobile_edges.defined(u, arc.first))) 
 	   && !is_vec_T_consistent_color(arc.second) && arc.second.size() < count_local_graphs()) {
-	const auto& colors = split_color(arc.second, only_two);
+	const auto& colors = split_color(arc.second);
 	for(const auto &color : colors) {
 	  split.insert(arc.first, color); 
 	}
@@ -223,43 +297,86 @@ structure::Mularcs<mcolor_t> mbgraph_with_colors<mcolor_t>::get_adjacent_multied
 } 
 
 template<class mcolor_t>
-std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& color, bool only_two) {
+size_t mbgraph_with_colors<mcolor_t>::max_degree_split_color(const mcolor_t& color) const {
   if (is_vec_T_consistent_color(color)) {
-    return std::set<mcolor_t>({color}); 
+    return 1; 
   } else { 
+    utility::equivalence<size_t> equiv;
+    std::for_each(color.cbegin(), color.cend(), [&] (const std::pair<size_t, size_t>& col) -> void {
+      equiv.addrel(col.first, col.first);
+    }); 
+
+    for (const auto &vtc: vec_T_consistent_colors) { 
+      mcolor_t inter_color(vtc, color, mcolor_t::Intersection);
+      if (inter_color.size() >= 2 && inter_color.size() == vtc.size()) {
+        std::for_each(inter_color.cbegin(), inter_color.cend(), [&] (const std::pair<size_t, size_t>& col) -> void {
+          equiv.addrel(col.first, inter_color.cbegin()->first);
+        });
+      }
+    }
+
+    equiv.update();
+
+    return equiv.classes();
+  } 
+}
+
+template<class mcolor_t>
+std::set<mcolor_t> mbgraph_with_colors<mcolor_t>::split_color(const mcolor_t& color) {
+  if (is_vec_T_consistent_color(color) || (number_of_splits == 1)) {
+    return std::set<mcolor_t>({color}); 
+  } else {  
     std::set<mcolor_t> answer;
     
-    if (hashing_split_colors.count(std::make_pair(color, only_two)) != 0) {
-      answer = hashing_split_colors.find(std::make_pair(color, only_two))->second;
-    } else {   
+    /*if (hashing_split_colors.count(std::make_pair(color, number_of_splits)) != 0) {
+      answer = hashing_split_colors.find(std::make_pair(color, number_of_splits))->second;
+    } else {   */
       utility::equivalence<size_t> equiv;
       std::for_each(color.cbegin(), color.cend(), [&] (const std::pair<size_t, size_t>& col) -> void {
         equiv.addrel(col.first, col.first);
       }); 
 
-      for (const auto &vtc: vec_T_consistent_colors) { 
-        mcolor_t inter_color(vtc, color, mcolor_t::Intersection);
-        if (inter_color.size() >= 2 && inter_color.size() == vtc.size()) {
+      bool tcons = false; 
+      #ifdef VERSION2  
+      for (const auto &tc: T_consistent_colors) { 
+        mcolor_t inter_color(tc, color, mcolor_t::Intersection);
+        if (inter_color.size() >= 2 && inter_color.size() == tc.size()) { 
+  	  tcons = (vec_T_consistent_colors.count(color) == 0);
           std::for_each(inter_color.cbegin(), inter_color.cend(), [&] (const std::pair<size_t, size_t>& col) -> void {
             equiv.addrel(col.first, inter_color.cbegin()->first);
           });
         }
       }
-
-      equiv.update();
-      const std::map<size_t, mcolor_t>& classes = equiv.get_eclasses<mcolor_t>(); 
-      for(const auto &col : classes) {
-        answer.insert(col.second);
+      #else 
+        for (const auto &vtc: vec_T_consistent_colors) { 
+          mcolor_t inter_color(vtc, color, mcolor_t::Intersection);
+          if (inter_color.size() >= 2 && inter_color.size() == vtc.size()) {
+            std::for_each(inter_color.cbegin(), inter_color.cend(), [&] (const std::pair<size_t, size_t>& col) -> void {
+              equiv.addrel(col.first, inter_color.cbegin()->first);
+            });
+          }
+        }
       }
+      #endif
 
-#ifdef VERSION2
-      if (only_two && (answer.size() > 2)) { 
-        answer.clear(); 
-        answer.insert(color);  	
-      } 
-#endif
-      hashing_split_colors.insert(std::make_pair(std::make_pair(color, only_two), answer));
-    }
+      if (tcons) { 
+	answer.insert(color);         
+      } else { 
+        equiv.update();
+        const std::map<size_t, mcolor_t>& classes = equiv.get_eclasses<mcolor_t>(); 
+        //std::cerr << "color " << genome_match::mcolor_to_name(color) << std::endl;
+        for(const auto &col : classes) {
+          answer.insert(col.second);
+        }
+
+        if (answer.size() > number_of_splits) { 
+          answer.clear(); 
+          answer.insert(color);  	
+        }
+      }  
+
+      //hashing_split_colors.insert(std::make_pair(std::make_pair(color, number_of_splits), answer));
+    //}
     return answer;
   }
 } 
@@ -306,7 +423,7 @@ std::map<vertex_t, std::set<vertex_t> > mbgraph_with_colors<mcolor_t>::split_on_
 
     const mularcs_t& mularcs = get_adjacent_multiedges(x); 
 
-    if (not_drop_complete_edge && mularcs.size() == 1 && mularcs.cbegin()->second == get_complete_color()) { 
+    if (not_drop_complete_edge && mularcs.number_unique_edge() == 1 && mularcs.union_multicolors() == get_complete_color()) { 
       continue; // ignore complete multiedges
     } 
 

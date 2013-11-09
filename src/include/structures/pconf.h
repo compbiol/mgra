@@ -1,17 +1,13 @@
 #ifndef PCONF_H_
 #define PCONF_H_
 
-/* 
-** Configurations support
-*/
-
 #include "defined.h"
 #include "2break.h"
-#include "Tree.h"
 
 /*This structures containes information from *.cfg file */
 template<class mcolor_t>
 struct ProblemInstance {
+  typedef structure::BinaryTree<std::string> phylogeny_tree_t;
   typedef event::TwoBreak<mcolor_t> twobreak_t; 
   
   ProblemInstance(const std::unordered_map<std::string, std::vector<std::string> >& input); 
@@ -52,16 +48,28 @@ struct ProblemInstance {
     return colorscheme;		
   } 
 
-  inline std::vector<BinaryTree<std::string> >::const_iterator cbegin_trees() const { 
+  inline std::vector<phylogeny_tree_t>::const_iterator cbegin_trees() const { 
     return trees.cbegin();
   } 
 
-  inline std::vector<BinaryTree<std::string> >::const_iterator cend_trees() const { 
+  inline std::vector<phylogeny_tree_t>::const_iterator cend_trees() const { 
     return trees.cend();
   } 
 
   inline size_t get_stages() const { 
     return stages;
+  } 
+
+  inline size_t get_max_number_of_split() const {
+    return max_number_of_split_colors;  	
+  } 
+ 
+  inline size_t get_size_component_in_brutforce() const { 
+    return size_component_brute_force; 
+  } 
+
+  inline bool is_reconstructed_trees() const { 
+    return reconstructed_trees;
   } 
 
   inline mcolor_t get_target() const { 
@@ -86,6 +94,8 @@ struct ProblemInstance {
 private: 
   void init_basic_rgb_colors(bool flag = true); 
 private:
+  const size_t MAX_NUMBER_STAGE;
+ 
   std::vector<std::string> priority_name;  
   std::unordered_map<std::string, size_t> genome_number;
   std::unordered_map<size_t, std::string> number_genome;  
@@ -96,9 +106,12 @@ private:
   std::string graphfname;
   std::string colorscheme;
 
-  std::vector<BinaryTree<std::string> > trees;
+  std::vector<phylogeny_tree_t> trees;
 
   size_t stages;
+  size_t max_number_of_split_colors; 
+  size_t size_component_brute_force;
+  bool reconstructed_trees;
 
   mcolor_t target; 		
 	
@@ -109,7 +122,13 @@ private:
 };
 
 template<class mcolor_t>
-ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string, std::vector<std::string> >& input) { 
+ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string, std::vector<std::string> >& input) 
+: MAX_NUMBER_STAGE(12)
+, stages(5) 
+, max_number_of_split_colors(2)
+, size_component_brute_force(0) 
+, reconstructed_trees(false)
+{ 
   std::vector<std::string> genomes; 
   if (input.find("[Genomes]") != input.cend()) {  
     genomes = input.find("[Genomes]")->second;
@@ -164,7 +183,7 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 	}			} 
     } else if (option.first == "[Trees]") {
       std::for_each(option.second.cbegin(), option.second.cend(), [&](const std::string& str) -> void {
-        trees.push_back(BinaryTree<std::string>(str, genome_number));	
+        trees.push_back(phylogeny_tree_t(str, genome_number));	
       });
     } else if (option.first == "[Graphs]") {
       for(const auto &str : option.second) {
@@ -189,7 +208,17 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 
 	if (name == "stages") { 
 	  is >> stages;
-	} else {
+	} else if (name == "rounds") {
+	  is >> max_number_of_split_colors;
+          if (max_number_of_split_colors > 3) {
+            std::cerr << "Large number of rounds" << std::endl; 
+	    exit(1);
+          } 
+        } else if (name == "bruteforce") {
+          is >> size_component_brute_force; 
+        } else if (name == "recostructed_tree") {
+          reconstructed_trees = true; 
+        } else { 
 	  std::cerr << "Unknown option " << name << std::endl;
 	  exit(1);
 	}

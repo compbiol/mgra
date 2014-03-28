@@ -22,10 +22,9 @@ void writer::Wstats::print_all_statistics(size_t stage, Statistics<mbgraph_with_
 
 } 
 
-void writer::Wstats::print_complete_edges(const std::vector<arc_t>& edges) { 
-  size_t nc = 0;
+void writer::Wstats::print_complete_edges(std::vector<arc_t> const & edges) { 
   ofstat << "... complete multiedges:";
-  for(const auto& edge : edges) {
+  for(auto const & edge : edges) {
     ofstat << " " << edge.first << "~" << edge.second;
   } 
   ofstat << "\t(total: " << edges.size() << ")" << std::endl;

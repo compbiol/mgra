@@ -8,7 +8,7 @@ struct Statistics {
   typedef structure::Mcolor mcolor_t; 
   typedef structure::Mularcs<mcolor_t> mularcs_t; 
 
-  Statistics(const std::shared_ptr<graph_t>& gr)
+  Statistics(std::shared_ptr<graph_t> const & gr)
   : graph(gr) 
   {
     count_vertex_statistics();   
@@ -35,9 +35,9 @@ struct Statistics {
   std::vector<arc_t> get_complete_edge() const {
     std::vector<arc_t> edges; 
     std::unordered_set<vertex_t> processed; 
-    for(const auto &x : *graph) {
+    for(auto const & x : *graph) {
       if (processed.count(x) == 0) {
-        const mularcs_t& mularcs = graph->get_adjacent_multiedges(x);
+        mularcs_t const & mularcs = graph->get_adjacent_multiedges(x);
         if (mularcs.number_unique_edge() == 1 && mularcs.union_multicolors() == graph->get_complete_color()) { 
 	  edges.push_back(arc_t(x, mularcs.cbegin()->first));
           processed.insert({x, mularcs.cbegin()->first});
@@ -83,7 +83,7 @@ template<class graph_t>
 void Statistics<graph_t>::count_vertex_statistics() {
   vertex_statistics.fill(0);
 
-  for(const auto &x : *graph) {
+  for(auto const &x : *graph) {
     if (graph->is_duplication_vertex(x)) {
 	++vertex_statistics[0];
     } else if (graph->is_indel_vertex(x)) {
@@ -94,7 +94,7 @@ void Statistics<graph_t>::count_vertex_statistics() {
 	++vertex_statistics[2];
     } 
 
-    const mularcs_t& current = graph->get_adjacent_multiedges(x); //current is list with adjacent multiedge&
+    mularcs_t const & current = graph->get_adjacent_multiedges(x); //current is list with adjacent multiedge&
     for (auto it = current.cbegin(); it != current.cend(); ++it) {
 	if (!it->second.is_one_to_one_match()) {
 	  ++vertex_statistics[3];
@@ -107,8 +107,8 @@ template<class graph_t>
 void Statistics<graph_t>::count_complete_multiedges() {
   std::unordered_set<std::string> processed;
 
-  for(const auto &x : *graph) {
-    const mularcs_t& current = graph->get_adjacent_multiedges(x); //current is list with adjacent multiedges
+  for(auto const &x : *graph) {
+    mularcs_t const & current = graph->get_adjacent_multiedges(x); //current is list with adjacent multiedges
 
     ++multidegree_count[current.size()]; //current.size - is degree vertex *it
 
@@ -140,8 +140,8 @@ void Statistics<graph_t>::count_complete_multiedges() {
   }
 
   // count lonely vertices (short paths) 
-  for(const auto& v : processed) {
-    const mularcs_t& current = graph->get_adjacent_multiedges(v);
+  for(auto const & v : processed) {
+    mularcs_t const & current = graph->get_adjacent_multiedges(v);
     if (processed.find(current.cbegin()->first) == processed.end() && processed.find(current.crbegin()->first) == processed.end()) {
       ++simple_vertices_alone_count[std::min(current.cbegin()->second, current.crbegin()->second)]; //no good neighbors
     }
@@ -152,12 +152,12 @@ template<class graph_t>
 void Statistics<graph_t>::count_cycles() { 
   std::unordered_set<vertex_t> processed;
 
-  for(const auto &x : *graph) { 
+  for(auto const & x : *graph) { 
     if (processed.count(x) != 0) { 
       continue; 
     } 
 
-    const mularcs_t& mularcs_x = graph->get_adjacent_multiedges(x); 
+    mularcs_t const & mularcs_x = graph->get_adjacent_multiedges(x); 
 
     if (!(graph->is_simple_vertex(x) && graph->get_complement_color(mularcs_x.cbegin()->second) == mularcs_x.crbegin()->second)) { 
       continue;
@@ -174,7 +174,7 @@ void Statistics<graph_t>::count_cycles() {
 	break;
       }
 
-      const mularcs_t& mularcs_y = graph->get_adjacent_multiedges(current);
+      mularcs_t const & mularcs_y = graph->get_adjacent_multiedges(current);
 
       if (prev == mularcs_y.cbegin()->first) {
 	prev = current;
@@ -215,7 +215,7 @@ void Statistics<graph_t>::build_complete_stat() {
   }; 
 
   for(auto im = compl_multiedges_count.cbegin(); im != compl_multiedges_count.cend(); ++im) {
-    const auto& current = graph->get_complement_color(im->first);  // complementary multicolor.
+    mcolor_t const & current = graph->get_complement_color(im->first);  // complementary multicolor.
 
     if (im->first < current) {
       continue;
@@ -233,8 +233,8 @@ void Statistics<graph_t>::build_complete_stat() {
     answer[8] = calc_value(good_irrer_multiedges_count, current); 
     answer[9] = calc_value(good_irrer_multiedges_count, im->first);
 
-    const auto& first = graph->get_min_complement_color(current); 
-    const auto& second = graph->get_complement_color(first);
+    mcolor_t const & first = graph->get_min_complement_color(current); 
+    mcolor_t const & second = graph->get_complement_color(first);
     stat_answer.insert(std::make_pair(answer[0] + answer[1], std::make_pair(std::make_pair(first, second), answer)));
   }
 
@@ -248,15 +248,15 @@ void Statistics<graph_t>::count_indel_statistics() {
   std::map<std::pair<mcolor_t, mcolor_t>, size_t> temp;
   std::unordered_set<vertex_t > processed; 
 
-  for (const auto &a1 : *graph) {  
-    const vertex_t& a2 = graph->get_obverse_vertex(a1);
-    const mularcs_t mularcs = graph->get_adjacent_multiedges(a1);
+  for (auto const & a1 : *graph) {  
+    vertex_t const & a2 = graph->get_obverse_vertex(a1);
+    mularcs_t const & mularcs = graph->get_adjacent_multiedges(a1);
 
     if (graph->is_indel_vertex(a1) && (processed.count(a1) == 0) && graph->is_indel_vertex(a2))  {
       processed.insert({a1, a2});
 
-      const auto& indel_color = mularcs.union_multicolors(); 
-      const auto& bar_indel_color = graph->get_complement_color(indel_color);
+      mcolor_t const & indel_color = mularcs.union_multicolors(); 
+      mcolor_t const & bar_indel_color = graph->get_complement_color(indel_color);
       assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
 
       if (temp.count(std::make_pair(bar_indel_color, indel_color)) == 0) {
@@ -268,11 +268,11 @@ void Statistics<graph_t>::count_indel_statistics() {
   }
 
   std::multimap<size_t, std::pair<mcolor_t, mcolor_t> > temp_info;	
-  for (const auto &stat : temp) {
+  for (auto const & stat : temp) {
     temp_info.insert(std::make_pair(stat.second, stat.first));
   }
 
-  for (const auto &stat : temp_info) {
+  for (auto const & stat : temp_info) {
     std::array<size_t, 3> answer; 
     answer[0] = stat.first;
     answer[1] = 1; //graph->max_degree_split_color(stat.second.first);
@@ -294,7 +294,7 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() {
   std::multimap<size_t, std::string> answer;
 
   for(auto im = compl_multiedges_count.cbegin(); im != compl_multiedges_count.cend(); ++im) {
-    const auto& current = graph->get_complement_color(im->first);  // complementary multicolor.
+    mcolor_t const & current = graph->get_complement_color(im->first);  // complementary multicolor.
 
     if (im->first < current) {
       continue;
@@ -312,8 +312,8 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() {
       os << "\\bf ";
     } 
 
-    const auto& first = graph->get_min_complement_color(current); 
-    const auto& second = graph->get_complement_color(first);
+    mcolor_t const & first = graph->get_min_complement_color(current); 
+    mcolor_t const & second = graph->get_complement_color(first);
 
     os <<  genome_match::mcolor_to_name(first) << " + "  <<  genome_match::mcolor_to_name(second) << "} & " 
       // multiedges

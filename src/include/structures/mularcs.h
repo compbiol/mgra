@@ -10,11 +10,11 @@ struct Mularcs {
   typedef typename map_t::const_reverse_iterator criter;
   typedef typename map_t::iterator iter;    
 
-  inline void insert(const vertex_t& v, const mcolor_t& mc) { 
+  inline void insert(vertex_t const & v, mcolor_t const & mc) { 
     mularcs.insert(std::make_pair(v, mc));	
   } 
 
-  inline void insert(const vertex_t& v, size_t i) {
+  inline void insert(vertex_t const & v, size_t i) {
     if (mularcs.find(v) != mularcs.end()) { 
       mularcs.find(v)->second.insert(i);
     } else { 
@@ -22,17 +22,17 @@ struct Mularcs {
     }
   }
  
-  inline void erase(const vertex_t& v) { 
+  inline void erase(vertex_t const & v) { 
     mularcs.erase(v);
   } 
  
-  inline bool defined(const vertex_t& v) const { 
+  inline bool defined(vertex_t const & v) const { 
     return (mularcs.count(v) != 0);
   }
  
-  inline vertex_t get_vertex(const mcolor_t& color) const { 
+  inline vertex_t get_vertex(mcolor_t const & color) const { 
     vertex_t v = "";
-    for (const auto & arc : mularcs) {
+    for (auto const & arc : mularcs) {
       if (arc.second == color) { 
         v = arc.first;
       }
@@ -40,7 +40,7 @@ struct Mularcs {
     return v;   
   } 
   
-  inline mcolor_t get_multicolor(const vertex_t& v) const {
+  inline mcolor_t get_multicolor(vertex_t const & v) const {
     if (mularcs.count(v) != 0) { 
       return mularcs.find(v)->second; 
     } else { 
@@ -50,21 +50,22 @@ struct Mularcs {
 
   inline size_t number_unique_edge() const {
     std::unordered_set<vertex_t> processed; 
-    for (const auto &arc : mularcs) { 
+    for (auto const & arc : mularcs) { 
       processed.insert(arc.first);
     }
     return processed.size();
 
   } 
 
-  inline std::pair<citer, citer> equal_range(const vertex_t& v) const {
+  inline std::pair<citer, citer> equal_range(vertex_t const & v) const {
     return mularcs.equal_range(v);
   } 
  
   inline mcolor_t union_multicolors() const {
     mcolor_t un; 
-    for (const auto &arc : mularcs) { 
-      un = mcolor_t(un, arc.second, mcolor_t::Union);  
+    for (auto const &arc : mularcs) { 
+      mcolor_t temp(un, arc.second, mcolor_t::Union);  
+      un = temp;
     }
     return un;
   }

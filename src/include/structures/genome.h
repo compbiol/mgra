@@ -27,7 +27,7 @@ struct Chromosome {
   } 
 
   inline void do_circular() { 
-	isCircular = true; 
+    isCircular = true; 
   } 
 
   inline std::map<size_t, gene_t>::const_iterator begin() const { 
@@ -67,28 +67,29 @@ struct Genome {
   Genome() {
   } 
 
-  Genome(const std::string& nm) 
+  explicit Genome(const std::string& nm) 
   : name(nm) 
   {
   } 
 
-  inline void insert(const orf_t& gene, const std::string& chromosome, size_t offset, int sign, size_t start, size_t end) {
-    const coord_t& p = std::make_pair(chromosome, offset);
-    const gene_t& orf = std::make_pair(gene, sign);   
+  inline void insert(orf_t const & gene, std::string const & chromosome, size_t offset, int sign) { 
+    //, size_t start, size_t end) {
+    //const coord_t& p = std::make_pair(chromosome, offset);
+    //const gene_t& orf = std::make_pair(gene, sign); 
     main_genome[chromosome].insert(gene, offset, sign);
   }   
 
-  inline void insert(const std::string& name_chr, const chromosome_t& chr) {
+  inline void insert(std::string const & name_chr, chromosome_t const & chr) {
     main_genome.insert(std::make_pair(name_chr, chr)); 
   } 
 	
-  inline void registrate_circular_chr(std::string name) { 
+  inline void registrate_circular_chr(std::string const & name) { 
     main_genome[name].do_circular();
   }  
 
   inline size_t size() const { 
     size_t sz = 0; 
-    std::for_each(main_genome.begin(), main_genome.end(), [&](const std::pair<std::string, chromosome_t> chromosome) {
+    std::for_each(main_genome.begin(), main_genome.end(), [&](std::pair<std::string, chromosome_t> const & chromosome) {
       sz += chromosome.second.size(); 
     });
     return sz; 
@@ -98,7 +99,7 @@ struct Genome {
     return main_genome.size();
   } 
 
-  inline std::string get_name() const {  
+  inline std::string const & get_name() const {  
     return name;
   } 
 

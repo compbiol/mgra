@@ -5,13 +5,15 @@
 
 template<class graph_t>
 struct RecoveredGenomes {
-  typedef structure::Mcolor mcolor_t;
+  typedef typename graph_t::mcolor_t mcolor_t;
+  typedef typename graph_t::twobreak_t twobreak_t; 
+  typedef typename graph_t::transform_t transform_t;
+ 
   typedef structure::Genome genome_t;
   typedef structure::Chromosome chromosome_t;
-  typedef event::TwoBreak<mcolor_t> twobreak_t; 
-  typedef std::list<twobreak_t> transform_t;
 
-  RecoveredGenomes(const graph_t& gr, const mcolor_t& target, const edges_t& b_edges);
+  template<class pconf_t>
+  RecoveredGenomes(graph_t const & gr, pconf_t const & conf, edges_t const & b_edges);
 
   inline std::vector<genome_t> get_genomes() { 
     std::vector<genome_t> genomes;
@@ -27,10 +29,10 @@ struct RecoveredGenomes {
 
 private: 
   genome_t get_genome(size_t index);
-  chromosome_t get_chromosome(size_t index, const vertex_t& x, std::unordered_set<vertex_t>& chromosome_set);
+  chromosome_t get_chromosome(size_t index, vertex_t const & x, std::unordered_set<vertex_t>& chromosome_set);
 
 private: 
-  const graph_t& graph;
+  graph_t const & graph;
   edges_t bad_edges;
   std::vector<std::string> name_genomes;
   std::vector<partgraph_t> recovered_graphs;
@@ -38,14 +40,16 @@ private:
 };
 
 template<class graph_t>
-RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const mcolor_t& target, const edges_t& b_edges)  
+template<class pconf_t>
+RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & conf, edges_t const & b_edges)  
 : graph(gr)
 , bad_edges(b_edges)
 {
- if (!target.empty()) { 
-   name_genomes.push_back(genome_match::mcolor_to_name(target));
+ if (!conf.get_target().empty()) { 
+   mcolor_t const & target = conf.get_target();
+   name_genomes.push_back(conf.mcolor_to_name(target));
    recovered_graphs.resize(1);
-   for(const auto &x : graph) {
+   for(auto const &x : graph) {
      if (recovered_graphs[0].defined(x)) { 
 	continue;
      }
@@ -53,7 +57,7 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const mcolor_t& t
      vertex_t y = Infty;
      bool good = true;
      size_t def = 0;
-     std::for_each(target.cbegin(), target.cend(), [&] (const std::pair<size_t, size_t>& col) -> void {
+     std::for_each(target.cbegin(), target.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
        size_t numb_color = col.first; 
        if (graph.is_exist_edge(numb_color, x)) {
 	 ++def;
@@ -82,6 +86,8 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const mcolor_t& t
       size_t i = 0;
       for(auto im = graph.cbegin_T_consistent_color(); im != graph.cend_T_consistent_color(); ++im, ++i) {
 	if (it->get_mcolor().includes(*im)) { 
+          //std::cerr << conf.mcolor_to_name(*im) << std::endl; 
+          //std::cerr << it->get_vertex(0) << " " << it->get_vertex(1) << " " << it->get_vertex(2) << " " << it->get_vertex(3) << std::endl;
 	  it->inverse().apply_single(recovered_graphs[i]);
 	}
 	if (it->get_mcolor() == *im) {
@@ -93,13 +99,14 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const mcolor_t& t
     size_t i = 0; 
     Decircularizeter<graph_t> dec(graph, bad_edges);          
     for (auto im = graph.cbegin_T_consistent_color(); im != graph.cend_T_consistent_color(); ++im, ++i) {    
-      name_genomes.push_back(genome_match::mcolor_to_name(*im));
+      name_genomes.push_back(conf.mcolor_to_name(*im));
+      std::cerr << "Start decircularize procedure for " << conf.mcolor_to_name(*im) << std::endl;
       //std::cerr << "Initial we have " << dec.count_circular_chromosome(recovered_graphs[i]) << std::endl;
       transform_t T = dec.decircularize(recovered_graphs[i], recovered_transformation[i]);
       //std::cerr << "After we have " << dec.count_circular_chromosome(recovered_graphs[i]) << std::endl;
 
       // move to adjacent branches
-      for (const auto &it : T) {
+      for (auto const &it : T) {
 	size_t j = 0; 
 	for (auto jt = graph.cbegin_T_consistent_color(); jt != graph.cend_T_consistent_color(); ++jt, ++j) {
 	  if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && graph.are_adjacent_branches(*im, *jt)) {
@@ -108,7 +115,7 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(const graph_t& gr, const mcolor_t& t
 	}
       }
     }
-    name_genomes.push_back(genome_match::mcolor_to_name(graph.get_root_color()));
+    name_genomes.push_back(conf.mcolor_to_name(graph.get_root_color()));
   }
 }
 
@@ -119,7 +126,7 @@ structure::Genome RecoveredGenomes<graph_t>::get_genome(size_t index) {
   std::string name_chr("chr");
   size_t count = 1; 
 
-  for(const auto &x : graph) { 
+  for(auto const & x : graph) { 
     if (processed.find(x) == processed.end()) { 
       std::unordered_set<vertex_t> chromosome_set;
       chromosome_t chromosome = get_chromosome(index, x, chromosome_set);
@@ -134,11 +141,11 @@ structure::Genome RecoveredGenomes<graph_t>::get_genome(size_t index) {
 } 
 
 template<class graph_t>
-structure::Chromosome RecoveredGenomes<graph_t>::get_chromosome(size_t index, const vertex_t& x, std::unordered_set<vertex_t>& chromosome_set) {
+structure::Chromosome RecoveredGenomes<graph_t>::get_chromosome(size_t index, vertex_t const & x, std::unordered_set<vertex_t>& chromosome_set) {
   std::list<std::pair<vertex_t, int> > path;
   bool circular = false;
   bool have_deletion = false;
-  auto changer_lambda = [&] (const vertex_t& t, bool flag) -> void {
+  auto const changer_lambda = [&] (vertex_t const & t, bool flag) -> void {
     if (flag) { 
       (*t.rbegin() == 't')?path.push_back(std::make_pair(t.substr(0, t.size() - 1), -1)):path.push_back(std::make_pair(t.substr(0, t.size() - 1), 1));
     } else { 

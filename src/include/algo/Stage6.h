@@ -2,66 +2,66 @@
 #define STAGE6_H_ 
 
 template<class graph_t>
-size_t Algorithm<graph_t>::calculate_cost(const vertex_t& y, const mularcs_t& mularcs_x, const mularcs_t& mularcs_y) { 
-  typedef std::pair<std::pair<vertex_t, mcolor_t>, size_t> colacr_t;
-  utility::equivalence<colacr_t> equiv; 
+size_t Algorithm<graph_t>::calculate_cost(vertex_t const & y, mularcs_t const & mularcs_x, mularcs_t const & mularcs_y) { 
+  if (y == Infty) {
+    return mularcs_x.size(); 
+  } 
 
+  typedef std::tuple<vertex_t, mcolor_t, size_t> colacr_t; 
+  utility::equivalence<colacr_t> equiv; 
+  
   for (auto arc_x = mularcs_x.cbegin(); arc_x != mularcs_x.cend(); ++arc_x) { 
     if (arc_x->first != y) { 
       for (auto arc_y = mularcs_y.cbegin(); arc_y != mularcs_y.cend(); ++arc_y) { 
         mcolor_t color(arc_x->second, arc_y->second, mcolor_t::Intersection);
         if (color.size() > 0) { 
-	  equiv.addrel(std::make_pair(*arc_x, 0), std::make_pair(*arc_y, 1));
+	  equiv.addrel(std::make_tuple(arc_x->first, arc_x->second, 0), std::make_tuple(arc_y->first, arc_y->second, 1));
         } 
       }
     } 
   }
   
   equiv.update();
-  const std::map<colacr_t, std::set<colacr_t> >& classes = equiv.get_eclasses<std::set<colacr_t> >(); 
+  std::map<colacr_t, std::set<colacr_t> > const & classes = equiv.template get_eclasses<std::set<colacr_t> >(); 
 
   size_t count_U = 0; 
-  for (const auto &color_set : classes) { 
-    std::unordered_set<vertex_t> left; 
-    std::unordered_set<vertex_t> right;
-    for (const auto &color : color_set.second) { 
-      (color.second == 0)?left.insert(color.first.first):right.insert(color.first.first);
-    }
-    if (left.size() != 0) { 
-      count_U += (left.size() - 1);
-    }  
-    if (right.size() != 0) { 
-      count_U += (right.size() - 1);
-    } 
+  for (auto const & color_set : classes) { 
+    count_U += (color_set.second.size() - 1);
   }
 
-  return (count_U + classes.size()); 
+  return count_U;
 }  
 
 template<class graph_t>
-std::set<arc_t> Algorithm<graph_t>::create_minimal_matching(const std::set<vertex_t>& vertex_set) {
+std::set<arc_t> Algorithm<graph_t>::create_minimal_matching(std::set<vertex_t> const & vertex_set) {
   std::map<arc_t, std::pair<size_t, mcolor_t> > weight_edges; 
 
-  for(const auto& v : vertex_set) { 
-    mularcs_t&& mularcs = graph->get_adjacent_multiedges(v);
-    for (const auto& arc: mularcs) {
-      if (arc.first != Infty && weight_edges.count(std::make_pair(v, arc.first)) == 0 && weight_edges.count(std::make_pair(arc.first, v)) == 0) { 
-        const mularcs_t& mularcs_x = graph->get_adjacent_multiedges_with_info(v, false); 
-	mularcs_t mularcs_y = graph->get_adjacent_multiedges_with_info(arc.first, false);
-	mularcs_y.erase(v);
-	//std::cerr << "Calculate cost " << v << " " << arc.first << " have " << calculate_cost(arc.first, mularcs_x, mularcs_y) << std::endl;
-	weight_edges.insert(std::make_pair(std::make_pair(v, arc.first), std::make_pair(calculate_cost(arc.first, mularcs_x, mularcs_y), arc.second)));
+  for(auto const & v : vertex_set) { 
+    mularcs_t mularcs = graph->get_adjacent_multiedges(v);
+    for (auto const & arc: mularcs) {
+      if (weight_edges.count(std::make_pair(v, arc.first)) == 0 && weight_edges.count(std::make_pair(arc.first, v)) == 0) { 
+        mularcs_t const & mularcs_x = graph->get_adjacent_multiedges_with_info(v); 
+	
+	mularcs_t mularcs_y;
+        if (arc.first != Infty) {
+          mularcs_y = graph->get_adjacent_multiedges_with_info(arc.first, false);
+	  mularcs_y.erase(v);
+        } 
+        size_t sz = calculate_cost(arc.first, mularcs_x, mularcs_y);
+	//std::cerr << "Calculate cost " << v << " " << arc.first << " have " << sz << std::endl;
+	weight_edges.insert(std::make_pair(std::make_pair(v, arc.first), std::make_pair(sz, arc.second)));
       }
     } 
   } 
 
   std::unordered_set<vertex_t> processed;
   std::set<arc_t> current; 
-  std::cerr << vertex_set.size() << std::endl;
-  for (const auto &edge : weight_edges) { 
+  //std::cerr << "Size " << vertex_set.size() << std::endl;
+  for (auto const &edge : weight_edges) { 
     if (postponed_deletions.defined(edge.first.first, edge.first.second) || (graph->is_T_consistent_color(edge.second.second) && !graph->is_vec_T_consistent_color(edge.second.second)) || edge.second.second.includes(graph->get_root_color())) { 
       current.insert(edge.first); 
       processed.insert({edge.first.first, edge.first.second});
+      processed.erase(Infty);
     } 
   } 
 
@@ -70,9 +70,10 @@ std::set<arc_t> Algorithm<graph_t>::create_minimal_matching(const std::set<verte
     answer.insert(current);
   } else { 
     std::function<void()> findLambda = [&] () -> void { 
-      for (const auto &e : weight_edges) { 
+      for (auto const &e : weight_edges) { 
         if (processed.count(e.first.first) == 0 && processed.count(e.first.second) == 0) { 
           processed.insert({e.first.first, e.first.second});
+          processed.erase(Infty);
 	  current.insert(e.first);
 	  findLambda();
 	  current.erase(e.first);
@@ -85,10 +86,11 @@ std::set<arc_t> Algorithm<graph_t>::create_minimal_matching(const std::set<verte
       } 
     }; 
  
-    for (const auto &edge : weight_edges) { 
+    for (auto const &edge : weight_edges) { 
       if (processed.count(edge.first.first) == 0 && processed.count(edge.first.second) == 0) { 	
         current.insert(edge.first); 
         processed.insert({edge.first.first, edge.first.second});
+        processed.erase(Infty);
         findLambda();  
         current.erase(edge.first);
         processed.erase(edge.first.first);
@@ -99,30 +101,111 @@ std::set<arc_t> Algorithm<graph_t>::create_minimal_matching(const std::set<verte
 
   std::set<arc_t> minimal_matching; 
   size_t min = std::numeric_limits<size_t>::max() / 4;
-  for (const auto &match: answer) { 
+  for (auto const & match: answer) { 
     size_t weight = 0; 
-    auto max_edge = *match.cbegin(); 
-    for (const auto &edge: match) { 
+    //auto max_edge = *match.cbegin(); 
+    for (auto const &edge: match) { 
       weight += weight_edges.find(edge)->second.first;
-      if (weight_edges.find(max_edge)->second.first < weight_edges.find(edge)->second.first) { 
-        max_edge = edge;
-      } 
+      //if (weight_edges.find(max_edge)->second.first < weight_edges.find(edge)->second.first) { 
+        //max_edge = edge;
+      //} 
     } 
-    if ((weight - weight_edges.find(max_edge)->second.first) < min) { 
+    if ((weight/* - weight_edges.find(max_edge)->second.first*/) < min) { 
       min = weight; 
       minimal_matching = match;
-      minimal_matching.erase(max_edge);
+      //minimal_matching.erase(max_edge);
     } 
   } 
  
   return minimal_matching;
 } 
 
+
 template<class graph_t>
-size_t Algorithm<graph_t>::process_minimal_matching(const std::set<arc_t>& matchings) { 
+size_t Algorithm<graph_t>::take_edge_on_color(vertex_t const & x, mcolor_t const & color, vertex_t const & y) {
+  size_t num_rear = 0;
+
+  std::cerr << "Start to work with (" << x << ", " << y << ") " << genome_match::mcolor_to_name(color) << std::endl;  
+
+  if (y == Infty) {
+    mularcs_t mularcs_x = graph->get_adjacent_multiedges_with_info(x, false);
+    mcolor_t need_color(color, mularcs_x.get_multicolor(y), mcolor_t::Difference);
+    mularcs_x.erase(y);
+  
+    for (auto const & arc : mularcs_x) {
+      if (need_color.includes(arc.second) && graph->is_vec_T_consistent_color(arc.second)) {
+	graph->apply_two_break(twobreak_t(x, arc.first, Infty, Infty, arc.second));
+	++num_rear; 
+      } 
+    } 
+  } else { 
+    mularcs_t mularcs_x = graph->get_adjacent_multiedges_with_info(x, false);
+    mcolor_t need_color(color, mularcs_x.get_multicolor(y), mcolor_t::Difference);
+    mularcs_x.erase(y);
+  
+    mularcs_t mularcs_y = graph->get_adjacent_multiedges_with_info(y, false);
+    mularcs_y.erase(x);
+
+    typedef std::pair<std::pair<vertex_t, structure::Mcolor>, size_t> colacr_t;
+    utility::equivalence<colacr_t> equiv; 
+
+    for (auto const & arc_x : mularcs_x) { 
+      for (auto const & arc_y : mularcs_y) { 
+        mcolor_t color(arc_x.second, arc_y.second, mcolor_t::Intersection);
+        if (color.size() > 0) { 
+	  equiv.addrel(std::make_pair(arc_x, 0), std::make_pair(arc_y, 1));
+        } 
+      } 
+    }  
+    equiv.update();
+
+    std::map<colacr_t, std::set<colacr_t> > const & classes = equiv.get_eclasses<std::set<colacr_t> >();   
+    
+    for (auto const & color_set : classes) { 
+      std::multimap<mcolor_t, vertex_t> left; 
+      std::multimap<mcolor_t, vertex_t> right; 
+      for (auto const & color : color_set.second) { 
+        if (color.second == 0) {
+          left.insert(std::make_pair(color.first.second, color.first.first));
+        } else {
+          right.insert(std::make_pair(color.first.second, color.first.first));
+        } 
+      }
+	
+      if (left.size() == 1 && right.size() == 1) {
+        assert(graph->is_vec_T_consistent_color(left.begin()->first)); 
+        assert(graph->is_vec_T_consistent_color(right.begin()->first)); 
+        if (need_color.includes(left.begin()->first)) {
+	  graph->apply_two_break(twobreak_t(x, left.begin()->second, y, right.begin()->second, left.begin()->first));
+	  ++num_rear; 
+        } 
+      } else {
+        assert(left.size() == 1 || right.size() == 1); 
+  
+        if (left.size() == 1 && need_color.includes(left.begin()->first)) {
+          num_rear += take_edge_on_color(y, left.begin()->first, right.begin()->second);
+          assert(graph->is_vec_T_consistent_color(left.begin()->first)); 
+          graph->apply_two_break(twobreak_t(x, left.begin()->second, y, right.begin()->second, left.begin()->first));
+          ++num_rear; 
+        } else if (right.size() == 1 && need_color.includes(right.begin()->first)) {
+          num_rear += take_edge_on_color(x, right.begin()->first, left.begin()->second);
+	  assert(graph->is_vec_T_consistent_color(right.begin()->first));  
+          graph->apply_two_break(twobreak_t(x, left.begin()->second, y, right.begin()->second, right.begin()->first));
+          ++num_rear; 
+        }   
+      } 
+    } 
+  } 
+
+  return num_rear;
+} 
+
+
+/*template<class graph_t>
+size_t Algorithm<graph_t>::process_minimal_matching(std::set<arc_t> const & matchings) { 
   size_t num_rear = 0; 
   
-  for (const auto& matching : matchings) { 
+  for (auto const & matching : matchings) { 
     mularcs_t mularcs_x = graph->get_adjacent_multiedges_with_info(matching.first, false);
     mularcs_x.erase(matching.second);
     mularcs_t mularcs_y = graph->get_adjacent_multiedges_with_info(matching.second, false);
@@ -130,18 +213,18 @@ size_t Algorithm<graph_t>::process_minimal_matching(const std::set<arc_t>& match
 
     std::cerr << "Start process " << matching.first << " " << matching.second << std::endl;
  
-    typedef std::pair<std::pair<vertex_t, mcolor_t>, size_t> colacr_t;
+    typedef std::pair<std::pair<vertex_t, structure::Mcolor>, size_t> colacr_t;
     utility::equivalence<colacr_t> equiv; 
 
-    std::cerr << "Element x " << std::endl;
-    for (auto arc_x = mularcs_x.cbegin(); arc_x != mularcs_x.cend(); ++arc_x) { 
-      std::cerr << "New edge " << arc_x->first << " " << genome_match::mcolor_to_name(arc_x->second) << std::endl;
-    } 
+    //std::cerr << "Element x " << std::endl;
+    //for (auto arc_x = mularcs_x.cbegin(); arc_x != mularcs_x.cend(); ++arc_x) { 
+    //  std::cerr << "New edge " << arc_x->first << " " << genome_match::mcolor_to_name(arc_x->second) << std::endl;
+    //} 
 
-    std::cerr << "Element y " << std::endl;
-    for (auto arc_y =  mularcs_y.cbegin(); arc_y != mularcs_y.cend(); ++arc_y) { 
-      std::cerr << "New edge " << arc_y->first << " " << genome_match::mcolor_to_name(arc_y->second) << std::endl;
-    } 
+    //std::cerr << "Element y " << std::endl;
+    //for (auto arc_y =  mularcs_y.cbegin(); arc_y != mularcs_y.cend(); ++arc_y) { 
+    //  std::cerr << "New edge " << arc_y->first << " " << genome_match::mcolor_to_name(arc_y->second) << std::endl;
+    //} 
 
     for (auto arc_x = mularcs_x.cbegin(); arc_x != mularcs_x.cend(); ++arc_x) { 
       for (auto arc_y =  mularcs_y.cbegin(); arc_y != mularcs_y.cend(); ++arc_y) { 
@@ -153,7 +236,7 @@ size_t Algorithm<graph_t>::process_minimal_matching(const std::set<arc_t>& match
     }
   
     equiv.update();
-    const std::map<colacr_t, std::set<colacr_t> >& classes = equiv.get_eclasses<std::set<colacr_t> >();   
+    std::map<colacr_t, std::set<colacr_t> > const & classes = equiv.get_eclasses<std::set<colacr_t> >();   
     std::cerr << classes.size() << std::endl;
     
     std::vector<twobreak_t> history;  
@@ -161,7 +244,7 @@ size_t Algorithm<graph_t>::process_minimal_matching(const std::set<arc_t>& match
     for (auto color_set = classes.cbegin(); (color_set != classes.cend()) && good; ++color_set) { 
       std::multimap<vertex_t, mcolor_t> left; 
       std::multimap<vertex_t, mcolor_t> right; 
-      for (const auto &color : color_set->second) { 
+      for (auto const & color : color_set->second) { 
         if (color.second == 0) {
           left.insert(color.first);
         } else {
@@ -214,29 +297,38 @@ size_t Algorithm<graph_t>::process_minimal_matching(const std::set<arc_t>& match
   } 
   return num_rear; 
 } 
+*/
 
 template<class graph_t>
 bool Algorithm<graph_t>::stage6() { 
   size_t number_break = 0;
-  const std::map<vertex_t, std::set<vertex_t> >& classes = graph->split_on_components();
-  for (const auto &vertex_set : classes) { 
-    std::cerr << vertex_set.second.size() << std::endl;
+
+  std::map<vertex_t, std::set<vertex_t> > const & classes = graph->split_on_components();
+  for (auto const & vertex_set : classes) { 
+ 
+    std::cerr << "Component have size " << vertex_set.second.size() << std::endl;
+
     if (vertex_set.second.size() <= max_size_component) { 
-      std::cerr << "start process component" << std::endl;
-      for (auto it = vertex_set.second.cbegin(); it != vertex_set.second.cend(); ++it) {
-	std::cerr << *it << " "; 
+
+      std::cerr << "Start process component" << std::endl;
+      for (auto const v : vertex_set.second) {
+	std::cerr << v << " "; 
       } 
       std::cerr << std::endl;
+
       std::set<arc_t> matching = create_minimal_matching(vertex_set.second);
-      std::cerr << "find minimal matching " << matching.size() << std::endl;
-      for (auto it = matching.cbegin(); it != matching.cend(); ++it) {
-	std::cerr << "(" << it->first  << ", " << it->second << ")" << std::endl; 
+
+      std::cerr << "Find minimal matching " << matching.size() << std::endl;
+      for (auto const edge : matching) {
+	std::cerr << "(" << edge.first  << ", " << edge.second << ")" << std::endl; 
       } 
-      std::cerr << std::endl;
   
-      number_break += process_minimal_matching(matching);
+      std::cerr << "Start process minimal matching" << std::endl;
+      auto edge = matching.cbegin();
+      number_break += take_edge_on_color(edge->first, graph->get_complete_color(), edge->second);
     } 
   }  
+
   return (number_break != 0);
 } 
 

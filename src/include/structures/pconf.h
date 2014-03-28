@@ -7,52 +7,52 @@
 /*This structures containes information from *.cfg file */
 template<class mcolor_t>
 struct ProblemInstance {
-  typedef structure::BinaryTree<std::string> phylogeny_tree_t;
+  typedef structure::BinaryTree<mcolor_t> phylogeny_tree_t;
   typedef event::TwoBreak<mcolor_t> twobreak_t; 
   
-  ProblemInstance(const std::unordered_map<std::string, std::vector<std::string> >& input); 
+  explicit ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input); 
 
-  mcolor_t name_to_mcolor(const std::string& temp) const;
-  std::string mcolor_to_name(const mcolor_t& temp) const;
+  mcolor_t name_to_mcolor(std::string const & temp) const;
+  std::string mcolor_to_name(mcolor_t const & temp) const;
 
-  inline bool is_genome_name(const std::string& i) const {
+  inline bool is_genome_name(std::string const & i) const {
     return (genome_number.count(i) != 0);
   } 
 
-  inline size_t get_genome_number(const std::string& str) const {
+  inline size_t get_genome_number(std::string const & str) const {
     assert (genome_number.count(str) != 0); 
     return genome_number.find(str)->second;
   } 
 
+  inline std::string const & get_priority_name(size_t i) const {
+    return priority_name[i];
+  }
+ 	
   inline size_t get_count_genomes() const {
     return priority_name.size();
   } 
 
-  inline std::string get_priority_name(size_t i) const {
-    return priority_name[i];
-  } 
-	
-  inline std::string get_blk_format() const { 
+  inline std::string const & get_blk_format() const { 
     return block_format;
   } 
 
-  inline std::string get_blk_file() const { 
+  inline std::string const & get_blk_file() const { 
     return block_file;		
   } 
 
-  inline std::string get_graphname() const { 
+  inline std::string const & get_graphname() const { 
     return graphfname;		
   } 
 
-  inline std::string get_colorscheme() const { 
+  inline std::string const & get_colorscheme() const { 
     return colorscheme;		
   } 
 
-  inline std::vector<phylogeny_tree_t>::const_iterator cbegin_trees() const { 
+  inline typename std::vector<phylogeny_tree_t>::const_iterator cbegin_trees() const { 
     return trees.cbegin();
   } 
 
-  inline std::vector<phylogeny_tree_t>::const_iterator cend_trees() const { 
+  inline typename std::vector<phylogeny_tree_t>::const_iterator cend_trees() const { 
     return trees.cend();
   } 
 
@@ -72,7 +72,7 @@ struct ProblemInstance {
     return reconstructed_trees;
   } 
 
-  inline mcolor_t get_target() const { 
+  inline mcolor_t const & get_target() const { 
     return target;		
   } 
 
@@ -84,7 +84,7 @@ struct ProblemInstance {
     return RGBcolors.size();
   } 
 
-  inline std::string get_RGBcolor(int index) const { 
+  inline std::string const & get_RGBcolor(size_t index) const { 
     return RGBcolors[index];
   } 
 
@@ -94,11 +94,12 @@ struct ProblemInstance {
 private: 
   void init_basic_rgb_colors(bool flag = true); 
 private:
-  const size_t MAX_NUMBER_STAGE;
+  size_t const MAX_NUMBER_STAGE;
  
   std::vector<std::string> priority_name;  
   std::unordered_map<std::string, size_t> genome_number;
-  std::unordered_map<size_t, std::string> number_genome;  
+  std::map<mcolor_t, std::string> mcolor_name;
+  //std::unordered_map<size_t, std::string> number_genome;  //FIXME 
 
   std::string block_format; 	
   std::string block_file;
@@ -122,7 +123,7 @@ private:
 };
 
 template<class mcolor_t>
-ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string, std::vector<std::string> >& input) 
+ProblemInstance<mcolor_t>::ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input) 
 : MAX_NUMBER_STAGE(12)
 , stages(5) 
 , max_number_of_split_colors(2)
@@ -151,8 +152,7 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 
     priority_name[k] = name;	
     genome_number.insert(std::make_pair(name, k));
-    number_genome.insert(std::make_pair(k, name));
-
+  
     while(!is.eof()) {
       std::string alias;
       is >> alias;
@@ -162,14 +162,13 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 	exit(1);
       }
 
-      number_genome.insert(std::make_pair(k, alias));
       genome_number.insert(std::make_pair(alias, k));
     }
   } 
 
-  for (const auto &option: input) {
+  for (auto const & option: input) {
     if (option.first == "[Blocks]") {
-      for (const auto &str : option.second) {
+      for (auto const & str : option.second) {
 	std::istringstream is(str);
 	std::string name;
 	is >> name;
@@ -182,11 +181,13 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 	  exit(1);
 	}			} 
     } else if (option.first == "[Trees]") {
-      std::for_each(option.second.cbegin(), option.second.cend(), [&](const std::string& str) -> void {
-        trees.push_back(phylogeny_tree_t(str, genome_number));	
+      std::for_each(option.second.cbegin(), option.second.cend(), [&](std::string const & str) -> void {
+        trees.push_back(phylogeny_tree_t(str, genome_number, priority_name));	
+        auto const & locals = trees.crbegin()->get_name_for_colors();
+        mcolor_name.insert(locals.cbegin(), locals.cend());
       });
     } else if (option.first == "[Graphs]") {
-      for(const auto &str : option.second) {
+      for(auto const & str : option.second) {
 	std::istringstream is(str);
 	std::string name;
 	is >> name;
@@ -251,7 +252,7 @@ ProblemInstance<mcolor_t>::ProblemInstance(const std::unordered_map<std::string,
 
 template<class mcolor_t>
 void ProblemInstance<mcolor_t>::init_basic_rgb_colors(bool flag) { 
-  const size_t number_colors = 136;
+  size_t const number_colors = 136;
 
   if (flag) { 	
     std::string cols[number_colors] = {
@@ -289,7 +290,7 @@ void ProblemInstance<mcolor_t>::init_basic_rgb_colors(bool flag) {
 
 
 template<class mcolor_t>
-mcolor_t ProblemInstance<mcolor_t>::name_to_mcolor(const std::string& temp) const {
+mcolor_t ProblemInstance<mcolor_t>::name_to_mcolor(std::string const & temp) const {
   mcolor_t answer; 
   if (temp[0] == '{' && temp[temp.length() - 1] == '}') { 
     std::string current = "";
@@ -314,20 +315,21 @@ mcolor_t ProblemInstance<mcolor_t>::name_to_mcolor(const std::string& temp) cons
 }
 
 template<class mcolor_t>
-std::string ProblemInstance<mcolor_t>::mcolor_to_name(const mcolor_t& color) const {
-  std::string answer = "{";
-  if (color.empty()) {
-    answer += "}";
-  } 
-
-  std::for_each(color.cbegin(), color.cend(), [&] (const std::pair<size_t,size_t> col) -> void {
-    const std::string& sym = priority_name[col.first]; 
-    for(size_t i = 0; i < col.second; ++i) { 
-      answer += (sym + ",");
-    }
-  });  
+std::string ProblemInstance<mcolor_t>::mcolor_to_name(mcolor_t const & color) const {
+  if (mcolor_name.find(color) != mcolor_name.end()) { 
+    return mcolor_name.find(color)->second;
+  } else { 
+    std::string answer = "";
+  
+    std::for_each(color.cbegin(), color.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
+      std::string const & sym = priority_name[col.first]; 
+      for(size_t i = 0; i < col.second; ++i) { 
+        answer += (sym + ",");
+      }
+    });  
  
-  answer[answer.size() - 1] = '}';
-  return answer; 
+    answer += '}';
+    return answer; 
+  } 
 }
 #endif

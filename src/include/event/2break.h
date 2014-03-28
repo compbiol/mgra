@@ -3,6 +3,7 @@
 
 #include "Event.h"
 
+
 namespace event { 
 
 template<class mcolor_t>
@@ -56,6 +57,7 @@ struct TwoBreak : public event::Event {
     } else if (index == 3) {
       return arcs[1].second; 
     } 
+    assert(false);
   } 
 
   inline mcolor_t get_mcolor() const { 
@@ -80,6 +82,8 @@ private:
 
 template<class mcolor_t>
 void event::TwoBreak<mcolor_t>::apply_single(partgraph_t& local_graph) const {
+  //std::cerr << arcs[0].first << " " <<  arcs[0].second << ", " << arcs[1].first << " " << arcs[1].second << std::endl; 
+//" - " << genome_match::mcolor_to_name(mcolor) << std::endl;
   for(size_t i = 0; i < 2; ++i) {
     if (arcs[i].first != Infty || arcs[i].second != Infty) {
       local_graph.erase(arcs[i].first, arcs[i].second);

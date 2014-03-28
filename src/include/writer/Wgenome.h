@@ -5,21 +5,21 @@ namespace writer {
 
 template <class genome_t>
 struct Wgenome {
-  void save_genomes(const std::vector<genome_t>& genomes, bool isEmptyTarget) const { 
-    for (const auto &genome: genomes) {
+  void save_genomes(std::vector<genome_t> const & genomes, bool isEmptyTarget) const { 
+    for (auto const & genome: genomes) {
       save_genome_in_text_format(genome, isEmptyTarget);
     } 
   } 
 
 private: 
-  void save_genome_in_text_format(const genome_t& genome, bool isEmptyTarget) const;
+  void save_genome_in_text_format(genome_t const & genome, bool isEmptyTarget) const;
 };
 
 } 
 
 template <class genome_t>
-void writer::Wgenome<genome_t>::save_genome_in_text_format(const genome_t& genome, bool isEmptyTarget) const { 
-  const std::string& outname = genome.get_name();  
+void writer::Wgenome<genome_t>::save_genome_in_text_format(genome_t const & genome, bool isEmptyTarget) const { 
+  std::string const & outname = genome.get_name();  
   std::ofstream out((outname + ".gen").c_str());
 
   out << "# Genome " << outname << std::endl;
@@ -35,7 +35,7 @@ void writer::Wgenome<genome_t>::save_genome_in_text_format(const genome_t& genom
   size_t number_circular = 0; 
   size_t length_circular = 0;
 
-  for(const auto &chromosome : genome) {
+  for(auto const & chromosome : genome) {
     out << std::endl;
 
     if (chromosome.second.is_circular()) {
@@ -49,7 +49,7 @@ void writer::Wgenome<genome_t>::save_genome_in_text_format(const genome_t& genom
     out << chr_title << " of length " << chromosome.second.size() << " follows:" << std::endl;
 
     if (chromosome.second.begin()->second.second == 1 || (--chromosome.second.end())->second.second == 1) {
-      for(const auto &block : chromosome.second) {
+      for(auto const & block : chromosome.second) {
 	out << ((block.second.second == -1)?"-":"+") << block.second.first << " ";
       }
     } else {

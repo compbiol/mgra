@@ -265,7 +265,7 @@ bool Algorithm<graph_t>::stage5_1() {
 	    const arc_t& q = *(reg_edge.second.rbegin());
 
 	    // N.B. we have CC[p.first] == CC[q.first] == ie->first
-#ifndef VERSION2
+#ifdef VERSION2
 	    if ((processed.count(CC[p.second]) == 0) && (processed.count(CC[q.second]) == 0) && CC[p.second] == CC[q.second]) { 
 	      processed.insert({CC[p.first], CC[q.first], CC[p.second], CC[q.second]});
 	      graph->apply_two_break(twobreak_t(p, q, Q));

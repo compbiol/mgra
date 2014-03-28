@@ -7,14 +7,14 @@ struct MBGraph {
   typedef structure::Genome genome_t;
   typedef std::string orf_t;
 
-  MBGraph(const std::vector<genome_t>& genomes) 
+  explicit MBGraph(std::vector<genome_t> const & genomes) 
   : local_graph(genomes.size()) 
   { 
     std::unordered_set<orf_t> blocks;
 
-    for (const auto& genome : genomes) { 
-      for(const auto &chromosome : genome) {
-        for(const auto &orf : chromosome.second) {
+    for (auto const & genome : genomes) { 
+      for(auto const & chromosome : genome) {
+        for(auto const & orf : chromosome.second) {
 	  if (blocks.count(orf.second.first) == 0) { 
 	    obverse_edges.insert(std::make_pair(orf.second.first + "t", orf.second.first + "h"));
 	    obverse_edges.insert(std::make_pair(orf.second.first + "h", orf.second.first + "t"));
@@ -31,13 +31,13 @@ struct MBGraph {
     }	
   } 
 
-  inline vertex_t get_obverse_vertex(const vertex_t& v) const {
+  inline vertex_t get_obverse_vertex(vertex_t const & v) const {
     assert(obverse_edges.count(v) != 0);
     return obverse_edges.find(v)->second;
   } 
 
   // FIXME: PROBLEM WITH TARGET. I NOT UNDERSTAND ALGORITHM ABOUT THIS. If changed, chaged this function
-  inline bool is_exist_edge(size_t index, const vertex_t& first) const { 
+  inline bool is_exist_edge(size_t index, vertex_t const & first) const { 
     assert(index < local_graph.size());
     if (local_graph[index].find(first) != local_graph[index].end()) { 
 	if (local_graph[index].find(first)->second == Infty)  {
@@ -51,7 +51,7 @@ struct MBGraph {
   }
  
   //FIXME IF WE RECONSTRUCT ANCESTORS WITH DUPLICATION EQUAL RANGE
-  inline vertex_t get_adjecent_vertex(size_t index, const vertex_t& first) const {  
+  inline vertex_t get_adjecent_vertex(size_t index, vertex_t const & first) const {  
     assert(index < local_graph.size() && (local_graph[index].count(first) != 0));
     return local_graph[index].find(first)->second;
   } 	 
@@ -81,27 +81,27 @@ struct MBGraph {
   } 
 
 protected: 
-  inline void add_edge(size_t index, const vertex_t& first, const vertex_t& second) { 
+  inline void add_edge(size_t index, vertex_t const & first, vertex_t const & second) { 
     assert(index < local_graph.size());
     local_graph[index].insert(first, second);
   }
 
-  inline void erase_edge(size_t index, const vertex_t& first, const vertex_t& second) {
+  inline void erase_edge(size_t index, vertex_t const & first, vertex_t const & second) {
     assert(index < local_graph.size());
     return local_graph[index].erase(first, second);
   } 
 
 private:
-  void add_edges(size_t index, const genome_t& genome) {
-    const auto rearLambda = [] (const std::pair<orf_t, int> & orf) -> vertex_t { 
+  void add_edges(size_t index, genome_t const & genome) {
+    auto const rearLambda = [] (std::pair<orf_t, int> const & orf) -> vertex_t { 
       return ((orf.second > 0)?(orf.first + "h"):(orf.first + "t"));
     };
 
-    const auto frontLambda = [] (const std::pair<orf_t, int> & orf) -> vertex_t { 
+    auto const frontLambda = [] (std::pair<orf_t, int> const & orf) -> vertex_t { 
       return ((orf.second > 0)?(orf.first + "t"):(orf.first + "h"));
     };
 
-    for (const auto &chromosome : genome) {
+    for (auto const & chromosome : genome) {
       vertex_t current_vertex = rearLambda(chromosome.second.begin()->second);
       for (auto gene = (++chromosome.second.begin()); gene != chromosome.second.end(); ++gene) { 
         local_graph[index].insert(current_vertex, frontLambda(gene->second));	

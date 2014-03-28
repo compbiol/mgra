@@ -1,11 +1,13 @@
 #ifndef MCOLOR_H_
 #define MCOLOR_H_
 
+#include <map>
+
 namespace structure { 
 
 struct Mcolor {
   enum Construct {Difference, Union, Intersection};
-	
+
   typedef std::map<size_t, size_t> map_t;
   typedef map_t::const_iterator citer;
   typedef map_t::iterator iter; 
@@ -13,11 +15,11 @@ struct Mcolor {
   Mcolor() { 
   } 
 
-  Mcolor(size_t i) {
+  explicit Mcolor(size_t i) {
     main_color.insert(std::make_pair(i, 1));
   }  
 
-  Mcolor(const Mcolor& first, const Mcolor& second, const Construct& what) { 
+  Mcolor(Mcolor const & first, Mcolor const & second, Construct const & what) { 
     switch (what) { 
     case Difference: set_difference(first, second);	
       break;
@@ -37,15 +39,15 @@ struct Mcolor {
   } 
 
   inline bool is_one_to_one_match() const {
-    for (const auto &col : main_color) { 
+    for (auto const  &col : main_color) { 
       if (col.second != 1) { 
 	return false; 
       } 
     } 
     return true; 
   }
-	
-  inline size_t how_much_includes(const Mcolor& second) const {
+
+  inline size_t how_much_includes(Mcolor const & second) const {
     size_t answer = 0;
     Mcolor current = *this; 
     while (current.includes(second)) {
@@ -54,8 +56,8 @@ struct Mcolor {
     }  	
     return answer; 
   }
-	
-  inline bool includes(const Mcolor& second) const { 	
+
+  inline bool includes(Mcolor const & second) const { 	
     auto first1 = main_color.cbegin(); 
     auto first2 = second.cbegin(); 
 
@@ -67,7 +69,7 @@ struct Mcolor {
       if (first2->first < first1->first) { 
 	return false;
       } 
-	
+
       if (first1->first == first2->first) { 
 	if  (first1->second < first2->second) {
 	  return false; 
@@ -103,24 +105,24 @@ struct Mcolor {
     return main_color.cend();
   } 
 
-  bool operator > (const Mcolor& C) const { 
+  bool operator > (Mcolor const & C) const { 
     return (main_color > C.main_color);
   } 
 
-  bool operator < (const Mcolor& C) const {
+  bool operator < (Mcolor const & C) const {
     return (main_color < C.main_color); 
   } 
 
-  bool operator == (const Mcolor& C) const { 
+  bool operator == (Mcolor const & C) const { 
     return (main_color == C.main_color);	
   } 
 
-  bool operator != (const Mcolor& C) const { 
+  bool operator != (Mcolor const & C) const { 
     return (main_color != C.main_color); 
   }
-	
+
 private:
-  void set_difference(const Mcolor& first, const Mcolor& second) {
+  void set_difference(Mcolor const & first, Mcolor const & second) {
     auto first1 = first.cbegin(); 
     auto first2 = second.cbegin(); 
     auto result = std::inserter(main_color, main_color.begin());
@@ -140,17 +142,17 @@ private:
 	++first2;
       } 
     }
-	
+
     for (; first1 != first.cend(); ++first1, ++result) { 
       *result = *first1;
     } 
   } 
-	
-  void set_union(const Mcolor& first, const Mcolor& second) {
+
+  void set_union(Mcolor const & first, Mcolor const & second) {
     auto first1 = first.cbegin(); 
     auto first2 = second.cbegin(); 
     auto result = std::inserter(main_color, main_color.begin());
-	
+
     while (true) { 
       if (first1 == first.cend()) { 
 	for (; first2 != second.cend(); ++first2, ++result) { 
@@ -158,14 +160,14 @@ private:
 	} 
 	break; 
       } 
-		
+
       if (first2 == second.cend()) { 	
 	for (; first1 != first.cend(); ++first1, ++result) { 
 	  *result = *first1;
 	} 		
 	break;
       } 
-	
+
       if (first1->first == first2->first) { 
 	*result = std::make_pair(first1->first, first1->second + first2->second);	
 	++first1; 
@@ -180,8 +182,8 @@ private:
       ++result;
     } 	
   }
-	
-  void set_intersection(const Mcolor& first, const Mcolor& second) {
+
+  void set_intersection(Mcolor const & first, Mcolor const & second) {
     auto first1 = first.cbegin(); 
     auto first2 = second.cbegin(); 
     auto result = std::inserter(main_color, main_color.begin());
@@ -203,6 +205,7 @@ private:
 private: 
   map_t main_color;
 };
+
 
 } 
 #endif

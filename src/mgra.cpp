@@ -24,7 +24,7 @@
 std::vector<std::string> genome_match::number_to_genome;
 genome_match::gen2num genome_match::genome_to_number;   
 
-void tell_root_besides(const mbgraph_with_history<structure::Mcolor>& graph) {
+void tell_root_besides(mbgraph_with_history<structure::Mcolor> const & graph) {
   // tell where the root resides
   std::clog << "the root resides in between:";
 
@@ -95,22 +95,6 @@ int main(int argc, char* argv[]) {
   Algorithm<mbgraph_with_history<structure::Mcolor> > main_algo(graph, cfg.get_size_component_in_brutforce(), cfg.get_max_number_of_split());
   main_algo.convert_to_identity_bgraph(cfg); 
 
-  /*std::cerr << "check two break " << std::endl;
-  std::shared_ptr<mbgraph_with_history<structure::Mcolor> > new_graph(new mbgraph_with_history<structure::Mcolor>(genomes, cfg)); 
-  Algorithm<mbgraph_with_history<structure::Mcolor> > alg(new_graph, cfg.get_size_component_in_brutforce(), cfg.get_max_number_of_split());
-  alg.stage3(); 
-  writer::Wdots<mbgraph_with_history<structure::Mcolor>, ProblemInstance<structure::Mcolor> > write_dots;
-  write_dots.save_dot(*new_graph, cfg, 100);
-
-  for (auto br = graph->cbegin_2break_history(); br != graph->cend_2break_history(); ++br) {
-    std::cerr << br->get_arc(0).first << " " << br->get_arc(0).second << " " 
-	<< br->get_arc(1).first << " " << br->get_arc(1).second << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
-    //if (br->get_arc(0).first == "175t" && br->get_arc(0).second == "401h" && br->get_arc(1).first == "305h" && br->get_arc(1).second == "401t") { 
-      //break; 
-    //} 
-    new_graph->apply_two_break(*br);
-  }*/
-
   if (cfg.get_target().empty()) {
     for(auto it = graph->cbegin_local_graphs(); it != graph->cend_local_graphs() - 1; ++it) { 
       if (*it != *(it + 1)) {
@@ -120,21 +104,22 @@ int main(int argc, char* argv[]) {
     }
   } 
 
-  std::clog << "Start reconstruct genomes." << std::endl;
-
   auto bad_edges = main_algo.get_bad_edges();
-  RecoveredGenomes<mbgraph_with_history<structure::Mcolor> > reductant(*graph, cfg.get_target(), bad_edges); 
 
+  std::clog << "Start reconstruct genomes." << std::endl;
+  RecoveredGenomes<mbgraph_with_history<structure::Mcolor> > reductant(*graph, cfg, bad_edges); 
+
+  std::clog << "Save history in files." << std::endl;
   if (cfg.get_target().empty()) {
     size_t i = 0;
     auto recover_transformation = reductant.get_history();
     for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im, ++i) {
-      std::ofstream tr((genome_match::mcolor_to_name(*im) + ".trs").c_str());
-      for(const auto &event : recover_transformation[i]) {
-        const vertex_t& p = event.get_arc(0).first;
-        const vertex_t& q = event.get_arc(0).second;
-        const vertex_t& x = event.get_arc(1).first;
-        const vertex_t& y = event.get_arc(1).second;
+      std::ofstream tr((cfg.mcolor_to_name(*im) + ".trs").c_str());
+      for(auto const & event : recover_transformation[i]) {
+        vertex_t const & p = event.get_arc(0).first;
+        vertex_t const & q = event.get_arc(0).second;
+        vertex_t const & x = event.get_arc(1).first;
+        vertex_t const & y = event.get_arc(1).second;
       
 	tr << "(" << p << ", " << q << ") x (" << x << ", " << y << ") " << genome_match::mcolor_to_name(event.get_mcolor()); 
 
@@ -154,7 +139,8 @@ int main(int argc, char* argv[]) {
       tr.close(); 
     } 
   }
- 
+
+  std::clog << "Save ancestor genomes in files." << std::endl; 
   writer::Wgenome<genome_t> writer_genome;
   writer_genome.save_genomes(reductant.get_genomes(), cfg.get_target().empty()); 
   return 0;

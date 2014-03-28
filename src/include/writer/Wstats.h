@@ -17,8 +17,8 @@ struct Wstats {
   { 
   } 
 
-  void print_all_statistics(size_t stage, Statistics<mbgraph_with_history<mcolor_t> >& info, const mbgraph_with_history<mcolor_t>& graph); 
-  void print_history_statistics(const mbgraph_with_history<mcolor_t>& graph, const edges_t& bad_edges);
+  void print_all_statistics(size_t stage, Statistics<mbgraph_with_history<mcolor_t> >& info, mbgraph_with_history<mcolor_t> const & graph); 
+  void print_history_statistics(mbgraph_with_history<mcolor_t> const & graph, edges_t const & bad_edges);
 
   //void print_postponed_deletion_statistics(const std::map<arc_t, Mcolor>& postponed_deletions);
   //void print_bad_complete_edges(const mbgraph_with_history<Mcolor>& graph, const std::multimap<arc_t, Mcolor>& insertions);

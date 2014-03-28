@@ -43,20 +43,18 @@ struct genome_match {
     return current;
   }
 
-  static std::string mcolor_to_name(const mcolor_t& S) {
+  static std::string mcolor_to_name(mcolor_t const & S) {
     if (S.empty()) { 
       return "\\ensuremath{\\emptyset}";
     }
 
     std::ostringstream os;
-
     for(auto is = S.cbegin(); is != S.cend(); ++is) {
-      const std::string& sym = number_to_genome[is->first]; 
+      std::string sym = number_to_genome[is->first]; 
       for(size_t i = 0; i < is->second; ++i) { 
 	os << sym;
-      } 
+      }
     }
-
     return os.str();
   }
      

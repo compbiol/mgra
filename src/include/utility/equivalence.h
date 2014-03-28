@@ -11,7 +11,7 @@ template <class Item, class Cmp = std::less<Item> >
 struct equivalence {
   typedef std::map<Item, Item, Cmp> map_t;
 
-  inline void addrel(const Item& x, const Item& y) {
+  inline void addrel(Item const & x, Item const & y) {
     Item z = operator[](x);
     Item t = operator[](y);
 
@@ -22,20 +22,20 @@ struct equivalence {
     }
   } 
 
-  inline void addrel(const std::pair<Item, Item>& p) { 
+  inline void addrel(std::pair<Item, Item> const & p) { 
     addrel(p.first, p.second); 
   }
 
   // return `true' iff two integers are equivalent
-  inline bool isequiv(const Item& x, const Item& y) { 
+  inline bool isequiv(Item const & x, Item const & y) { 
     return (operator[](x) == operator[](y));
   } 
 
-  inline bool isequiv(const std::pair<Item, Item>& p) { 
+  inline bool isequiv(std::pair<Item, Item> const & p) { 
     return isequiv(p.first, p.second); 
   }
 
-  inline const Item& operator[](const Item& x) {
+  inline Item const & operator[](Item const & x) {
     if (container.count(x) == 0) { 
       return container[x] = x; 
     } 
@@ -47,16 +47,16 @@ struct equivalence {
     return (container[x] = y);
   }
 
-  inline void insert(const Item& x) {
+  inline void insert(Item const & x) {
     operator[](x);
   }
 
-  inline bool defined(const Item& x) const { 
+  inline bool defined(Item const & x) const { 
     return (container.find(x) != container.end());
   } 
 
   inline void update() {
-    for (const auto & elem : container) { 
+    for (auto const & elem : container) { 
       operator[](elem.first);
     }
   } 
@@ -65,6 +65,8 @@ struct equivalence {
 
   template<class eclass_t>
   std::map<Item, eclass_t, Cmp> get_eclasses();
+
+  std::map<Item, std::set<Item>, Cmp> get_eclasses1();
 
 private: 
   map_t container; 
@@ -75,7 +77,7 @@ private:
 template<class Item, class Cmp>
 size_t utility::equivalence<Item, Cmp>::classes() {
   size_t count = 0;
-  for(const auto& item : container) { 
+  for(auto const & item : container) { 
     if (operator[](item.first) == item.first) { 
       ++count;
     } 
@@ -84,10 +86,19 @@ size_t utility::equivalence<Item, Cmp>::classes() {
 }
 
 template<class Item, class Cmp>
+std::map<Item, std::set<Item>, Cmp> utility::equivalence<Item, Cmp>::get_eclasses1() {
+  std::map<Item, std::set<Item>, Cmp> classes;
+  for(auto const & item : container) { 
+    classes[operator[](item.first)].insert(item.first); 
+  } 
+  return classes;
+}
+
+template<class Item, class Cmp>
 template<class eclass_t>
 std::map<Item, eclass_t, Cmp> utility::equivalence<Item, Cmp>::get_eclasses() {
-  std::map<Item, eclass_t, Cmp> classes;
-  for(const auto& item : container) { 
+  std::map<Item, eclass_t , Cmp> classes;
+  for(auto const & item : container) { 
     classes[operator[](item.first)].insert(item.first); 
   } 
   return classes;

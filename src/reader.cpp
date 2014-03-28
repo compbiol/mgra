@@ -56,7 +56,8 @@ void reader::read_infercars(const ProblemInstance<mcolor_t>& cfg, std::vector<ge
 	for(size_t i = 0; i < count_block.size(); ++i) { 
 	  if (count_block[i] == 1) {
 	    int sign_ = (sign[i] == "+") ? +1: -1;
-	    genome[i].insert(gene, chromosome[i], (start_block[i] + end_block[i]) / 2, sign_, std::min(start_block[i], end_block[i]), std::max(start_block[i], end_block[i]));         	   
+	    genome[i].insert(gene, chromosome[i], (start_block[i] + end_block[i]) / 2, sign_); 
+	//, std::min(start_block[i], end_block[i]), std::max(start_block[i], end_block[i]));         	   
 	  }
 	} 
 	gene.clear();
@@ -128,7 +129,7 @@ void reader::read_grimm(const ProblemInstance<mcolor_t>& cfg, std::vector<genome
 	  if (gene[0] == '-' || gene[0] == '+') {
 	    gene = gene.substr(1);
 	  }
-	  genome[number_genome].insert(gene, chr, genord, sign, genord, genord); 
+	  genome[number_genome].insert(gene, chr, genord, sign); //, genord, genord); 
 	} 
       }
     } 

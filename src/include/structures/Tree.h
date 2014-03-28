@@ -1,21 +1,16 @@
 #ifndef TREE_H_ 
 #define TREE_H_
 
-#include "mcolor.h"
-
 namespace structure { 
 
-template<class type_data>
+template<class mcolor_t>
 struct BinaryTree { 
-  typedef structure::Mcolor mcolor_t;
-
   struct Node { 
     std::string name;   
-    std::vector<size_t> data;
+    std::vector<std::string> childs;
+    mcolor_t data;
     std::shared_ptr<Node> left_child;    
     std::shared_ptr<Node> right_child; 
-
-    Node(const std::string& tree, const std::unordered_map<std::string, size_t>& genome_number);     
 
     Node () 
     : left_child (nullptr)
@@ -23,25 +18,33 @@ struct BinaryTree {
     { 
     }
 
-    template<class cofg_t>
-    std::string/*std::set<std::string>*/ get_nodes(std::vector<std::string>& info, const cofg_t& cfg) const;
+    Node(std::string const & tree, std::unordered_map<std::string, size_t> const & genome_number, std::vector<std::string> const & priority_name);     
 
-    mcolor_t get_dicolors(std::set<mcolor_t>& dicolor) const; 
+    std::string get_nodes(std::vector<std::string>& info) const;
+
+    void get_dicolors(std::set<mcolor_t>& dicolor) const; 
+    void get_name_for_colors(std::map<mcolor_t, std::string>& colors) const;
   };
 
-  BinaryTree(const std::string& st, const std::unordered_map<std::string, size_t>& genome_number) 
-  : root(st, genome_number)
+  BinaryTree(std::string const & st, std::unordered_map<std::string, size_t> const & genome_number, std::vector<std::string> const & priority_name) 
+  : root(st, genome_number, priority_name)
   { 
   } 
 
-  template<class cfg_t>
-  void get_nodes(std::vector<std::string>& info, const cfg_t& cfg) const {
-	root.get_nodes(info, cfg);	
+  void get_nodes(std::vector<std::string>& info) const {
+    root.get_nodes(info);	
   }
 
-  void build_vec_T_consistent_colors(std::set<mcolor_t>& dicolor) const {
-	const mcolor_t& color = root.get_dicolors(dicolor);	
-	dicolor.insert(color); 
+  std::set<mcolor_t> build_vec_T_consistent_colors() const {
+    std::set<mcolor_t> dicolor;
+    root.get_dicolors(dicolor);
+    return dicolor;	
+  }
+
+  std::map<mcolor_t, std::string> get_name_for_colors() const {
+    std::map<mcolor_t, std::string> colors;
+    root.get_name_for_colors(colors);
+    return colors;	
   }
 
 private: 
@@ -50,151 +53,138 @@ private:
 
 }
 
-template<class type_data>
-structure::BinaryTree<type_data>::Node::Node(const std::string& tree, const std::unordered_map<std::string, size_t>& genome_number) {
+template<class mcolor_t>
+structure::BinaryTree<mcolor_t>::Node::Node(std::string const & tree, std::unordered_map<std::string, size_t> const & genome_number, std::vector<std::string> const & priority_name) {
   int i = 0; 
-  for (i = tree.length() - 1; tree[i] != ':' && tree[i] != ')' && i >= 0; --i) 
+  for (i = tree.length() - 1; tree[i] != ':' && tree[i] != ')' && tree[i] != '}' && i >= 0; --i) 
     ; 
 
   std::string new_tree = tree; 
-  if (i > 0 && tree[i] == ':') {
+  if (i > 0) { 
     name = tree.substr(i + 1, tree.length() - i - 1);
-    new_tree = tree.substr(0, i); 
-  } 
+    if (tree[i] == ':') { 
+      new_tree = tree.substr(0, i);
+    } else { 
+      new_tree = tree.substr(0, i + 1);
+    }  
+  }
+  
 
-  if (tree[0] == '(') {
+  if (new_tree[0] == '(') {
     //non-trivial tree
-    if (tree[tree.size() - 1] != ')') {
-      std::cerr << "ERROR: Malformed input (sub)tree 1" << std::endl;
+    if (new_tree[new_tree.size() - 1] != ')') {
+      std::cerr << "ERROR: Bad format input (sub)tree. Check count \')\'" << std::endl;
       exit(3);
     }
 
     int p = 0;
-    for(size_t j = 1; j < tree.size() - 1; ++j) {
-      if (tree[j] == '(') { 
+    for(size_t j = 1; j < new_tree.size() - 1; ++j) {
+      if (new_tree[j] == '(' || new_tree[j] == '{') { 
 	++p; 
-      } else if (tree[j] == ')') {
+      } else if (new_tree[j] == ')' || new_tree[j] == '}') {
 	--p;
-      } else if (tree[j] == ',') { 
+      } else if (new_tree[j] == ',') { 
 	if (p == 0) {
-	  left_child = std::make_shared<Node>(Node(tree.substr(1, j - 1), genome_number)); 
-	  right_child = std::make_shared<Node>(Node(tree.substr(j + 1, tree.size() - j - 2), genome_number));
+          left_child = std::make_shared<Node>(Node(new_tree.substr(1, j - 1), genome_number, priority_name)); 
+	  right_child = std::make_shared<Node>(Node(new_tree.substr(j + 1, new_tree.size() - j - 2), genome_number, priority_name));
 	} 
       } 
       if (p < 0) {
-	std::cerr << "ERROR: Malformed input (sub)tree 2" << std::endl;
+	std::cerr << "ERROR: Bad format input (sub)tree. Check count \'(\' and \')\'" << std::endl;
 	exit(3);
       }
     }
+
     if (p != 0) {
-      std::cerr << "ERROR: Malformed input (sub)tree 3" << std::endl;
+      std::cerr << "ERROR: Bad format input (sub)tree. Check count \'(\' and \')\'" << std::endl;
       exit(3);
     }
+
+    if (name.empty()) {
+      name = left_child->name + right_child->name;
+    } 
+    data = mcolor_t(left_child->data, right_child->data, mcolor_t::Union);
   } else {
-    /*
     if (new_tree[0] == '{' && new_tree[new_tree.size() - 1] == '}') {
       size_t start = 1;
-      for(size_t j = 1; j < new_tree.size() - 1; ++j) {
-        if (new_tree[j] == ',') {
-          std::string str = new_tree.substr(start, new_tree.size() - start - 1);
-          data.push_back(genome_number.find(str)->second);
+      std::string new_name = "";
+      for(size_t j = 1; j < new_tree.size(); ++j) {
+        if (new_tree[j] == ',' || new_tree[j] == '}') {
+          std::string const & str = new_tree.substr(start, j - start);
+          if (genome_number.count(str) == 0) {
+    	    std::cerr << "ERROR: Unknown genome in (sub)tree: " << str << std::endl;
+	    exit(3);
+          }
+          data.insert(genome_number.find(str)->second);
+          childs.push_back(priority_name[genome_number.find(str)->second]);
+          new_name += priority_name[genome_number.find(str)->second];
           start = j + 1;  
         } 
       } 
+
+      if (name.empty()) {
+        name = new_name;
+      } 
     } else {
       if (genome_number.count(new_tree) == 0) {
-	data.push_back(genome_number.find(new_tree)->second);
-      } 
-    } 
-    */
-      //single node
-      for(size_t j = 0; j < tree.size(); ++j) {
-        std::string c = tree.substr(j, 1);
-        if (genome_number.count(c) == 0) {
-	  std::cerr << "ERROR: Unknown genome in (sub)tree: " << tree << std::endl;
-	  exit(3);
-        }
-        data.push_back(genome_number.find(c)->second);
+        std::cerr << "ERROR: Unknown genome in (sub)tree: " << new_tree << std::endl;
+	exit(3);
       }
-   
+      data.insert(genome_number.find(new_tree)->second);
+      name = priority_name[genome_number.find(new_tree)->second]; 
+    }   
     left_child = nullptr;
     right_child = nullptr;
   }
 }
 
-template<class type_data>
-template<class cfg_t>
-std::string/*std::set<std::string>*/ structure::BinaryTree<type_data>::Node::get_nodes(std::vector<std::string>& info, const cfg_t& cfg) const  {
-	if (!left_child && !right_child) { 
-		//std::set<std::string> lists;
-		std::string temp = ""; 
-		for(auto it = data.cbegin(); it != data.cend(); ++it) {
-			temp += (cfg.get_priority_name(*it));//lists.insert(*it);
-    		}
-		return temp;//return lists;
-	} 
+template<class mcolor_t>
+std::string structure::BinaryTree<mcolor_t>::Node::get_nodes(std::vector<std::string>& info) const  {
+  if (!left_child && !right_child) { 
+    if (!childs.empty()) { 
+      for(auto const & lc : childs) {
+        info.push_back("\t\"" + name + "\" -> \"" + lc + "\";");
+      }
+    } 
+    return name; 
+  } 
 
-	std::string first = "";  
-	//std::set<std::string> list_first; 
-	if (left_child) {
-		first = left_child->get_nodes(info, cfg);
-		//list_first = left_child->get_nodes(info);
-	
-		/*for (auto it = list_first.cbegin(); it != list_first.cend(); ++it) {
-			first += (*it);
-		}*/
-	}
+  if (left_child) {
+    std::string const & first = left_child->get_nodes(info); 
+    info.push_back("\t\"" + name + "\" -> \"" + first + "\";");
+  }
+  
+  if (right_child) {
+    std::string const & second = right_child->get_nodes(info); 
+    info.push_back("\t\"" + name + "\" -> \"" + second + "\";");
+  } 
 
-	std::string second = ""; 
-	//std::set<std::string> list_second; 
-	if (right_child) {
-		second = right_child->get_nodes(info, cfg);
-		//list_second = right_child->get_nodes(info);
-		/*for (auto it = list_second.cbegin(); it != list_second.cend(); ++it) {
-			second += (*it);
-		}*/
-	}
-
-	/*std::set<std::string> list_result;
-	std::set_union(list_first.cbegin(), list_first.cend(), list_second.cbegin(), list_second.cend(), std::inserter(list_result, list_result.begin()));*/
-
-	std::string result = first + second; ///"";
-	//for (auto it = list_result.cbegin(); it != list_result.cend(); ++it) {
-	//	result += (*it);
-	//}
-
-	info.push_back("\t\"" + result + "\"\t->\t\"" + first + "\";");
-	info.push_back("\t\"" + result + "\"\t->\t\"" + second + "\";");
-
-	//return list_result;
-	return result;
+  return name;
 }
 
-template<class type_data>
-structure::Mcolor structure::BinaryTree<type_data>::Node::get_dicolors(std::set<mcolor_t>& dicolor) const {
-	if (!left_child && !right_child) { 
-		mcolor_t temp; 
-		for(auto it = data.cbegin(); it != data.cend(); ++it) {	
-			temp.insert(*it); 
-    		}
-		return temp;
-	} 
+template<class mcolor_t>
+void structure::BinaryTree<mcolor_t>::Node::get_dicolors(std::set<mcolor_t>& dicolor) const {
+  if (left_child) {
+    left_child->get_dicolors(dicolor);
+  }
 
-	mcolor_t first;  
-	if (left_child) {
-		first = left_child->get_dicolors(dicolor);
-		dicolor.insert(first);
-	}
+  dicolor.insert(data);
 
-	mcolor_t second; 
-	if (right_child) {
-		second = right_child->get_dicolors(dicolor);
-		dicolor.insert(second);
-	}
-
-	mcolor_t result(first, second, mcolor_t::Union);
-
-	return result;
+  if (right_child) {
+    right_child->get_dicolors(dicolor);
+  }
 } 
 
+template<class mcolor_t>
+void structure::BinaryTree<mcolor_t>::Node::get_name_for_colors(std::map<mcolor_t, std::string>& colors) const {
+  if (left_child) {
+    left_child->get_name_for_colors(colors);
+  }
+
+  colors.insert(std::make_pair(data, name));
+  
+  if (right_child) {
+    right_child->get_name_for_colors(colors);
+  }
+} 
 #endif

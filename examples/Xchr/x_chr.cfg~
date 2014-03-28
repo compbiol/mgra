@@ -1,22 +1,24 @@
 [Genomes]
-M Mouse
+M Mouse 
 R Rat
 D Dog
 Q Champanse
-H Human
-C Cat
+H Human 
+C Cat 
 
 [Blocks]
 format grimm
-file mam_dup.txt
+file xchr.txt
 
 [Trees]
-(((M,R),D),(Q,(H,C)))
+(((Mouse,Rat),Dog),(Champanse,(Human,Cat)))
 
 [Algorithm]
-stages 8
+stages 3
+rounds 3
+bruteforce 25
 
-#target 
+## [Target] 
 
 [Graphs]
 filename stage

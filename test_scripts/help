@@ -1,8 +1,0 @@
-Коллекция, чем запускаем 
-
-dot -Tpdf $x -o $NAMEFILE
-sfdp -Tpdf $x -o $NAMEFILE
-sfdp -Goverlap=prism -Tpdf stage0.dot -o stage.pdf
-neato -Gmode=KK -Gratio=1.0 -Gepsilon=.3 -v -T pdf -o st1MDQ.pdf st1MDQ.dot
-neato -Nlabel="" -Gratio=1.0 -v -T pdf -o stage0n0.pdf stage0.dot
-neato -Gratio=1.0 -v -T pdf -o stage0n1.pdf stage0.dot

@@ -14,7 +14,7 @@ bool Algorithm<graph_t>::stage1() {
 	std::unordered_set<vertex_t> processed({v, Infty}); // we count oo as already processed
 
         auto const  find_simple_path_lambda = [&] (vertex_t const & prev, vertex_t const & cur, bool is_next) -> vertex_t { 
-          vertex_t previous  = prev;
+          vertex_t previous = prev;
           vertex_t current = cur;
           bool stop = true; 
 
@@ -33,7 +33,8 @@ bool Algorithm<graph_t>::stage1() {
               auto const & previous_color = new_edges.get_multicolor(previous); 
               new_edges.erase(previous);
     
-              if (new_edges.size() == 1 && graph->get_complement_color(previous_color) == new_edges.cbegin()->second) {
+              if (new_edges.size() == 1 && graph->get_complement_color(previous_color) == new_edges.cbegin()->second
+ 		  && !postponed_deletions.defined(current, new_edges.cbegin()->first)) {
 	        mularcs_t const & edges = graph->get_adjacent_multiedges_with_info(current, false);
                 auto const count_Lambda = [&] (const vertex_t& v) -> bool {
                   bool flag = true; 

@@ -65,7 +65,7 @@ private:
   //Stage 6: brutoforce stage
   bool stage6();
   size_t calculate_cost(const vertex_t& y, const mularcs_t& mularcs_x, const mularcs_t& mulacrs_y); 
-  std::set<arc_t> create_minimal_matching(const std::set<vertex_t>& vertex_set); 
+  std::multimap<size_t, arc_t> create_minimal_matching(const std::set<vertex_t>& vertex_set); 
   //size_t process_minimal_matching(const std::set<arc_t>& matchings);
   size_t take_edge_on_color(vertex_t const & x, mcolor_t const & color, vertex_t const & y);
 

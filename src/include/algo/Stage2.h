@@ -239,7 +239,7 @@ bool Algorithm<graph_t>::stage22() {
               }
  	    }  
            
-	    if (!found && !graph->is_vec_T_consistent_color(im->second)) {
+	    if (y != Infty && !found && !graph->is_vec_T_consistent_color(im->second)) {
               auto const count_variant_Lambda = [&] (arc_t const & viewed, mcolor_t const & Q, arc_t const & remove) -> size_t { 
                 size_t number_variant = 0; 
                 if (viewed.first != Infty) {

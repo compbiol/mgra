@@ -15,7 +15,6 @@
 ** You should have received a copy of the GNU General Public License 
 ** along with this program; if not, see http://www.gnu.org/licenses/gpl.html 
 */
-
 #include "reader.h"
 #include "algo/Algorithm.h"
 #include "Wgenome.h"
@@ -50,7 +49,7 @@ void tell_root_besides(mbgraph_with_history<structure::Mcolor> const & graph) {
 
 int main(int argc, char* argv[]) {
   std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) version 2" << std::endl;
-  std::cout << "(c) 2008-2013 by Max Alekseyev <maxal@cse.sc.edu>, Pavel Avdeyev and Shuai Jiang" << std::endl;
+  std::cout << "(c) 2008-2013 by Shuai Jiang, Pavel Avdeyev, Max Alekseyev <maxal@cse.sc.edu>" << std::endl;
   std::cout << "Distributed under GNU GENERAL PUBLIC LICENSE license." << std::endl;
   std::cout << std::endl;
 
@@ -58,7 +57,12 @@ int main(int argc, char* argv[]) {
   std::string name_cfg_file;
   if (argc != 2) {
     std::cerr << "Usage: mgra <ProblemConfiguration>" << std::endl;
+    std::cerr << "You can read detailed information about configuration file in https://github.com/ablab/mgra" << std::endl;
     return 1;
+  } else if (std::string(argv[1]) == "--h" || std::string(argv[1]) == "-help") { 
+    std::cout << "Usage: mgra <ProblemConfiguration>" << std::endl;
+    std::cout << "You can read detailed information about configuration file in https://github.com/ablab/mgra" << std::endl;
+    return 0;
   } else { 
     name_cfg_file = argv[1];
   } 

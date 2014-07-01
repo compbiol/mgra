@@ -5,7 +5,7 @@
 ** Multiple Genome Rearrangements and Ancestors (MGRA) 
 ** reconstruction software. 
 ** 
-** Copyright (C) 2008 - 2013 by Max Alekseyev <maxal@cse.sc.edu> 
+** Copyright (C) 2008 - 2014 by Max Alekseyev <maxal@cse.sc.edu> 
 **. 
 ** This program is free software; you can redistribute it and/or 
 ** modify it under the terms of the GNU General Public License 
@@ -15,10 +15,16 @@
 ** You should have received a copy of the GNU General Public License 
 ** along with this program; if not, see http://www.gnu.org/licenses/gpl.html 
 */
-#include "reader.h"
 #include "algo/Algorithm.h"
-#include "Wgenome.h"
+#include "writer/Wgenome.h"
+
+#include "reader.h"
 #include "RecoveredGenomes.h"
+
+#include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/exception.hpp>
+
 
 std::vector<std::string> genome_match::number_to_genome;
 genome_match::gen2num genome_match::genome_to_number;   
@@ -33,13 +39,13 @@ void tell_root_besides(mbgraph_with_history<structure::Mcolor> const & graph) {
     for (auto jt = it; ++jt != T.end(); ) {
       structure::Mcolor C(*it, *jt, structure::Mcolor::Intersection);
       if (C.size() == it->size()) {
-	T.erase(it++);
-	jt = it;
-	continue;
+        T.erase(it++);
+        jt = it;
+        continue;
       }
       if (C.size() == jt->size()) {
-	T.erase(jt++);
-	--jt;
+        T.erase(jt++);
+        --jt;
       }
     }
     std::clog << " " << genome_match::mcolor_to_name(*it);
@@ -48,28 +54,74 @@ void tell_root_besides(mbgraph_with_history<structure::Mcolor> const & graph) {
 }
 
 int main(int argc, char* argv[]) {
-  std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) version 2" << std::endl;
-  std::cout << "(c) 2008-2013 by Shuai Jiang, Pavel Avdeyev, Max Alekseyev <maxal@cse.sc.edu>" << std::endl;
-  std::cout << "Distributed under GNU GENERAL PUBLIC LICENSE license." << std::endl;
-  std::cout << std::endl;
-
   /*reading flags*/
-  std::string name_cfg_file;
-  if (argc != 2) {
-    std::cerr << "Usage: mgra <ProblemConfiguration>" << std::endl;
-    std::cerr << "You can read detailed information about configuration file in https://github.com/ablab/mgra" << std::endl;
-    return 1;
-  } else if (std::string(argv[1]) == "--h" || std::string(argv[1]) == "-help") { 
-    std::cout << "Usage: mgra <ProblemConfiguration>" << std::endl;
-    std::cout << "You can read detailed information about configuration file in https://github.com/ablab/mgra" << std::endl;
-    return 0;
-  } else { 
-    name_cfg_file = argv[1];
-  } 
+  std::string const VERSION("2.2");
 
+  std::string cfg_file;
+  std::string type; 
+  std::string blocks_file;
+  std::string out_path; 
+  std::string graph_name;
+  std::string colorsheme;
+
+  namespace po = boost::program_options;
+  po::options_description desc("Options"); 
+
+  desc.add_options()
+    ("help,h", "Show help message")
+    ("version,v", "Print version program")
+    ("config,c", po::value<std::string>(&cfg_file), "Input configure file")
+    ("format,f", po::value<std::string>(&type)->required(), "Input format file in genomes file")
+    ("genomes,g", po::value<std::string>(&blocks_file)->required(), "Input file contains genomes")
+    ("output_dir,o", po::value<std::string>(&out_path)->required(), "Output directory")
+    ("filename", po::value<std::string>(&graph_name)->default_value("stage"), "File name for output breakpoint graph")
+    ("colorsheme", po::value<std::string>(), "Colorsheme, which used in output breakpoint graph")
+    ;
+
+  po::positional_options_description p;
+  p.add("config", -1);
+
+  po::variables_map vm; 
+  try { 
+    po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm); 
+
+    if ( vm.count("help") ) {
+      std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) version " << VERSION << std::endl;
+      std::cout << "(c) 2008-2014 by Shuai Jiang, Pavel Avdeyev, Max Alekseyev" << std::endl;
+      std::cout << "Distributed under GNU GENERAL PUBLIC LICENSE license." << std::endl;
+      std::cout << std::endl;
+      std::cout << desc << std::endl;
+      return 0;
+    }
+
+    if ( vm.count("version") ) {
+      std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) version " << VERSION << std::endl;
+      return 0;
+    }
+
+    po::notify(vm);
+
+    if ( !vm.count("config") ) { 
+      throw po::required_option("--config");
+    }
+    
+  } catch (po::required_option& e) {
+    std::cerr << "ERROR: " << e.what() << std::endl; 
+    std::cerr << desc << std::endl;
+    return 1;
+  } catch (po::error& e) { 
+    std::cerr << "ERROR: " << e.what() << std::endl; 
+    return 1;
+  }
+
+  if ( vm.count("colorsheme") ) { 
+    colorsheme = vm["colorsheme"].as<std::string>();
+  }
+
+/*
   typedef structure::Genome genome_t;
   
-  /*Reading problem configuration*/
+  //Reading problem configuration
   ProblemInstance<structure::Mcolor> cfg(reader::read_cfg_file(name_cfg_file)); 
 
   std::vector<genome_t> genomes = reader::read_genomes(cfg);
@@ -147,6 +199,7 @@ int main(int argc, char* argv[]) {
   std::clog << "Save ancestor genomes in files." << std::endl; 
   writer::Wgenome<genome_t> writer_genome;
   writer_genome.save_genomes(reductant.get_genomes(), cfg.get_target().empty()); 
+*/ 
   return 0;
 }
 

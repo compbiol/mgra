@@ -22,9 +22,6 @@
 #include "RecoveredGenomes.h"
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/exception.hpp>
-
 
 std::vector<std::string> genome_match::number_to_genome;
 genome_match::gen2num genome_match::genome_to_number;   
@@ -33,18 +30,18 @@ void tell_root_besides(mbgraph_with_history<structure::Mcolor> const & graph) {
   // tell where the root resides
   std::clog << "the root resides in between:";
 
-  std::set<structure::Mcolor> T(graph.cbegin_T_consistent_color(), graph.cend_T_consistent_color()); 
+  std::set<structure::Mcolor> colors(graph.cbegin_T_consistent_color(), graph.cend_T_consistent_color()); 
 
-  for (auto it = T.begin(); it != T.end(); ++it) {
-    for (auto jt = it; ++jt != T.end(); ) {
+  for (auto it = colors.begin(); it != colors.end(); ++it) {
+    for (auto jt = it; ++jt != colors.end(); ) {
       structure::Mcolor C(*it, *jt, structure::Mcolor::Intersection);
       if (C.size() == it->size()) {
-        T.erase(it++);
+        colors.erase(it++);
         jt = it;
         continue;
       }
       if (C.size() == jt->size()) {
-        T.erase(jt++);
+        colors.erase(jt++);
         --jt;
       }
     }
@@ -54,7 +51,6 @@ void tell_root_besides(mbgraph_with_history<structure::Mcolor> const & graph) {
 }
 
 int main(int argc, char* argv[]) {
-  /*reading flags*/
   std::string const VERSION("2.2");
 
   std::string cfg_file;
@@ -64,6 +60,7 @@ int main(int argc, char* argv[]) {
   std::string graph_name;
   std::string colorsheme;
 
+  /*Reading flags*/
   namespace po = boost::program_options;
   po::options_description desc("Options"); 
 
@@ -118,14 +115,56 @@ int main(int argc, char* argv[]) {
     colorsheme = vm["colorsheme"].as<std::string>();
   }
 
-/*
-  typedef structure::Genome genome_t;
-  
-  //Reading problem configuration
-  ProblemInstance<structure::Mcolor> cfg(reader::read_cfg_file(name_cfg_file)); 
+  namespace sys = boost::system;
+  sys::error_code error; 
 
-  std::vector<genome_t> genomes = reader::read_genomes(cfg);
+  fs::path out_path_directory(out_path);
+  fs::path in_path_cfg(cfg_file);
+  fs::path in_path_blocks(blocks_file);
+
+  if ( !fs::exists(in_path_cfg, error) || !fs::is_regular_file(in_path_cfg, error) ) { 
+    std::cerr << "ERROR: Problem with configuration file: " << cfg_file << std::endl;
+  }
+
+  if ( !fs::exists(in_path_blocks, error) || !fs::is_regular_file(in_path_blocks, error) ) { 
+    std::cerr << "ERROR: Problem with genomes file: " << blocks_file << std::endl;
+  }
+
+  if ( fs::exists(out_path_directory, error) ) {
+    if ( !fs::is_directory(out_path_directory, error) ) {
+      std::cerr << "ERROR: " << out_path << " is not directory" << std::endl;
+      return 1;
+    }
+  } else {
+    bool flag = fs::create_directory(out_path_directory, error); 
+
+    if ( !flag || error != 0 ) { 
+      std::cerr << "ERROR: Problem to create " << out_path << " directory" << std::endl; 
+      return 1;
+    }
+  }
+
+  /*Reading problem configuration and genomes*/
+  typedef structure::Genome genome_t;
+  typedef structure::Mcolor mcolor_t;
+  ProblemInstance<mcolor_t> cfg(reader::read_cfg_file(in_path_cfg), colorsheme.empty()); 
+
+  if (cfg.get_count_genomes() < 2) {
+    std::cerr << "ERROR: at least two input genomes required" << std::endl;
+    return 1;
+  }
   
+  std::vector<genome_t> genomes; 
+  if (type == "infercars") {
+    genomes = reader::read_infercars(cfg, in_path_blocks);
+  } else if (type == "grimm") {
+    genomes = reader::read_grimm(cfg, in_path_blocks);
+  } else {
+    std::cerr << "ERROR: unknown synteny blocks format" << type << std::endl;
+    return 1;
+  }
+
+  /*Start to work*/
   genome_match::init_name_genomes(cfg, genomes); //FIXME: IT'S DEBUG
 
   for(size_t i = 0; i < genomes.size(); ++i) { 
@@ -142,24 +181,20 @@ int main(int argc, char* argv[]) {
 
   tell_root_besides(*graph); 	
 
-  if (cfg.is_reconstructed_trees()) {
-    std::clog << "Start algorithm for reconstructed trees" << std::endl;
-  } 
-
   std::clog << "Start algorithm for convert from breakpoint graph to identity breakpoint graph" << std::endl;
-
-  Algorithm<mbgraph_with_history<structure::Mcolor> > main_algo(graph, cfg.get_size_component_in_brutforce(), cfg.get_max_number_of_split());
+  Algorithm<mbgraph_with_history<structure::Mcolor> > main_algo(graph, out_path_directory, 
+    cfg.get_size_component_in_brutforce(), cfg.get_max_number_of_split(), colorsheme, graph_name);
   main_algo.convert_to_identity_bgraph(cfg); 
 
   if (cfg.get_target().empty()) {
     for(auto it = graph->cbegin_local_graphs(); it != graph->cend_local_graphs() - 1; ++it) { 
       if (*it != *(it + 1)) {
-	std::clog << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; 
-        exit(1);
+      	std::clog << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; 
+        return 1;
       }
     }
   } 
-
+  
   auto bad_edges = main_algo.get_bad_edges();
 
   std::clog << "Start reconstruct genomes." << std::endl;
@@ -170,36 +205,37 @@ int main(int argc, char* argv[]) {
     size_t i = 0;
     auto recover_transformation = reductant.get_history();
     for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im, ++i) {
-      std::ofstream tr((cfg.mcolor_to_name(*im) + ".trs").c_str());
+      std::string namefile = cfg.mcolor_to_name(*im) + ".trs";
+      fs::ofstream tr(out_path_directory / namefile);
       for(auto const & event : recover_transformation[i]) {
         vertex_t const & p = event.get_arc(0).first;
         vertex_t const & q = event.get_arc(0).second;
         vertex_t const & x = event.get_arc(1).first;
         vertex_t const & y = event.get_arc(1).second;
       
-	tr << "(" << p << ", " << q << ") x (" << x << ", " << y << ") " << genome_match::mcolor_to_name(event.get_mcolor()); 
+      	tr << "(" << p << ", " << q << ") x (" << x << ", " << y << ") " << genome_match::mcolor_to_name(event.get_mcolor()); 
 
-	if (p != Infty && q != Infty && x != Infty && y != Infty) { 
-	  if (p == graph->get_obverse_vertex(x) && bad_edges.defined(p, x)) { 
-	    tr << " # deletion"; 
+      	if (p != Infty && q != Infty && x != Infty && y != Infty) { 
+      	  if (p == graph->get_obverse_vertex(x) && bad_edges.defined(p, x)) { 
+      	    tr << " # deletion"; 
           } else if (q == graph->get_obverse_vertex(y) && bad_edges.defined(q, y)) {
-	    tr << " # deletion"; 
-	  } else if (p == graph->get_obverse_vertex(q) && bad_edges.defined(p, q)) { 
-	    tr << " # insertion"; 
+      	    tr << " # deletion"; 
+      	  } else if (p == graph->get_obverse_vertex(q) && bad_edges.defined(p, q)) { 
+      	    tr << " # insertion"; 
           } else if (x == graph->get_obverse_vertex(y) && bad_edges.defined(x, y)) {
-	    tr << " # insertion"; 
-	  } 
-	}
-	tr << std::endl;  
+      	    tr << " # insertion"; 
+      	  } 
+      	}
+      	tr << std::endl;  
       }
       tr.close(); 
     } 
   }
 
   std::clog << "Save ancestor genomes in files." << std::endl; 
-  writer::Wgenome<genome_t> writer_genome;
+  writer::Wgenome<genome_t> writer_genome(out_path_directory);
   writer_genome.save_genomes(reductant.get_genomes(), cfg.get_target().empty()); 
-*/ 
+
   return 0;
 }
 

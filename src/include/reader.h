@@ -7,14 +7,10 @@
 namespace reader { 
   typedef structure::Genome genome_t;
   typedef structure::Mcolor mcolor_t;
-  
-  std::vector<genome_t> read_genomes(const ProblemInstance<mcolor_t>& cfg); 
-	
-  void read_infercars(const ProblemInstance<mcolor_t>& cfg, std::vector<genome_t>& genome); 
-
-  void read_grimm(const ProblemInstance<mcolor_t>& cfg, std::vector<genome_t>& genome);
-
-  std::unordered_map<std::string, std::vector<std::string> > read_cfg_file(const std::string& name_cfg_file);
+  	
+  std::vector<structure::Genome> read_infercars(ProblemInstance<mcolor_t> const & cfg, fs::path const & path_to_file); 
+  std::vector<structure::Genome> read_grimm(ProblemInstance<mcolor_t> const & cfg, fs::path const & path_to_file);
+  std::unordered_map<std::string, std::vector<std::string> > read_cfg_file(fs::path const & path_to_file);
 } 
 
 #endif

@@ -12,8 +12,8 @@ struct Wstats {
   typedef structure::Mcolor mcolor_t;
   typedef structure::Mularcs<mcolor_t> mularcs_t;
 
-  Wstats(std::string name_file) 
-  : ofstat(name_file)
+  Wstats(fs::path const & path, std::string const & name_file) 
+  : ofstat(path / name_file)
   { 
   } 
 
@@ -55,7 +55,7 @@ private:
     ofstat << std::endl;
   } 
 private: 
-  std::ofstream ofstat;
+  fs::ofstream ofstat;
 };
 
 } 

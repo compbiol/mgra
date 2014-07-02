@@ -5,6 +5,12 @@ namespace writer {
 
 template <class genome_t>
 struct Wgenome {
+
+  explicit Wgenome(fs::path const & path) 
+  : m_path(path)
+  { 
+  }
+
   void save_genomes(std::vector<genome_t> const & genomes, bool isEmptyTarget) const { 
     for (auto const & genome: genomes) {
       save_genome_in_text_format(genome, isEmptyTarget);
@@ -13,6 +19,8 @@ struct Wgenome {
 
 private: 
   void save_genome_in_text_format(genome_t const & genome, bool isEmptyTarget) const;
+private: 
+  fs::path m_path;
 };
 
 } 
@@ -20,9 +28,9 @@ private:
 template <class genome_t>
 void writer::Wgenome<genome_t>::save_genome_in_text_format(genome_t const & genome, bool isEmptyTarget) const { 
   std::string const & outname = genome.get_name();  
-  std::ofstream out((outname + ".gen").c_str());
+  fs::ofstream out(m_path / (outname + ".gen"));
 
-  out << "# Genome " << outname << std::endl;
+  out << "# Genome " << genome.get_name() << std::endl;
 
   std::string chr_title;
 
@@ -50,11 +58,11 @@ void writer::Wgenome<genome_t>::save_genome_in_text_format(genome_t const & geno
 
     if (chromosome.second.begin()->second.second == 1 || (--chromosome.second.end())->second.second == 1) {
       for(auto const & block : chromosome.second) {
-	out << ((block.second.second == -1)?"-":"+") << block.second.first << " ";
+        out << ((block.second.second == -1)?"-":"+") << block.second.first << " ";
       }
     } else {
       for(auto ip = chromosome.second.crbegin(); ip != chromosome.second.crend(); ++ip) {
-	out << ((ip->second.second == -1)?"+":"-") << ip->second.first << " ";
+      	out << ((ip->second.second == -1)?"+":"-") << ip->second.first << " ";
       }
     }
 

@@ -3,10 +3,10 @@
 void writer::Wstats::print_all_statistics(size_t stage, Statistics<mbgraph_with_history<mcolor_t> >& info, const mbgraph_with_history<mcolor_t>& graph) { 
   if (stage == 0) { 
     ofstat << "Initial graph:" << std::endl;
-    ofstat << "... Unique blocks: " << toString(graph.size() / 2) << std::endl;
-    ofstat << "... Vertex: " << toString(graph.size()) << std::endl;
+    ofstat << "... Unique blocks: " << std::to_string(graph.size() / 2) << std::endl;
+    ofstat << "... Vertex: " << std::to_string(graph.size()) << std::endl;
   }  else { 
-    ofstat << "After Stage " << toString(stage) << " graph:" << std::endl;
+    ofstat << "After Stage " << std::to_string(stage) << " graph:" << std::endl;
   } 
 
   print_vertex_statistics(info.get_vertex_statistics()); 

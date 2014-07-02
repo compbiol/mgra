@@ -41,7 +41,7 @@ struct Mcolor {
   inline bool is_one_to_one_match() const {
     for (auto const  &col : main_color) { 
       if (col.second != 1) { 
-	return false; 
+        return false; 
       } 
     } 
     return true; 
@@ -63,19 +63,19 @@ struct Mcolor {
 
     for (; first2 != second.cend(); ++first1) { 
       if (first1 == main_color.cend()) {
-	return false;
+        return false;
       }
 
       if (first2->first < first1->first) { 
-	return false;
+        return false;
       } 
 
       if (first1->first == first2->first) { 
-	if  (first1->second < first2->second) {
-	  return false; 
-	} else {
-	  ++first2; 
-	}
+        if  (first1->second < first2->second) {
+          return false; 
+        } else {
+          ++first2; 
+        }
       } 
     } 
     return true;
@@ -91,8 +91,8 @@ struct Mcolor {
 
   inline size_t size() const {
     size_t size = 0; 
-    for (auto col : main_color) { 
-	size += col.second;
+    for (auto const & col : main_color) { 
+      size += col.second;
     } 
     return size;
   } 
@@ -129,17 +129,17 @@ private:
 
     while (first1 != first.cend() && first2 != second.cend()) {
       if (first1->first == first2->first) { 
-	if (first1->second > first2->second) { 
-	  *result = std::make_pair(first1->first, first1->second - first2->second);
-	} 
-	++first1;
-	++first2;
+        if (first1->second > first2->second) { 
+          *result = std::make_pair(first1->first, first1->second - first2->second);
+        } 
+        ++first1;
+        ++first2;
       } else if (*first1 < *first2) {
-	*result = *first1; 
-	++result; 
-	++first1; 
+        *result = *first1; 
+        ++result; 
+        ++first1; 
       } else if (*first2 < *first1) { 
-	++first2;
+        ++first2;
       } 
     }
 
@@ -155,29 +155,29 @@ private:
 
     while (true) { 
       if (first1 == first.cend()) { 
-	for (; first2 != second.cend(); ++first2, ++result) { 
-	  *result = *first2;
-	} 
-	break; 
+      	for (; first2 != second.cend(); ++first2, ++result) { 
+      	  *result = *first2;
+      	} 
+      	break; 
       } 
 
       if (first2 == second.cend()) { 	
-	for (; first1 != first.cend(); ++first1, ++result) { 
-	  *result = *first1;
-	} 		
-	break;
+      	for (; first1 != first.cend(); ++first1, ++result) { 
+      	  *result = *first1;
+      	} 		
+      	break;
       } 
 
       if (first1->first == first2->first) { 
-	*result = std::make_pair(first1->first, first1->second + first2->second);	
-	++first1; 
-	++first2; 
+      	*result = std::make_pair(first1->first, first1->second + first2->second);	
+      	++first1; 
+      	++first2; 
       } else if (*first1 < *first2) {
-	*result = *first1; 
-	++first1; 
+      	*result = *first1; 
+      	++first1; 
       } else if (*first2 < *first1) { 
-	*result = *first2; 
-	++first2;			
+      	*result = *first2; 
+      	++first2;			
       }  
       ++result;
     } 	
@@ -190,14 +190,14 @@ private:
 
     while (first1 != first.cend() && first2 != second.cend()) {
       if (first1->first == first2->first) { 
-	*result = std::make_pair(first1->first, std::min(first1->second, first2->second)); 		
-	++result; 
-	++first1;
-	++first2;
+        *result = std::make_pair(first1->first, std::min(first1->second, first2->second)); 		
+        ++result; 
+        ++first1;
+        ++first2;
       } else if (*first1 < *first2) { 
-	++first1;
+        ++first1;
       } else if (*first2 < *first1) { 
-	++first2;
+        ++first2;
       } 
     }
   }
@@ -205,7 +205,6 @@ private:
 private: 
   map_t main_color;
 };
-
-
 } 
-#endif
+
+#endif  /* end of include guard: MCOLOR_H_ */

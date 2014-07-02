@@ -1,22 +1,22 @@
 #ifndef ALGORITHM_H_
 #define ALGORITHM_H_
 
-#include <tuple>
-
-#include "mbgraph_history.h"
 #include "genome_match.h" //FIXME REMOVE LATER
+
+#include "graph/mbgraph_history.h"
 #include "writer/Wstats.h"
 #include "writer/Wdots.h"
 
 template<class graph_t>
 struct Algorithm { 
-  Algorithm(std::shared_ptr<graph_t> const & gr, size_t size_component, size_t rds) 
-  : crash(false)
-  , graph(gr) 
+  Algorithm(std::shared_ptr<graph_t> const & gr, fs::path const & work_dir, size_t size_component, size_t rds, 
+    std::string const & colorscheme, std::string const & graphname) 
+  : graph(gr) 
   , canformQoo(true)
   , rounds(rds)
   , max_size_component(size_component)
-  , write_stats("stats.txt") 
+  , write_stats(work_dir, "stats.txt") 
+  , write_dots(work_dir, colorscheme, graphname)
   {
   } 
 
@@ -77,7 +77,6 @@ private:
   bool canformQ(vertex_t const & current, mcolor_t  const & Q) const;
 
 private: 
-  bool crash; //FIXME
   std::shared_ptr<graph_t> graph; 
 
   bool canformQoo;  // safe choice, at later stages may change to false
@@ -89,10 +88,10 @@ private:
   std::map<std::pair<vertex_t, mcolor_t>, vertex_t> mother_verteces;
  
   std::set<edge_t> clone_edges; 
-  std::set<std::set<mcolor_t> > disjoint_subset_colors;  
+  std::set<std::set<mcolor_t> > disjoint_subset_colors;  //FIXME
 
   writer::Wstats write_stats;
-  writer::Wdots<graph_t, ProblemInstance<mcolor_t> > write_dots; 
+  writer::Wdots<graph_t, ProblemInstance<mcolor_t> > write_dots;
 };
 
 template<class graph_t>
@@ -100,7 +99,6 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
   std::unordered_set<size_t> print_dots;
   size_t stage = 0; 
   bool isChanged = false;
-  //size_t count_changes = 0;
   bool process_compl = true; 
 
   auto const saveInfoLambda = [&](size_t st) -> void { 
@@ -143,12 +141,12 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
  
         if (!isChanged) {
           std::cerr << "Stage: 2 Non-mobile edges " << stage << std::endl;
-	  isChanged = stage22();
+          isChanged = stage22();
         }
 
         if (!isChanged) {
           std::cerr << "Stage: 71 Non-mobile edges " << stage << std::endl;
-	  isChanged = stage71();
+          isChanged = stage71();
         }
 
         saveInfoLambda(stage++);
@@ -167,14 +165,9 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
       }
     } 
 
-    /*if (isChanged) {
-      count_changes = 0;
-    }*/
- 
-    if (canformQoo && !isChanged) { // && count_changes != 2) { 
-      std::cerr << "Change canformQoo " /*<< count_changes*/ << std::endl;
-      canformQoo = false; //!canformQoo; // more flexible
-      //++count_changes;
+    if (canformQoo && !isChanged) { 
+      std::cerr << "Change canformQoo "  << std::endl;
+      canformQoo = false; // more flexible
       isChanged = true;
     }
 
@@ -182,7 +175,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
       //std::cerr << "Manual Completion Stage" << std::endl;
       auto completion = cfg.get_completion();
       for(auto il = completion.begin(); il != completion.end(); ++il) {
-	graph->apply_two_break(*il);
+        graph->apply_two_break(*il);
       }
 
       process_compl = false;
@@ -222,8 +215,8 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
       }  
      
       if (canformQoo && !isChanged) {
-	isChanged = true;
-	canformQoo = false; // more flexible
+        isChanged = true;
+        canformQoo = false; // more flexible
       }    
 
       saveInfoLambda(stage++);
@@ -240,7 +233,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
       //std::cerr << "Manual Completion Stage" << std::endl;
       auto completion = cfg.get_completion();
       for(auto il = completion.begin(); il != completion.end(); ++il) {
-	graph->apply_two_break(*il);
+        graph->apply_two_break(*il);
       }
 
       process_compl = false;

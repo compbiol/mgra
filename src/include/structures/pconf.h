@@ -10,7 +10,7 @@ struct ProblemInstance {
   typedef structure::BinaryTree<mcolor_t> phylogeny_tree_t;
   typedef event::TwoBreak<mcolor_t> twobreak_t; 
   
-  explicit ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input); 
+  explicit ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input, bool is_colorscheme); 
 
   mcolor_t name_to_mcolor(std::string const & temp) const;
   std::string mcolor_to_name(mcolor_t const & temp) const;
@@ -30,22 +30,6 @@ struct ProblemInstance {
  	
   inline size_t get_count_genomes() const {
     return priority_name.size();
-  } 
-
-  inline std::string const & get_blk_format() const { 
-    return block_format;
-  } 
-
-  inline std::string const & get_blk_file() const { 
-    return block_file;		
-  } 
-
-  inline std::string const & get_graphname() const { 
-    return graphfname;		
-  } 
-
-  inline std::string const & get_colorscheme() const { 
-    return colorscheme;		
   } 
 
   inline typename std::vector<phylogeny_tree_t>::const_iterator cbegin_trees() const { 
@@ -91,8 +75,10 @@ struct ProblemInstance {
   inline int get_RGBcoeff() const { 
     return RGBcoeff;
   } 
+
 private: 
   void init_basic_rgb_colors(bool flag = true); 
+
 private:
   size_t const MAX_NUMBER_STAGE;
  
@@ -100,12 +86,6 @@ private:
   std::unordered_map<std::string, size_t> genome_number;
   std::map<mcolor_t, std::string> mcolor_name;
   //std::unordered_map<size_t, std::string> number_genome;  //FIXME 
-
-  std::string block_format; 	
-  std::string block_file;
-
-  std::string graphfname;
-  std::string colorscheme;
 
   std::vector<phylogeny_tree_t> trees;
 
@@ -123,7 +103,7 @@ private:
 };
 
 template<class mcolor_t>
-ProblemInstance<mcolor_t>::ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input) 
+ProblemInstance<mcolor_t>::ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input, bool is_colorscheme) 
 : MAX_NUMBER_STAGE(12)
 , stages(5) 
 , max_number_of_split_colors(2)
@@ -158,8 +138,8 @@ ProblemInstance<mcolor_t>::ProblemInstance(std::unordered_map<std::string, std::
       is >> alias;
 
       if (genome_number.count(alias) > 0) {
-	std::cerr << "ERROR: Duplicate alias " << alias << std::endl;
-	exit(1);
+      	std::cerr << "ERROR: Duplicate alias " << alias << std::endl;
+      	exit(1);
       }
 
       genome_number.insert(std::make_pair(alias, k));
@@ -167,62 +147,34 @@ ProblemInstance<mcolor_t>::ProblemInstance(std::unordered_map<std::string, std::
   } 
 
   for (auto const & option: input) {
-    if (option.first == "[Blocks]") {
-      for (auto const & str : option.second) {
-	std::istringstream is(str);
-	std::string name;
-	is >> name;
-	if(name == "format") {  
-	  is >> block_format;
-	} else if(name == "file") {  
-	  is >> block_file;
-	} else {
-	  std::cerr << "Unknown option " << name << std::endl;
-	  exit(1);
-	}			} 
-    } else if (option.first == "[Trees]") {
+    if (option.first == "[Trees]") {
       std::for_each(option.second.cbegin(), option.second.cend(), [&](std::string const & str) -> void {
         trees.push_back(phylogeny_tree_t(str, genome_number, priority_name));	
         auto const & locals = trees.crbegin()->get_name_for_colors();
         mcolor_name.insert(locals.cbegin(), locals.cend());
       });
-    } else if (option.first == "[Graphs]") {
-      for(auto const & str : option.second) {
-	std::istringstream is(str);
-	std::string name;
-	is >> name;
-
-	if (name == "filename") { 
-	  is >> graphfname;
-	} else if (name == "colorscheme") { 
-	  is >> colorscheme; 
-	} else {
-	  std::cerr << "Unknown option " << name << std::endl;
-	  exit(1);
-	}
-      }
     } else if (option.first == "[Algorithm]") {
       for(auto js = option.second.cbegin(); js != option.second.cend(); ++js) {
-	std::istringstream is(*js);
-	std::string name;
-	is >> name;
+      	std::istringstream is(*js);
+      	std::string name;
+      	is >> name;
 
-	if (name == "stages") { 
-	  is >> stages;
-	} else if (name == "rounds") {
-	  is >> max_number_of_split_colors;
+      	if (name == "stages") { 
+      	  is >> stages;
+      	} else if (name == "rounds") {
+      	  is >> max_number_of_split_colors;
           if (max_number_of_split_colors > 3) {
             std::cerr << "Large number of rounds" << std::endl; 
-	    exit(1);
+      	    exit(1);
           } 
         } else if (name == "bruteforce") {
           is >> size_component_brute_force; 
         } else if (name == "recostructed_tree") {
           reconstructed_trees = true; 
         } else { 
-	  std::cerr << "Unknown option " << name << std::endl;
-	  exit(1);
-	}
+      	  std::cerr << "Unknown option " << name << std::endl;
+      	  exit(1);
+      	}
       }
     } else if (option.first == "[Target]") { 
       std::istringstream is(*option.second.cbegin());
@@ -231,13 +183,13 @@ ProblemInstance<mcolor_t>::ProblemInstance(std::unordered_map<std::string, std::
       std::remove_if(temp.begin(), temp.end(), (int(*)(int)) isspace); //FIXME NOT WORKED
       target = name_to_mcolor(temp);
     } else if (option.first == "[Completion]") {
-      for(const auto &event: option.second) {
-	std::vector<std::string> mc(5);
-	std::istringstream is(event);
-	is >> mc[0] >> mc[1] >> mc[2] >> mc[3] >> mc[4];
-	std::remove_if(mc[4].begin(), mc[4].end(), (int(*)(int)) isspace); //FIXME NOT WORKED		
-	mcolor_t color = name_to_mcolor(mc[4]);
-	completion.push_back(twobreak_t(mc[0], mc[1], mc[2], mc[3], color));
+      for(auto const & event: option.second) {
+      	std::vector<std::string> mc(5);
+      	std::istringstream is(event);
+      	is >> mc[0] >> mc[1] >> mc[2] >> mc[3] >> mc[4];
+      	std::remove_if(mc[4].begin(), mc[4].end(), (int(*)(int)) isspace); //FIXME NOT WORKED		
+      	mcolor_t color = name_to_mcolor(mc[4]);
+      	completion.push_back(twobreak_t(mc[0], mc[1], mc[2], mc[3], color));
       }
     } else if (option.first == "[Genomes]") {
       continue;  
@@ -247,7 +199,7 @@ ProblemInstance<mcolor_t>::ProblemInstance(std::unordered_map<std::string, std::
     }
   } 
     
-  init_basic_rgb_colors(colorscheme.empty());
+  init_basic_rgb_colors(is_colorscheme);
 } 
 
 template<class mcolor_t>
@@ -282,7 +234,7 @@ void ProblemInstance<mcolor_t>::init_basic_rgb_colors(bool flag) {
     RGBcoeff = (number_colors - 1) / (get_count_genomes() - 1);
   } else { 
     for(size_t i = 0; i < number_colors; ++i) {
-      RGBcolors.push_back(toString(i + 1)); 
+      RGBcolors.push_back(std::to_string(i + 1)); 
     } 
     RGBcoeff = 1;
   }
@@ -296,15 +248,15 @@ mcolor_t ProblemInstance<mcolor_t>::name_to_mcolor(std::string const & temp) con
     std::string current = "";
     for (size_t i = 1; i < temp.length(); ++i) { 
       if (temp[i] == ',' || temp[i] == '}') { 
-	if (genome_number.find(current) != genome_number.end()) {  
-	  answer.insert(genome_number.find(current)->second);
-	}  	
-	current = "";
+      	if (genome_number.find(current) != genome_number.end()) {  
+      	  answer.insert(genome_number.find(current)->second);
+      	}  	
+      	current = "";
       } else if (check_symbol(temp[i])) { 
-	current += temp[i];
+        current += temp[i];
       } else { 
-	std::cerr << "Bad format target " << temp << std::endl;
-	exit(1);
+        std::cerr << "Bad format target " << temp << std::endl;
+        exit(1);
       }  
     } 
   } else {

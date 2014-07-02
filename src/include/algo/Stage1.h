@@ -10,10 +10,10 @@ bool Algorithm<graph_t>::stage1() {
     number_rear = 0; 
     for (auto const & v: *graph) {  
       if (graph->is_simple_vertex(v)) { 
-	path_t path({v});
-	std::unordered_set<vertex_t> processed({v, Infty}); // we count oo as already processed
+      	path_t path({v});
+      	std::unordered_set<vertex_t> processed({v, Infty}); // we count oo as already processed
 
-        auto const  find_simple_path_lambda = [&] (vertex_t const & prev, vertex_t const & cur, bool is_next) -> vertex_t { 
+        auto const find_simple_path_lambda = [&] (vertex_t const & prev, vertex_t const & cur, bool is_next) -> vertex_t { 
           vertex_t previous = prev;
           vertex_t current = cur;
           bool stop = true; 
@@ -34,8 +34,8 @@ bool Algorithm<graph_t>::stage1() {
               new_edges.erase(previous);
     
               if (new_edges.size() == 1 && graph->get_complement_color(previous_color) == new_edges.cbegin()->second
- 		  && !postponed_deletions.defined(current, new_edges.cbegin()->first)) {
-	        mularcs_t const & edges = graph->get_adjacent_multiedges_with_info(current, false);
+             		  && !postponed_deletions.defined(current, new_edges.cbegin()->first)) {
+      	        mularcs_t const & edges = graph->get_adjacent_multiedges_with_info(current, false);
                 auto const count_Lambda = [&] (const vertex_t& v) -> bool {
                   bool flag = true; 
                   auto const & colors = edges.equal_range(v);
@@ -49,8 +49,8 @@ bool Algorithm<graph_t>::stage1() {
                 bool pedge = count_Lambda(previous);
                 if (nedge || pedge) { 
                   previous = current;
-	          current = new_edges.cbegin()->first; 
-	          stop = true;
+      	          current = new_edges.cbegin()->first; 
+      	          stop = true;
                 }
               } 
             }
@@ -112,7 +112,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
       auto const & mul = graph->get_adjacent_multiedges_with_info(*(++path.begin()), false);
       auto const & pair_colors = mul.equal_range(*path.begin());
       for (auto col = pair_colors.first; col != pair_colors.second; ++col) {
- 	process_colors.insert(col->second);     
+ 	      process_colors.insert(col->second);     
       } 
     } else if (!pedge && nedge) { 
       process_color = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*(++++path.begin()));
@@ -125,9 +125,9 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     
     if ((path.size() % 2 != 0) && (*path.begin() != *path.rbegin())) {
       if (process_color != graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin())) { 
-	path.erase(path.begin());
+        path.erase(path.begin());
       } else {
-	path.erase(--path.end());
+        path.erase(--path.end());
       }
     }
 
@@ -219,7 +219,6 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  }
 	}
       }
-
       color = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
     }
 
@@ -227,8 +226,6 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     // results in:
     // x2 == x3   x4 == x5 ... x(2k-2) == x(2k-1)   x1 -- x2k
 
-    //std::cerr << genome_match::mcolor_to_name(process_color) << std::endl;
-     
     auto z3 = path.begin();
     auto z0 = z3++;
     auto z1 = z3++;
@@ -236,8 +233,8 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     
     while (z3 != path.end()) {
       for (auto const & col : process_colors) {
-	graph->apply_two_break(twobreak_t(*z0, *z1, *z3, *z2, col));
-	++number_rear;     
+      	graph->apply_two_break(twobreak_t(*z0, *z1, *z3, *z2, col));
+      	++number_rear;     
       } 
       z1 = z3++;
       if (z3 != path.end()) { 

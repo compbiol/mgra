@@ -80,18 +80,18 @@ structure::BinaryTree<mcolor_t>::Node::Node(std::string const & tree, std::unord
     int p = 0;
     for(size_t j = 1; j < new_tree.size() - 1; ++j) {
       if (new_tree[j] == '(' || new_tree[j] == '{') { 
-	++p; 
+      	++p; 
       } else if (new_tree[j] == ')' || new_tree[j] == '}') {
-	--p;
+      	--p;
       } else if (new_tree[j] == ',') { 
-	if (p == 0) {
+      	if (p == 0) {
           left_child = std::make_shared<Node>(Node(new_tree.substr(1, j - 1), genome_number, priority_name)); 
-	  right_child = std::make_shared<Node>(Node(new_tree.substr(j + 1, new_tree.size() - j - 2), genome_number, priority_name));
-	} 
+      	  right_child = std::make_shared<Node>(Node(new_tree.substr(j + 1, new_tree.size() - j - 2), genome_number, priority_name));
+      	} 
       } 
       if (p < 0) {
-	std::cerr << "ERROR: Bad format input (sub)tree. Check count \'(\' and \')\'" << std::endl;
-	exit(3);
+      	std::cerr << "ERROR: Bad format input (sub)tree. Check count \'(\' and \')\'" << std::endl;
+      	exit(3);
       }
     }
 
@@ -112,8 +112,8 @@ structure::BinaryTree<mcolor_t>::Node::Node(std::string const & tree, std::unord
         if (new_tree[j] == ',' || new_tree[j] == '}') {
           std::string const & str = new_tree.substr(start, j - start);
           if (genome_number.count(str) == 0) {
-    	    std::cerr << "ERROR: Unknown genome in (sub)tree: " << str << std::endl;
-	    exit(3);
+          	std::cerr << "ERROR: Unknown genome in (sub)tree: " << str << std::endl;
+      	    exit(3);
           }
           data.insert(genome_number.find(str)->second);
           childs.push_back(priority_name[genome_number.find(str)->second]);
@@ -128,7 +128,7 @@ structure::BinaryTree<mcolor_t>::Node::Node(std::string const & tree, std::unord
     } else {
       if (genome_number.count(new_tree) == 0) {
         std::cerr << "ERROR: Unknown genome in (sub)tree: " << new_tree << std::endl;
-	exit(3);
+      	exit(3);
       }
       data.insert(genome_number.find(new_tree)->second);
       name = priority_name[genome_number.find(new_tree)->second]; 

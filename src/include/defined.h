@@ -20,23 +20,22 @@
 #include <memory>
 #include <limits>
 #include <utility>
+#include <tuple>
 
 #include <functional>
 
 #include <cassert>
 
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/exception.hpp>
+namespace fs = boost::filesystem;
+
 #include "utility/sym_multi_hashmap.h"
 #include "utility/equivalence.h"
 
 typedef std::string vertex_t;
-const vertex_t Infty = "oo"; 
-
-template <typename T>
-__attribute__((always_inline)) inline std::string toString(T val) { 
-  std::ostringstream oss; 
-  oss << val; 
-  return oss.str();
-}  
+vertex_t const Infty = "oo"; 
 
 __attribute__((always_inline)) inline bool check_symbol(char c) { 
   if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) { 
@@ -46,7 +45,7 @@ __attribute__((always_inline)) inline bool check_symbol(char c) {
   } 
 } 
 
-__attribute__((always_inline)) inline std::string trim(std::string s, const std::string& drop = " \t\r\n"){
+__attribute__((always_inline)) inline std::string trim(std::string s, std::string const & drop = " \t\r\n"){
   s = s.erase(s.find_last_not_of(drop) + 1);
   return s.erase(0, s.find_first_not_of(drop));
 }

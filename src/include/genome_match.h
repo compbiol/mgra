@@ -34,8 +34,8 @@ struct genome_match {
     for (size_t j = 0; j < name.size(); ++j) {
       std::string t = name.substr(j, 1);
       if (genome_to_number.find(t) == genome_to_number.end()) {
-	std::cerr << "ERROR: Malformed multicolor " << name << std::endl;
-	exit(1);
+      	std::cerr << "ERROR: Malformed multicolor " << name << std::endl;
+      	exit(1);
       }
       current.insert(genome_to_number.find(t)->second);
     }
@@ -52,7 +52,7 @@ struct genome_match {
     for(auto is = S.cbegin(); is != S.cend(); ++is) {
       std::string sym = number_to_genome[is->first]; 
       for(size_t i = 0; i < is->second; ++i) { 
-	os << sym;
+      	os << sym;
       }
     }
     return os.str();

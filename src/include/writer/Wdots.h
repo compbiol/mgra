@@ -7,21 +7,33 @@ namespace writer {
     typedef structure::Mcolor mcolor_t;
     typedef structure::Mularcs<mcolor_t> mularcs_t;
 
+    Wdots(fs::path const & path, std::string const & colorscheme, std::string const & graphname) 
+    : m_path(path)
+    , m_colorscheme(colorscheme)
+    , m_graphname(graphname)
+    {
+    }
+
     // Save .dot file and output statistics of synteny blocks representing breakpoints
-    void save_dot(const graph_t& graph, const conf_t& cfg, size_t stage);
-    void save_components(const graph_t& graph, const conf_t& cfg, size_t stage);
-    void write_legend_dot(const conf_t& cfg);
+    void save_dot(graph_t const & graph, conf_t const & cfg, size_t stage);
+    void save_components(graph_t const & graph, conf_t const & cfg, size_t stage);
+    void write_legend_dot(conf_t const & cfg);
+
+  private: 
+    fs::path m_path;
+    std::string m_colorscheme;
+    std::string m_graphname;
   }; 
 } 
 
 template<class graph_t, class conf_t>
 void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, conf_t const & cfg, size_t stage) { 
-  std::string dotname = cfg.get_graphname() + toString(stage) + ".dot";
-  std::ofstream dot(dotname.c_str());
+  std::string dotname = m_graphname + std::to_string(stage) + ".dot";
+  fs::ofstream dot(m_path / dotname);
 
   dot << "graph {" << std::endl;
-  if (!cfg.get_colorscheme().empty()) { 
-    dot << "edge [colorscheme=" << cfg.get_colorscheme() << "];" << std::endl;
+  if (!m_colorscheme.empty()) { 
+    dot << "edge [colorscheme=" << m_colorscheme << "];" << std::endl;
   } 
 
   int infv = 0;
@@ -74,8 +86,8 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, conf_t cons
 } 
 
 template<class graph_t, class conf_t>
-void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const conf_t& cfg, size_t stage) { 
-  std::string dotname = cfg.get_graphname() + toString(stage);
+void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, conf_t const & cfg, size_t stage) { 
+  std::string dotname = m_graphname + std::to_string(stage);
   std::map<vertex_t, std::set<vertex_t> > components = graph.split_on_components(); 
   
   size_t i = 0; 
@@ -85,12 +97,12 @@ void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const
       continue;
     }
   
-    std::string namefile = dotname + "_" + toString(++i) + ".dot"; 
-    std::ofstream dot(namefile.c_str());
+    std::string namefile = dotname + "_" + std::to_string(++i) + ".dot"; 
+    fs::ofstream dot(m_path / namefile);
 
     dot << "graph {" << std::endl;
-    if (!cfg.get_colorscheme().empty()) { 
-      dot << "edge [colorscheme=" << cfg.get_colorscheme() << "];" << std::endl;
+    if (!m_colorscheme.empty()) { 
+      dot << "edge [colorscheme=" << m_colorscheme << "];" << std::endl;
     } 
 
     int infv = 0;
@@ -99,13 +111,13 @@ void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const
       vertex_t const & x = *is;
   
       if (x == Infty) { 
-	continue;
+      	continue;
       } 
 
       mularcs_t const & Mx = graph.get_adjacent_multiedges(x);
 
       if (Mx.number_unique_edge() == 1 && Mx.union_multicolors() == graph.get_complete_color()) { 
-	continue; // trivial cycle
+        continue; // trivial cycle
       } 
       
       for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
@@ -122,7 +134,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const
 	    dot << "\t\"" << x << "\"\t--\t\"";
 	    if (y == Infty) {
 	      if (ic == C.cbegin()) { 
-		--infv;
+		      --infv;
 	      } 
 	      dot << infv << "\"\t[len=0.75,";
 	    } else { 
@@ -149,13 +161,13 @@ void writer::Wdots<graph_t, conf_t>::save_components(const graph_t& graph, const
 } 
 
 template<class graph_t, class conf_t>
-void writer::Wdots<graph_t, conf_t>::write_legend_dot(const conf_t& cfg) { 
-  std::ofstream output("legend.dot");
+void writer::Wdots<graph_t, conf_t>::write_legend_dot(conf_t const & cfg) { 
+  fs::ofstream output(m_path / "legend.dot");
 
   output << "digraph legend {" << std::endl;
   output << "\tnode [style=filled"; 
-  if (!cfg.get_colorscheme().empty()) {
-    output << ", colorscheme=" << cfg.get_colorscheme();
+  if (!m_colorscheme.empty()) {
+    output << ", colorscheme=" << m_colorscheme;
   } 
   output << "];" << std::endl;
 

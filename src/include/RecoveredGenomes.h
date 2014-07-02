@@ -131,7 +131,7 @@ structure::Genome RecoveredGenomes<graph_t>::get_genome(size_t index) {
       std::unordered_set<vertex_t> chromosome_set;
       chromosome_t chromosome = get_chromosome(index, x, chromosome_set);
       if (chromosome.size() != 0) {
-        genome.insert(name_chr + toString(count++), chromosome);
+        genome.insert(name_chr + std::to_string(count++), chromosome);
       } 
       std::copy(chromosome_set.cbegin(), chromosome_set.cend(), std::inserter(processed, processed.end()));
     }

@@ -74,13 +74,13 @@ void writer::Wgenome<genome_t>::save_genome_in_text_format(genome_t const & geno
   }
 
   out << std::endl << "# Reconstructed genome " << outname << " has " << genome.count_chromosome() << " " << chr_title << "s" << std::endl;
-#ifdef VERSION2
+#ifndef VERSION1
   std::cout << std::endl << "# Reconstructed genome " << outname << " has " << genome.count_chromosome() << " " << chr_title << "s" << std::endl;
 #endif
 
   if (number_circular) {
     out << "#\tout of which " << number_circular << " are circular of total length " << length_circular << std::endl;
-#ifdef VERSION2
+#ifndef VERSION1
     std::cout << "#\tout of which " << number_circular << " are circular of total length " << length_circular << std::endl;
 #endif
   }

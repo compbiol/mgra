@@ -14,7 +14,7 @@ bool Algorithm<graph_t>::stage4_td() {
       for (auto im = mularcs.cbegin(); im != mularcs.cend() && !find; ++im) {
 	if (im->first != Infty && im->second.is_one_to_one_match()) {
 	  vertex_t current = im->first;
-	  const auto& color = im->second;	
+	  auto const & color = im->second;	
 	  std::vector<arc_t> duplication({std::make_pair(v, current)}); 
 	 
 	  bool is_go = true;    

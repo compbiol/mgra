@@ -76,7 +76,7 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
     }
   } else {
     recovered_transformation.resize(graph.count_vec_T_consitent_color());
-#ifdef VERSION2
+#ifndef VERSION1
     recovered_graphs.resize(graph.count_vec_T_consitent_color() + 1, *(graph.cbegin_local_graphs())); // + 1
 #else 
     recovered_graphs.resize(graph.count_vec_T_consitent_color(), *(graph.cbegin_local_graphs())); 

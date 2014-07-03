@@ -113,7 +113,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
   saveInfoLambda(stage++);
   write_dots.write_legend_dot(cfg);
 
-#ifdef VERSION2
+#ifndef VERSION1
   if (cfg.get_stages() >= 1) { 
     std::cerr << "Stage: 1 (indel stage)" << std::endl; 
     graph->update_number_of_splits(rounds);  
@@ -127,7 +127,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
     isChanged = false; 
     stage = 2; 
 
-#ifdef VERSION2
+#ifndef VERSION1
     
     for (size_t i = 1; i <= rounds && !isChanged; ++i) {   
       std::cerr << "Rounds " << i << std::endl;
@@ -190,6 +190,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
     }
 
 #else
+
    stage = 2; 
 
    graph->update_number_of_splits(1);

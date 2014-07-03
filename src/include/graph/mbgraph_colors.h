@@ -155,7 +155,7 @@ mbgraph_with_colors<mcolor_type>::mbgraph_with_colors(std::vector<MBGraph::genom
   }
   nodes_color.erase(complete_color);
 
-#ifdef VERSION2  
+#ifndef VERSION1  
   if (cfg.get_target().empty()) { 
     //mcolor_t root_color = complete_color;
     //size_t est = (complete_color.size() / 2 + complete_color.size() % 2);
@@ -340,7 +340,7 @@ std::set<mcolor_type> mbgraph_with_colors<mcolor_type>::split_color(mcolor_t con
         equiv.addrel(col.first, col.first);
       }); 
 
-      #ifdef VERSION2  
+      #ifndef VERSION1  
       for (auto const & tc: T_consistent_colors) { 
         mcolor_t inter_color(tc, color, mcolor_t::Intersection);
         if (inter_color.size() >= 2 && inter_color.size() == tc.size()) { 

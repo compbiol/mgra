@@ -26,29 +26,37 @@
 
 #include <cassert>
 
+#define MGRA_VERSION_MAJOR @MGRA_VERSION_MAJOR@
+#define MGRA_VERSION_MINOR @MGRA_VERSION_MINOR@
+#define MGRA_VERSION_PATCH @MGRA_VERSION_PATCH@
+
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/exception.hpp>
+
+namespace sys = boost::system;
 namespace fs = boost::filesystem;
+
+/*#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sinks/text_file_backend.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/sources/record_ostream.hpp>
+
+namespace logging = boost::log;
+namespace src = boost::log::sources;
+namespace sinks = boost::log::sinks;
+namespace keywords = boost::log::keywords;
+*/
 
 #include "utility/sym_multi_hashmap.h"
 #include "utility/equivalence.h"
 
 typedef std::string vertex_t;
 vertex_t const Infty = "oo"; 
-
-__attribute__((always_inline)) inline bool check_symbol(char c) { 
-  if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) { 
-    return true;
-  } else { 
-    return false;
-  } 
-} 
-
-__attribute__((always_inline)) inline std::string trim(std::string s, std::string const & drop = " \t\r\n"){
-  s = s.erase(s.find_last_not_of(drop) + 1);
-  return s.erase(0, s.find_first_not_of(drop));
-}
 
 #include "genome.h"
 #include "mcolor.h"

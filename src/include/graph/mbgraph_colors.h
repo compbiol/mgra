@@ -1,7 +1,7 @@
 #ifndef MBGRAPH_COLOR_H_
 #define MBGRAPH_COLOR_H_
 
-#include "mbgraph.h"
+#include "graph/mbgraph.h"
 
 #include "genome_match.h"
 
@@ -66,14 +66,14 @@ struct mbgraph_with_colors: public MBGraph {
     return (T_consistent_colors.count(color) > 0);
   } 
 
-  inline size_t count_vec_T_consitent_color() const { 
-    return vec_T_consistent_colors.size();
-  } 
-  
   inline bool is_vec_T_consistent_color(mcolor_t const & color) const {
     return (vec_T_consistent_colors.count(color) > 0);
   }
 
+  inline size_t count_vec_T_consitent_color() const { 
+    return vec_T_consistent_colors.size();
+  } 
+  
   inline citer cbegin_Tconsistent_color() const { //FIXME change
     return T_consistent_colors.cbegin(); 
   } 
@@ -82,11 +82,11 @@ struct mbgraph_with_colors: public MBGraph {
     return T_consistent_colors.cend(); 
   } 
 
-  inline citer cbegin_T_consistent_color() const { //FIXME change
+  inline citer cbegin_vec_T_consistent_color() const { 
     return vec_T_consistent_colors.cbegin(); 
   } 
 
-  inline citer cend_T_consistent_color() const { //FIXME change 
+  inline citer cend_vec_T_consistent_color() const { 
     return vec_T_consistent_colors.cend(); 
   } 
 
@@ -95,6 +95,7 @@ struct mbgraph_with_colors: public MBGraph {
   } 
  
   std::set<mcolor_t> split_color(mcolor_t const & color);
+
 private: 
   inline mcolor_t compute_complement_color(mcolor_t const & color) const {
     mcolor_t answer; 
@@ -193,8 +194,8 @@ mbgraph_with_colors<mcolor_type>::mbgraph_with_colors(std::vector<MBGraph::genom
     for(auto jd = id; jd != vec_T_consistent_colors.end(); ++jd) {
       mcolor_t color(*id, *jd, mcolor_t::Intersection);
       if (!color.empty() && color.size() != id->size() && color.size() != jd->size()) {
-	vec_T_consistent_colors.erase(jd++);
-	--jd;
+      	vec_T_consistent_colors.erase(jd++);
+      	--jd;
       }
     }
   }
@@ -228,7 +229,7 @@ bool mbgraph_with_colors<mcolor_type>::is_indel_vertex(vertex_t const & v) const
  
   mcolor_t const & un = get_adjacent_multiedges(v).union_multicolors();
 	
-  if (!un.is_one_to_one_match() || (un == complete_color)) {
+  if (!un.is_one_to_one_match() || (un == complete_color)) { //FIXME
     return false; 
   }  
 
@@ -421,7 +422,7 @@ std::map<vertex_t, std::set<vertex_t> > mbgraph_with_colors<mcolor_type>::split_
 
     mularcs_t const & mularcs = get_adjacent_multiedges(x); 
 
-    if (not_drop_complete_edge && mularcs.number_unique_edge() == 1 && mularcs.union_multicolors() == get_complete_color()) { 
+    if (not_drop_complete_edge && mularcs.union_multicolors() == get_complete_color()) { 
       continue; // ignore complete multiedges
     } 
 

@@ -45,7 +45,7 @@ bool Algorithm<graph_t>::stage7() {
             fake_twobreak_t ft(arc_t(x, y), mularcs_x, *(mularcs_y.cbegin()));  
             //std::cerr << "Create clone " << x << " " << y << " " /*<< *(mularcs_y.cbegin())*/ << std::endl;
             graph->apply_fake_twobreak(ft);
-            assert(graph->get_adjacent_multiedges(x).number_unique_edge() == 1 && graph->get_adjacent_multiedges(x).union_multicolors() == graph->get_complete_color()); 
+            assert(graph->get_adjacent_multiedges(x).union_multicolors() == graph->get_complete_color()); 
             ++number_rear;
           } 
         } 
@@ -191,7 +191,7 @@ bool Algorithm<graph_t>::stage7() {
            //std::cerr << mother << " " << y << std::endl;
            graph->apply_fake_twobreak(ft);
            graph->registrate_real_edge(mother, mularcs_y.cbegin()->second, arc_t(x, y));
-           assert(graph->get_adjacent_multiedges(x).number_unique_edge() == 1 && graph->get_adjacent_multiedges(x).union_multicolors() == graph->get_complete_color()); 
+           assert(graph->get_adjacent_multiedges(x).union_multicolors() == graph->get_complete_color()); 
            ++number_rear;
          } 
       } 

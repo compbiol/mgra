@@ -30,7 +30,7 @@ void tell_root_besides(mbgraph_with_history<structure::Mcolor> const & graph) {
   // tell where the root resides
   std::clog << "the root resides in between:";
 
-  std::set<structure::Mcolor> colors(graph.cbegin_T_consistent_color(), graph.cend_T_consistent_color()); 
+  std::set<structure::Mcolor> colors(graph.cbegin_vec_T_consistent_color(), graph.cend_vec_T_consistent_color()); 
 
   for (auto it = colors.begin(); it != colors.end(); ++it) {
     for (auto jt = it; ++jt != colors.end(); ) {
@@ -50,15 +50,56 @@ void tell_root_besides(mbgraph_with_history<structure::Mcolor> const & graph) {
   std::clog << std::endl;
 }
 
+bool organize_output_directory( fs::path const & path ) { 
+  auto creater_lambda = [](fs::path const & directory) -> bool {
+    sys::error_code error; 
+    if ( fs::exists(directory, error) ) {
+      if ( !fs::is_directory(directory, error) ) {
+        return false;
+      }
+    } else {
+      bool flag = fs::create_directory(directory, error); 
+
+      if ( !flag || error != 0 ) { 
+        return false;
+      }
+    }
+    return true; 
+  };
+
+  fs::path debug_dir = path / "debug"; 
+  fs::path genomes_dir = path / "genomes"; 
+  fs::path transformation_dir = path / "transformations";
+
+  return creater_lambda(debug_dir) && creater_lambda(genomes_dir) && creater_lambda(transformation_dir);
+}
+
+/*
+void init(std::string const & file) {
+  logging::add_file_log
+  (
+    keywords::file_name = file,
+    keywords::rotation_size = 20 * 1024 * 1024, 
+    keywords::format = "[%TimeStamp%]: %Message%"
+  );
+
+  logging::core::get()->set_filter
+  (
+    logging::trivial::severity >= logging::trivial::info
+  );
+}
+*/
+
 int main(int argc, char* argv[]) {
-  std::string const VERSION("2.2");
+  std::string const VERSION(std::to_string(MGRA_VERSION_MAJOR) + "." + std::to_string(MGRA_VERSION_MINOR) + "."
+    + std::to_string(MGRA_VERSION_PATCH));
 
   std::string cfg_file;
   std::string type; 
   std::string blocks_file;
   std::string out_path; 
-  std::string graph_name;
   std::string colorsheme;
+  bool debug = false; 
 
   /*Reading flags*/
   namespace po = boost::program_options;
@@ -71,8 +112,8 @@ int main(int argc, char* argv[]) {
     ("format,f", po::value<std::string>(&type)->required(), "Input format file in genomes file")
     ("genomes,g", po::value<std::string>(&blocks_file)->required(), "Input file contains genomes")
     ("output_dir,o", po::value<std::string>(&out_path)->required(), "Output directory")
-    ("filename", po::value<std::string>(&graph_name)->default_value("stage"), "File name for output breakpoint graph")
     ("colorsheme", po::value<std::string>(), "Colorsheme, which used in output breakpoint graph")
+    ("debug,d", "Switch on debug output")
     ;
 
   po::positional_options_description p;
@@ -115,7 +156,11 @@ int main(int argc, char* argv[]) {
     colorsheme = vm["colorsheme"].as<std::string>();
   }
 
-  namespace sys = boost::system;
+  if ( vm.count("debug") ) { 
+    debug = true; 
+  }
+
+  /*Check paths for cfg file, block file and output directory*/
   sys::error_code error; 
 
   fs::path out_path_directory(out_path);
@@ -144,9 +189,18 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  out_path_directory = fs::canonical(out_path_directory);
+  bool is_create = organize_output_directory(out_path_directory); 
+  if ( !is_create ) {
+    std::cerr << "ERROR: problem with organize output directory " << out_path_directory << std::endl;
+    return 1; 
+  }  
+
   /*Reading problem configuration and genomes*/
   typedef structure::Genome genome_t;
   typedef structure::Mcolor mcolor_t;
+  typedef mbgraph_with_history<mcolor_t> graph_t; 
+
   ProblemInstance<mcolor_t> cfg(reader::read_cfg_file(in_path_cfg), colorsheme.empty()); 
 
   if (cfg.get_count_genomes() < 2) {
@@ -164,17 +218,19 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  /*Start to work*/
+  /*Do job work*/
+  //if ( debug ) { 
   genome_match::init_name_genomes(cfg, genomes); //FIXME: IT'S DEBUG
+  //}
 
   for(size_t i = 0; i < genomes.size(); ++i) { 
     std::clog << "Genome " << cfg.get_priority_name(i) << " blocks: " << genomes[i].size() << std::endl;
   } 
 
-  std::shared_ptr<mbgraph_with_history<structure::Mcolor> > graph(new mbgraph_with_history<structure::Mcolor>(genomes, cfg)); 
+  std::shared_ptr<graph_t> graph(new graph_t(genomes, cfg)); 
 
   std::clog << "vecT-consistent colors: " << graph->count_vec_T_consitent_color() << std::endl;
-  for (auto id = graph->cbegin_T_consistent_color(); id != graph->cend_T_consistent_color(); ++id) {
+  for (auto id = graph->cbegin_vec_T_consistent_color(); id != graph->cend_vec_T_consistent_color(); ++id) {
     std::clog << "\t" << genome_match::mcolor_to_name(*id);  ///FIXME: CHANGE
   }
   std::clog << std::endl;
@@ -182,31 +238,28 @@ int main(int argc, char* argv[]) {
   tell_root_besides(*graph); 	
 
   std::clog << "Start algorithm for convert from breakpoint graph to identity breakpoint graph" << std::endl;
-  Algorithm<mbgraph_with_history<structure::Mcolor> > main_algo(graph, out_path_directory, 
-    cfg.get_size_component_in_brutforce(), cfg.get_max_number_of_split(), colorsheme, graph_name);
-  main_algo.convert_to_identity_bgraph(cfg); 
+  Algorithm<graph_t> main_algo(graph, cfg);
+  main_algo.init_writers(out_path_directory, colorsheme, "stage", debug);
 
-  if (cfg.get_target().empty()) {
-    for(auto it = graph->cbegin_local_graphs(); it != graph->cend_local_graphs() - 1; ++it) { 
-      if (*it != *(it + 1)) {
-      	std::clog << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; 
-        return 1;
-      }
-    }
+  main_algo.convert_to_identity_bgraph(); 
+
+  if (cfg.get_target().empty() && !graph->is_identity()) {
+    std::clog << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; 
+    return 1;
   } 
   
   auto bad_edges = main_algo.get_bad_edges();
 
   std::clog << "Start reconstruct genomes." << std::endl;
-  RecoveredGenomes<mbgraph_with_history<structure::Mcolor> > reductant(*graph, cfg, bad_edges); 
+  RecoveredGenomes<graph_t> reductant(*graph, cfg, bad_edges); 
 
   std::clog << "Save history in files." << std::endl;
   if (cfg.get_target().empty()) {
     size_t i = 0;
     auto recover_transformation = reductant.get_history();
-    for (auto im = graph->cbegin_T_consistent_color(); im != graph->cend_T_consistent_color(); ++im, ++i) {
+    for (auto im = graph->cbegin_vec_T_consistent_color(); im != graph->cend_vec_T_consistent_color(); ++im, ++i) {
       std::string namefile = cfg.mcolor_to_name(*im) + ".trs";
-      fs::ofstream tr(out_path_directory / namefile);
+      fs::ofstream tr(out_path_directory / "transformations" / namefile);
       for(auto const & event : recover_transformation[i]) {
         vertex_t const & p = event.get_arc(0).first;
         vertex_t const & q = event.get_arc(0).second;
@@ -233,7 +286,7 @@ int main(int argc, char* argv[]) {
   }
 
   std::clog << "Save ancestor genomes in files." << std::endl; 
-  writer::Wgenome<genome_t> writer_genome(out_path_directory);
+  writer::Wgenome<genome_t> writer_genome(out_path_directory / "genomes");
   writer_genome.save_genomes(reductant.get_genomes(), cfg.get_target().empty()); 
 
   return 0;

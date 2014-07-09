@@ -44,7 +44,7 @@ bool Algorithm<graph_t>::stage5_1() {
   do {
     number_rear = 0;
     // go over all T-consistent multicolors
-    for (auto ic = graph->cbegin_T_consistent_color(); ic != graph->cend_T_consistent_color(); ++ic) {
+    for (auto ic = graph->cbegin_vec_T_consistent_color(); ic != graph->cend_vec_T_consistent_color(); ++ic) {
       const auto& Q = *ic;
 
       bool repeat = true;
@@ -190,7 +190,7 @@ bool Algorithm<graph_t>::stage5_1() {
   do {
     number_rear = 0;
     // go over all T-consistent multicolors
-    for(auto ic = graph->cbegin_T_consistent_color(); ic != graph->cend_T_consistent_color(); ++ic) {
+    for(auto ic = graph->cbegin_vec_T_consistent_color(); ic != graph->cend_vec_T_consistent_color(); ++ic) {
       const auto& Q = *ic;
 
       bool repeat = true;

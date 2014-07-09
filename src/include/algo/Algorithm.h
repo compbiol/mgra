@@ -9,18 +9,23 @@
 
 template<class graph_t>
 struct Algorithm { 
-  Algorithm(std::shared_ptr<graph_t> const & gr, fs::path const & work_dir, size_t size_component, size_t rds, 
-    std::string const & colorscheme, std::string const & graphname) 
+  Algorithm(std::shared_ptr<graph_t> const & gr, ProblemInstance<typename graph_t::mcolor_t> const & cfg) 
   : graph(gr) 
   , canformQoo(true)
-  , rounds(rds)
-  , max_size_component(size_component)
-  , write_stats(work_dir, "stats.txt") 
-  , write_dots(work_dir, colorscheme, graphname)
+  , rounds(cfg.get_max_number_of_split())
+  , max_size_component(cfg.get_size_component_in_brutforce())
+  , stages(cfg.get_stages())
+  , m_completion(cfg.get_completion())
+  , write_dots(cfg)
   {
   } 
 
-  void convert_to_identity_bgraph(ProblemInstance<typename graph_t::mcolor_t> const & cfg);
+  void init_writers(fs::path const & work_dir, std::string const & colorscheme, std::string const & graphname, bool debug) { 
+    write_stats.open(work_dir, "stats.txt");
+    write_dots.init(work_dir, colorscheme, graphname, debug);
+  }
+
+  void convert_to_identity_bgraph();
   edges_t get_bad_edges() const; 
 
 private: 
@@ -82,6 +87,8 @@ private:
   bool canformQoo;  // safe choice, at later stages may change to false
   size_t const rounds;
   size_t const max_size_component; 
+  size_t const stages;
+  std::list<twobreak_t> const m_completion;
 
   edges_t insertions;
   edges_t postponed_deletions; 
@@ -95,7 +102,7 @@ private:
 };
 
 template<class graph_t>
-void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> const & cfg) {
+void Algorithm<graph_t>::convert_to_identity_bgraph() {
   std::unordered_set<size_t> print_dots;
   size_t stage = 0; 
   bool isChanged = false;
@@ -104,17 +111,17 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
   auto const saveInfoLambda = [&](size_t st) -> void { 
     if ((print_dots.count(st) == 0) && !isChanged) {
       print_dots.insert(st);
-      Statistics<graph_t> stat(graph); 
+      Statistics<graph_t> stat(graph);
       write_stats.print_all_statistics(st, stat, *graph);
-      write_dots.save_dot(*graph, cfg, st);
+      write_dots.save_dot(*graph, st);
     } 
   };
 
   saveInfoLambda(stage++);
-  write_dots.write_legend_dot(cfg);
+  write_dots.write_legend_dot();
 
 #ifndef VERSION1
-  if (cfg.get_stages() >= 1) { 
+  if (stages >= 1) { 
     std::cerr << "Stage: 1 (indel stage)" << std::endl; 
     graph->update_number_of_splits(rounds);  
     stage3();
@@ -134,7 +141,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
 
       graph->update_number_of_splits(i);
     
-      if ((cfg.get_stages() >= 2) && !isChanged) {
+      if ((stages >= 2) && !isChanged) {
         std::cerr << "Stage: 2 Good path " << stage << std::endl;
 
         isChanged = stage1();	
@@ -152,13 +159,13 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
         saveInfoLambda(stage++);
       }
 
-      if ((cfg.get_stages() >= 3) && !isChanged) { // STAGE 4, somewhat unreliable
+      if ((stages >= 3) && !isChanged) { // STAGE 4, somewhat unreliable
         std::cerr << "Stage: 3 Split on components " << stage << std::endl;
         isChanged = stage5_1(); // cut the graph into connected components
         saveInfoLambda(stage++); 
       }
 
-      if ((cfg.get_stages() >= 4) && !isChanged) {
+      if ((stages >= 4) && !isChanged) {
         std::cerr << "Stage: 4 Clone approach " << stage << std::endl;
         isChanged = stage7();
         saveInfoLambda(stage++);
@@ -171,10 +178,9 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
       isChanged = true;
     }
 
-    if (process_compl && !cfg.get_completion().empty() && !isChanged) {     
+    if (process_compl && !m_completion.empty() && !isChanged) {     
       //std::cerr << "Manual Completion Stage" << std::endl;
-      auto completion = cfg.get_completion();
-      for(auto il = completion.begin(); il != completion.end(); ++il) {
+      for(auto il = m_completion.cbegin(); il != m_completion.cend(); ++il) {
         graph->apply_two_break(*il);
       }
 
@@ -195,19 +201,19 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
 
    graph->update_number_of_splits(1);
     
-    if ((cfg.get_stages() >= 1) && !isChanged) {
+    if ((stages >= 1) && !isChanged) {
       std::cerr << "Stage: 1" << std::endl;
       isChanged = stage1();	
       saveInfoLambda(stage++);
     }
 
-    if ((cfg.get_stages() >= 2) && !isChanged) {
+    if ((stages >= 2) && !isChanged) {
       std::cerr << "Stage: 2" << std::endl;
       isChanged = stage2();
       saveInfoLambda(stage++);
     }
 
-    if ((cfg.get_stages() >= 3) && !isChanged) { // STAGE 3, somewhat unreliable
+    if ((stages >= 3) && !isChanged) { // STAGE 3, somewhat unreliable
       std::cerr << "Stage: 3" << std::endl;
       isChanged = stage5_1(); // cut the graph into connected components
       
@@ -223,17 +229,17 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
       saveInfoLambda(stage++);
     }
 
-    if ((cfg.get_stages() >= 4) && !isChanged) {
+    if ((stages >= 4) && !isChanged) {
       std::cerr << "Stage: 4" << std::endl;
       graph->update_number_of_splits(3);
       isChanged = stage2();
       saveInfoLambda(stage++);
     }
 
-    if (process_compl && !cfg.get_completion().empty() && !isChanged) {     
+    if (process_compl && !m_completion.empty() && !isChanged) {     
       //std::cerr << "Manual Completion Stage" << std::endl;
-      auto completion = cfg.get_completion();
-      for(auto il = completion.begin(); il != completion.end(); ++il) {
+      //auto completion = _completion();
+      for(auto il = m_completion.cbegin(); il != m_completion.cend(); ++il) {
         graph->apply_two_break(*il);
       }
 
@@ -243,10 +249,9 @@ void Algorithm<graph_t>::convert_to_identity_bgraph(ProblemInstance<mcolor_t> co
 #endif
   }	
 
-  write_dots.save_dot(*graph, cfg, 99);
+  write_dots.save_final_dot(*graph);
 
   graph->change_history();
-
   size_t bad_postponed_deletions = check_postponed_deletions();
   if (bad_postponed_deletions != 0) {
     std::cerr << "We have problem with " << bad_postponed_deletions << " edges, corresponding postponed deletions." << std::endl;

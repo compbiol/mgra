@@ -77,14 +77,14 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
   } else {
     recovered_transformation.resize(graph.count_vec_T_consitent_color());
 #ifndef VERSION1
-    recovered_graphs.resize(graph.count_vec_T_consitent_color() + 1, *(graph.cbegin_local_graphs())); // + 1
+    recovered_graphs.resize(graph.count_vec_T_consitent_color() + 1, graph.get_partgraph(0));
 #else 
-    recovered_graphs.resize(graph.count_vec_T_consitent_color(), *(graph.cbegin_local_graphs())); 
+    recovered_graphs.resize(graph.count_vec_T_consitent_color(), graph.get_partgraph(0)); 
 #endif
 
     for(auto it = graph.crbegin_2break_history(); it != graph.crend_2break_history(); ++it) {
       size_t i = 0;
-      for(auto im = graph.cbegin_T_consistent_color(); im != graph.cend_T_consistent_color(); ++im, ++i) {
+      for(auto im = graph.cbegin_vec_T_consistent_color(); im != graph.cend_vec_T_consistent_color(); ++im, ++i) {
 	if (it->get_mcolor().includes(*im)) { 
           //std::cerr << conf.mcolor_to_name(*im) << std::endl; 
           //std::cerr << it->get_vertex(0) << " " << it->get_vertex(1) << " " << it->get_vertex(2) << " " << it->get_vertex(3) << std::endl;
@@ -98,7 +98,7 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
 
     size_t i = 0; 
     Decircularizeter<graph_t> dec(graph, bad_edges);          
-    for (auto im = graph.cbegin_T_consistent_color(); im != graph.cend_T_consistent_color(); ++im, ++i) {    
+    for (auto im = graph.cbegin_vec_T_consistent_color(); im != graph.cend_vec_T_consistent_color(); ++im, ++i) {    
       name_genomes.push_back(conf.mcolor_to_name(*im));
       std::cerr << "Start decircularize procedure for " << conf.mcolor_to_name(*im) << std::endl;
       //std::cerr << "Initial we have " << dec.count_circular_chromosome(recovered_graphs[i]) << std::endl;
@@ -108,7 +108,7 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
       // move to adjacent branches
       for (auto const &it : T) {
 	size_t j = 0; 
-	for (auto jt = graph.cbegin_T_consistent_color(); jt != graph.cend_T_consistent_color(); ++jt, ++j) {
+	for (auto jt = graph.cbegin_vec_T_consistent_color(); jt != graph.cend_vec_T_consistent_color(); ++jt, ++j) {
 	  if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && graph.are_adjacent_branches(*im, *jt)) {
 	    recovered_transformation[j].push_back(it);
 	  }

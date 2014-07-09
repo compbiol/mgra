@@ -9,8 +9,13 @@ template<class mcolor_t>
 struct ProblemInstance {
   typedef structure::BinaryTree<mcolor_t> phylogeny_tree_t;
   typedef event::TwoBreak<mcolor_t> twobreak_t; 
-  
-  explicit ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input, bool is_colorscheme); 
+
+  ProblemInstance() 
+  : MAX_NUMBER_STAGE(12)
+  {
+  }  
+
+  ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input, bool is_colorscheme); 
 
   mcolor_t name_to_mcolor(std::string const & temp) const;
   std::string mcolor_to_name(mcolor_t const & temp) const;
@@ -252,7 +257,7 @@ mcolor_t ProblemInstance<mcolor_t>::name_to_mcolor(std::string const & temp) con
       	  answer.insert(genome_number.find(current)->second);
       	}  	
       	current = "";
-      } else if (check_symbol(temp[i])) { 
+      } else if (std::isalpha(temp[i]) || std::isdigit(temp[i])) { 
         current += temp[i];
       } else { 
         std::cerr << "Bad format target " << temp << std::endl;

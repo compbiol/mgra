@@ -7,29 +7,48 @@ namespace writer {
     typedef structure::Mcolor mcolor_t;
     typedef structure::Mularcs<mcolor_t> mularcs_t;
 
-    Wdots(fs::path const & path, std::string const & colorscheme, std::string const & graphname) 
-    : m_path(path)
-    , m_colorscheme(colorscheme)
-    , m_graphname(graphname)
+    Wdots(conf_t const & cfg) 
+    : m_cfg(cfg)
+    , m_debug(false)
     {
     }
 
+    void init(fs::path const & path, std::string const & colorscheme, std::string const & graphname, bool debug) {
+      m_path = path; 
+      m_colorscheme = colorscheme; 
+      m_graphname = graphname;
+      m_debug = debug;
+    }     
+
     // Save .dot file and output statistics of synteny blocks representing breakpoints
-    void save_dot(graph_t const & graph, conf_t const & cfg, size_t stage);
-    void save_components(graph_t const & graph, conf_t const & cfg, size_t stage);
-    void write_legend_dot(conf_t const & cfg);
+    void save_final_dot(graph_t const & graph) {
+      save_dot(graph, m_path, "last_graph.dot");
+    }
+
+    void save_dot(graph_t const & graph, size_t stage) {
+      if (m_debug) {
+        std::string dotname = m_graphname + std::to_string(stage) + ".dot";
+        save_dot(graph, m_path / "debug", dotname);    
+      }
+    }
+
+    void save_components(graph_t const & graph, size_t stage);
+    void write_legend_dot();
 
   private: 
+    void save_dot(graph_t const & graph, fs::path const & path, std::string const & dotname);
+  private: 
+    conf_t const & m_cfg;
     fs::path m_path;
     std::string m_colorscheme;
     std::string m_graphname;
+    bool m_debug;
   }; 
 } 
 
 template<class graph_t, class conf_t>
-void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, conf_t const & cfg, size_t stage) { 
-  std::string dotname = m_graphname + std::to_string(stage) + ".dot";
-  fs::ofstream dot(m_path / dotname);
+void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path const & path, std::string const & dotname) { 
+  fs::ofstream dot(path / dotname);
 
   dot << "graph {" << std::endl;
   if (!m_colorscheme.empty()) { 
@@ -41,7 +60,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, conf_t cons
   for(auto const & x : graph) { 
     mularcs_t const & Mx = graph.get_adjacent_multiedges(x);
 
-    if (Mx.number_unique_edge() == 1 && Mx.union_multicolors() == graph.get_complete_color()) { 
+    if (Mx.union_multicolors() == graph.get_complete_color()) { 
       continue; // trivial cycle
     } 
 
@@ -49,7 +68,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, conf_t cons
       vertex_t const & y = im->first;
 
       if (mark.find(y) != mark.end()) { 
-	continue; // already output
+        continue; // already output
       }    
 
       mcolor_t const & C = im->second;
@@ -67,9 +86,9 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, conf_t cons
 	    dot << y << "\"\t[";
 	  } 
 	  if (vec_T_color) {
-	    dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
+	    dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
 	  } else {
-	    dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
+	    dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
 	  }
 	} 
       }
@@ -86,7 +105,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, conf_t cons
 } 
 
 template<class graph_t, class conf_t>
-void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, conf_t const & cfg, size_t stage) { 
+void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, size_t stage) { 
   std::string dotname = m_graphname + std::to_string(stage);
   std::map<vertex_t, std::set<vertex_t> > components = graph.split_on_components(); 
   
@@ -116,7 +135,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, conf
 
       mularcs_t const & Mx = graph.get_adjacent_multiedges(x);
 
-      if (Mx.number_unique_edge() == 1 && Mx.union_multicolors() == graph.get_complete_color()) { 
+      if (Mx.union_multicolors() == graph.get_complete_color()) { 
         continue; // trivial cycle
       } 
       
@@ -141,9 +160,9 @@ void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, conf
 	      dot << y << "\"\t[";
 	    } 
 	    if (vec_T_color) {
-	      dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
+	      dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
 	    } else {
-	      dot << "color=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
+	      dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
 	    }
 	  }
 	}
@@ -161,7 +180,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, conf
 } 
 
 template<class graph_t, class conf_t>
-void writer::Wdots<graph_t, conf_t>::write_legend_dot(conf_t const & cfg) { 
+void writer::Wdots<graph_t, conf_t>::write_legend_dot() { 
   fs::ofstream output(m_path / "legend.dot");
 
   output << "digraph legend {" << std::endl;
@@ -171,16 +190,16 @@ void writer::Wdots<graph_t, conf_t>::write_legend_dot(conf_t const & cfg) {
   } 
   output << "];" << std::endl;
 
-  for (size_t j = 0; j < cfg.get_count_genomes(); ++j) {
-    output << "\t\"" << cfg.get_priority_name(j) << "\" [fillcolor=" <<  cfg.get_RGBcolor(cfg.get_RGBcoeff() * j)  << "];" << std::endl;
+  for (size_t j = 0; j < m_cfg.get_count_genomes(); ++j) {
+    output << "\t\"" << m_cfg.get_priority_name(j) << "\" [fillcolor=" 
+      << m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * j)  << "];" << std::endl;
   } 
 
   std::vector<std::string> info;
-  for(auto it = cfg.cbegin_trees(); it != cfg.cend_trees(); ++it) {
+  for(auto it = m_cfg.cbegin_trees(); it != m_cfg.cend_trees(); ++it) {
     it->get_nodes(info);
   }
  
-	
   for(auto const & str : info) {
     output << str << std::endl;
   } 

@@ -8,26 +8,26 @@ struct Chromosome {
   typedef std::pair<orf_t, int> gene_t;
 
   Chromosome () 
-  : isCircular(false) 
+  : m_is_circular(false) 
   { 
   }
 
-  Chromosome (const std::list<gene_t> & path, bool is_circ) 
-  : isCircular(is_circ) 
+  Chromosome (std::list<gene_t> const & path, bool is_circular) 
+  : m_is_circular(is_circular) 
   {
     size_t offset = 0; 
-    for (const auto & gene : path) { 
+    for (auto const & gene : path) { 
       main_chromosome.insert(std::make_pair(offset++, gene));
     }  
   }
 
-  inline void insert(const orf_t& gene, size_t offset, int sign) { 
+  inline void insert(orf_t const & gene, size_t offset, int sign) { 
     auto gen = gene_t(gene, sign);
     main_chromosome.insert(std::make_pair(offset, gen));
   } 
 
   inline void do_circular() { 
-    isCircular = true; 
+    m_is_circular = true; 
   } 
 
   inline std::map<size_t, gene_t>::const_iterator begin() const { 
@@ -51,10 +51,10 @@ struct Chromosome {
   } 
 
   inline bool is_circular() const { 
-    return isCircular;
+    return m_is_circular;
   }
 private: 
-  bool isCircular; 
+  bool m_is_circular; 
   std::map<size_t, gene_t> main_chromosome;
 }; 
 
@@ -67,8 +67,8 @@ struct Genome {
   Genome() {
   } 
 
-  explicit Genome(const std::string& nm) 
-  : name(nm) 
+  explicit Genome(std::string const & name) 
+  : m_name(name) 
   {
   } 
 
@@ -100,7 +100,7 @@ struct Genome {
   } 
 
   inline std::string const & get_name() const {  
-    return name;
+    return m_name;
   } 
 
   inline std::map<std::string, chromosome_t>::const_iterator begin() const { 
@@ -111,7 +111,7 @@ struct Genome {
     return main_genome.cend();
   } 
 private: 
-  std::string name;
+  std::string m_name;
   std::map<std::string, chromosome_t> main_genome;
 };
 

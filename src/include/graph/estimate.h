@@ -38,8 +38,8 @@ struct Statistics {
     for(auto const & x : *graph) {
       if (processed.count(x) == 0) {
         mularcs_t const & mularcs = graph->get_adjacent_multiedges(x);
-        if (mularcs.number_unique_edge() == 1 && mularcs.union_multicolors() == graph->get_complete_color()) { 
-	  edges.push_back(arc_t(x, mularcs.cbegin()->first));
+        if (mularcs.union_multicolors() == graph->get_complete_color()) { 
+	        edges.push_back(arc_t(x, mularcs.cbegin()->first));
           processed.insert({x, mularcs.cbegin()->first});
         } 
       } 

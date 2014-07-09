@@ -15,13 +15,13 @@ struct MBGraph {
     for (auto const & genome : genomes) { 
       for(auto const & chromosome : genome) {
         for(auto const & orf : chromosome.second) {
-	  if (blocks.count(orf.second.first) == 0) { 
-	    obverse_edges.insert(std::make_pair(orf.second.first + "t", orf.second.first + "h"));
-	    obverse_edges.insert(std::make_pair(orf.second.first + "h", orf.second.first + "t"));
-	    blocks.insert(orf.second.first);
-	    vertex_set.insert(orf.second.first + "t"); 
-	    vertex_set.insert(orf.second.first + "h"); 
-	  }
+      	  if (blocks.count(orf.second.first) == 0) { 
+      	    obverse_edges.insert(std::make_pair(orf.second.first + "t", orf.second.first + "h"));
+      	    obverse_edges.insert(std::make_pair(orf.second.first + "h", orf.second.first + "t"));
+      	    blocks.insert(orf.second.first);
+      	    vertex_set.insert(orf.second.first + "t"); 
+      	    vertex_set.insert(orf.second.first + "h"); 
+      	  }
         } 
       }
     }
@@ -36,25 +36,34 @@ struct MBGraph {
     return obverse_edges.find(v)->second;
   } 
 
-  // FIXME: PROBLEM WITH TARGET. I NOT UNDERSTAND ALGORITHM ABOUT THIS. If changed, chaged this function
-  inline bool is_exist_edge(size_t index, vertex_t const & first) const { 
-    assert(index < local_graph.size());
-    if (local_graph[index].find(first) != local_graph[index].end()) { 
-	if (local_graph[index].find(first)->second == Infty)  {
-		return false;
-	}
-	return true;
-    } else { 
-	return false; 
-    }  
-    //return local_graph[index].defined(first);		
-  }
- 
   //FIXME IF WE RECONSTRUCT ANCESTORS WITH DUPLICATION EQUAL RANGE
   inline vertex_t get_adjecent_vertex(size_t index, vertex_t const & first) const {  
     assert(index < local_graph.size() && (local_graph[index].count(first) != 0));
     return local_graph[index].find(first)->second;
-  } 	 
+  }    
+
+  inline bool is_exist_edge(size_t index, vertex_t const & first) const { 
+    assert(index < local_graph.size());
+    auto edge = local_graph[index].find(first);
+    if (edge != local_graph[index].end() && edge->second != Infty)  {
+    	return true;
+    }
+    return false; 
+  }
+ 
+  inline bool is_identity() { 
+    for(auto it = local_graph.cbegin(); it != local_graph.cend() - 1; ++it) { 
+      if (*it != *(it + 1)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  inline partgraph_t const & get_partgraph(size_t index) const { 
+    assert(index < local_graph.size());
+    return local_graph[index];
+  } 
 
   inline size_t size() const { 
     return vertex_set.size(); 
@@ -71,15 +80,7 @@ struct MBGraph {
   inline std::set<vertex_t>::const_iterator end() const { 
     return vertex_set.cend();
   }
-		
-  inline std::vector<partgraph_t>::const_iterator cbegin_local_graphs() const { 
-    return local_graph.cbegin();
-  } 
 	
-  inline std::vector<partgraph_t>::const_iterator cend_local_graphs() const { 
-    return local_graph.cend(); 
-  } 
-
 protected: 
   inline void add_edge(size_t index, vertex_t const & first, vertex_t const & second) { 
     assert(index < local_graph.size());
@@ -109,10 +110,10 @@ private:
       }
 
       if (chromosome.second.is_circular()) {
-	local_graph[index].insert(frontLambda(chromosome.second.begin()->second), rearLambda((--chromosome.second.end())->second)); 
+      	local_graph[index].insert(frontLambda(chromosome.second.begin()->second), rearLambda((--chromosome.second.end())->second)); 
       } else { 
-	local_graph[index].insert(frontLambda(chromosome.second.begin()->second), Infty);
-	local_graph[index].insert(rearLambda((--chromosome.second.end())->second), Infty); 
+      	local_graph[index].insert(frontLambda(chromosome.second.begin()->second), Infty);
+      	local_graph[index].insert(rearLambda((--chromosome.second.end())->second), Infty); 
       }
     }
   }

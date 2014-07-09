@@ -15,7 +15,16 @@ set(MGRA_SOURCE mgra.cpp
 	Wstats.cpp
    )
 
+configure_file (
+  ${PROJECT_SOURCE_DIR}/include/defined.h.in
+  ${PROJECT_BINARY_DIR}/defined.h
+  [@ONLY]
+  )
+
+set(ROOT_DIR "${CMAKE_SOURCE_DIR}/../")
+
 set (OPTIMIZE_FLAG " -std=c++11 -O2 -pipe -finline-functions -finline-limit=1000")
+# -DBOOST_LOG_DYN_LINK")
 set (WARNS "-Wall -Werror -Wextra -pedantic-errors")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${WARNS}") 
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${DEBUG}")
@@ -31,7 +40,7 @@ include_directories(${CMAKE_BINARY_DIR}
 			${PROJECT_SOURCE_DIR}/include/event
 		   ) 
 
-find_package(Boost COMPONENTS program_options filesystem system REQUIRED)
+find_package(Boost COMPONENTS program_options filesystem system REQUIRED) #log log_setup thread date_time 
 if(NOT ${Boost_FOUND})
     message(SEND_ERROR "Failed to find boost::program_options or boost::filesystem or boost::system.")
     return()
@@ -57,4 +66,29 @@ endif()
 
 add_executable(${PROJECT_NAME} ${MGRA_SOURCE})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+
+
+if(WIN32)
+	message(SEND_ERROR "Windows is unsupported system, please use UNIX or OS X systems")
+else()
+	set(LIB_DIR "lib/MGRA")
+	set(SHARE_DIR "share/MGRA")
+	set(DOC_DIR "share/MGRA/doc")
+	install(TARGETS mgra RUNTIME DESTINATION bin)
+	install(FILES ${ROOT_DIR}/NEWS.md ${ROOT_DIR}/README.md ${ROOT_DIR}/USAGE.md ${ROOT_DIR}/INSTALL.md ${ROOT_DIR}/COPYING DESTINATION ${DOC_DIR})
+endif()
+
+set(CPACK_NSIS_MODIFY_PATH "ON")
+set(CPACK_SOURCE_IGNORE_FILES "\\\\.git.*;/build/.+;${CPACK_SOURCE_IGNORE_FILES};")
+set(CPACK_RESOURCE_FILE_LICENSE "${ROOT_DIR}/COPYING")
+set(CPACK_PACKAGE_NAME "MGRA")
+set(CPACK_PACKAGE_VENDOR "George Washington University")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MGRA is a tool used for reconstruction genomes and transformation history")
+set(CPACK_PACKAGE_VERSION_MAJOR ${MGRA_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${MGRA_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${MGRA_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "MGRA")
+set(CMAKE_SOURCE_DIR ${ROOT_DIR})
+include(CPack)
 

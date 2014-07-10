@@ -8,24 +8,24 @@ struct Decircularizeter {
   typedef std::list<twobreak_t> transform_t;
 
   
-  Decircularizeter(const graph_t& gr, const edges_t& b_edges) 
+  Decircularizeter(graph_t const & gr, edges_t const & b_edges) 
   : graph(gr)
   , bad_edges(b_edges)
   { 
   }
 
   transform_t decircularize(partgraph_t& local_graph, transform_t& transform);
-  size_t count_circular_chromosome(const partgraph_t& local_graph) const;
+  size_t count_circular_chromosome(partgraph_t const & local_graph) const;
 
 private: 
-  bool is_circular_chromosome(const partgraph_t& local_graph, const vertex_t& x, std::unordered_set<vertex_t>& processed) const;
+  bool is_circular_chromosome(partgraph_t const & local_graph, vertex_t const & x, std::unordered_set<vertex_t>& processed) const;
 private: 
-  const graph_t& graph;
-  const edges_t& bad_edges;
+  graph_t const & graph;
+  edges_t const & bad_edges;
 }; 
 
 template<class graph_t>
-bool Decircularizeter<graph_t>::is_circular_chromosome(const partgraph_t& local_graph, const vertex_t& x, std::unordered_set<vertex_t>& processed) const {
+bool Decircularizeter<graph_t>::is_circular_chromosome(partgraph_t const & local_graph, vertex_t const & x, std::unordered_set<vertex_t>& processed) const {
   bool circular = false;
   bool have_deletion = false;
   vertex_t current = x; 
@@ -58,7 +58,7 @@ bool Decircularizeter<graph_t>::is_circular_chromosome(const partgraph_t& local_
       processed.insert(y);
       if (y != Infty) {
     	y = graph.get_obverse_vertex(y);
-	processed.insert(y);
+		processed.insert(y);
       }
     }
   } 
@@ -71,11 +71,11 @@ bool Decircularizeter<graph_t>::is_circular_chromosome(const partgraph_t& local_
 }
 
 template<class graph_t>
-size_t Decircularizeter<graph_t>::count_circular_chromosome(const partgraph_t& local_graph) const {
+size_t Decircularizeter<graph_t>::count_circular_chromosome(partgraph_t const & local_graph) const {
   std::unordered_set<vertex_t> processed;
   size_t count_chr = 0;
   
-  for (const auto &x : graph) { 
+  for (auto const & x : graph) { 
     if (processed.count(x) == 0) { 
       std::unordered_set<vertex_t> chr_set;
       bool circular = is_circular_chromosome(local_graph, x, chr_set); 
@@ -103,7 +103,7 @@ std::list<event::TwoBreak<structure::Mcolor> > Decircularizeter<graph_t>::decirc
 
     size_t CircSize = count_circular_chromosome(PG);
     if (CircSize == 0) {
-	return D;
+		return D;
     } 
 
     //std::cerr << "Eliminating " << CircSize << " circular chromosomes in " << genome_match::mcolor_to_name(Q) << std::endl;
@@ -117,101 +117,104 @@ std::list<event::TwoBreak<structure::Mcolor> > Decircularizeter<graph_t>::decirc
 
         size_t ccsize = count_circular_chromosome(T);
 
-	if (ccsize >= CircSize) {
-	    ++it;
-	    continue;
-	}
+		if (ccsize >= CircSize) {
+	    	++it;
+	    	continue;
+		}
 
-	//std::cerr << "Found problematic 2-break: ";// << *it << "\t";
+		//std::cerr << "Found problematic 2-break: ";// << *it << "\t";
 
-	// move t over to beginning
-	for(auto jt = it; jt != TG.begin();) {
+		// move t over to beginning
+		for(auto jt = it; jt != TG.begin();) {
 
-	    auto kt = jt--; // jt, kt are successive, *kt == t
+		    auto kt = jt--; // jt, kt are successive, *kt == t
 
-	    const twobreak_t& t = *kt;
-	    const twobreak_t& s = *jt;
+		    twobreak_t const & t = *kt;
+		    twobreak_t const & s = *jt;
 
-//            outlog << "... trying to swap with " << s << endl;
+			//outlog << "... trying to swap with " << s << endl;
 
-	    arc_t p1, q1, p2, q2;
+		    arc_t p1, q1, p2, q2;
 
-	    bool usearc = false;
+		    bool usearc = false;
 
-	    mcolor_t C(t.get_mcolor(), s.get_mcolor(), mcolor_t::Intersection);
-	    if (!C.empty()) {
+		    mcolor_t C(t.get_mcolor(), s.get_mcolor(), mcolor_t::Intersection);
+		    if (!C.empty()) {
 
+				/*
+					 p1=(x1,x2) x (y1,y2)=q1
+					 p2=(x1,y1) x (x3,y3)=q2
+		    
+					 into:
+		    
+					 (x1,x2) x (x3,y3)
+					 (y3,x2) x (y1,y2)
+				*/
+	    
+				for(int j = 0; j < 2; ++j) {    
+				    if (t.get_arc(j) == std::make_pair(jt->get_arc(0).first, jt->get_arc(1).first)) { 
+						usearc = true;
+		    
+						p2 = t.get_arc(j);
+						q2 = t.get_arc(1 - j);
+			    
+						p1 = jt->get_arc(0);
+						q1 = jt->get_arc(1);
+				    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(1).first, jt->get_arc(0).first)) {
+						usearc = true;
+			    
+						p2 = t.get_arc(j);
+						q2 = t.get_arc(1 - j);
+			    
+						p1 = jt->get_arc(1);
+						q1 = jt->get_arc(0);
+				    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(0).second, jt->get_arc(1).second)) {
+						usearc = true;
+			    
+						p2 = t.get_arc(j);
+						q2 = t.get_arc(1 - j);
+			    
+						p1 = std::make_pair(jt->get_arc(0).second, jt->get_arc(0).first);
+						q1 = std::make_pair(jt->get_arc(1).second, jt->get_arc(1).first);
+				    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(1).second, jt->get_arc(0).second)) {
+						usearc = true;
+			    
+						p2 = t.get_arc(j);
+						q2 = t.get_arc(1 - j);
+			    
+						p1 = std::make_pair(jt->get_arc(1).second, jt->get_arc(1).first);
+						q1 = std::make_pair(jt->get_arc(0).second, jt->get_arc(0).first);
+				    }
 
-		/*
-			 p1=(x1,x2) x (y1,y2)=q1
-			 p2=(x1,y1) x (x3,y3)=q2
-    
-			 into:
-    
-			 (x1,x2) x (x3,y3)
-			 (y3,x2) x (y1,y2)
-		*/
-    
-		for(int j = 0; j < 2; ++j) {    
-		    if (t.get_arc(j) == std::make_pair(jt->get_arc(0).first, jt->get_arc(1).first)) { 
-			usearc = true;
-    
-			p2 = t.get_arc(j);
-			q2 = t.get_arc(1 - j);
-    
-			p1 = jt->get_arc(0);
-			q1 = jt->get_arc(1);
-		    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(1).first, jt->get_arc(0).first)) {
-			usearc = true;
-    
-			p2 = t.get_arc(j);
-			q2 = t.get_arc(1 - j);
-    
-			p1 = jt->get_arc(1);
-			q1 = jt->get_arc(0);
-		    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(0).second, jt->get_arc(1).second)) {
-			usearc = true;
-    
-			p2 = t.get_arc(j);
-			q2 = t.get_arc(1 - j);
-    
-			p1 = std::make_pair(jt->get_arc(0).second, jt->get_arc(0).first);
-			q1 = std::make_pair(jt->get_arc(1).second, jt->get_arc(1).first);
-		    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(1).second, jt->get_arc(0).second)) {
-			usearc = true;
-    
-			p2 = t.get_arc(j);
-			q2 = t.get_arc(1 - j);
-    
-			p1 = std::make_pair(jt->get_arc(1).second, jt->get_arc(1).first);
-			q1 = std::make_pair(jt->get_arc(0).second, jt->get_arc(0).first);
+				    if (usearc) { 
+				    	break; 
+				    }
+				}
+			}
+
+		    // TwoBreak t0 = t;
+
+		    if (usearc) {
+				if (t.get_mcolor() != s.get_mcolor())  { 
+					break;
+				}
+				*kt = twobreak_t(q2.second, p1.second, q1.first, q1.second, t.get_mcolor());
+				*jt = twobreak_t(p1.first, p1.second, q2.first, q2.second, t.get_mcolor());
+		    } else {
+				twobreak_t temp = *kt;
+				*kt = *jt;
+	            *jt = temp;
 		    }
-		    if (usearc) break;
-		}
-	    }
 
-	    // TwoBreak t0 = t;
-
-	    if (usearc) {
-		if (t.get_mcolor() != s.get_mcolor()) break;
-		*kt = twobreak_t(q2.second, p1.second, q1.first, q1.second, t.get_mcolor());
-		*jt = twobreak_t(p1.first, p1.second, q2.first, q2.second, t.get_mcolor());
-	    } else {
-		twobreak_t temp = *kt;
-		*kt = *jt;
-                *jt = temp;
-	    }
-
-	    {
-		mcolor_t C(kt->get_mcolor(), it->get_mcolor(), mcolor_t::Intersection);
-    
-                // N.B. at this point if C is not empty, then C == Q
-		if (!C.empty()) {
-		    kt->inverse().apply_single(T);
-
-		    ccsize = count_circular_chromosome(T);
-		}
-	    }
+		    {
+				mcolor_t C(kt->get_mcolor(), it->get_mcolor(), mcolor_t::Intersection);
+	    
+	                // N.B. at this point if C is not empty, then C == Q
+				if (!C.empty()) {
+			    	kt->inverse().apply_single(T);
+					ccsize = count_circular_chromosome(T);
+				}
+		    }
 
 	    /*
 	    if( CC.size() > ccsize ) {
@@ -219,34 +222,33 @@ std::list<event::TwoBreak<structure::Mcolor> > Decircularizeter<graph_t>::decirc
 		outlog << *jt << " , " << t0 << "  -->  " << t << " , " << *kt << endl;
 	    }
 	    */
-
 	}
 
 
-	if (ccsize < CircSize) {
-	    //std::cerr << " SUCCEDED" << std::endl;
-	    // move t away from the transformation TG and save it to D
-            TG.begin()->apply_single(PG);
-	    D.push_back(*TG.begin());
+		if (ccsize < CircSize) {
+	    	//std::cerr << " SUCCEDED" << std::endl;
+	    	// move t away from the transformation TG and save it to D
+        	TG.begin()->apply_single(PG);
+	    	D.push_back(*TG.begin());
 
-	    TG.erase(TG.begin());
+	    	TG.erase(TG.begin());
 
-	    CircSize = count_circular_chromosome(PG);
+	    	CircSize = count_circular_chromosome(PG);
 
-	    if (CircSize == 0) { 
-	      break;
-	    } 
+	    	if (CircSize == 0) { 
+	      		break;
+	    	} 
 
-	    start = TG.begin();
-	} else {  // did not succeed
-	    start++;
-	    //std::cerr << " FAILED" << std::endl;
-	}
+	    	start = TG.begin();
+		} else {  // did not succeed
+	    	start++;
+		    //std::cerr << " FAILED" << std::endl;
+		}
 
-	T = PG;
-	for(it = TG.begin(); it != start; ++it) {
-	    it->apply_single(T);
-	}
+		T = PG;
+		for(it = TG.begin(); it != start; ++it) {
+	    	it->apply_single(T);
+		}
     }
    
     //if (CircSize > 0) {

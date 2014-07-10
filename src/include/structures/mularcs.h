@@ -61,9 +61,19 @@ struct Mularcs {
     return un;
   }
 
+
+  inline size_t number_unique_edge() const {
+    std::unordered_set<vertex_t> processed; 
+    for (auto const & arc : mularcs) { 
+      processed.insert(arc.first);
+    }
+    return processed.size();
+  } 
+ 
+
   inline std::set<mcolor_t> get_multicolors() const { //FIXME: think about it.
     std::set<mcolor_t> answer; 
-    for (auto const & arc : mularcs) {
+    for (const auto & arc : mularcs) {
       answer.insert(arc.second);
     }		
     return answer;	 

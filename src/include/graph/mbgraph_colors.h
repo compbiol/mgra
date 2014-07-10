@@ -422,7 +422,7 @@ std::map<vertex_t, std::set<vertex_t> > mbgraph_with_colors<mcolor_type>::split_
 
     mularcs_t const & mularcs = get_adjacent_multiedges(x); 
 
-    if (not_drop_complete_edge && mularcs.union_multicolors() == get_complete_color()) { 
+    if (not_drop_complete_edge && get_adjacent_multiedges(x).number_unique_edge() == 1 && mularcs.union_multicolors() == get_complete_color()) { 
       continue; // ignore complete multiedges
     } 
 

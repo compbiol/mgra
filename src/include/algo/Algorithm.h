@@ -73,7 +73,6 @@ private:
   std::multimap<size_t, arc_t> create_minimal_matching(const std::set<vertex_t>& vertex_set); 
   //size_t process_minimal_matching(const std::set<arc_t>& matchings);
   size_t take_edge_on_color(vertex_t const & x, mcolor_t const & color, vertex_t const & y);
-
   size_t check_postponed_deletions() const;
 
   //can incident multiedges of x form multicolor Q (current don't check T-consistent formation)
@@ -124,10 +123,13 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
   if (stages >= 1) { 
     std::cerr << "Stage: 1 (indel stage)" << std::endl; 
     graph->update_number_of_splits(rounds);  
+    saveInfoLambda(80);
     stage3();
     saveInfoLambda(stage++);
   }
 #endif
+
+  saveInfoLambda(80);
 
   isChanged = true;
   while(isChanged) {
@@ -237,12 +239,9 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
     }
 
     if (process_compl && !m_completion.empty() && !isChanged) {     
-      //std::cerr << "Manual Completion Stage" << std::endl;
-      //auto completion = _completion();
       for(auto il = m_completion.cbegin(); il != m_completion.cend(); ++il) {
         graph->apply_two_break(*il);
       }
-
       process_compl = false;
       isChanged = true;
     }
@@ -277,12 +276,12 @@ edges_t Algorithm<graph_t>::get_bad_edges() const {
   return answer;
 } 
 
-#include "Stage1.h" 
-#include "Stage2.h"
-#include "Stage3.h"
-//#include "Stage4.h"
-#include "Stage5.h"
-#include "Stage6.h"
-#include "Stage7.h"
+#include "algo/Stage1.h" 
+#include "algo/Stage2.h"
+#include "algo/Stage3.h"
+//#include "algo/Stage4.h"
+#include "algo/Stage5.h"
+#include "algo/Stage6.h"
+#include "algo/Stage7.h"
 
 #endif

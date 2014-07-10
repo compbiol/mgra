@@ -60,7 +60,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
   for(auto const & x : graph) { 
     mularcs_t const & Mx = graph.get_adjacent_multiedges(x);
 
-    if (Mx.union_multicolors() == graph.get_complete_color()) { 
+    if (Mx.number_unique_edge() == 1 && Mx.union_multicolors() == graph.get_complete_color()) { 
       continue; // trivial cycle
     } 
 

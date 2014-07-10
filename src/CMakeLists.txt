@@ -38,6 +38,7 @@ include_directories(${CMAKE_BINARY_DIR}
 			${PROJECT_SOURCE_DIR}/include/graph
 			${PROJECT_SOURCE_DIR}/include/structures
 			${PROJECT_SOURCE_DIR}/include/event
+			${PROJECT_SOURCE_DIR}/libs 
 		   ) 
 
 find_package(Boost COMPONENTS program_options filesystem system REQUIRED) #log log_setup thread date_time 

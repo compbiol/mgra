@@ -32,8 +32,12 @@ struct MBGraph {
   } 
 
   inline vertex_t get_obverse_vertex(vertex_t const & v) const {
-    assert(obverse_edges.count(v) != 0);
-    return obverse_edges.find(v)->second;
+    //assert(obverse_edges.count(v) != 0);
+    if (obverse_edges.count(v) != 0) {
+      return obverse_edges.find(v)->second;
+    } else { 
+      return vertex_t();
+    }
   } 
 
   //FIXME IF WE RECONSTRUCT ANCESTORS WITH DUPLICATION EQUAL RANGE

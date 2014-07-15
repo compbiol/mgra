@@ -37,17 +37,13 @@ bool Algorithm<graph_t>::is_mobility_edge(vertex_t const & x, mcolor_t const & c
   if (x != Infty) {
     mularcs_x = graph->get_adjacent_multiedges_with_info(x);
     mularcs_x.erase(y);
-  } /*else {
-    mobilQ = canformQoo;
-  }  */
+  } 
 
   mularcs_t mularcs_y;
   if (y != Infty) {
     mularcs_y = graph->get_adjacent_multiedges_with_info(x);
     mularcs_y.erase(x);
-  } /*else {
-    mobilQ = canformQoo;
-  } */
+  } 
 
   for(auto ix = mularcs_x.cbegin(); (ix != mularcs_x.cend()) && !mobilQ; ++ix) { 
     mobilQ = canformQ(ix->first, color);
@@ -145,13 +141,13 @@ bool Algorithm<graph_t>::stage22() {
 
       bool found = false;
       for(auto im = mularcs.cbegin(); (im != mularcs.cend()) && !found; ++im) {
-	vertex_t const & y = im->first; // Q == im->second - color of central edge
+        vertex_t const & y = im->first; // Q == im->second - color of central edge
 
         if (y != Infty && graph->is_duplication_vertex(y)) {
           continue;
         } 
  
-	if (!is_mobility_edge(x, y)) { 
+        if (!is_mobility_edge(x, y)) { 
           const auto filter_Lambda = [&] (vertex_t const & s, mularcs_t const & mul, std::unordered_set<vertex_t>& mobiles, std::unordered_set<vertex_t>& non_mobiles) -> void {
             for (auto arc = mul.cbegin(); arc != mul.cend(); ++arc) { 
               if (this->is_mobility_edge(s, arc->second, arc->first)) { 
@@ -162,8 +158,8 @@ bool Algorithm<graph_t>::stage22() {
             } 
           };  
 
-	  mularcs_t mularcs_x = graph->get_adjacent_multiedges_with_info(x);
-	  mularcs_x.erase(y);
+          mularcs_t mularcs_x = graph->get_adjacent_multiedges_with_info(x);
+          mularcs_x.erase(y);
 
           std::unordered_set<vertex_t> mobile_vertex_x; 
           std::unordered_set<vertex_t> non_mobile_vertex_x;
@@ -177,7 +173,7 @@ bool Algorithm<graph_t>::stage22() {
 
           std::unordered_set<vertex_t> mobile_vertex_y; 
           std::unordered_set<vertex_t> non_mobile_vertex_y;
-	  filter_Lambda(y, mularcs_y, mobile_vertex_y, non_mobile_vertex_y);
+          filter_Lambda(y, mularcs_y, mobile_vertex_y, non_mobile_vertex_y);
 
           if (non_mobile_vertex_x.empty() && non_mobile_vertex_y.empty()) {
             for (auto const &arc : mularcs_x) {
@@ -185,14 +181,14 @@ bool Algorithm<graph_t>::stage22() {
                 vertex_t const & v = mularcs_y.get_vertex(arc.second); 
                 if (y == Infty || !v.empty()) {   
                   //std::cerr << "Do two break in first case" << genome_match::mcolor_to_name(im->second) << std::endl;
-		  //std::cerr << x << " " << arc.first << " " << y << " " << v << " " << genome_match::mcolor_to_name(arc.second) << std::endl;
+		              //std::cerr << x << " " << arc.first << " " << y << " " << v << " " << genome_match::mcolor_to_name(arc.second) << std::endl;
                   if (y == Infty) {
-                    graph->apply_two_break(twobreak_t(x, arc.first, Infty, Infty, arc.second));
+                    graph->apply(twobreak_t(x, arc.first, Infty, Infty, arc.second));
                   } else {                 
-        	    graph->apply_two_break(twobreak_t(x, arc.first, y, v, arc.second));
+                    graph->apply(twobreak_t(x, arc.first, y, v, arc.second));
                   } 
-	          found = true;
-	          ++number_rear;
+                    found = true;
+                    ++number_rear;
                 } 
               }  
             } 
@@ -211,7 +207,7 @@ bool Algorithm<graph_t>::stage22() {
             };
   
 
-	    mcolor_t addit_color = get_min_addit_color(im->second);
+            mcolor_t addit_color = get_min_addit_color(im->second);
             if (!addit_color.empty() && addit_color != graph->get_complete_color()) {
               std::vector<std::pair<arc_t, mcolor_t> > endpoints; 
               for (auto arc = mularcs_x.cbegin(); (arc != mularcs_x.cend()) && !addit_color.empty(); ++arc) { 
@@ -225,41 +221,41 @@ bool Algorithm<graph_t>::stage22() {
                   if ((y == Infty || mobile_vertex_y.count(v) != 0) && arc->second.includes(addit_color)) {
                     endpoints.push_back(std::make_pair(std::make_pair(arc->first, v), arc->second));   
                     addit_color = mcolor_t(addit_color, arc->second, mcolor_t::Difference);
- 	          }  
+ 	                }  
                 }
               }   
               
               if (addit_color.empty()) { 
                 for(auto const & endpoint : endpoints) {
                   //std::cerr << "Do two break in second case" << std::endl;
-                  graph->apply_two_break(twobreak_t(x, endpoint.first.first, y, endpoint.first.second, endpoint.second));
+                  graph->apply(twobreak_t(x, endpoint.first.first, y, endpoint.first.second, endpoint.second));
                   found = true;
                   ++number_rear; 
                 }  
               }
- 	    }  
+ 	          }  
            
-	    if (y != Infty && !found && !graph->is_vec_T_consistent_color(im->second)) {
+            if (y != Infty && !found && !graph->is_vec_T_consistent_color(im->second)) {
               auto const count_variant_Lambda = [&] (arc_t const & viewed, mcolor_t const & Q, arc_t const & remove) -> size_t { 
                 size_t number_variant = 0; 
                 if (viewed.first != Infty) {
                   mularcs_t&& end_f = graph->get_adjacent_multiedges_with_info(viewed.first);
                   end_f.erase(viewed.second);
-	          end_f.erase(remove.first); 
-	          end_f.erase(remove.second); 
-	          for (auto arc = end_f.cbegin(); arc != end_f.cend(); ++arc) { 
-		    if (this->canformQ(arc->first, Q)) {
+                  end_f.erase(remove.first); 
+                  end_f.erase(remove.second); 
+                  for (auto arc = end_f.cbegin(); arc != end_f.cend(); ++arc) { 
+                    if (this->canformQ(arc->first, Q)) {
                       ++number_variant;
                     } 
                   } 
                 } 
 
-		if (viewed.second != Infty) {                
+		            if (viewed.second != Infty) {                
                   mularcs_t&& end_s = graph->get_adjacent_multiedges_with_info(viewed.second);
                   end_s.erase(viewed.first);
-	          end_s.erase(remove.first); 
-	          end_s.erase(remove.second);
-	          for (auto arc = end_s.cbegin(); arc != end_s.cend(); ++arc) { 
+                  end_s.erase(remove.first); 
+                  end_s.erase(remove.second);
+                  for (auto arc = end_s.cbegin(); arc != end_s.cend(); ++arc) { 
                     if (this->canformQ(arc->first, Q)) {
                       ++number_variant;
                     }
@@ -270,21 +266,22 @@ bool Algorithm<graph_t>::stage22() {
               };
           
               for (auto arc = mularcs_x.cbegin(); arc != mularcs_x.cend(); ++arc) { 
-		vertex_t v; 
+                vertex_t v; 
                 if (y != Infty) {
                   v = mularcs_y.get_vertex(arc->second); 
                 } else { 
                   v = Infty;
                 } 
+                
                 if ((mobile_vertex_x.count(arc->first) != 0) && (y == Infty || mobile_vertex_y.count(v) != 0)) { 
-		  size_t count = count_variant_Lambda(arc_t(x, arc->first), arc->second, arc_t(y, v));
+		              size_t count = count_variant_Lambda(arc_t(x, arc->first), arc->second, arc_t(y, v));
                   count += count_variant_Lambda(arc_t(y, v), arc->second, arc_t(x, arc->first));  
-		  if (count == 0) {
-                    graph->apply_two_break(twobreak_t(x, arc->first, y, v, arc->second));
+		              if (count == 0) {
+                    graph->apply(twobreak_t(x, arc->first, y, v, arc->second));
 		    //std::cerr << " Do 2-break in third case " << x << " " << y << std::endl;
 		    //std::cerr << x << " " << arc->first << " " << y << " " << v << " " << genome_match::mcolor_to_name(arc->second) << std::endl;                
-	            found = true;
-	            ++number_rear;
+                    found = true;
+                    ++number_rear;
                   } 
                 }
               }
@@ -335,7 +332,7 @@ bool Algorithm<graph_t>::stage2() {
            std::cerr << " Sub-multiedge " << x << " " << y << std::endl;
             std::cerr << x << " " << arc.first << " " << y << " " << v << genome_match::mcolor_to_name(arc.second) << std::endl;
 #endif
-              graph->apply_two_break(twobreak_t(x, arc.first, y, v, arc.second));
+              graph->apply(twobreak_t(x, arc.first, y, v, arc.second));
 	      found = true;
 	      ++number_rear;
 	    }

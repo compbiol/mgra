@@ -1,16 +1,14 @@
 #ifndef MBGRAPH_HISTORY_H_
 #define MBGRAPH_HISTORY_H_
 
-#include "mbgraph_colors.h"
-
 #include "genome_match.h"
 
-#include "2break.h"
-#include "Insdel.h"
-#include "TandemDuplication.h"
-#include "Fake2break.h"
+#include "graph/mbgraph_colors.h"
 
-//#include "genome_match.h"
+#include "event/2break.h"
+#include "event/Insdel.h"
+#include "event/TandemDuplication.h"
+#include "event/Fake2break.h"
 
 template<class mcolor_t>
 struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> { 
@@ -31,6 +29,16 @@ struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> {
  
   void change_history(); 
 
+  bool check_edge_with_pseudo_vertex() const {
+    for (auto const & pseudo_vertex : pseudo_mother_vertex) {
+      mcolor_t color = this->get_adjacent_multiedges(pseudo_vertex).get_multicolor(Infty);
+      if (color != this->get_complete_color()) {
+        return false;
+      }  
+    } 
+    return true;
+  }
+
   inline typename transform_t::const_iterator cbegin_2break_history() const { 
     return break2_history.cbegin();
   } 
@@ -47,29 +55,22 @@ struct mbgraph_with_history : public mbgraph_with_colors<mcolor_t> {
     return break2_history.crend(); 
   }
 
-  //2-break operations
-  void apply_two_break(twobreak_t const & break2, bool record = true);
-
-  //Insertion/Deletion operations
-  void apply_ins_del(insertion_t const & insdel) { 
-    for (auto const &color : insdel) {
-      this->add_edge(color.first, insdel.get_edge().first, insdel.get_edge().second); 
-    }
-  } 
-
-  //Fork operations
-  void apply_fake_twobreak(fake_twobreak_t const & fakebreak2, bool record = true);
- 
-  //(Reverse) tandem duplication operations
-  void apply_tandem_duplication(tandem_duplication_t const & dupl, bool record = true);
-
   inline typename std::list<tandem_duplication_t>::const_iterator begin_tandem_duplication_history() const { 
     return tandem_dupl_history.cbegin();
   } 
-	
+  
   inline typename std::list<tandem_duplication_t>::const_iterator end_tandem_duplication_history() const { 
     return tandem_dupl_history.cend(); 
   }
+  
+  void apply(twobreak_t const & break2, bool record = true); //2-break operations
+  void apply(fake_twobreak_t const & fakebreak2, bool is_pseudo_mother = false, bool record = true); //Fork operations 
+  void apply(tandem_duplication_t const & dupl, bool record = true); //(Reverse) tandem duplication operations
+  void apply(insertion_t const & insdel) { //Insertion/Deletion operations
+    for (auto const &color : insdel) {
+      this->add_edge(color.first, insdel.get_edge().first, insdel.get_edge().second); 
+    }
+  }   
 
 private:	
   inline void registrate_real_edge(std::pair<vertex_t, mcolor_t> const & mother_edge) { 
@@ -83,11 +84,12 @@ private:
   std::map<size_t, fake_twobreak_t> fbr2_history;
   std::list<tandem_duplication_t> tandem_dupl_history;		
 
+  std::unordered_set<vertex_t> pseudo_mother_vertex;
   std::map<vertex_t, std::set<mcolor_t> > target_real_edges;
 };
 
 template<class mcolor_t>
-void mbgraph_with_history<mcolor_t>::apply_two_break(twobreak_t const & break2, bool record) { 
+void mbgraph_with_history<mcolor_t>::apply(twobreak_t const & break2, bool record) { 
   if (record) {
     br2_history.insert(std::make_pair(number_events++, break2));
   }
@@ -95,7 +97,7 @@ void mbgraph_with_history<mcolor_t>::apply_two_break(twobreak_t const & break2, 
   for (auto const & color : break2) {
     for (size_t i = 0; i < 2; ++i) {
       if (break2.get_arc(i).first != Infty || break2.get_arc(i).second != Infty) {
-	this->erase_edge(color.first, break2.get_arc(i).first, break2.get_arc(i).second);
+        this->erase_edge(color.first, break2.get_arc(i).first, break2.get_arc(i).second);
       } 
     }
 
@@ -120,7 +122,7 @@ void mbgraph_with_history<mcolor_t>::apply_two_break(twobreak_t const & break2, 
             if (inter_color.size() == target.size()) {
               target_real_edges[v].erase(target);
               if (target_real_edges.find(v)->second.empty()) {
-	        target_real_edges.erase(v);
+                target_real_edges.erase(v);
               }   
             }
           } 
@@ -136,13 +138,26 @@ void mbgraph_with_history<mcolor_t>::apply_two_break(twobreak_t const & break2, 
 } 
 
 template<class mcolor_t>
-void mbgraph_with_history<mcolor_t>::apply_fake_twobreak(fake_twobreak_t const & fakebreak2, bool record) { 
+void mbgraph_with_history<mcolor_t>::apply(fake_twobreak_t const & fakebreak2, bool is_pseudo_mother, bool record) { 
   if (record) { 
     fbr2_history.insert(std::make_pair(number_events++, fakebreak2));
   } 
 
   auto const & central_edge = fakebreak2.get_central_arc(); 
   auto const & mother_edge = fakebreak2.get_mother_edge();
+
+  if (is_pseudo_mother) {
+    this->vertex_set.insert(mother_edge.first);
+    for (auto color = mother_edge.second.cbegin(); color != mother_edge.second.cend(); ++color) {
+      this->erase_edge(color->first, central_edge.second, Infty);  
+      this->add_edge(color->first, central_edge.second, mother_edge.first);
+    }  
+
+    auto compl_color = this->get_complement_color(mother_edge.second);
+    for (auto color = compl_color.cbegin(); color != compl_color.cend(); ++color) {
+      this->add_edge(color->first, mother_edge.first, Infty);
+    }
+  }
 
   for (auto color = mother_edge.second.cbegin(); color != mother_edge.second.cend(); ++color) {
     this->erase_edge(color->first, central_edge.second, mother_edge.first);  
@@ -158,6 +173,10 @@ void mbgraph_with_history<mcolor_t>::apply_fake_twobreak(fake_twobreak_t const &
   } 
 
   registrate_real_edge(mother_edge); 
+
+  if (is_pseudo_mother) {
+    pseudo_mother_vertex.insert(mother_edge.first);
+  }
 } 
 
 template<class mcolor_t>
@@ -180,11 +199,13 @@ void mbgraph_with_history<mcolor_t>::change_history() {
         auto const change_lambda = [&] (size_t ind) -> void { 
           if (br->get_vertex(ind) == mother_edge.first) {
           //std::cerr << "Change " << br->get_arc(0).first << " " << br->get_arc(0).second << " " 
-  	//<< br->get_arc(1).first << " " << br->get_arc(1).second << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
+          //<< br->get_arc(1).first << " " << br->get_arc(1).second << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
             
-	    auto const & color = br->get_mcolor();
+            auto const & color = br->get_mcolor();
             if (!color.includes(mother_edge.second) || color == mother_edge.second) { 
-//!mcolor_t(color, mother_edge.second, mcolor_t::Intersection).empty()) { // 
+              //std::cerr << genome_match::mcolor_to_name(color) << " " << genome_match::mcolor_to_name(mother_edge.second) 
+              //  << " " << color.includes(mother_edge.second) << std::endl;
+              //!mcolor_t(color, mother_edge.second, mcolor_t::Intersection).empty()) { // 
               bool found = false;   
               for (auto col = colors.cbegin(); col != colors.cend() && !found; ++col) {
                 mcolor_t inter_color(color, *col, mcolor_t::Intersection);
@@ -212,14 +233,20 @@ void mbgraph_with_history<mcolor_t>::change_history() {
 
       if (last_twobreak != break2_history.end()) {
         ++last_twobreak;
+        
+        vertex_t mother = mother_edge.first; 
+        if (pseudo_mother_vertex.count(mother_edge.first) != 0) { 
+          mother = Infty;
+        } 
+
         if (old_two_break.get_vertex(0) == mother_edge.first) {
-          break2_history.insert(last_twobreak, twobreak_t(central.first, old_two_break.get_vertex(2), central.second, mother_edge.first, mother_edge.second));          
+          break2_history.insert(last_twobreak, twobreak_t(central.first, old_two_break.get_vertex(2), central.second, mother, mother_edge.second));          
         } else if (old_two_break.get_vertex(1) == mother_edge.first) { 
-          break2_history.insert(last_twobreak, twobreak_t(central.first, old_two_break.get_vertex(3), central.second, mother_edge.first, mother_edge.second));
+          break2_history.insert(last_twobreak, twobreak_t(central.first, old_two_break.get_vertex(3), central.second, mother, mother_edge.second));
         } else if (old_two_break.get_vertex(2) == mother_edge.first) { 
-          break2_history.insert(last_twobreak, twobreak_t(central.first, old_two_break.get_vertex(0), central.second, mother_edge.first, mother_edge.second));
+          break2_history.insert(last_twobreak, twobreak_t(central.first, old_two_break.get_vertex(0), central.second, mother, mother_edge.second));
         } else if (old_two_break.get_vertex(3) == mother_edge.first) { 
-          break2_history.insert(last_twobreak, twobreak_t(central.first, old_two_break.get_vertex(1), central.second, mother_edge.first, mother_edge.second));
+          break2_history.insert(last_twobreak, twobreak_t(central.first, old_two_break.get_vertex(1), central.second, mother, mother_edge.second));
         } 
       } else { 
         ;//assert(false);
@@ -227,45 +254,53 @@ void mbgraph_with_history<mcolor_t>::change_history() {
       } 
     }
   } 
+
+  mcolor_t compl_color = this->get_complete_color(); 
+  for (auto const & pseudo_vertex : pseudo_mother_vertex) {
+    for (auto color = compl_color.cbegin(); color != compl_color.cend(); ++color) {
+      this->erase_edge(color->first, pseudo_vertex, Infty);  
+    }  
+    this->vertex_set.erase(pseudo_vertex);
+  } 
 } 
 
 
 template<class mcolor_t>
-void mbgraph_with_history<mcolor_t>::apply_tandem_duplication(const tandem_duplication_t& dupl, bool record) {
+void mbgraph_with_history<mcolor_t>::apply(const tandem_duplication_t& dupl, bool record) {
   if (record) {
     tandem_dupl_history.push_back(dupl);
   }
  
   if (dupl.is_deletion_oper()) {
     for (auto it = dupl.cbegin_edges(); it != (--dupl.cend_edges()); ++it) {
-      for (const auto &color : dupl) {
-	this->erase_edge(color.first, it->first, it->second);
+      for (const auto &color : dupl) {  
+        this->erase_edge(color.first, it->first, it->second);
       }
     } 
 
     if (dupl.is_reverse_tandem_duplication()) {
       for (const auto &color : dupl) {
-	this->add_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
+        this->add_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
       }
     } else {
       for (const auto &color : dupl) {
-	this->erase_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
+        this->erase_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
       }
     }
   } else {
     for (auto it = dupl.cbegin_edges(); it != (--dupl.cend_edges()); ++it) {
       for (const auto &color : dupl) {
-	this->add_edge(color.first, it->first, it->second);
+        this->add_edge(color.first, it->first, it->second);
       }
     } 
 
     if (dupl.is_reverse_tandem_duplication()) {
       for (const auto &color : dupl) {
-	this->erase_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
+        this->erase_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
       }
     } else {
       for (const auto &color : dupl) {
-	this->add_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
+      	this->add_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
       }
     }
   } 

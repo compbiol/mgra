@@ -101,7 +101,7 @@ private:
     mcolor_t answer; 
     for(size_t j = 0; j < count_local_graphs(); ++j) { 
       if (!color.defined(j)) { 
-	answer.insert(j);
+        answer.insert(j);
       } 
     } 
     return answer;
@@ -417,7 +417,7 @@ std::map<vertex_t, std::set<vertex_t> > mbgraph_with_colors<mcolor_type>::split_
 
   for(auto const & x : vertex_set) {
     if (!not_drop_complete_edge) { 
-	connected_components.addrel(x, x);
+      connected_components.addrel(x, x);
     } 
 
     mularcs_t const & mularcs = get_adjacent_multiedges(x); 
@@ -428,7 +428,7 @@ std::map<vertex_t, std::set<vertex_t> > mbgraph_with_colors<mcolor_type>::split_
 
     std::for_each(mularcs.cbegin(), mularcs.cend(), [&] (std::pair<vertex_t, mcolor_t> const & arc) -> void {    
       if (arc.first != Infty) { 
-	connected_components.addrel(x, arc.first);
+        connected_components.addrel(x, arc.first);
       } 
     });
   }

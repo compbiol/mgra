@@ -110,7 +110,7 @@ bool Algorithm<graph_t>::stage5_1() {
 	      if (q.second != Infty) { 
 		processed.insert(CC[q.second]);
 	      } 
-	      graph->apply_two_break(twobreak_t(p, q, Q));
+	      graph->apply(twobreak_t(p, q, Q));
 	      ++number_rear;			   
 	      repeat = true;
             }
@@ -122,14 +122,14 @@ bool Algorithm<graph_t>::stage5_1() {
 #ifndef VERSION2
 	    if ((processed.count(CC[p.second]) == 0) && (processed.count(CC[q.second]) == 0) && CC[p.second] == CC[q.second]) { 
 	      processed.insert({CC[p.first], CC[q.first], CC[p.second], CC[q.second]});
-	      graph->apply_two_break(twobreak_t(p, q, Q));
+	      graph->apply(twobreak_t(p, q, Q));
 	      ++number_rear;
 	      repeat = true;
 	    }
 #else
             if (processed.count(CC[p.second]) == 0 && processed.count(CC[q.second]) == 0) { 
               processed.insert({CC[p.first], CC[q.first], CC[p.second], CC[q.second]});
-	      graph->apply_two_break(twobreak_t(p, q, Q));
+	      graph->apply(twobreak_t(p, q, Q));
 	      ++number_rear;
 	      repeat = true;      
             } 
@@ -195,93 +195,94 @@ bool Algorithm<graph_t>::stage5_1() {
 
       bool repeat = true;
       while(repeat) {
-	repeat = false;
+		repeat = false;
         std::map<vertex_t, std::set<arc_t> > EC; // reg. edges between diff. connected components of color Q
-	std::map<vertex_t, std::set<arc_t> > EI; // irreg. edges of color Q
-	utility::equivalence<vertex_t> CC = split_on_components(EC, EI, Q); 
+		std::map<vertex_t, std::set<arc_t> > EI; // irreg. edges of color Q
+		utility::equivalence<vertex_t> CC = split_on_components(EC, EI, Q); 
 	
-	std::unordered_set<vertex_t> processed;
-	// reg. edges between diff. connected components of color Q
-	for (const auto &reg_edge : EC) {
-	  if (processed.count(reg_edge.first) != 0) { 
-	    continue;
-	  }
+		std::unordered_set<vertex_t> processed;
+		// reg. edges between diff. connected components of color Q
+		for (const auto &reg_edge : EC) {
+	  		if (processed.count(reg_edge.first) != 0) { 
+	    		continue;
+	  		}	
 
-	  // connected component with a single external edge
-	  if (reg_edge.second.size() == 1) {
-	    const arc_t& p = *(reg_edge.second.begin());
-	    arc_t q;
+	  		// connected component with a single external edge
+	  		if (reg_edge.second.size() == 1) {
+	    		arc_t const & p = *(reg_edge.second.begin());
+	    		arc_t q;
 
-	    // look for irregular edges
-	    bool found = false;
+	    		// look for irregular edges
+	    		bool found = false;
     
-	    for(auto ii = EI[reg_edge.first].cbegin(); (ii != EI[reg_edge.first].cend()) && !found; ++ii) {
-	      const arc_t& ireg_edge = *ii; // edge
-	      // let check what would happen with (be-)edge e=(p.first, irreg.first)
-	      mcolor_t color = Q;
-	      for(size_t i = 0; i < graph->count_local_graphs(); ++i) {
-		if (graph->is_exist_edge(i, p.first) && graph->get_adjecent_vertex(i, p.first) == ireg_edge.first) {
-		  color.insert(i);
-		}
-	      } 
-	      // if e is enriched to T-consistent color, great!
-	      if (color.size() > Q.size() && graph->is_T_consistent_color(color)) {
-		//std::cerr << "perfect edge is found" << std::endl;
-		q = ireg_edge;
-		found = true;
-		EI[reg_edge.first].erase(ii);
-	      }
-	    }
+	    		for(auto ii = EI[reg_edge.first].cbegin(); (ii != EI[reg_edge.first].cend()) && !found; ++ii) {
+	      			const arc_t& ireg_edge = *ii; // edge
+	      			// let check what would happen with (be-)edge e=(p.first, irreg.first)
+					mcolor_t color = Q;
+					for(size_t i = 0; i < graph->count_local_graphs(); ++i) {
+						if (graph->is_exist_edge(i, p.first) && graph->get_adjecent_vertex(i, p.first) == ireg_edge.first) {
+							color.insert(i);
+						}
+	      			}	 
+		      		// if e is enriched to T-consistent color, great!
+		      		if (color.size() > Q.size() && graph->is_T_consistent_color(color)) {
+						//std::cerr << "perfect edge is found" << std::endl;
+						q = ireg_edge;
+						found = true;
+						EI[reg_edge.first].erase(ii);
+		      		}
+		    	}
 
-	    // we did not find good edge, but there are some candidates - take any
-	    if (!found && EI[reg_edge.first].size() == 1) {
-	      //std::cerr << "somewhat good but unique edge is found" << std::endl;
-	      q = *(EI[reg_edge.first].cbegin());
-	      EI.erase(reg_edge.first);
-	      found = true;
-	    }
+		    	// we did not find good edge, but there are some candidates - take any
+		    	if (!found && EI[reg_edge.first].size() == 1) {
+		      		//std::cerr << "somewhat good but unique edge is found" << std::endl;
+		      		q = *(EI[reg_edge.first].cbegin());
+		      		EI.erase(reg_edge.first);
+		      		found = true;
+		    	}
 
-	    if (!found && EI[reg_edge.first].size() == 0) {
-	      //std::cerr << "no irregular edges, do fission" << std::endl;
-	      q = std::make_pair(Infty, Infty);
-	      found = true;
-	    }
-    
-	    if (found) {	      
-	      processed.insert(CC[p.first]);
-	      if (q.first != Infty) { 
-		processed.insert(CC[q.first]);
-	      } 
-	      processed.insert(CC[p.second]);
-	      if (q.second != Infty) { 
-		processed.insert(CC[q.second]);
-	      } 
-	      graph->apply_two_break(twobreak_t(p, q, Q));
-	      ++number_rear;			   
-	      repeat = true;
-            }
-	  } else if (reg_edge.second.size() == 2 && EI[reg_edge.first].size() == 0) {
-	    const arc_t& p = *(reg_edge.second.begin());
-	    const arc_t& q = *(reg_edge.second.rbegin());
+		    	if (!found && EI[reg_edge.first].size() == 0) {
+		    		//std::cerr << "no irregular edges, do fission" << std::endl;
+		      		q = std::make_pair(Infty, Infty);
+		    		found = true;
+		    	}
+	    
+		    	if (found) {	      
+		      		processed.insert(CC[p.first]);
+		      		if (q.first != Infty) { 
+						processed.insert(CC[q.first]);
+		      		} 
+		      		processed.insert(CC[p.second]);
 
-	    // N.B. we have CC[p.first] == CC[q.first] == ie->first
-#ifndef VERSION1
-	    if ((processed.count(CC[p.second]) == 0) && (processed.count(CC[q.second]) == 0) && CC[p.second] == CC[q.second]) { 
-	      processed.insert({CC[p.first], CC[q.first], CC[p.second], CC[q.second]});
-	      graph->apply_two_break(twobreak_t(p, q, Q));
-	      ++number_rear;
-	      repeat = true;
-	    }
+		      		if (q.second != Infty) { 
+						processed.insert(CC[q.second]);
+		      		} 
+		      		graph->apply(twobreak_t(p, q, Q));
+		      		++number_rear;			   
+		      		repeat = true;
+	            }
+			} else if (reg_edge.second.size() == 2 && EI[reg_edge.first].size() == 0) {
+	    		const arc_t& p = *(reg_edge.second.begin());
+	    		const arc_t& q = *(reg_edge.second.rbegin());
+
+	    		// N.B. we have CC[p.first] == CC[q.first] == ie->first
+#ifdef VERSION1
+	    		if ((processed.count(CC[p.second]) == 0) && (processed.count(CC[q.second]) == 0) && CC[p.second] == CC[q.second]) { 
+	    			processed.insert({CC[p.first], CC[q.first], CC[p.second], CC[q.second]});
+	    			graph->apply(twobreak_t(p, q, Q));
+	    			++number_rear;
+	    			repeat = true;
+	    		}
 #else
-        if (processed.count(CC[p.second]) == 0 && processed.count(CC[q.second]) == 0) { 
-          processed.insert({CC[p.first], CC[q.first], CC[p.second], CC[q.second]});
-	      graph->apply_two_break(twobreak_t(p, q, Q));
-	      ++number_rear;
-	      repeat = true;      
-        } 
+        		if (processed.count(CC[p.second]) == 0 && processed.count(CC[q.second]) == 0) { 
+        			processed.insert({CC[p.first], CC[q.first], CC[p.second], CC[q.second]});
+	    			graph->apply(twobreak_t(p, q, Q));
+	    			++number_rear;
+	    			repeat = true;      
+        		} 
 #endif
-	  }
-	}
+			}
+		}
       }
     }
 
@@ -324,7 +325,7 @@ bool Algorithm<graph_t>::stage5_2() {
 	      const vertex_t& v = graph->get_adjacent_multiedges(z).get_vertex(Q); 
 	      if (!v.empty() && mularcs_x.defined(v)) { 
 		//std::cerr << "Stage 5_2: " << x << " - " << y << "\tX\t" << v << " - " << z << std::endl;
-                graph->apply_two_break(twobreak_t(x, y, v, z, Q));
+                graph->apply(twobreak_t(x, y, v, z, Q));
 		++number_rear;
                 next = true;
 	      }

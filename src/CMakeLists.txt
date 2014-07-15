@@ -22,13 +22,13 @@ configure_file (
   )
 
 set(ROOT_DIR "${CMAKE_SOURCE_DIR}/../")
-
 set (OPTIMIZE_FLAG " -std=c++11 -O2 -pipe -finline-functions -finline-limit=1000")
-# -DBOOST_LOG_DYN_LINK")
 set (WARNS "-Wall -Werror -Wextra -pedantic-errors")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${WARNS}") 
+
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${DEBUG}")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${DEBUG}")
+# -DBOOST_LOG_DYN_LINK")
 
 
 include_directories(${CMAKE_BINARY_DIR} 
@@ -65,9 +65,13 @@ else()
     return()
 endif()
 
+add_subdirectory(libs/blossom5)
+set_property(TARGET BLOSSOM5 APPEND_STRING PROPERTY COMPILE_FLAGS " -w")
+
 add_executable(${PROJECT_NAME} ${MGRA_SOURCE})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
-
+add_dependencies(${PROJECT_NAME} BLOSSOM5)
+target_link_libraries(${PROJECT_NAME} BLOSSOM5)
 
 if(WIN32)
 	message(SEND_ERROR "Windows is unsupported system, please use UNIX or OS X systems")

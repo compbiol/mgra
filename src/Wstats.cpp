@@ -17,9 +17,8 @@ void writer::Wstats::print_all_statistics(size_t stage, Statistics<mbgraph_with_
   print_rear_characters(info.get_compl_stat()); 
   print_indel_statistics(info.get_indel_stat());
 	
-//print_fair_edges(graph, info);
-//print_estimated_dist(stage, cfg, graph);
-
+  //print_fair_edges(graph, info);
+  //print_estimated_dist(stage, cfg, graph);
 } 
 
 void writer::Wstats::print_complete_edges(std::vector<arc_t> const & edges) { 
@@ -35,6 +34,9 @@ void writer::Wstats::print_connected_components(const mbgraph_with_history<mcolo
   std::map<size_t, size_t> stx;
 
   for(const auto &component : classes) {
+    if (component.second.size() == 1) { 
+        std::cerr << *component.second.cbegin() << std::endl;
+    }
     ++stx[component.second.size()];
   }
 
@@ -83,15 +85,15 @@ void writer::Wstats::print_history_statistics(const mbgraph_with_history<mcolor_
   size_t del = 0;
 
   for(auto il = graph.crbegin_2break_history(); il != graph.crend_2break_history(); ++il) {
-    if (il->get_arc(0).first == Infty || il->get_arc(0).second == Infty 
-        || il->get_arc(1).first == Infty || il->get_arc(1).second == Infty) {
+    vertex_t const & p = il->get_arc(0).first;
+    vertex_t const & q = il->get_arc(0).second;
+    vertex_t const & x = il->get_arc(1).first;
+    vertex_t const & y = il->get_arc(1).second;
+
+    if (p == Infty || q == Infty || x == Infty || y == Infty) {
       ++n2br[il->get_mcolor()];
       ++tbr;
     } else { 
-      const vertex_t& p = il->get_arc(0).first;
-      const vertex_t& q = il->get_arc(0).second;
-      const vertex_t& x = il->get_arc(1).first;
-      const vertex_t& y = il->get_arc(1).second;
       if (p == graph.get_obverse_vertex(x) && bad_edges.defined(p, x)) { 
         ++ndel[il->get_mcolor()];
         ++del;

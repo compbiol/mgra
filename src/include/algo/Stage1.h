@@ -144,7 +144,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  mularcs_t const & mul = graph->get_adjacent_multiedges_with_info(x0, false);
 	  auto const & colors = mul.equal_range(self_v);
 	  for (auto it = colors.first; it != colors.second; ++it) { 
-	    graph->apply_two_break(twobreak_t(self_v, x0, self_v, y0, it->second));
+	    graph->apply(twobreak_t(self_v, x0, self_v, y0, it->second));
 	    ++number_rear;
 	  } 
 	
@@ -161,7 +161,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 	  mularcs_t const & mul = graph->get_adjacent_multiedges_with_info(y0, false);
 	  auto const & pair = mul.equal_range(y1);
 	  for (auto it = pair.first; it != pair.second; ++it) { 
- 	    graph->apply_two_break(twobreak_t(y0, y1, self_v, self_v, it->second));
+ 	    graph->apply(twobreak_t(y0, y1, self_v, self_v, it->second));
 	    ++number_rear;
 	  }
         
@@ -233,7 +233,7 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     
     while (z3 != path.end()) {
       for (auto const & col : process_colors) {
-      	graph->apply_two_break(twobreak_t(*z0, *z1, *z3, *z2, col));
+      	graph->apply(twobreak_t(*z0, *z1, *z3, *z2, col));
       	++number_rear;     
       } 
       z1 = z3++;

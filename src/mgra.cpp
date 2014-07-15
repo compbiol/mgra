@@ -240,7 +240,6 @@ int main(int argc, char* argv[]) {
   std::clog << "Start algorithm for convert from breakpoint graph to identity breakpoint graph" << std::endl;
   Algorithm<graph_t> main_algo(graph, cfg);
   main_algo.init_writers(out_path_directory, colorsheme, "stage", debug);
-
   main_algo.convert_to_identity_bgraph(); 
 
   if (cfg.get_target().empty() && !graph->is_identity()) {

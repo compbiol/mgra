@@ -16,6 +16,7 @@ struct Algorithm {
   , max_size_component(cfg.get_size_component_in_brutforce())
   , stages(cfg.get_stages())
   , m_completion(cfg.get_completion())
+  , pseudo_infinity_vertex(0)
   , write_dots(cfg)
   {
   } 
@@ -36,7 +37,7 @@ private:
   typedef typename graph_t::insertion_t insertion_t;
   typedef typename graph_t::tandem_duplication_t tandem_duplication_t;
 
-  //Stage 1: process insertion/deletion events. Balanced graph
+  //Stage 1: process insertion/deletion events. Balanced graph.
   bool stage3();
 	
   //Stage 2: Simple paths  
@@ -69,9 +70,11 @@ private:
 
   //Stage 6: brutoforce stage
   bool stage6();
-  size_t calculate_cost(const vertex_t& y, const mularcs_t& mularcs_x, const mularcs_t& mulacrs_y); 
-  std::multimap<size_t, arc_t> create_minimal_matching(const std::set<vertex_t>& vertex_set); 
-  //size_t process_minimal_matching(const std::set<arc_t>& matchings);
+  size_t calculate_cost(vertex_t const & y, mularcs_t const & mularcs_x, mularcs_t const & mulacrs_y); 
+
+  std::multimap<size_t, arc_t> create_minimal_matching(std::set<vertex_t> const & vertex_set); 
+  std::multimap<size_t, arc_t> wrapper_create_minimal_matching(std::set<vertex_t> const & vertex_set);
+
   size_t take_edge_on_color(vertex_t const & x, mcolor_t const & color, vertex_t const & y);
   size_t check_postponed_deletions() const;
 
@@ -89,6 +92,7 @@ private:
   size_t const stages;
   std::list<twobreak_t> const m_completion;
 
+  size_t pseudo_infinity_vertex;
   edges_t insertions;
   edges_t postponed_deletions; 
   std::map<std::pair<vertex_t, mcolor_t>, vertex_t> mother_verteces;
@@ -123,13 +127,10 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
   if (stages >= 1) { 
     std::cerr << "Stage: 1 (indel stage)" << std::endl; 
     graph->update_number_of_splits(rounds);  
-    saveInfoLambda(80);
     stage3();
     saveInfoLambda(stage++);
   }
 #endif
-
-  saveInfoLambda(80);
 
   isChanged = true;
   while(isChanged) {
@@ -151,11 +152,6 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
         if (!isChanged) {
           std::cerr << "Stage: 2 Non-mobile edges " << stage << std::endl;
           isChanged = stage22();
-        }
-
-        if (!isChanged) {
-          std::cerr << "Stage: 71 Non-mobile edges " << stage << std::endl;
-          isChanged = stage71();
         }
 
         saveInfoLambda(stage++);
@@ -183,7 +179,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
     if (process_compl && !m_completion.empty() && !isChanged) {     
       //std::cerr << "Manual Completion Stage" << std::endl;
       for(auto il = m_completion.cbegin(); il != m_completion.cend(); ++il) {
-        graph->apply_two_break(*il);
+        graph->apply(*il);
       }
 
       process_compl = false;
@@ -240,7 +236,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
 
     if (process_compl && !m_completion.empty() && !isChanged) {     
       for(auto il = m_completion.cbegin(); il != m_completion.cend(); ++il) {
-        graph->apply_two_break(*il);
+        graph->apply(*il);
       }
       process_compl = false;
       isChanged = true;
@@ -249,6 +245,12 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
   }	
 
   write_dots.save_final_dot(*graph);
+
+  if (!graph->check_edge_with_pseudo_vertex()) { 
+    std::cerr << "We have problem with pseudo infnity vertex" << std::endl;
+    std::cerr << "If you have indentity breakpoint graph after stages, please contact us." << std::endl;
+    exit(1);
+  }
 
   graph->change_history();
   size_t bad_postponed_deletions = check_postponed_deletions();

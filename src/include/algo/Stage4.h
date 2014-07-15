@@ -34,13 +34,13 @@ bool Algorithm<graph_t>::stage4_td() {
 	  if (v == graph->get_obverse_vertex(current)) {
 	    if (graph->is_vec_T_consistent_color(color)) { 
 	      tandem_duplication_t dupl(duplication, color, true, false);
-	      graph->apply_tandem_duplication(dupl);	
+	      graph->apply(dupl);	
 	      ++number_dupl;
 	    } else if (!graph->is_vec_T_consistent_color(graph->get_complement_color(color)) && split_bad_colors) {
 		auto colors = graph->split_color(color);
 		for(const auto &col: colors) {
 		  tandem_duplication_t dupl(duplication, col, true, false);
-	          graph->apply_tandem_duplication(dupl);	
+	          graph->apply(dupl);	
 	          ++number_dupl;
 		} 
 	    } 
@@ -126,14 +126,14 @@ bool Algorithm<graph_t>::stage4_rtd() {
 
       if (graph->is_vec_T_consistent_color(color)) { 
 	tandem_duplication_t dupl(duplication, color, true, true);
-	graph->apply_tandem_duplication(dupl);
+	graph->apply(dupl);
 	++number_dupl;
 	//std::cerr << " processed" << std::endl;
       } else if (!graph->is_vec_T_consistent_color(graph->get_complement_color(color)) && split_bad_colors) {
 	auto colors = graph->split_color(color);
 	for (const auto &col: colors) {
 		tandem_duplication_t dupl(duplication, col, true, true);
-		graph->apply_tandem_duplication(dupl);
+		graph->apply(dupl);
 		++number_dupl;
 	} 
 	//std::cerr << " processed" << std::endl;
@@ -171,14 +171,14 @@ bool Algorithm<graph_t>::stage4_conv_to_td() {
 	  	if (graph->is_vec_T_consistent_color(color)) { 
 			//std::cerr << a1 << " " << x << " " << a2 << " " << y << std::endl;
 			twobreak_t t(a1, x, a2, y, color);
-			graph->apply_two_break(t);
+			graph->apply(t);
 			++number_rear;
 	  	} else if (!graph->is_vec_T_consistent_color(graph->get_complement_color(color)) && split_bad_colors) {
 			//std::cerr << a1 << " " << x << " " << a2 << " " << y << std::endl;
 			auto colors = graph->split_color(color);
 			for (const auto& col: colors) { 
 				twobreak_t t(a1, x, a2, y, col);
-				graph->apply_two_break(t);
+				graph->apply(t);
 				++number_rear;
 			}
 		} 

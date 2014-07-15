@@ -16,7 +16,7 @@ bool Algorithm<graph_t>::stage3() {
       auto const & indel_color = mularcs.union_multicolors(); 
       auto const & bar_indel_color = graph->get_complement_color(indel_color);
       assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
-      graph->apply_ins_del(insertion_t(a1, a2, bar_indel_color, false));
+      graph->apply(insertion_t(a1, a2, bar_indel_color, false));
       ++number_indel_event;
 
       auto set_split_indel = graph->split_color(indel_color); 
@@ -34,7 +34,7 @@ bool Algorithm<graph_t>::stage3() {
       bool bi_tc = false;
       size_t c_vtc_bar_indel = 0;        
       for (auto const & col: set_split_bar_indel) {  
-	if (graph->is_vec_T_consistent_color(col)) {
+        if (graph->is_vec_T_consistent_color(col)) {
           ++c_vtc_bar_indel; 
         } else { 
           bi_tc = true; 
@@ -45,7 +45,7 @@ bool Algorithm<graph_t>::stage3() {
         insertions.insert(a1, a2);
       } else if (bi_tc || c_vtc_indel == std::min(c_vtc_indel, c_vtc_bar_indel)) { 
         graph->registrate_viewed_edge(a1, a2);
-	postponed_deletions.insert(a1, a2);
+        postponed_deletions.insert(a1, a2);
       } else { 
         assert(false);
       } 

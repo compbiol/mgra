@@ -37,14 +37,6 @@ struct ProblemInstance {
     return priority_name.size();
   } 
 
-  inline typename std::vector<phylogeny_tree_t>::const_iterator cbegin_trees() const { 
-    return trees.cbegin();
-  } 
-
-  inline typename std::vector<phylogeny_tree_t>::const_iterator cend_trees() const { 
-    return trees.cend();
-  } 
-
   inline size_t get_stages() const { 
     return stages;
   } 
@@ -69,7 +61,7 @@ struct ProblemInstance {
     return completion;
   } 
 
-  inline size_t RGB_color_size() { 
+  inline size_t RGB_color_size() const { 
     return RGBcolors.size();
   } 
 
@@ -80,6 +72,10 @@ struct ProblemInstance {
   inline int get_RGBcoeff() const { 
     return RGBcoeff;
   } 
+
+  typedef typename std::vector<phylogeny_tree_t>::const_iterator citer_tree; 
+  DECLARE_CONST_ITERATOR( citer_tree, trees, cbegin_trees, cbegin ) 
+  DECLARE_CONST_ITERATOR( citer_tree, trees, cend_trees, cend ) 
 
 private: 
   void init_basic_rgb_colors(bool flag = true); 

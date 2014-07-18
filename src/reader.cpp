@@ -75,10 +75,17 @@ std::vector<structure::Genome> reader::read_grimm(ProblemInstance<mcolor_t> cons
     exit(1);
   }
 
-  std::vector<genome_t> genomes(cfg.get_count_genomes());    
-
   size_t nchr = 0;
   size_t number_genome = 0;
+  std::vector<genome_t> genomes(cfg.get_count_genomes());   
+  auto inserter_lambda = [&] (std::string gene, std::string const & chr, size_t offset) {
+    int sign = (gene[0] == '-')? -1: +1; 
+    if (gene[0] == '-' || gene[0] == '+') {
+      gene = gene.substr(1);
+    }
+    genomes[number_genome].insert(gene, chr, offset, sign); //, genord, genord); 
+  };
+
   while(!input.eof()) {
     std::string line;
     std::getline(input, line);
@@ -104,22 +111,24 @@ std::vector<structure::Genome> reader::read_grimm(ProblemInstance<mcolor_t> cons
       	  break;
       	} else if (gene[0] == '$') {
       	  break;
+        } else if (gene.find("$") != std::string::npos) { 
+          inserter_lambda(gene.substr(0, gene.find("$")), chr, ++genord);
+          break;
       	} else if (gene[0] == '@') {
       	  genomes[number_genome].registrate_circular_chr(chr);
       	  break;
+        } else if (gene.find("@") != std::string::npos) { 
+          inserter_lambda(gene.substr(0, gene.find("@")), chr, ++genord);
+          genomes[number_genome].registrate_circular_chr(chr);
+          break;
       	} else {
-      	  int sign = (gene[0] == '-')? -1: +1; 
-      	  ++genord;
-      	  if (gene[0] == '-' || gene[0] == '+') {
-      	    gene = gene.substr(1);
-      	  }
-      	  genomes[number_genome].insert(gene, chr, genord, sign); //, genord, genord); 
+          inserter_lambda(gene, chr, ++genord);
       	} 
       }
     } 
   }
-  input.close();
 
+  input.close();
   return genomes;
 }
 

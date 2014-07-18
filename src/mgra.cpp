@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
   std::string type; 
   std::string blocks_file;
   std::string out_path; 
-  std::string colorsheme;
+  std::string colorscheme;
   bool debug = false; 
 
   /*Reading flags*/
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
     ("format,f", po::value<std::string>(&type)->required(), "Input format file in genomes file")
     ("genomes,g", po::value<std::string>(&blocks_file)->required(), "Input file contains genomes")
     ("output_dir,o", po::value<std::string>(&out_path)->required(), "Output directory")
-    ("colorsheme", po::value<std::string>(), "Colorsheme, which used in output breakpoint graph")
+    ("colorscheme", po::value<std::string>(), "colorscheme, which used in output breakpoint graph")
     ("debug,d", "Switch on debug output")
     ;
 
@@ -152,8 +152,8 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  if ( vm.count("colorsheme") ) { 
-    colorsheme = vm["colorsheme"].as<std::string>();
+  if ( vm.count("colorscheme") ) { 
+    colorscheme = vm["colorscheme"].as<std::string>();
   }
 
   if ( vm.count("debug") ) { 
@@ -161,8 +161,7 @@ int main(int argc, char* argv[]) {
   }
 
   /*Check paths for cfg file, block file and output directory*/
-  sys::error_code error; 
-
+  sys::error_code error;
   fs::path out_path_directory(out_path);
   fs::path in_path_cfg(cfg_file);
   fs::path in_path_blocks(blocks_file);
@@ -201,7 +200,7 @@ int main(int argc, char* argv[]) {
   typedef structure::Mcolor mcolor_t;
   typedef mbgraph_with_history<mcolor_t> graph_t; 
 
-  ProblemInstance<mcolor_t> cfg(reader::read_cfg_file(in_path_cfg), colorsheme.empty()); 
+  ProblemInstance<mcolor_t> cfg(reader::read_cfg_file(in_path_cfg), colorscheme.empty()); 
 
   if (cfg.get_count_genomes() < 2) {
     std::cerr << "ERROR: at least two input genomes required" << std::endl;
@@ -239,8 +238,30 @@ int main(int argc, char* argv[]) {
 
   std::clog << "Start algorithm for convert from breakpoint graph to identity breakpoint graph" << std::endl;
   Algorithm<graph_t> main_algo(graph, cfg);
-  main_algo.init_writers(out_path_directory, colorsheme, "stage", debug);
+  main_algo.init_writers(out_path_directory, colorscheme, "stage", debug);
   main_algo.convert_to_identity_bgraph(); 
+
+  std::shared_ptr<graph_t> new_graph(new graph_t(genomes, cfg)); 
+  Algorithm<graph_t> alg(new_graph, cfg);
+  alg.stage3(); 
+  writer::Wdots<graph_t, ProblemInstance<mcolor_t> > write_dots(cfg);
+  write_dots.init(out_path_directory, colorscheme, "stage", true);
+  //write_dots.save_dot(*new_graph, cfg, 100);
+
+  /*for (auto br = graph->cbegin_2break_history(); br != graph->cend_2break_history(); ++br) {
+    std::cerr << br->get_arc(0).first << " " << br->get_arc(0).second << " " 
+  << br->get_arc(1).first << " " << br->get_arc(1).second << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
+      
+    if (br->get_arc(0).first == "1035h" && br->get_arc(0).second == Infty && br->get_arc(1).first == "176h" && br->get_arc(1).second == Infty) { 
+      mcolor_t color = new_graph->get_adjacent_multiedges("1035h").get_multicolor(Infty);      
+      std::cerr << genome_match::mcolor_to_name(color) << std::endl;
+      color = new_graph->get_adjacent_multiedges("176h").get_multicolor(Infty);      
+      std::cerr << genome_match::mcolor_to_name(color) << std::endl;
+      write_dots.save_dot(*new_graph, 100);
+      //break; 
+    } 
+    new_graph->apply(*br);
+  }*/
 
   if (cfg.get_target().empty() && !graph->is_identity()) {
     std::clog << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; 

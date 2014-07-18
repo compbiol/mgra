@@ -405,15 +405,15 @@ bool Algorithm<graph_t>::stage6() {
   std::map<vertex_t, std::set<vertex_t> > const & classes = graph->split_on_components();
   for (auto const & vertex_set : classes) { 
  
-    std::cerr << "Component have size " << vertex_set.second.size() << std::endl;
+    //std::cerr << "Component have size " << vertex_set.second.size() << std::endl;
 
     if (vertex_set.second.size() <= max_size_component) { 
 
-      std::cerr << "Start process component" << std::endl;
+      /*std::cerr << "Start process component" << std::endl;
       for (auto const v : vertex_set.second) {
       	std::cerr << v << " "; 
       } 
-      std::cerr << std::endl;
+      std::cerr << std::endl;*/
 
       std::multimap<size_t, arc_t> matching = create_minimal_matching(vertex_set.second);
       //for (auto const & edge : matching) { 

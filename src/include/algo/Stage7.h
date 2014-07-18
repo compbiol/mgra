@@ -17,33 +17,44 @@ bool Algorithm<graph_t>::stage7() {
       }
 
       if (!is_mobility_edge(x, y)) {  
-        mularcs_t&& mularcs_y = graph->get_adjacent_multiedges_with_info(y);
+        mularcs_t && mularcs_y = graph->get_adjacent_multiedges_with_info(y);
         mularcs_y.erase(x);
-        mularcs_t&& mularcs_x = graph->get_adjacent_multiedges_with_info(x);
+        mularcs_t && mularcs_x = graph->get_adjacent_multiedges_with_info(x);
         mularcs_x.erase(y);
-       
-        vertex_t const & mother = mularcs_y.cbegin()->first;
-        bool sligshot = (mularcs_y.size() == 1) && (mularcs_x.size() != 1) 
-            && graph->is_vec_T_consistent_color(mularcs_y.cbegin()->second);
-        for (auto arc = mularcs_x.cbegin(); arc != mularcs_x.cend() && sligshot; ++arc) {
-          sligshot = graph->is_vec_T_consistent_color(arc->second);
-        } 
-        sligshot = sligshot && mularcs_y.cbegin()->second == mularcs_x.union_multicolors();
 
-        if (sligshot) { 
+        if (mularcs_y.size() == 1) { 
+          vertex_t const & mother = mularcs_y.begin()->first;        
           if (mother == Infty) { 
-            std::string pseudo_vertex = "o" + std::to_string(pseudo_infinity_vertex) + "o";
-            ++pseudo_infinity_vertex;
-            fake_twobreak_t ft(arc_t(x, y), mularcs_x, edge_t(pseudo_vertex, mularcs_y.cbegin()->second));  
-            graph->apply(ft, true);
-            assert(graph->get_adjacent_multiedges(x).number_unique_edge() == 1 && graph->get_adjacent_multiedges(x).union_multicolors() == graph->get_complete_color()); 
-            ++number_rear;
-          } else { 
-            fake_twobreak_t ft(arc_t(x, y), mularcs_x, *(mularcs_y.cbegin()));  
-            //std::cerr << "Create clone " << x << " " << y << " " /*<< *(mularcs_y.cbegin())*/ << std::endl;
-            graph->apply(ft);
-            assert(graph->get_adjacent_multiedges(x).number_unique_edge() == 1 && graph->get_adjacent_multiedges(x).union_multicolors() == graph->get_complete_color()); 
-            ++number_rear;
+            ;
+            /*bool sligshot = (mularcs_y.size() == 1) && (mularcs_x.size() != 1) && graph->is_vec_T_consistent_color(mularcs_y.cbegin()->second);
+            for (auto arc = mularcs_x.cbegin(); arc != (mularcs_x.cend()) && sligshot; ++arc) {
+              sligshot = (arc->first != Infty) && graph->is_vec_T_consistent_color(arc->second);
+            }
+            sligshot = sligshot && (mularcs_y.cbegin()->second == mularcs_x.union_multicolors());
+        
+            if (sligshot) { 
+              std::string pseudo_vertex = "o" + std::to_string(pseudo_infinity_vertex) + "o";
+              //std::cerr << "We have fake 2-break " << x << " " << y << " " << Infty << " " << pseudo_vertex << std::endl;
+              ++pseudo_infinity_vertex;
+              pseudo_infinity_verteces.insert(pseudo_vertex);
+              fake_twobreak_t ft(arc_t(x, y), mularcs_x, edge_t(pseudo_vertex, mularcs_y.cbegin()->second));  
+              graph->apply(ft, true);
+              assert(graph->get_adjacent_multiedges(x).number_unique_edge() == 1 && graph->get_adjacent_multiedges(x).union_multicolors() == graph->get_complete_color()); 
+              ++number_rear;
+            }*/
+          } else {
+            bool sligshot = (mularcs_y.size() == 1) && (mularcs_x.size() != 1) 
+            && graph->is_vec_T_consistent_color(mularcs_y.cbegin()->second);
+            for (auto arc = mularcs_x.cbegin(); arc != mularcs_x.cend() && sligshot; ++arc) {
+              sligshot = graph->is_vec_T_consistent_color(arc->second);
+            } 
+            sligshot = sligshot && mularcs_y.cbegin()->second == mularcs_x.union_multicolors();
+            if (sligshot) { 
+              fake_twobreak_t ft(arc_t(x, y), mularcs_x, *(mularcs_y.cbegin()));  
+              //std::cerr << "Create clone " << x << " " << y << " " /*<< *(mularcs_y.cbegin())*/ << std::endl;
+              graph->apply(ft);
+              assert(graph->get_adjacent_multiedges(x).number_unique_edge() == 1 && graph->get_adjacent_multiedges(x).union_multicolors() == graph->get_complete_color()); 
+            }
           }  
         } 
       }

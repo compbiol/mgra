@@ -14,88 +14,85 @@ struct TwoBreak : public event::Event {
   TwoBreak() { 
   } 
   	
-  TwoBreak(const arc_t& a1, const arc_t& a2, const mcolor_t& Q)
-  : arcs({a1, a2}) 
-  , mcolor(Q) 
+  TwoBreak(arc_t const & a1, arc_t const & a2, mcolor_t const & Q)
+  : m_arcs({a1, a2}) 
+  , m_multicolor(Q) 
   {
   }
 
-  TwoBreak(const vertex_t& x1, const vertex_t& y1, const vertex_t& x2, const vertex_t& y2, const mcolor_t& Q)
-  : arcs({arc_t(x1, y1), arc_t(x2, y2)})
-  , mcolor(Q) 
+  TwoBreak(vertex_t const & x1, vertex_t const & y1, vertex_t const & x2, vertex_t const & y2, mcolor_t const & Q)
+  : m_arcs({arc_t(x1, y1), arc_t(x2, y2)})
+  , m_multicolor(Q) 
   {
   }
  
-  inline void change_vertex(size_t index, const vertex_t& v) {
+  inline void change_vertex(size_t index, vertex_t const & v) {
     if (index == 0) {
-      arcs[0].first = v; 
+      m_arcs[0].first = v; 
     } else if (index == 1) {
-      arcs[0].second = v; 
+      m_arcs[0].second = v; 
     } else if (index == 2) {
-      arcs[1].first = v; 
+      m_arcs[1].first = v; 
     } else if (index == 3) {
-      arcs[1].second = v; 
+      m_arcs[1].second = v; 
     } 
   }
    
   inline TwoBreak inverse() const {
-    return TwoBreak(arcs[0].first, arcs[1].first, arcs[0].second, arcs[1].second, mcolor);
+    return TwoBreak(m_arcs[0].first, m_arcs[1].first, m_arcs[0].second, m_arcs[1].second, m_multicolor);
   }
 
   inline arc_t get_arc(size_t index) const { 
     assert(index < 2); 
-    return arcs[index];
+    return m_arcs[index];
   } 
 
   inline vertex_t get_vertex(size_t index) const { 
     if (index == 0) {
-      return arcs[0].first; 
+      return m_arcs[0].first; 
     } else if (index == 1) {
-      return arcs[0].second; 
+      return m_arcs[0].second; 
     } else if (index == 2) {
-      return arcs[1].first; 
+      return m_arcs[1].first; 
     } else if (index == 3) {
-      return arcs[1].second; 
+      return m_arcs[1].second; 
     } 
     assert(false);
   } 
 
   inline mcolor_t get_mcolor() const { 
-    return mcolor; 
-  } 
-
-  inline citer begin() const { 
-    return mcolor.cbegin();
-  } 
-
-  inline citer end() const { 
-    return mcolor.cend();
+    return m_multicolor; 
   } 
 
   void apply_single(partgraph_t& local_graph) const;
+  
+  DECLARE_CONST_ITERATOR( citer, m_multicolor, begin, cbegin )  
+  DECLARE_CONST_ITERATOR( citer, m_multicolor, end, cend )
+  DECLARE_CONST_ITERATOR( citer, m_multicolor, cbegin, cbegin )  
+  DECLARE_CONST_ITERATOR( citer, m_multicolor, cend, cend )
+
 private: 
-  arc_t arcs[2]; // (x1,y1) x (x2,y2) = (x1,x2) + (y1,y2)
-  mcolor_t mcolor; 
+  //std::array<vertex_t, 4> arcs;
+  arc_t m_arcs[2]; // (x1,y1) x (x2,y2) = (x1,x2) + (y1,y2)
+  mcolor_t m_multicolor; 
 };
 
 }
 
 template<class mcolor_t>
 void event::TwoBreak<mcolor_t>::apply_single(partgraph_t& local_graph) const {
-  //std::cerr << arcs[0].first << " " <<  arcs[0].second << ", " << arcs[1].first << " " << arcs[1].second << std::endl; 
-//" - " << genome_match::mcolor_to_name(mcolor) << std::endl;
   for(size_t i = 0; i < 2; ++i) {
-    if (arcs[i].first != Infty || arcs[i].second != Infty) {
-      local_graph.erase(arcs[i].first, arcs[i].second);
+    if (m_arcs[i].first != Infty || m_arcs[i].second != Infty) {
+      local_graph.erase(m_arcs[i].first, m_arcs[i].second);
     }
   }
 	
-  if (arcs[0].first != Infty || arcs[1].first != Infty) {
-    local_graph.insert(arcs[0].first, arcs[1].first);
+  if (m_arcs[0].first != Infty || m_arcs[1].first != Infty) {
+    local_graph.insert(m_arcs[0].first, m_arcs[1].first);
   }
 
-  if (arcs[0].second != Infty || arcs[1].second != Infty) {
-    local_graph.insert(arcs[0].second, arcs[1].second);
+  if (m_arcs[0].second != Infty || m_arcs[1].second != Infty) {
+    local_graph.insert(m_arcs[0].second, m_arcs[1].second);
   }
 } 
 

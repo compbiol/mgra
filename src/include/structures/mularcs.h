@@ -11,28 +11,24 @@ struct Mularcs {
   typedef typename map_t::iterator iter;    
 
   inline void insert(vertex_t const & v, mcolor_t const & mc) { 
-    mularcs.insert(std::make_pair(v, mc));	
+    m_mularcs.insert(std::make_pair(v, mc));	
   } 
 
   inline void insert(vertex_t const & v, size_t i) {
-    if (mularcs.find(v) != mularcs.end()) { 
-      mularcs.find(v)->second.insert(i);
+    if (m_mularcs.find(v) != m_mularcs.end()) { 
+      m_mularcs.find(v)->second.insert(i);
     } else { 
-      mularcs.insert(std::make_pair(v, mcolor_t(i)));
+      m_mularcs.insert(std::make_pair(v, mcolor_t(i)));
     }
   }
  
   inline void erase(vertex_t const & v) { 
-    mularcs.erase(v);
+    m_mularcs.erase(v);
   }
  
-  inline bool defined(vertex_t const & v) const { 
-    return (mularcs.count(v) != 0);
-  }
- 
-  inline vertex_t get_vertex(mcolor_t const & color) const { 
+  inline vertex_t get_vertex(mcolor_t const & color) const { //FIXME: MAYBE OPTIONAL
     vertex_t v = "";
-    for (auto const & arc : mularcs) {
+    for (auto const & arc : m_mularcs) {
       if (arc.second == color) { 
         v = arc.first;
       }
@@ -40,21 +36,21 @@ struct Mularcs {
     return v;   
   } 
   
-  inline mcolor_t get_multicolor(vertex_t const & v) const {
-    if (mularcs.count(v) != 0) { 
-      return mularcs.find(v)->second; 
+  inline mcolor_t get_multicolor(vertex_t const & v) const { //FIXME: MAYBE OPTIONAL
+    if (m_mularcs.count(v) != 0) { 
+      return m_mularcs.find(v)->second; 
     } else { 
       return mcolor_t();
     } 
   } 
 
   inline std::pair<citer, citer> equal_range(vertex_t const & v) const {
-    return mularcs.equal_range(v);
+    return m_mularcs.equal_range(v);
   } 
  
   inline mcolor_t union_multicolors() const {
     mcolor_t un; 
-    for (auto const &arc : mularcs) { 
+    for (auto const &arc : m_mularcs) { 
       mcolor_t temp(un, arc.second, mcolor_t::Union);  
       un = temp;
     }
@@ -64,7 +60,7 @@ struct Mularcs {
 
   inline size_t number_unique_edge() const {
     std::unordered_set<vertex_t> processed; 
-    for (auto const & arc : mularcs) { 
+    for (auto const & arc : m_mularcs) { 
       processed.insert(arc.first);
     }
     return processed.size();
@@ -73,42 +69,33 @@ struct Mularcs {
 
   inline std::set<mcolor_t> get_multicolors() const { //FIXME: think about it.
     std::set<mcolor_t> answer; 
-    for (const auto & arc : mularcs) {
+    for (const auto & arc : m_mularcs) {
       answer.insert(arc.second);
     }		
     return answer;	 
   }
 
+  inline bool defined(vertex_t const & v) const { 
+    return (m_mularcs.count(v) != 0);
+  }
+ 
   inline size_t size() const {
-    return mularcs.size();  
+    return m_mularcs.size();  
   }
 
-  inline iter begin() { 
-    return mularcs.begin(); 
-  } 
+  DECLARE_ITERATOR( iter, m_mularcs, begin, begin )
+  DECLARE_ITERATOR( iter, m_mularcs, end, end )
+  DECLARE_CONST_ITERATOR( citer, m_mularcs, begin, cbegin )
+  DECLARE_CONST_ITERATOR( citer, m_mularcs, end, cend )
+  DECLARE_CONST_ITERATOR( citer, m_mularcs, cbegin, cbegin )
+  DECLARE_CONST_ITERATOR( citer, m_mularcs, cend, cend )
+  DECLARE_CONST_ITERATOR( criter, m_mularcs, crbegin, crbegin )
+  DECLARE_CONST_ITERATOR( criter, m_mularcs, crend, crend )
 
-  inline iter end() { 
-    return mularcs.end();
-  } 
-
-  inline citer cbegin() const { 
-    return mularcs.cbegin(); 
-  } 
-
-  inline citer cend() const { 
-    return mularcs.cend();
-  } 
-
-  inline criter crbegin() const { 
-    return mularcs.crbegin(); 
-  } 
-
-  inline criter crend() const { 
-    return mularcs.crend();
-  } 
 private: 
-  map_t mularcs;
+  map_t m_mularcs;
 }; 
 
 }
+
 #endif

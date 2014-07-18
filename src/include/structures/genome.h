@@ -30,22 +30,6 @@ struct Chromosome {
     m_is_circular = true; 
   } 
 
-  inline std::map<size_t, gene_t>::const_iterator begin() const { 
-    return main_chromosome.cbegin();	
-  } 
-
-  inline std::map<size_t, gene_t>::const_iterator end() const { 
-    return main_chromosome.cend();
-  } 
-
-  inline std::map<size_t, gene_t>::const_reverse_iterator crbegin() const { 
-    return main_chromosome.crbegin();	
-  } 
-
-  inline std::map<size_t, gene_t>::const_reverse_iterator crend() const { 
-    return main_chromosome.crend();
-  } 
-
   inline size_t size() const {
     return main_chromosome.size();      
   } 
@@ -53,6 +37,15 @@ struct Chromosome {
   inline bool is_circular() const { 
     return m_is_circular;
   }
+  
+  typedef std::map<size_t, gene_t>::const_iterator citer; 
+  typedef std::map<size_t, gene_t>::const_reverse_iterator criter;
+
+  DECLARE_CONST_ITERATOR( citer, main_chromosome, begin, cbegin ) 
+  DECLARE_CONST_ITERATOR( citer, main_chromosome, end, cend ) 
+  DECLARE_CONST_ITERATOR( criter, main_chromosome, crbegin, crbegin ) 
+  DECLARE_CONST_ITERATOR( criter, main_chromosome, crend, crend )
+
 private: 
   bool m_is_circular; 
   std::map<size_t, gene_t> main_chromosome;
@@ -103,13 +96,10 @@ struct Genome {
     return m_name;
   } 
 
-  inline std::map<std::string, chromosome_t>::const_iterator begin() const { 
-    return main_genome.cbegin();	
-  } 
-
-  inline std::map<std::string, chromosome_t>::const_iterator end() const { 
-    return main_genome.cend();
-  } 
+  typedef std::map<std::string, chromosome_t>::const_iterator citer; 
+  DECLARE_CONST_ITERATOR( citer, main_genome, begin, cbegin ) 
+  DECLARE_CONST_ITERATOR( citer, main_genome, end, cend ) 
+  
 private: 
   std::string m_name;
   std::map<std::string, chromosome_t> main_genome;

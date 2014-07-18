@@ -24,7 +24,7 @@ configure_file (
 set(ROOT_DIR "${CMAKE_SOURCE_DIR}/../")
 set (OPTIMIZE_FLAG " -std=c++11 -O2 -pipe -finline-functions -finline-limit=1000")
 set (WARNS "-Wall -Werror -Wextra -pedantic-errors")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${WARNS}") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG}") #" ${WARNS}") 
 
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${DEBUG}")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${DEBUG}")

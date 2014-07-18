@@ -34,9 +34,6 @@ void writer::Wstats::print_connected_components(const mbgraph_with_history<mcolo
   std::map<size_t, size_t> stx;
 
   for(const auto &component : classes) {
-    if (component.second.size() == 1) { 
-        std::cerr << *component.second.cbegin() << std::endl;
-    }
     ++stx[component.second.size()];
   }
 
@@ -132,19 +129,19 @@ void writer::Wstats::print_history_statistics(const mbgraph_with_history<mcolor_
   }
   ofstat << std::endl;
 
-  size_t c_td = 0; 
+  /*size_t c_td = 0; 
   std::map<mcolor_t, size_t> ntd;
   for(auto il = graph.begin_tandem_duplication_history(); il != graph.end_tandem_duplication_history(); ++il) {
     ++c_td;
     ++ntd[il->get_mcolor()];
-  }
+  }*/
 
-  ofstat << std::endl << "Total number of (reverse) tandem duplication: " << c_td << std::endl;
-  for(auto im = ntd.begin(); im != ntd.end(); ++im) {
+  //ofstat << std::endl << "Total number of (reverse) tandem duplication: " << c_td << std::endl;
+  /*for(auto im = ntd.begin(); im != ntd.end(); ++im) {
     ofstat << genome_match::mcolor_to_name(im->first) << "\t" << im->second << std::endl;
   }
 	
-  ofstat << std::endl;
+  ofstat << std::endl;*/
 }
 
 /*void writer::Wstats::print_postponed_deletion_statistics(const std::map<arc_t, Mcolor>& postponed_deletions) {

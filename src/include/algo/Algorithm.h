@@ -29,6 +29,8 @@ struct Algorithm {
   void convert_to_identity_bgraph();
   edges_t get_bad_edges() const; 
 
+  bool stage3();
+  
 private: 
   typedef typename graph_t::mcolor_t mcolor_t;
   typedef typename graph_t::mularcs_t mularcs_t; 
@@ -38,7 +40,7 @@ private:
   typedef typename graph_t::tandem_duplication_t tandem_duplication_t;
 
   //Stage 1: process insertion/deletion events. Balanced graph.
-  bool stage3();
+  //bool stage3();
 	
   //Stage 2: Simple paths  
   bool stage1(); 
@@ -60,6 +62,7 @@ private:
   utility::equivalence<vertex_t> split_on_components(std::map<vertex_t, std::set<arc_t> >& EC, std::map<vertex_t, std::set<arc_t> >& EI, mcolor_t const & Q);
   bool stage5_1(); 
   bool stage5_2();
+  bool stage5_3();
 
   //Stage 5: Clone approach
   bool stage7();
@@ -98,7 +101,8 @@ private:
   std::map<std::pair<vertex_t, mcolor_t>, vertex_t> mother_verteces;
  
   std::set<edge_t> clone_edges; 
-  std::set<std::set<mcolor_t> > disjoint_subset_colors;  //FIXME
+  std::unordered_set<vertex_t> pseudo_infinity_verteces;
+  //std::set<std::set<mcolor_t> > disjoint_subset_colors;  //FIXME
 
   writer::Wstats write_stats;
   writer::Wdots<graph_t, ProblemInstance<mcolor_t> > write_dots;
@@ -176,6 +180,12 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
       isChanged = true;
     }
 
+    /*if (!isChanged) {
+      std::cerr << "Stage 5: Experement stage" << stage << std::endl;
+      isChanged = stage5_3();
+      saveInfoLambda(stage++);
+    }*/
+
     if (process_compl && !m_completion.empty() && !isChanged) {     
       //std::cerr << "Manual Completion Stage" << std::endl;
       for(auto il = m_completion.cbegin(); il != m_completion.cend(); ++il) {
@@ -246,7 +256,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
 
   write_dots.save_final_dot(*graph);
 
-  if (!graph->check_edge_with_pseudo_vertex()) { 
+  if (graph->is_identity() && !graph->check_edge_with_pseudo_vertex()) { 
     std::cerr << "We have problem with pseudo infnity vertex" << std::endl;
     std::cerr << "If you have indentity breakpoint graph after stages, please contact us." << std::endl;
     exit(1);
@@ -254,7 +264,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
 
   graph->change_history();
   size_t bad_postponed_deletions = check_postponed_deletions();
-  if (bad_postponed_deletions != 0) {
+  if (graph->is_identity() && bad_postponed_deletions != 0) {
     std::cerr << "We have problem with " << bad_postponed_deletions << " edges, corresponding postponed deletions." << std::endl;
     std::cerr << "If you have indentity breakpoint graph after stages, please contact us." << std::endl;
     exit(1);

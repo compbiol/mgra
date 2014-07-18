@@ -43,6 +43,7 @@ namespace fs = boost::filesystem;
 typedef std::string vertex_t;
 vertex_t const Infty = "oo"; 
 
+#include "property.h"
 #include "genome.h"
 #include "mcolor.h"
 #include "mularcs.h"

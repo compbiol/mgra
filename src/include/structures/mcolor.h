@@ -97,14 +97,6 @@ struct Mcolor {
     return size;
   } 
 
-  inline citer cbegin() const { 
-    return main_color.cbegin();
-  } 
-
-  inline citer cend() const { 
-    return main_color.cend();
-  } 
-
   bool operator > (Mcolor const & C) const { 
     return (main_color > C.main_color);
   } 
@@ -120,6 +112,11 @@ struct Mcolor {
   bool operator != (Mcolor const & C) const { 
     return (main_color != C.main_color); 
   }
+
+  DECLARE_CONST_ITERATOR( citer, main_color, begin, cbegin )
+  DECLARE_CONST_ITERATOR( citer, main_color, end, cend )
+  DECLARE_CONST_ITERATOR( citer, main_color, cbegin, cbegin )
+  DECLARE_CONST_ITERATOR( citer, main_color, cend, cend )
 
 private:
   void set_difference(Mcolor const & first, Mcolor const & second) {
@@ -205,6 +202,7 @@ private:
 private: 
   map_t main_color;
 };
+
 } 
 
 #endif  /* end of include guard: MCOLOR_H_ */

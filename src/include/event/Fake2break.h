@@ -8,12 +8,17 @@ struct FakeTwoBreak : public event::Event {
   typedef structure::Mularcs<mcolor_t> mularcs_t; 
   typedef std::pair<vertex_t, mcolor_t> color_arc_t;
 
-  FakeTwoBreak(const arc_t& central, const mularcs_t& fs, const edge_t& mother)
+  FakeTwoBreak(arc_t const & central, mularcs_t const & fs, edge_t const & mother, bool with_pseudo_vertex)
   : fathers(fs)
   , central_edge(central)
   , mother_arc(mother) 
+  , m_with_pseudo_vertex(with_pseudo_vertex)
   {
   } 
+
+  inline bool is_have_pseudo_vertex() const {
+    return m_with_pseudo_vertex;
+  }
 
   inline arc_t get_central_arc() const { 
     return central_edge;
@@ -34,6 +39,7 @@ private:
   mularcs_t fathers; 
   arc_t central_edge; 
   color_arc_t mother_arc;
+  bool m_with_pseudo_vertex;
 };
 
 }

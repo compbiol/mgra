@@ -66,8 +66,6 @@ struct equivalence {
   template<class eclass_t>
   std::map<Item, eclass_t, Cmp> get_eclasses();
 
-  std::map<Item, std::set<Item>, Cmp> get_eclasses1();
-
 private: 
   map_t container; 
 };
@@ -83,15 +81,6 @@ size_t utility::equivalence<Item, Cmp>::classes() {
     } 
   } 
   return count;
-}
-
-template<class Item, class Cmp>
-std::map<Item, std::set<Item>, Cmp> utility::equivalence<Item, Cmp>::get_eclasses1() {
-  std::map<Item, std::set<Item>, Cmp> classes;
-  for(auto const & item : container) { 
-    classes[operator[](item.first)].insert(item.first); 
-  } 
-  return classes;
 }
 
 template<class Item, class Cmp>

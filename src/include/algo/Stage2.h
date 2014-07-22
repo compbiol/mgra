@@ -67,6 +67,10 @@ bool Algorithm<graph_t>::is_mobility_edge(vertex_t const & x, vertex_t const & y
   
   bool mobilQ = false;
 
+  if ((x == Infty || y == Infty) && is_mobile_irregular_edge) { 
+    return true;
+  }
+
   if (x != Infty) /*{
     mobilQ = canformQoo;
   } else*/ {
@@ -147,13 +151,8 @@ bool Algorithm<graph_t>::stage22() {
           continue;
         } 
  
-        if ((pseudo_infinity_verteces.count(x) != 0 && y == Infty) 
-          || (pseudo_infinity_verteces.count(y) != 0 && x == Infty)) {
-          continue;
-        } 
-
         if (!is_mobility_edge(x, y)) { 
-          const auto filter_Lambda = [&] (vertex_t const & s, mularcs_t const & mul, std::unordered_set<vertex_t>& mobiles, std::unordered_set<vertex_t>& non_mobiles) -> void {
+          auto const filter_Lambda = [&] (vertex_t const & s, mularcs_t const & mul, std::unordered_set<vertex_t>& mobiles, std::unordered_set<vertex_t>& non_mobiles) -> void {
             for (auto arc = mul.cbegin(); arc != mul.cend(); ++arc) { 
               if (this->is_mobility_edge(s, arc->second, arc->first)) { 
                 mobiles.insert(arc->first); 
@@ -189,11 +188,12 @@ bool Algorithm<graph_t>::stage22() {
 		              //std::cerr << x << " " << arc.first << " " << y << " " << v << " " << genome_match::mcolor_to_name(arc.second) << std::endl;
                   if (y == Infty) {
                     graph->apply(twobreak_t(x, arc.first, Infty, Infty, arc.second));
+                    ++number_rear;
                   } else {                 
                     graph->apply(twobreak_t(x, arc.first, y, v, arc.second));
-                  } 
-                    found = true;
                     ++number_rear;
+                  } 
+                  found = true;
                 } 
               }  
             } 

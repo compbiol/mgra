@@ -185,7 +185,8 @@ mbgraph_with_colors<mcolor_type>::mbgraph_with_colors(std::vector<MBGraph::genom
 
   vec_T_consistent_colors = nodes_color;
   if (!cfg.get_target().empty()) { 
-    vec_T_consistent_colors.insert(remove_color);
+    remove_color = cfg.get_target();
+    //vec_T_consistent_colors.insert(remove_color);
     vec_T_consistent_colors.erase(cfg.get_target());
   } 
 
@@ -269,7 +270,7 @@ structure::Mularcs<mcolor_type> mbgraph_with_colors<mcolor_type>::get_adjacent_m
 
   mularcs_t output;
   for (size_t i = 0; i < count_local_graphs(); ++i) {
-    auto iters = local_graph[i].equal_range(u);
+    auto iters = m_local_graphs[i].equal_range(u);
     for (auto it = iters.first; it != iters.second; ++it) { 
       output.insert(it->second, i); 
     }
@@ -287,12 +288,12 @@ structure::Mularcs<mcolor_type> mbgraph_with_colors<mcolor_type>::get_adjacent_m
     for(auto const & arc : output) {
       if ((!with_bad_edge || (with_bad_edge && !not_mobile_edges.defined(u, arc.first))) 
 	   && !is_T_consistent_color(arc.second) && arc.second.size() < count_local_graphs()) {
-    	auto const & colors = split_color(arc.second);
-	for(auto const & color : colors) {
-	   split.insert(arc.first, color); 
-	}
+        auto const & colors = split_color(arc.second);
+        for(auto const & color : colors) {  
+          split.insert(arc.first, color); 
+        }
       } else { 
-	split.insert(arc.first, arc.second); 
+        split.insert(arc.first, arc.second); 
       }
     }
     return split; 

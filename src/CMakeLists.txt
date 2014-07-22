@@ -85,7 +85,7 @@ endif()
 
 set(CPACK_NSIS_MODIFY_PATH "ON")
 set(CPACK_SOURCE_IGNORE_FILES "\\\\.git.*;/build/.+;${CPACK_SOURCE_IGNORE_FILES};")
-set(CPACK_RESOURCE_FILE_LICENSE "${ROOT_DIR}/COPYING")
+#set(CPACK_RESOURCE_FILE_LICENSE "${ROOT_DIR}/COPYING")
 set(CPACK_PACKAGE_NAME "MGRA")
 set(CPACK_PACKAGE_VENDOR "George Washington University")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MGRA is a tool used for reconstruction genomes and transformation history")

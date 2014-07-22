@@ -287,7 +287,7 @@ bool Algorithm<graph_t>::stage5_2() {
 	      if (!v.empty() && mularcs_x.defined(v)) { 
 		//std::cerr << "Stage 5_2: " << x << " - " << y << "\tX\t" << v << " - " << z << std::endl;
                 graph->apply(twobreak_t(x, y, v, z, Q));
-		++number_rear;
+				++number_rear;
                 next = true;
 	      }
 	    }

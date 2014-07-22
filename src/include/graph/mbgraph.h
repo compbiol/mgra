@@ -8,7 +8,7 @@ struct MBGraph {
   typedef std::string orf_t;
 
   explicit MBGraph(std::vector<genome_t> const & genomes) 
-  : local_graph(genomes.size()) 
+  : m_local_graphs(genomes.size()) 
   { 
     std::unordered_set<orf_t> blocks;
 
@@ -42,21 +42,21 @@ struct MBGraph {
 
   //FIXME IF WE RECONSTRUCT ANCESTORS WITH DUPLICATION EQUAL RANGE
   inline vertex_t get_adjecent_vertex(size_t index, vertex_t const & first) const {  
-    assert(index < local_graph.size() && (local_graph[index].count(first) != 0));
-    return local_graph[index].find(first)->second;
+    assert(index < m_local_graphs.size() && (m_local_graphs[index].count(first) != 0));
+    return m_local_graphs[index].find(first)->second;
   }    
 
   inline bool is_exist_edge(size_t index, vertex_t const & first) const { 
-    assert(index < local_graph.size());
-    auto edge = local_graph[index].find(first);
-    if (edge != local_graph[index].end() && edge->second != Infty)  {
+    assert(index < m_local_graphs.size());
+    auto edge = m_local_graphs[index].find(first);
+    if (edge != m_local_graphs[index].end() && edge->second != Infty)  {
     	return true;
     }
     return false; 
   }
  
   inline bool is_identity() { 
-    for(auto it = local_graph.cbegin(); it != local_graph.cend() - 1; ++it) { 
+    for(auto it = m_local_graphs.cbegin(); it != m_local_graphs.cend() - 1; ++it) { 
       if (*it != *(it + 1)) {
         return false;
       }
@@ -65,8 +65,8 @@ struct MBGraph {
   }
 
   inline partgraph_t const & get_partgraph(size_t index) const { 
-    assert(index < local_graph.size());
-    return local_graph[index];
+    assert(index < m_local_graphs.size());
+    return m_local_graphs[index];
   } 
 
   inline size_t size() const { 
@@ -74,26 +74,26 @@ struct MBGraph {
   }
  
   inline size_t count_local_graphs() const { 
-    return local_graph.size();
+    return m_local_graphs.size();
   } 
 
-  inline std::set<vertex_t>::const_iterator begin() const { 
-    return vertex_set.cbegin();
-  } 
-	
-  inline std::set<vertex_t>::const_iterator end() const { 
-    return vertex_set.cend();
-  }
-	
+  typedef std::set<vertex_t>::const_iterator citer;
+  DECLARE_CONST_ITERATOR( citer, vertex_set, begin, cbegin )  
+  DECLARE_CONST_ITERATOR( citer, vertex_set, end, cend )
+  DECLARE_CONST_ITERATOR( citer, vertex_set, cbegin, cbegin )  
+  DECLARE_CONST_ITERATOR( citer, vertex_set, cend, cend )
+  
 protected: 
   inline void add_edge(size_t index, vertex_t const & first, vertex_t const & second) { 
-    assert(index < local_graph.size());
-    local_graph[index].insert(first, second);
+    assert(index < m_local_graphs.size());
+    assert(first != Infty || second != Infty);
+    m_local_graphs[index].insert(first, second);
   }
 
   inline void erase_edge(size_t index, vertex_t const & first, vertex_t const & second) {
-    assert(index < local_graph.size());
-    return local_graph[index].erase(first, second);
+    assert(index < m_local_graphs.size());
+    assert(first != Infty || second != Infty);
+    return m_local_graphs[index].erase(first, second);
   } 
 
 private:
@@ -109,15 +109,15 @@ private:
     for (auto const & chromosome : genome) {
       vertex_t current_vertex = rearLambda(chromosome.second.begin()->second);
       for (auto gene = (++chromosome.second.begin()); gene != chromosome.second.end(); ++gene) { 
-        local_graph[index].insert(current_vertex, frontLambda(gene->second));	
+        m_local_graphs[index].insert(current_vertex, frontLambda(gene->second));	
         current_vertex = rearLambda(gene->second);
       }
 
       if (chromosome.second.is_circular()) {
-      	local_graph[index].insert(frontLambda(chromosome.second.begin()->second), rearLambda((--chromosome.second.end())->second)); 
+      	m_local_graphs[index].insert(frontLambda(chromosome.second.begin()->second), rearLambda((--chromosome.second.end())->second)); 
       } else { 
-      	local_graph[index].insert(frontLambda(chromosome.second.begin()->second), Infty);
-      	local_graph[index].insert(rearLambda((--chromosome.second.end())->second), Infty); 
+      	m_local_graphs[index].insert(frontLambda(chromosome.second.begin()->second), Infty);
+      	m_local_graphs[index].insert(rearLambda((--chromosome.second.end())->second), Infty); 
       }
     }
   }
@@ -125,7 +125,7 @@ private:
 protected:
   std::set<vertex_t> vertex_set; //set of vertice
   std::unordered_map<vertex_t, vertex_t> obverse_edges; //obverse relation 
-  std::vector<partgraph_t> local_graph; //local graphs of each color 
+  std::vector<partgraph_t> m_local_graphs; //local graphs of each color 
 };	
 
 #endif

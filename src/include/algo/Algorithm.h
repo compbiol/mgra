@@ -12,6 +12,7 @@ struct Algorithm {
   Algorithm(std::shared_ptr<graph_t> const & gr, ProblemInstance<typename graph_t::mcolor_t> const & cfg) 
   : graph(gr) 
   , canformQoo(true)
+  , is_mobile_irregular_edge(true)
   , rounds(cfg.get_max_number_of_split())
   , max_size_component(cfg.get_size_component_in_brutforce())
   , stages(cfg.get_stages())
@@ -90,6 +91,7 @@ private:
   std::shared_ptr<graph_t> graph; 
 
   bool canformQoo;  // safe choice, at later stages may change to false
+  bool is_mobile_irregular_edge; 
   size_t const rounds;
   size_t const max_size_component; 
   size_t const stages;
@@ -149,29 +151,31 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
       graph->update_number_of_splits(i);
     
       if ((stages >= 2) && !isChanged) {
-        std::cerr << "Stage: 2 Good path " << stage << std::endl;
-
-        isChanged = stage1();	
+        if (!isChanged) {
+          std::cerr << "Stage: 2 Good path " << stage << std::endl;
+          isChanged = stage1(); 
+          saveInfoLambda(stage++);
+        }
  
         if (!isChanged) {
           std::cerr << "Stage: 2 Non-mobile edges " << stage << std::endl;
           isChanged = stage22();
+          saveInfoLambda(stage++);
         }
-
-        saveInfoLambda(stage++);
       }
 
-      if ((stages >= 3) && !isChanged) { // STAGE 4, somewhat unreliable
+      if ((stages >= 4) && !isChanged) { // STAGE 4, somewhat unreliable
         std::cerr << "Stage: 3 Split on components " << stage << std::endl;
         isChanged = stage5_1(); // cut the graph into connected components
         saveInfoLambda(stage++); 
       }
 
-      if ((stages >= 4) && !isChanged) {
+      if ((stages >= 3) && !isChanged) {
         std::cerr << "Stage: 4 Clone approach " << stage << std::endl;
         isChanged = stage7();
         saveInfoLambda(stage++);
       }
+
     } 
 
     if (canformQoo && !isChanged) { 
@@ -180,6 +184,13 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
       isChanged = true;
     }
 
+    if (is_mobile_irregular_edge && !isChanged) { 
+      std::cerr << "Change is process irregular edge " << std::endl;
+      canformQoo = true; // more flexible
+      is_mobile_irregular_edge = false; //more flexible 
+      isChanged = true;
+    } 
+    
     /*if (!isChanged) {
       std::cerr << "Stage 5: Experement stage" << stage << std::endl;
       isChanged = stage5_3();
@@ -194,8 +205,10 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
 
       process_compl = false;
       isChanged = true;
-    }
+    }  
 
+    saveInfoLambda(stage++);
+    
     if ((max_size_component != 0) && !isChanged) {
       std::cerr << "Brute force stage: " << std::endl;
       graph->update_number_of_splits(3);
@@ -256,11 +269,11 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
 
   write_dots.save_final_dot(*graph);
 
-  if (graph->is_identity() && !graph->check_edge_with_pseudo_vertex()) { 
+  /*if (graph->is_identity() && !graph->check_edge_with_pseudo_vertex()) { 
     std::cerr << "We have problem with pseudo infnity vertex" << std::endl;
     std::cerr << "If you have indentity breakpoint graph after stages, please contact us." << std::endl;
     exit(1);
-  }
+  }*/
 
   graph->change_history();
   size_t bad_postponed_deletions = check_postponed_deletions();

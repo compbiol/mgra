@@ -241,33 +241,34 @@ int main(int argc, char* argv[]) {
   main_algo.init_writers(out_path_directory, colorscheme, "stage", debug);
   main_algo.convert_to_identity_bgraph(); 
 
-  std::shared_ptr<graph_t> new_graph(new graph_t(genomes, cfg)); 
-  Algorithm<graph_t> alg(new_graph, cfg);
-  alg.stage3(); 
-  writer::Wdots<graph_t, ProblemInstance<mcolor_t> > write_dots(cfg);
-  write_dots.init(out_path_directory, colorscheme, "stage", true);
-  //write_dots.save_dot(*new_graph, cfg, 100);
-
-  /*for (auto br = graph->cbegin_2break_history(); br != graph->cend_2break_history(); ++br) {
-    std::cerr << br->get_arc(0).first << " " << br->get_arc(0).second << " " 
-  << br->get_arc(1).first << " " << br->get_arc(1).second << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
-      
-    if (br->get_arc(0).first == "1035h" && br->get_arc(0).second == Infty && br->get_arc(1).first == "176h" && br->get_arc(1).second == Infty) { 
-      mcolor_t color = new_graph->get_adjacent_multiedges("1035h").get_multicolor(Infty);      
-      std::cerr << genome_match::mcolor_to_name(color) << std::endl;
-      color = new_graph->get_adjacent_multiedges("176h").get_multicolor(Infty);      
-      std::cerr << genome_match::mcolor_to_name(color) << std::endl;
-      write_dots.save_dot(*new_graph, 100);
-      //break; 
-    } 
-    new_graph->apply(*br);
-  }*/
-
   if (cfg.get_target().empty() && !graph->is_identity()) {
     std::clog << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; 
     return 1;
   } 
   
+  std::shared_ptr<graph_t> new_graph(new graph_t(genomes, cfg)); 
+  Algorithm<graph_t> alg(new_graph, cfg);
+  alg.stage3(); 
+  //writer::Wdots<graph_t, ProblemInstance<mcolor_t> > write_dots(cfg);
+  //write_dots.init(out_path_directory, colorscheme, "stage", true);
+  //write_dots.save_dot(*new_graph, cfg, 100);
+
+  for (auto br = graph->cbegin_2break_history(); br != graph->cend_2break_history(); ++br) {
+    std::cerr << br->get_arc(0).first << " " << br->get_arc(0).second << " " 
+  << br->get_arc(1).first << " " << br->get_arc(1).second << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
+      
+    /*if (br->get_arc(0).first == "599t" && br->get_arc(0).second == "206h" && br->get_arc(1).first == "593t" && br->get_arc(1).second == "333h") { 
+      mcolor_t color = new_graph->get_adjacent_multiedges("599t").get_multicolor("206h");      
+      std::cerr << genome_match::mcolor_to_name(color) << std::endl;
+      color = new_graph->get_adjacent_multiedges("593t").get_multicolor("333h");      
+      std::cerr << genome_match::mcolor_to_name(color) << std::endl;
+      write_dots.save_dot(*new_graph, 100);
+      //break; 
+    } */
+
+    new_graph->apply(*br);
+  }
+
   auto bad_edges = main_algo.get_bad_edges();
 
   std::clog << "Start reconstruct genomes." << std::endl;

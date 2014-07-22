@@ -16,7 +16,7 @@ bool Algorithm<graph_t>::stage3() {
       auto const & indel_color = mularcs.union_multicolors(); 
       auto const & bar_indel_color = graph->get_complement_color(indel_color);
       assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
-      graph->apply(insertion_t(a1, a2, bar_indel_color, false));
+      graph->apply(insertion_t(a1, a2, bar_indel_color));
       ++number_indel_event;
 
       auto set_split_indel = graph->split_color(indel_color); 

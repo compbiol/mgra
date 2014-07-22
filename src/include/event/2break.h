@@ -14,15 +14,15 @@ struct TwoBreak : public event::Event {
   TwoBreak() { 
   } 
   	
-  TwoBreak(arc_t const & a1, arc_t const & a2, mcolor_t const & Q)
+  TwoBreak(arc_t const & a1, arc_t const & a2, mcolor_t const & multicolor)
   : m_arcs({a1, a2}) 
-  , m_multicolor(Q) 
+  , m_multicolor(multicolor) 
   {
   }
 
-  TwoBreak(vertex_t const & x1, vertex_t const & y1, vertex_t const & x2, vertex_t const & y2, mcolor_t const & Q)
+  TwoBreak(vertex_t const & x1, vertex_t const & y1, vertex_t const & x2, vertex_t const & y2, mcolor_t const & multicolor)
   : m_arcs({arc_t(x1, y1), arc_t(x2, y2)})
-  , m_multicolor(Q) 
+  , m_multicolor(multicolor) 
   {
   }
  
@@ -65,7 +65,7 @@ struct TwoBreak : public event::Event {
   } 
 
   void apply_single(partgraph_t& local_graph) const;
-  
+
   DECLARE_CONST_ITERATOR( citer, m_multicolor, begin, cbegin )  
   DECLARE_CONST_ITERATOR( citer, m_multicolor, end, cend )
   DECLARE_CONST_ITERATOR( citer, m_multicolor, cbegin, cbegin )  

@@ -152,7 +152,7 @@ std::list<event::TwoBreak<structure::Mcolor> > Decircularizeter<graph_t>::decirc
 				*/
 	    
 				for(int j = 0; j < 2; ++j) {    
-				    if (t.get_arc(j) == std::make_pair(jt->get_arc(0).first, jt->get_arc(1).first)) { 
+				    if (t.get_arc(j) == std::make_pair(jt->get_vertex(0), jt->get_vertex(2))) { 
 						usearc = true;
 		    
 						p2 = t.get_arc(j);
@@ -160,7 +160,7 @@ std::list<event::TwoBreak<structure::Mcolor> > Decircularizeter<graph_t>::decirc
 			    
 						p1 = jt->get_arc(0);
 						q1 = jt->get_arc(1);
-				    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(1).first, jt->get_arc(0).first)) {
+				    } else if (t.get_arc(j) == std::make_pair(jt->get_vertex(2), jt->get_vertex(0))) {
 						usearc = true;
 			    
 						p2 = t.get_arc(j);
@@ -168,22 +168,22 @@ std::list<event::TwoBreak<structure::Mcolor> > Decircularizeter<graph_t>::decirc
 			    
 						p1 = jt->get_arc(1);
 						q1 = jt->get_arc(0);
-				    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(0).second, jt->get_arc(1).second)) {
+				    } else if (t.get_arc(j) == std::make_pair(jt->get_vertex(1), jt->get_vertex(3))) {
 						usearc = true;
 			    
 						p2 = t.get_arc(j);
 						q2 = t.get_arc(1 - j);
 			    
-						p1 = std::make_pair(jt->get_arc(0).second, jt->get_arc(0).first);
-						q1 = std::make_pair(jt->get_arc(1).second, jt->get_arc(1).first);
-				    } else if (t.get_arc(j) == std::make_pair(jt->get_arc(1).second, jt->get_arc(0).second)) {
+						p1 = std::make_pair(jt->get_vertex(1), jt->get_vertex(0));
+						q1 = std::make_pair(jt->get_vertex(3), jt->get_vertex(2));
+				    } else if (t.get_arc(j) == std::make_pair(jt->get_vertex(3), jt->get_vertex(1))) {
 						usearc = true;
 			    
 						p2 = t.get_arc(j);
 						q2 = t.get_arc(1 - j);
 			    
-						p1 = std::make_pair(jt->get_arc(1).second, jt->get_arc(1).first);
-						q1 = std::make_pair(jt->get_arc(0).second, jt->get_arc(0).first);
+						p1 = std::make_pair(jt->get_vertex(3), jt->get_vertex(2));
+						q1 = std::make_pair(jt->get_vertex(1), jt->get_vertex(0));
 				    }
 
 				    if (usearc) { 

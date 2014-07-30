@@ -31,19 +31,12 @@ struct Mularcs {
     for (auto const & arc : m_mularcs) {
       if (arc.second == color) { 
         v = arc.first;
+        break;
       }
     }
     return v;   
   } 
   
-  inline mcolor_t get_multicolor(vertex_t const & v) const { //FIXME: MAYBE OPTIONAL
-    if (m_mularcs.count(v) != 0) { 
-      return m_mularcs.find(v)->second; 
-    } else { 
-      return mcolor_t();
-    } 
-  } 
-
   inline std::pair<citer, citer> equal_range(vertex_t const & v) const {
     return m_mularcs.equal_range(v);
   } 
@@ -56,25 +49,7 @@ struct Mularcs {
     }
     return un;
   }
-
-
-  inline size_t number_unique_edge() const {
-    std::unordered_set<vertex_t> processed; 
-    for (auto const & arc : m_mularcs) { 
-      processed.insert(arc.first);
-    }
-    return processed.size();
-  } 
  
-
-  inline std::set<mcolor_t> get_multicolors() const { //FIXME: think about it.
-    std::set<mcolor_t> answer; 
-    for (const auto & arc : m_mularcs) {
-      answer.insert(arc.second);
-    }		
-    return answer;	 
-  }
-
   inline bool defined(vertex_t const & v) const { 
     return (m_mularcs.count(v) != 0);
   }

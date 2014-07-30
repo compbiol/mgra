@@ -20,21 +20,11 @@ struct FakeTwoBreak : public event::Event {
     return m_with_pseudo_vertex;
   }
 
-  inline arc_t get_central_arc() const { 
-    return central_edge;
-  } 
+  DECLARE_GETTER( arc_t, central_edge, central_arc )
+  DECLARE_GETTER( mularcs_t, fathers, end_edges )
+  DECLARE_GETTER( color_arc_t, mother_arc, mother_edge )
+  DECLARE_GETTER( mcolor_t, mother_arc.second, mcolor )
 
-  inline mcolor_t get_union_mcolor() const { 
-    return mother_arc.second; 
-  } 
-
-  inline mularcs_t get_end_edges() const { 
-    return fathers; 
-  } 
-
-  inline color_arc_t get_mother_edge() const { 
-    return mother_arc; 
-  }
 private: 
   mularcs_t fathers; 
   arc_t central_edge; 

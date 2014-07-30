@@ -5,7 +5,7 @@
 
 template<class graph_t>
 struct RecoveredGenomes {
-  typedef typename graph_t::mcolor_t mcolor_t;
+  typedef typename graph_t::mcolor_type mcolor_t;
   typedef typename graph_t::twobreak_t twobreak_t; 
   typedef typename graph_t::transform_t transform_t;
  
@@ -28,6 +28,8 @@ struct RecoveredGenomes {
   }
 
 private: 
+  bool are_adjacent_branches(mcolor_t const & A, mcolor_t const & B) const; 
+
   genome_t get_genome(size_t index);
   chromosome_t get_chromosome(size_t index, vertex_t const & x, std::unordered_set<vertex_t>& chromosome_set);
 
@@ -40,13 +42,45 @@ private:
 };
 
 template<class graph_t>
+bool RecoveredGenomes<graph_t>::are_adjacent_branches(mcolor_t const & mcolor_a, mcolor_t const & mcolor_b) const { 
+  if (!graph.is_T_consistent_color(mcolor_a) || !graph.is_T_consistent_color(mcolor_b)) { 
+    return false;
+  } 
+
+  mcolor_t color1; 
+  mcolor_t color2;
+  
+  if (mcolor_a.size() >= mcolor_b.size()) {
+    color1 = mcolor_a;
+    color2 = mcolor_b;
+  } else {
+    color1 = mcolor_b;
+    color2 = mcolor_a;
+  }
+  
+  mcolor_t diff_color(color1, color2, mcolor_t::Difference);
+  
+  if (diff_color.size() == color1.size() - color2.size() && graph.is_T_consistent_color(diff_color)) {    
+    return true;
+  } 
+  
+  mcolor_t union_color(color1, color2, mcolor_t::Union); 
+  if (union_color.size() == color1.size() + color2.size() && graph.is_T_consistent_color(union_color)) {  
+    return true;
+  } 
+  
+  return false;
+}
+
+template<class graph_t>
 template<class pconf_t>
 RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & conf, edges_t const & b_edges)  
 : graph(gr)
 , bad_edges(b_edges)
 {
   if (!conf.get_target().empty()) { 
-    mcolor_t const & target = conf.get_target();
+    ;
+    /*mcolor_t const & target = conf.get_target();
     name_genomes.push_back(conf.mcolor_to_name(target));
     recovered_graphs.resize(1);
     for(auto const &x : graph) {
@@ -73,7 +107,7 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
       if (good && def == target.size() && y != Infty) {
         recovered_graphs[0].insert(x, y);
       }
-    }
+    }*/
   } else {
     recovered_transformation.resize(graph.count_vec_T_consitent_color());
 #ifndef VERSION1
@@ -109,7 +143,7 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
       for (auto const &it : T) {
         size_t j = 0; 
         for (auto jt = graph.cbegin_vec_T_consistent_color(); jt != graph.cend_vec_T_consistent_color(); ++jt, ++j) {
-          if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && graph.are_adjacent_branches(*im, *jt)) {
+          if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && are_adjacent_branches(*im, *jt)) {
             recovered_transformation[j].push_back(it);
           }
         }

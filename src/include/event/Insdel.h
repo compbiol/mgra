@@ -8,25 +8,26 @@ struct InsDel {
   typedef std::pair<vertex_t, vertex_t> arc_t;
   typedef typename mcolor_t::citer citer; 
 	
-  InsDel(arc_t const & edge, mcolor_t const & multicolor)
+  InsDel(arc_t const & edge, mcolor_t const & multicolor, bool is_insertion = true)
   : m_edge(edge) 
   , m_multicolor(multicolor) 
+  , m_is_insertion(is_insertion)
   {
   }
 
-  InsDel(vertex_t const & x1, vertex_t const & y1, mcolor_t const & multicolor)
+  InsDel(vertex_t const & x1, vertex_t const & y1, mcolor_t const & multicolor, bool is_insertion = true)
   : m_edge(arc_t(x1, y1)) 
   , m_multicolor(multicolor) 
+  , m_is_insertion(is_insertion)
   {
   }
-    
-  inline arc_t get_edge() const { 
-    return m_edge;
-  } 
 
-  inline mcolor_t get_mcolor() const { 
-    return m_multicolor; 
-  } 
+  bool is_insertion() const { 
+    return m_is_insertion;
+  }  
+    
+  DECLARE_GETTER( arc_t, m_edge, edge )
+  DECLARE_GETTER( mcolor_t, m_multicolor, mcolor )
 
   DECLARE_CONST_ITERATOR( citer, m_multicolor, begin, cbegin )  
   DECLARE_CONST_ITERATOR( citer, m_multicolor, end, cend )
@@ -36,6 +37,7 @@ struct InsDel {
 private: 
   arc_t m_edge; // (x1, y1)
   mcolor_t m_multicolor; 
+  bool m_is_insertion; 
 };
 
 }

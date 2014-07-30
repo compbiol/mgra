@@ -51,7 +51,6 @@ vertex_t const Infty = "oo";
 
 typedef utility::sym_multi_hashmap<vertex_t> edges_t;
 typedef utility::sym_multi_hashmap<vertex_t> partgraph_t;
-typedef std::list<vertex_t> path_t;
 typedef std::pair<vertex_t, vertex_t> arc_t;
 typedef std::pair<vertex_t, structure::Mcolor> edge_t; //FIXME CHECK on all
 

@@ -3,7 +3,6 @@
 
 #include "Event.h"
 
-
 namespace event { 
 
 template<class mcolor_t>
@@ -60,12 +59,10 @@ struct TwoBreak : public event::Event {
     assert(false);
   } 
 
-  inline mcolor_t get_mcolor() const { 
-    return m_multicolor; 
-  } 
-
   void apply_single(partgraph_t& local_graph) const;
 
+  DECLARE_GETTER( mcolor_t, m_multicolor, mcolor )
+  
   DECLARE_CONST_ITERATOR( citer, m_multicolor, begin, cbegin )  
   DECLARE_CONST_ITERATOR( citer, m_multicolor, end, cend )
   DECLARE_CONST_ITERATOR( citer, m_multicolor, cbegin, cbegin )  

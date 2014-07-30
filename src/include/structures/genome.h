@@ -26,17 +26,15 @@ struct Chromosome {
     main_chromosome.insert(std::make_pair(offset, gen));
   } 
 
-  inline void do_circular() { 
+  inline void set_circular() { 
     m_is_circular = true; 
-  } 
-
-  inline size_t size() const {
-    return main_chromosome.size();      
   } 
 
   inline bool is_circular() const { 
     return m_is_circular;
   }
+  
+  DECLARE_DELEGATE_CONST_METHOD(size_t, main_chromosome, size, size)
   
   typedef std::map<size_t, gene_t>::const_iterator citer; 
   typedef std::map<size_t, gene_t>::const_reverse_iterator criter;
@@ -77,7 +75,7 @@ struct Genome {
   } 
 	
   inline void registrate_circular_chr(std::string const & name) { 
-    main_genome[name].do_circular();
+    main_genome[name].set_circular();
   }  
 
   inline size_t size() const { 
@@ -88,14 +86,9 @@ struct Genome {
     return sz; 
   }
 
-  inline size_t count_chromosome() const { 
-    return main_genome.size();
-  } 
-
-  inline std::string const & get_name() const {  
-    return m_name;
-  } 
-
+  DECLARE_GETTER(std::string const &, m_name, name)
+  DECLARE_DELEGATE_CONST_METHOD(size_t, main_genome, count_chromosome, size)
+  
   typedef std::map<std::string, chromosome_t>::const_iterator citer; 
   DECLARE_CONST_ITERATOR( citer, main_genome, begin, cbegin ) 
   DECLARE_CONST_ITERATOR( citer, main_genome, end, cend ) 

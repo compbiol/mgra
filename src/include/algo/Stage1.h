@@ -1,25 +1,48 @@
-#ifndef STAGE1_H_
-#define STAGE1_H_
+#ifndef SIMPLE_PATH_STAGE_HPP
+#define SIMPLE_PATH_STAGE_HPP
 
 template<class graph_t>
-bool Algorithm<graph_t>::stage1() {
+struct Algorithm<graph_t>::ProcessSimplePath : public Algorithm<graph_t>::Stage { 
+  typedef std::list<vertex_t> path_t;
+  typedef typename graph_t::mcolor_type mcolor_t;
+  typedef typename graph_t::mularcs_t mularcs_t; 
+  typedef typename graph_t::twobreak_t twobreak_t;
+  
+
+  explicit ProcessSimplePath(std::shared_ptr<graph_t> const & graph)
+  : Stage(graph) 
+  {
+  }
+
+  bool do_action() override;
+  
+  std::string get_name() override { 
+    return "Process good and simple paths.";
+  }
+
+private:
+  size_t process_simple_path(path_t& path); 
+};
+
+template<class graph_t>
+bool Algorithm<graph_t>::ProcessSimplePath::do_action() { 
   bool isChanged = false; 
   size_t number_rear = 0; // number of rearrangements 
 
   do {
     number_rear = 0; 
-    for (auto const & v: *graph) {  
-      if (graph->is_simple_vertex(v)) { 
-      	path_t path({v});
-      	std::unordered_set<vertex_t> processed({v, Infty}); // we count oo as already processed
+    for (vertex_t const & v: *(this->graph)) {  
+      if (this->graph->is_simple_vertex(v)) { 
+        path_t path({v});
+        std::unordered_set<vertex_t> processed({v, Infty}); // we count oo as already processed
 
         auto const find_simple_path_lambda = [&] (vertex_t const & prev, vertex_t const & cur, bool is_next) -> vertex_t { 
           vertex_t previous = prev;
           vertex_t current = cur;
-          bool stop = true; 
+          bool is_continue = true; 
 
-          while (stop) {
-            stop = false; 
+          while (is_continue) {
+            is_continue = false; 
 
             if (is_next) { 
               path.push_front(current);
@@ -27,30 +50,31 @@ bool Algorithm<graph_t>::stage1() {
               path.push_back(current);
             } 
 
-            if (processed.find(current) == processed.end() && !graph->is_duplication_vertex(current)) {     
+            if (processed.find(current) == processed.end() && !this->graph->is_duplication_vertex(current)) {     
               processed.insert(current);
-              mularcs_t&& new_edges = graph->get_adjacent_multiedges(current);
-              auto const & previous_color = new_edges.get_multicolor(previous); 
+              mcolor_t previous_color = this->graph->get_edge_multicolor(current, previous); 
+              mularcs_t&& new_edges = this->graph->get_adjacent_multiedges(current);
               new_edges.erase(previous);
-    
-              if (new_edges.size() == 1 && graph->get_complement_color(previous_color) == new_edges.cbegin()->second
-             		  && !postponed_deletions.defined(current, new_edges.cbegin()->first)) {
-      	        mularcs_t const & edges = graph->get_adjacent_multiedges_with_info(current, false);
-                auto const count_Lambda = [&] (const vertex_t& v) -> bool {
+              mcolor_t next_color = new_edges.union_multicolors();
+      
+              if ((this->graph->degree_vertex(current) == 2) && this->graph->get_complement_color(previous_color) == next_color
+                  && !this->graph->is_postponed_deletion(current, new_edges.cbegin()->first)) {
+
+                auto const check_lambda = [&] (vertex_t const & v) -> bool {
                   bool flag = true; 
-                  auto const & colors = edges.equal_range(v);
-                  for (auto arc = colors.first; arc != colors.second && flag; ++arc) {
-                    flag = graph->is_vec_T_consistent_color(arc->second);
+                  std::set<mcolor_t> const & colors = this->graph->get_edge_multicolor_with_info(current, v, false); 
+                  for (auto color = colors.cbegin(); color != colors.cend() && flag; ++color) {
+                    flag = this->graph->is_vec_T_consistent_color(*color);
                   }     
                   return flag;
                 };
 
-                bool nedge = count_Lambda(new_edges.cbegin()->first); 
-                bool pedge = count_Lambda(previous);
+                bool nedge = check_lambda(new_edges.cbegin()->first); 
+                bool pedge = check_lambda(previous);
                 if (nedge || pedge) { 
                   previous = current;
-      	          current = new_edges.cbegin()->first; 
-      	          stop = true;
+                  current = new_edges.cbegin()->first; 
+                  is_continue = true;
                 }
               } 
             }
@@ -58,14 +82,14 @@ bool Algorithm<graph_t>::stage1() {
           return current;
         };
 
-        mularcs_t const & current = graph->get_adjacent_multiedges(v);
         //std::cerr << std::endl << "start " << v << std::endl; 
         //std::cerr << "go to " << current.cbegin()->first << genome_match::mcolor_to_name(current.cbegin()->second) << std::endl; 
+        mularcs_t const & current = this->graph->get_adjacent_multiedges(v);
         vertex_t const & last = find_simple_path_lambda(v, current.cbegin()->first, true);
         if (last != v) { 
           //std::cerr << "go to " << current.crbegin()->first << genome_match::mcolor_to_name(current.crbegin()->second) << std::endl; 
           find_simple_path_lambda(v, current.crbegin()->first, false);
-        }  		    
+        }         
 
         number_rear += process_simple_path(path);
       }
@@ -80,51 +104,47 @@ bool Algorithm<graph_t>::stage1() {
 } 
 
 template<class graph_t>
-size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
+size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) {
   size_t number_rear = 0;
 
   if (path.size() >= 4 || (path.size() == 3 && *path.begin() == *path.rbegin())) {
-#ifdef LOG_ENABLED
-    std::cerr << std::endl << "Processing a path of length " << path.size() - 1 << std::endl;
+    /*std::cerr << std::endl << "Processing a path of length " << path.size() - 1 << std::endl;
     std::cerr << "path:\t" << *path.begin();
     for(auto ip = ++path.begin(); ip != path.end(); ++ip) {
       std::cerr << " -- " << *ip;
     }
-    std::cerr << std::endl;
-#endif
-    auto const & edges = graph->get_adjacent_multiedges_with_info(*(++path.begin()), false);
-    auto const count_Lambda = [&] (vertex_t const & v) -> bool {
-      bool flag = true; 
-      auto const & colors = edges.equal_range(v);
-      for (auto arc = colors.first; arc != colors.second && flag; ++arc) {
-        flag = graph->is_vec_T_consistent_color(arc->second);
+    std::cerr << std::endl;*/
+    auto const count_lambda = [&] (vertex_t const & v) -> std::pair<size_t, bool> {
+      size_t vtc = 0;
+      bool tc = false;
+      std::set<mcolor_t> const & colors = this->graph->get_edge_multicolor_with_info(*(++path.begin()), v, false); 
+      for (mcolor_t const & color : colors) {
+        if (this->graph->is_vec_T_consistent_color(color)) { 
+          ++vtc;
+        } else { 
+          tc = true;
+        }
       }     
-      return flag;
+      return std::make_pair(vtc, tc);
     };
 
     mcolor_t process_color; 
-    bool pedge = count_Lambda(*path.begin());
-    bool nedge = count_Lambda(*(++++path.begin())); 
+    auto first_edge = count_lambda(*path.begin());
+    auto second_edge = count_lambda(*(++++path.begin())); 
     std::set<mcolor_t> process_colors;
 
-    if (pedge) { 
-      process_color = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
-      auto const & mul = graph->get_adjacent_multiedges_with_info(*(++path.begin()), false);
-      auto const & pair_colors = mul.equal_range(*path.begin());
-      for (auto col = pair_colors.first; col != pair_colors.second; ++col) {
- 	      process_colors.insert(col->second);     
-      } 
-    } else if (!pedge && nedge) { 
-      process_color = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*(++++path.begin()));
-      auto const & mul = graph->get_adjacent_multiedges_with_info(*(++path.begin()), false);
-      auto const & pair_colors = mul.equal_range(*(++++path.begin())); 
-      for (auto col = pair_colors.first; col != pair_colors.second; ++col) {
-       	process_colors.insert(col->second);
-      } 
+    if ((!first_edge.second && second_edge.second) 
+      || (!first_edge.second && first_edge.first == std::min(first_edge.first, second_edge.first))) { 
+      process_color = this->graph->get_edge_multicolor(*(++path.begin()), *path.begin());
+      process_colors = this->graph->get_edge_multicolor_with_info(*(++path.begin()), *path.begin(), false);
+    } else if ((first_edge.second && !second_edge.second)
+      || (!second_edge.second && second_edge.first== std::min(first_edge.first, second_edge.first))) { 
+      process_color = this->graph->get_edge_multicolor(*(++path.begin()), *(++++path.begin()));
+      process_colors = this->graph->get_edge_multicolor_with_info(*(++path.begin()), *(++++path.begin()), false);
     } 
     
     if ((path.size() % 2 != 0) && (*path.begin() != *path.rbegin())) {
-      if (process_color != graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin())) { 
+      if (process_color != this->graph->get_edge_multicolor(*(++path.begin()), *path.begin())) { 
         path.erase(path.begin());
       } else {
         path.erase(--path.end());
@@ -133,93 +153,75 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
 
     if (*path.begin() == *path.rbegin()) {
       if (path.size() % 2 == 0) {
-	if (process_color == graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin())) { 
-#ifdef LOG_ENABLED
-	  std::cerr << "... semi-cycle, fusion applied" << std::endl;
-#endif
-	  vertex_t const & self_v = *(path.begin());
-	  vertex_t const & x0 = *(++path.begin());
-	  vertex_t const & y0 = *(++path.rbegin());
+        if (process_color == this->graph->get_edge_multicolor(*(++path.begin()), *path.begin())) {
+          //std::cerr << "... semi-cycle, fusion applied" << std::endl;
+          vertex_t const & self_v = *(path.begin());
+          vertex_t const & x0 = *(++path.begin());
+          vertex_t const & y0 = *(++path.rbegin());
 
-	  mularcs_t const & mul = graph->get_adjacent_multiedges_with_info(x0, false);
-	  auto const & colors = mul.equal_range(self_v);
-	  for (auto it = colors.first; it != colors.second; ++it) { 
-	    graph->apply(twobreak_t(self_v, x0, self_v, y0, it->second));
-	    ++number_rear;
-	  } 
-	
-	  path.erase(--path.end());
-	  *path.begin() = y0;
-	} else {
-#ifdef LOG_ENABLED
-	  std::cerr << "... semi-cycle, fission applied" << std::endl;
-#endif
-	  vertex_t const & self_v = *(path.begin());
-	  vertex_t const & y0 = *(++path.rbegin());
-	  vertex_t const & y1 = *(++++path.rbegin());
+          std::set<mcolor_t> const & colors = this->graph->get_edge_multicolor_with_info(x0, self_v, false);
+          for (mcolor_t const & color : colors) {
+            this->graph->apply(twobreak_t(self_v, x0, self_v, y0, color));
+            ++number_rear;
+          }
 
-	  mularcs_t const & mul = graph->get_adjacent_multiedges_with_info(y0, false);
-	  auto const & pair = mul.equal_range(y1);
-	  for (auto it = pair.first; it != pair.second; ++it) { 
- 	    graph->apply(twobreak_t(y0, y1, self_v, self_v, it->second));
-	    ++number_rear;
-	  }
-        
-	  path.erase(--path.end());
-	  *path.rbegin() = self_v;
-	}
+          path.erase(--path.end());
+          *path.begin() = y0;
+        } else {
+          //std::cerr << "... semi-cycle, fission applied" << std::endl;
+          vertex_t const & self_v = *(path.begin());
+          vertex_t const & y0 = *(++path.rbegin());
+          vertex_t const & y1 = *(++++path.rbegin());
 
-	if (path.size() < 4) { 
-	  return number_rear;
-	}
-      } 
-#ifdef LOG_ENABLED
-      else { 
-	std::cerr << "... cycle" << std::endl;
+          std::set<mcolor_t> const & colors = this->graph->get_edge_multicolor_with_info(y0, y1, false);
+          for (mcolor_t const & color : colors) {
+            this->graph->apply(twobreak_t(y0, y1, self_v, self_v, color));
+            ++number_rear;
+          }
+
+          path.erase(--path.end());
+          *path.rbegin() = self_v;
+        }
+
+        if (path.size() < 4) { 
+          return number_rear;
+        }
+      } else { 
+        ;//std::cerr << "... cycle" << std::endl;
       }
-#endif 
     }
   
-    auto color = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
-    while (process_color != color) {
+    mcolor_t current_color = this->graph->get_edge_multicolor(*(++path.begin()), *path.begin());
+    while (process_color != current_color) {
       // multicolor of (z1,z2). N.B.: x2 is NOT oo
-#ifdef LOG_ENABLED
-      std::cerr << "... multicolors of first and second multiedges: ";
-#endif
+      //std::cerr << "... multicolors of first and second multiedges: ";
       if (*path.begin() == *path.rbegin()) {
-#ifdef LOG_ENABLED
-	std::cerr << "... rotating" << std::endl;
-#endif
-	path.push_back(*path.begin());
-	path.erase(path.begin());
+        //std::cerr << "... rotating" << std::endl;
+        path.push_back(*path.begin());  
+        path.erase(path.begin());
       } else {
-	if (*path.begin() == Infty && *path.rbegin() != Infty) {
-#ifdef LOG_ENABLED
-	  std::cerr << "... flipping" << std::endl;
-#endif
-	  for(auto ip = ++path.begin(); ip != path.end();) {
-	    path.push_front(*ip);
-	    path.erase(ip++);
-	  }
-	}
-	if (*path.rbegin() == Infty) {
-#ifdef LOG_ENABLED
-	  std::cerr << "... extending beyond oo" << std::endl;
-#endif
-	  path.push_back(Infty);
-	  path.erase(path.begin());
-	} else {
-#ifdef LOG_ENABLED
-	  std::cerr << "... truncating ??" << std::endl;
-#endif
-	  path.erase(path.begin());
-	  path.erase(--path.end());
-	  if (path.size() < 4) { 
-	    return number_rear;
-	  }
-	}
+        if (*path.begin() == Infty && *path.rbegin() != Infty) {
+          //std::cerr << "... flipping" << std::endl;
+          for(auto ip = ++path.begin(); ip != path.end();) {
+      	    path.push_front(*ip);
+      	    path.erase(ip++);
+      	  }
+        }
+
+        if (*path.rbegin() == Infty) {
+          //std::cerr << "... extending beyond oo" << std::endl;
+          path.push_back(Infty);
+          path.erase(path.begin());
+        } else {
+          //std::cerr << "... truncating ??" << std::endl;
+          path.erase(path.begin());
+          path.erase(--path.end());
+          if (path.size() < 4) { 
+            return number_rear;
+          }
+        }
       }
-      color = graph->get_adjacent_multiedges(*(++path.begin())).get_multicolor(*path.begin());
+      current_color = this->graph->get_edge_multicolor(*(++path.begin()), *path.begin());
     }
 
     // x1 -- x2 -- x3 -- ... -- x2k
@@ -232,8 +234,8 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
     auto z2 = z3++;
     
     while (z3 != path.end()) {
-      for (auto const & col : process_colors) {
-      	graph->apply(twobreak_t(*z0, *z1, *z3, *z2, col));
+      for (mcolor_t const & color : process_colors) {
+      	this->graph->apply(twobreak_t(*z0, *z1, *z3, *z2, color));
       	++number_rear;     
       } 
       z1 = z3++;
@@ -242,10 +244,9 @@ size_t Algorithm<graph_t>::process_simple_path(path_t& path) {
       }
     }
 
-#ifdef LOG_ENABLED
-    std::cerr << "... resolved with " << number_rear << " 2-breaks" << std::endl;
-#endif
+    //std::cerr << "... resolved with " << number_rear << " 2-breaks" << std::endl;
   }
+
   return number_rear;
 }
 

@@ -3,21 +3,18 @@
 
 #include "genome_match.h" //FIXME REMOVE LATER
 
-#include "graph/mbgraph_history.h"
+#include "graph/breakpoint_graph.hpp"
 #include "writer/Wstats.h"
 #include "writer/Wdots.h"
 
 template<class graph_t>
 struct Algorithm { 
-  Algorithm(std::shared_ptr<graph_t> const & gr, ProblemInstance<typename graph_t::mcolor_t> const & cfg) 
+  Algorithm(std::shared_ptr<graph_t> const & gr, ProblemInstance<typename graph_t::mcolor_type> const & cfg) 
   : graph(gr) 
-  , canformQoo(true)
-  , is_mobile_irregular_edge(true)
   , rounds(cfg.get_max_number_of_split())
   , max_size_component(cfg.get_size_component_in_brutforce())
   , stages(cfg.get_stages())
   , m_completion(cfg.get_completion())
-  , pseudo_infinity_vertex(0)
   , write_dots(cfg)
   {
   } 
@@ -28,83 +25,63 @@ struct Algorithm {
   }
 
   void convert_to_identity_bgraph();
-  edges_t get_bad_edges() const; 
-
-  bool stage3();
   
 private: 
-  typedef typename graph_t::mcolor_t mcolor_t;
+  typedef typename graph_t::mcolor_type mcolor_t;
   typedef typename graph_t::mularcs_t mularcs_t; 
   typedef typename graph_t::twobreak_t twobreak_t;
-  typedef typename graph_t::fake_twobreak_t fake_twobreak_t;        
-  typedef typename graph_t::insertion_t insertion_t;
-  typedef typename graph_t::tandem_duplication_t tandem_duplication_t;
+  
+  struct Stage {
+    explicit Stage(std::shared_ptr<graph_t> const & gr) 
+    : graph(gr)
+    {
+    }
 
-  //Stage 1: process insertion/deletion events. Balanced graph.
-  //bool stage3();
-	
-  //Stage 2: Simple paths  
-  bool stage1(); 
-  size_t process_simple_path(path_t& path);	
+    virtual bool do_action() = 0;
+    virtual std::string get_name() = 0;
+    virtual ~Stage() 
+    {
+    }
+  protected:
+    std::shared_ptr<graph_t> graph;
+  };
 
-  //Stage 3: process non-mobile edges
-  bool stage2();
+public:
+  struct Balance; 	
 
-  bool stage22();
-  bool is_mobility_edge(vertex_t const & x, vertex_t const & y) const;
-  bool is_mobility_edge(vertex_t const & x, mcolor_t const & color, vertex_t const & y) const;
-  size_t is_mobility_edge_score(vertex_t const & x, mcolor_t const & color, vertex_t const & y) const;
+private:
+  struct ProcessSimplePath;
+  
+  struct ProcessFairEdges; 
 
-  //Stage -: process tandem duplication events
-  bool stage4_td(); 
-  bool stage4_rtd(); 
+  struct ProcessClone;
 
-  //Stage 4: process components, 
-  utility::equivalence<vertex_t> split_on_components(std::map<vertex_t, std::set<arc_t> >& EC, std::map<vertex_t, std::set<arc_t> >& EI, mcolor_t const & Q);
-  bool stage5_1(); 
-  bool stage5_2();
-  bool stage5_3();
+  struct IncreaseNumberComponents;
 
-  //Stage 5: Clone approach
-  bool stage7();
-  bool stage71();
-        
-  //Stage 10: convert duplication to tandem duplication   
-  bool stage4_conv_to_td();
-
+  struct BruteForce;
+  
   //Stage 6: brutoforce stage
   bool stage6();
-  size_t calculate_cost(vertex_t const & y, mularcs_t const & mularcs_x, mularcs_t const & mulacrs_y); 
-
+  
   std::multimap<size_t, arc_t> create_minimal_matching(std::set<vertex_t> const & vertex_set); 
   std::multimap<size_t, arc_t> wrapper_create_minimal_matching(std::set<vertex_t> const & vertex_set);
 
   size_t take_edge_on_color(vertex_t const & x, mcolor_t const & color, vertex_t const & y);
-  size_t check_postponed_deletions() const;
-
-  //can incident multiedges of x form multicolor Q (current don't check T-consistent formation)
-  //if return false, then Q cannot be formed
-  //if true - who knows... 
-  bool canformQ(vertex_t const & current, mcolor_t  const & Q) const;
-
+  
+  /*EXPERIMENTAL STAGE OR EXISTS BUT NOT USED */
+  //Stage -: process tandem duplication events
+  bool stage5_4();
+  //bool stage71();
+  //stage5_3()    
+  //stage4_td(); 
+  
 private: 
   std::shared_ptr<graph_t> graph; 
 
-  bool canformQoo;  // safe choice, at later stages may change to false
-  bool is_mobile_irregular_edge; 
   size_t const rounds;
   size_t const max_size_component; 
   size_t const stages;
   std::list<twobreak_t> const m_completion;
-
-  size_t pseudo_infinity_vertex;
-  edges_t insertions;
-  edges_t postponed_deletions; 
-  std::map<std::pair<vertex_t, mcolor_t>, vertex_t> mother_verteces;
- 
-  std::set<edge_t> clone_edges; 
-  std::unordered_set<vertex_t> pseudo_infinity_verteces;
-  //std::set<std::set<mcolor_t> > disjoint_subset_colors;  //FIXME
 
   writer::Wstats write_stats;
   writer::Wdots<graph_t, ProblemInstance<mcolor_t> > write_dots;
@@ -117,6 +94,13 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
   bool isChanged = false;
   bool process_compl = true; 
 
+  std::vector<std::shared_ptr<Stage> > algorithm(5); 
+  algorithm[0] = std::shared_ptr<Stage>(new Balance(graph));
+  algorithm[1] = std::shared_ptr<Stage>(new ProcessSimplePath(graph));
+  algorithm[2] = std::shared_ptr<Stage>(new ProcessFairEdges(graph));
+  algorithm[3] = std::shared_ptr<Stage>(new ProcessClone(graph));
+  algorithm[4] = std::shared_ptr<Stage>(new IncreaseNumberComponents(graph));
+  
   auto const saveInfoLambda = [&](size_t st) -> void { 
     if ((print_dots.count(st) == 0) && !isChanged) {
       print_dots.insert(st);
@@ -129,71 +113,48 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
   saveInfoLambda(stage++);
   write_dots.write_legend_dot();
 
-#ifndef VERSION1
   if (stages >= 1) { 
-    std::cerr << "Stage: 1 (indel stage)" << std::endl; 
     graph->update_number_of_splits(rounds);  
-    stage3();
+    std::cerr << "Stage " << stage << ": " << algorithm[0]->get_name() << std::endl; 
+    isChanged = algorithm[0]->do_action();
     saveInfoLambda(stage++);
   }
-#endif
 
   isChanged = true;
   while(isChanged) {
     isChanged = false; 
-    stage = 2; 
+    stage = 2;
 
-#ifndef VERSION1
-    
     for (size_t i = 1; i <= rounds && !isChanged; ++i) {   
       std::cerr << "Rounds " << i << std::endl;
 
       graph->update_number_of_splits(i);
-    
-      if ((stages >= 2) && !isChanged) {
-        if (!isChanged) {
-          std::cerr << "Stage: 2 Good path " << stage << std::endl;
-          isChanged = stage1(); 
-          saveInfoLambda(stage++);
-        }
- 
-        if (!isChanged) {
-          std::cerr << "Stage: 2 Non-mobile edges " << stage << std::endl;
-          isChanged = stage22();
-          saveInfoLambda(stage++);
-        }
-      }
 
-      if ((stages >= 4) && !isChanged) { // STAGE 4, somewhat unreliable
-        std::cerr << "Stage: 3 Split on components " << stage << std::endl;
-        isChanged = stage5_1(); // cut the graph into connected components
-        saveInfoLambda(stage++); 
-      }
-
-      if ((stages >= 3) && !isChanged) {
-        std::cerr << "Stage: 4 Clone approach " << stage << std::endl;
-        isChanged = stage7();
+      for (size_t j = 1; j < 5 && !isChanged; ++j) {
+        std::cerr << "Stage " << stage << ": " << algorithm[j]->get_name() << std::endl;
+        write_dots.save_dot(*graph, 100);      
+        isChanged = algorithm[j]->do_action();
         saveInfoLambda(stage++);
-      }
-
+      } 
     } 
 
-    if (canformQoo && !isChanged) { 
+    if (graph->get_canformQoo() && !isChanged) { 
       std::cerr << "Change canformQoo "  << std::endl;
-      canformQoo = false; // more flexible
+      graph->set_canformQoo(false);
       isChanged = true;
     }
 
-    if (is_mobile_irregular_edge && !isChanged) { 
+    /*if (is_mobile_irregular_edge && !isChanged) { 
       std::cerr << "Change is process irregular edge " << std::endl;
       canformQoo = true; // more flexible
       is_mobile_irregular_edge = false; //more flexible 
       isChanged = true;
-    } 
+    } */
     
     /*if (!isChanged) {
       std::cerr << "Stage 5: Experement stage" << stage << std::endl;
-      isChanged = stage5_3();
+      graph->update_number_of_splits(3);
+      isChanged = stage5_4();
       saveInfoLambda(stage++);
     }*/
 
@@ -207,99 +168,18 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
       isChanged = true;
     }  
 
-    saveInfoLambda(stage++);
-    
     if ((max_size_component != 0) && !isChanged) {
       std::cerr << "Brute force stage: " << std::endl;
       graph->update_number_of_splits(3);
       isChanged = stage6();
       saveInfoLambda(stage++);
     }
-
-#else
-
-   stage = 2; 
-
-   graph->update_number_of_splits(1);
-    
-    if ((stages >= 1) && !isChanged) {
-      std::cerr << "Stage: 1" << std::endl;
-      isChanged = stage1();	
-      saveInfoLambda(stage++);
-    }
-
-    if ((stages >= 2) && !isChanged) {
-      std::cerr << "Stage: 2" << std::endl;
-      isChanged = stage2();
-      saveInfoLambda(stage++);
-    }
-
-    if ((stages >= 3) && !isChanged) { // STAGE 3, somewhat unreliable
-      std::cerr << "Stage: 3" << std::endl;
-      isChanged = stage5_1(); // cut the graph into connected components
-      
-      if (!isChanged) { 
-         isChanged = stage5_2(); // process 4-cycles
-      }  
-     
-      if (canformQoo && !isChanged) {
-        isChanged = true;
-        canformQoo = false; // more flexible
-      }    
-
-      saveInfoLambda(stage++);
-    }
-
-    if ((stages >= 4) && !isChanged) {
-      std::cerr << "Stage: 4" << std::endl;
-      graph->update_number_of_splits(3);
-      isChanged = stage2();
-      saveInfoLambda(stage++);
-    }
-
-    if (process_compl && !m_completion.empty() && !isChanged) {     
-      for(auto il = m_completion.cbegin(); il != m_completion.cend(); ++il) {
-        graph->apply(*il);
-      }
-      process_compl = false;
-      isChanged = true;
-    }
-#endif
   }	
-
+  
+  //graph->print();
+  graph->update_number_of_splits(3);
   write_dots.save_final_dot(*graph);
-
-  /*if (graph->is_identity() && !graph->check_edge_with_pseudo_vertex()) { 
-    std::cerr << "We have problem with pseudo infnity vertex" << std::endl;
-    std::cerr << "If you have indentity breakpoint graph after stages, please contact us." << std::endl;
-    exit(1);
-  }*/
-
-  graph->change_history();
-  size_t bad_postponed_deletions = check_postponed_deletions();
-  if (graph->is_identity() && bad_postponed_deletions != 0) {
-    std::cerr << "We have problem with " << bad_postponed_deletions << " edges, corresponding postponed deletions." << std::endl;
-    std::cerr << "If you have indentity breakpoint graph after stages, please contact us." << std::endl;
-    exit(1);
-  } 
-
-  write_stats.print_history_statistics(*graph, get_bad_edges());
 }          
-
-template<class graph_t>
-edges_t Algorithm<graph_t>::get_bad_edges() const { 
-  edges_t answer; 
-
-  for (auto const & edge: insertions) { 
-    answer.insert(edge.first, edge.second);
-  } 
-
-  for (auto const & edge: postponed_deletions) {
-    answer.insert(edge.first, edge.second);
-  }
-
-  return answer;
-} 
 
 #include "algo/Stage1.h" 
 #include "algo/Stage2.h"
@@ -308,5 +188,7 @@ edges_t Algorithm<graph_t>::get_bad_edges() const {
 #include "algo/Stage5.h"
 #include "algo/Stage6.h"
 #include "algo/Stage7.h"
+#include "algo/ExperemStages.h"
+
 
 #endif

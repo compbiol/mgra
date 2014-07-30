@@ -60,7 +60,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
   for(auto const & x : graph) { 
     mularcs_t const & Mx = graph.get_adjacent_multiedges(x);
 
-    if (Mx.number_unique_edge() == 1 && Mx.union_multicolors() == graph.get_complete_color()) { 
+    if (Mx.size() == 1 && Mx.union_multicolors() == graph.get_complete_color()) { 
       continue; // trivial cycle
     } 
 
@@ -71,27 +71,103 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
         continue; // already output
       }    
 
-      mcolor_t const & C = im->second;
-      bool vec_T_color = graph.is_vec_T_consistent_color(C);
-      for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
-	for (size_t i = 0; i < ic->second; ++i) { 
-	  /*************** output edge (x,y) **************** */
-	  dot << "\t\"" << x << "\"\t--\t\"";
-	  if (y == Infty) {
-	    if (ic == C.cbegin()) { 
-	      --infv;
-	    } 
-	    dot << infv << "\"\t[len=0.75,";
-	  } else { 
-	    dot << y << "\"\t[";
-	  } 
-	  if (vec_T_color) {
-	    dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
-	  } else {
-	    dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
-	  }
-	} 
-      }
+      if (graph.is_vec_T_consistent_color(im->second)) { 
+        mcolor_t const & C = im->second;
+        for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
+          for (size_t i = 0; i < ic->second; ++i) { 
+            /*************** output edge (x,y) **************** */
+            dot << "\t\"" << x << "\"\t--\t\"";
+            if (y == Infty) {
+              if (ic == C.cbegin()) { 
+                --infv;
+              } 
+              dot << infv << "\"\t[len=0.75,";
+            } else { 
+              dot << y << "\"\t[";
+            } 
+
+            dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
+          }
+        }
+      } else { 
+        auto split_colors = graph.split_color(im->second);
+        if (split_colors.size() == 2) { 
+          auto const & C = *split_colors.begin();
+          for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
+            for (size_t i = 0; i < ic->second; ++i) { 
+              /*************** output edge (x,y) **************** */
+              dot << "\t\"" << x << "\"\t--\t\"";
+              if (y == Infty) {
+                if (ic == C.cbegin()) { 
+                  --infv;
+                } 
+                dot << infv << "\"\t[len=0.75,";
+              } else { 
+                dot << y << "\"\t[";
+              }
+
+              dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", style=dashed];" << std::endl;   
+            }
+          } 
+
+          
+          auto const & C1 = *(++split_colors.cbegin());
+          for(auto ic = C1.cbegin(); ic != C1.cend(); ++ic) {
+            for (size_t i = 0; i < ic->second; ++i) { 
+              /*************** output edge (x,y) **************** */
+              dot << "\t\"" << x << "\"\t--\t\"";
+              if (y == Infty) {
+                if (ic == C1.cbegin()) { 
+                  --infv;
+                } 
+                dot << infv << "\"\t[len=0.75,";
+              } else { 
+                dot << y << "\"\t[";
+              }
+
+              dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;   
+            }
+          }           
+        } else { 
+          mcolor_t const & C = im->second;
+          for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
+            for (size_t i = 0; i < ic->second; ++i) { 
+              /*************** output edge (x,y) **************** */
+              dot << "\t\"" << x << "\"\t--\t\"";
+              if (y == Infty) {
+                if (ic == C.cbegin()) { 
+                  --infv;
+                } 
+                dot << infv << "\"\t[len=0.75,";
+              } else { 
+                dot << y << "\"\t[";
+              } 
+
+              dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;  
+            } 
+          }
+        }
+      } 
+      /*for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
+        for (size_t i = 0; i < ic->second; ++i) { 
+          /*************** output edge (x,y) **************** 
+          dot << "\t\"" << x << "\"\t--\t\"";
+          if (y == Infty) {
+            if (ic == C.cbegin()) { 
+              --infv;
+            } 
+            dot << infv << "\"\t[len=0.75,";
+          } else { 
+            dot << y << "\"\t[";
+          } 
+
+          if (vec_T_color) {
+            dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
+          } else {
+            dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
+          }
+        } 
+      }*/
     }
     mark.insert(x);
   }
@@ -107,7 +183,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
 template<class graph_t, class conf_t>
 void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, size_t stage) { 
   std::string dotname = m_graphname + std::to_string(stage);
-  std::map<vertex_t, std::set<vertex_t> > components = graph.split_on_components(); 
+  std::map<vertex_t, std::set<vertex_t> > components = graph.split_on_components().get_eclasses(); 
   
   size_t i = 0; 
   for(auto it = components.cbegin(); it != components.cend(); ++it) { 

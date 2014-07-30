@@ -24,9 +24,9 @@ bool Algorithm<graph_t>::stage4_td() {
 	    is_go = false; 
 	    for (auto is = current_mularcs.cbegin(); (is != current_mularcs.cend()) && !is_go; ++is) {
 	      if (is->first != Infty && is->second.how_much_includes(color) >= 2) {
-		is_go = true; 
-		duplication.push_back(std::make_pair(current, is->first));
-		current = is->first; 
+      		is_go = true; 
+      		duplication.push_back(std::make_pair(current, is->first));
+      		current = is->first; 
 	      }
 	    }
  	  }

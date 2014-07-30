@@ -26,7 +26,7 @@
 std::vector<std::string> genome_match::number_to_genome;
 genome_match::gen2num genome_match::genome_to_number;   
 
-void tell_root_besides(mbgraph_with_history<structure::Mcolor> const & graph) {
+void tell_root_besides(BreakpointGraph<structure::Mcolor> const & graph) {
   // tell where the root resides
   std::clog << "the root resides in between:";
 
@@ -198,7 +198,7 @@ int main(int argc, char* argv[]) {
   /*Reading problem configuration and genomes*/
   typedef structure::Genome genome_t;
   typedef structure::Mcolor mcolor_t;
-  typedef mbgraph_with_history<mcolor_t> graph_t; 
+  typedef BreakpointGraph<mcolor_t> graph_t;
 
   ProblemInstance<mcolor_t> cfg(reader::read_cfg_file(in_path_cfg), colorscheme.empty()); 
 
@@ -226,6 +226,7 @@ int main(int argc, char* argv[]) {
     std::clog << "Genome " << cfg.get_priority_name(i) << " blocks: " << genomes[i].size() << std::endl;
   } 
 
+
   std::shared_ptr<graph_t> graph(new graph_t(genomes, cfg)); 
 
   std::clog << "vecT-consistent colors: " << graph->count_vec_T_consitent_color() << std::endl;
@@ -246,31 +247,38 @@ int main(int argc, char* argv[]) {
     return 1;
   } 
   
+  bool consist = graph->check_consistency_graph();
+  if (cfg.get_target().empty() && !consist) {
+    std::cerr << "We have problem with edges, corresponding postponed deletions." << std::endl;
+    std::cerr << "If you have indentity breakpoint graph after stages, please contact us." << std::endl;
+    return 1;
+  } 
+
+  //FIXME: go to mgra cpp
+  std::cerr << "start to change history " << std::endl;
+
+  graph->change_history();
+  
+  writer::Wstats write_stats;
+  write_stats.open(out_path_directory, "history_stats.txt");
+  write_stats.print_history_statistics(*graph);
+
+  //std::shared_ptr<graph_t> new_graph(new graph_t(genomes, cfg)); 
   std::shared_ptr<graph_t> new_graph(new graph_t(genomes, cfg)); 
-  Algorithm<graph_t> alg(new_graph, cfg);
-  alg.stage3(); 
+  Algorithm<graph_t> alg(new_graph, cfg);  
+  Algorithm<graph_t>::Balance balance(new_graph);
+  balance.do_action();
   //writer::Wdots<graph_t, ProblemInstance<mcolor_t> > write_dots(cfg);
   //write_dots.init(out_path_directory, colorscheme, "stage", true);
   //write_dots.save_dot(*new_graph, cfg, 100);
 
   for (auto br = graph->cbegin_2break_history(); br != graph->cend_2break_history(); ++br) {
-    std::cerr << br->get_arc(0).first << " " << br->get_arc(0).second << " " 
-  << br->get_arc(1).first << " " << br->get_arc(1).second << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
-      
-    /*if (br->get_arc(0).first == "599t" && br->get_arc(0).second == "206h" && br->get_arc(1).first == "593t" && br->get_arc(1).second == "333h") { 
-      mcolor_t color = new_graph->get_adjacent_multiedges("599t").get_multicolor("206h");      
-      std::cerr << genome_match::mcolor_to_name(color) << std::endl;
-      color = new_graph->get_adjacent_multiedges("593t").get_multicolor("333h");      
-      std::cerr << genome_match::mcolor_to_name(color) << std::endl;
-      write_dots.save_dot(*new_graph, 100);
-      //break; 
-    } */
-
+    //std::cerr << br->get_vertex(0) << " " << br->get_vertex(1) << " " << br->get_vertex(2) 
+    //<< " " << br->get_vertex(3) << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
     new_graph->apply(*br);
   }
 
-  auto bad_edges = main_algo.get_bad_edges();
-
+  auto bad_edges = graph->get_bad_edges();
   std::clog << "Start reconstruct genomes." << std::endl;
   RecoveredGenomes<graph_t> reductant(*graph, cfg, bad_edges); 
 
@@ -282,10 +290,10 @@ int main(int argc, char* argv[]) {
       std::string namefile = cfg.mcolor_to_name(*im) + ".trs";
       fs::ofstream tr(out_path_directory / "transformations" / namefile);
       for(auto const & event : recover_transformation[i]) {
-        vertex_t const & p = event.get_arc(0).first;
-        vertex_t const & q = event.get_arc(0).second;
-        vertex_t const & x = event.get_arc(1).first;
-        vertex_t const & y = event.get_arc(1).second;
+        vertex_t const & p = event.get_vertex(0);
+        vertex_t const & q = event.get_vertex(1);
+        vertex_t const & x = event.get_vertex(2);
+        vertex_t const & y = event.get_vertex(3);
       
       	tr << "(" << p << ", " << q << ") x (" << x << ", " << y << ") " << genome_match::mcolor_to_name(event.get_mcolor()); 
 

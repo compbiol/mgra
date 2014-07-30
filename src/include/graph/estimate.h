@@ -35,10 +35,10 @@ struct Statistics {
   std::vector<arc_t> get_complete_edge() const {
     std::vector<arc_t> edges; 
     std::unordered_set<vertex_t> processed; 
-    for(auto const & x : *graph) {
+    for(vertex_t const & x : *graph) {
       if (processed.count(x) == 0) {
         mularcs_t const & mularcs = graph->get_adjacent_multiedges(x);
-        if (graph->get_adjacent_multiedges(x).number_unique_edge() == 1 && mularcs.union_multicolors() == graph->get_complete_color()) { 
+        if (mularcs.size() == 1 && mularcs.union_multicolors() == graph->get_complete_color()) { 
 	        edges.push_back(arc_t(x, mularcs.cbegin()->first));
           processed.insert({x, mularcs.cbegin()->first});
         } 
@@ -171,30 +171,30 @@ void Statistics<graph_t>::count_cycles() {
       processed.insert(current);
 
       if (!graph->is_simple_vertex(current)) {
-	break;
+        break;
       }
 
       mularcs_t const & mularcs_y = graph->get_adjacent_multiedges(current);
 
       if (prev == mularcs_y.cbegin()->first) {
-	prev = current;
-	current = mularcs_y.crbegin()->first;
+        prev = current;
+        current = mularcs_y.crbegin()->first;
       } else {
-	prev = current;
-	current = mularcs_y.cbegin()->first;
+        prev = current;
+        current = mularcs_y.cbegin()->first;
       }
 
       while (current == Infty) {
-	if (special_Q.empty()) {
-	  special_Q = mularcs_y.get_multicolor(current);
-	  prev = x;
-	  current = mularcs_x.cbegin()->first; 
-	} else {
-	  if (special_Q != mularcs_y.get_multicolor(current)) {
-	    ++special_cycle_count[std::min(special_Q, mularcs_y.get_multicolor(current))]; 	  
-	  }
-	  break;
-	}
+      	if (special_Q.empty()) {
+      	  special_Q = graph->get_edge_multicolor(prev, current); 
+      	  prev = x;
+      	  current = mularcs_x.cbegin()->first; 
+      	} else {
+      	  if (special_Q != graph->get_edge_multicolor(prev, current)) {
+      	    ++special_cycle_count[std::min(special_Q, graph->get_edge_multicolor(prev, current))]; 	  
+      	  }
+      	  break;
+      	}
       }
     } while ((current != Infty) && (processed.count(current) == 0));
 	
@@ -233,8 +233,18 @@ void Statistics<graph_t>::build_complete_stat() {
     answer[8] = calc_value(good_irrer_multiedges_count, current); 
     answer[9] = calc_value(good_irrer_multiedges_count, im->first);
 
-    mcolor_t const & first = graph->get_min_complement_color(current); 
-    mcolor_t const & second = graph->get_complement_color(first);
+    mcolor_t const & complement = graph->get_complement_color(current);
+
+    mcolor_t first; 
+    mcolor_t second;
+    if (current < complement) { 
+      first = current;
+      second = complement;
+    } else { 
+      first = complement; 
+      second = current;
+    }
+
     stat_answer.insert(std::make_pair(answer[0] + answer[1], std::make_pair(std::make_pair(first, second), answer)));
   }
 
@@ -312,8 +322,17 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() {
       os << "\\bf ";
     } 
 
-    mcolor_t const & first = graph->get_min_complement_color(current); 
-    mcolor_t const & second = graph->get_complement_color(first);
+    mcolor_t const & complement = graph->get_complement_color(current);
+
+    mcolor_t first; 
+    mcolor_t second;
+    if (current < complement) { 
+      first = current;
+      second = complement;
+    } else { 
+      first = complement; 
+      second = current;
+    }
 
     os <<  genome_match::mcolor_to_name(first) << " + "  <<  genome_match::mcolor_to_name(second) << "} & " 
       // multiedges

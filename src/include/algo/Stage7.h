@@ -1,231 +1,92 @@
-#ifndef STAGE7_H_
-#define STAGE7_H_
+#ifndef CLONE_STAGE_HPP
+#define CLONE_STAGE_HPP
 
 template<class graph_t>
-bool Algorithm<graph_t>::stage7() {
+struct Algorithm<graph_t>::ProcessClone : public Algorithm<graph_t>::Stage {
+  typedef Stage base;
+  typedef typename graph_t::mcolor_type mcolor_t;
+  typedef typename graph_t::mularcs_t mularcs_t; 
+  typedef typename graph_t::clone_t clone_t;        
+  
+  explicit ProcessClone(std::shared_ptr<graph_t> const & graph)
+  : Stage(graph) 
+  , pseudo_infinity_vertex(0)
+  {
+  }
+  
+  bool do_action() override;
+  
+  std::string get_name() override { 
+    return "Process clone situation.";
+  }
+
+private: 
+  size_t pseudo_infinity_vertex;  
+};
+
+template<class graph_t>
+bool Algorithm<graph_t>::ProcessClone::do_action() { 
+  bool isChanged = false;
   size_t number_rear = 0; // number of rearrangements 
 
-  for (auto const & x: *graph) {  
-    mularcs_t const & mularcs = graph->get_adjacent_multiedges(x);
-      
-    bool found = false;
-    for(auto im = mularcs.cbegin(); (im != mularcs.cend()) && !found; ++im) {
-      vertex_t const & y = im->first; // Q == im->second - color of central edge
+  do {
+    number_rear = 0; 
 
-      if (y == Infty) {
-        continue;
-      }
-
-      if (!is_mobility_edge(x, y)) {  
-        mularcs_t && mularcs_y = graph->get_adjacent_multiedges_with_info(y);
-        mularcs_y.erase(x);
-        mularcs_t && mularcs_x = graph->get_adjacent_multiedges_with_info(x);
-        mularcs_x.erase(y);
-
-        if (mularcs_y.size() == 1) { 
-          vertex_t const & mother = mularcs_y.begin()->first;        
-          if (mother == Infty) { 
-            size_t count_infty = 0; 
-            bool sligshot = (mularcs_y.size() == 1) && (mularcs_x.size() != 1) && graph->is_vec_T_consistent_color(mularcs_y.cbegin()->second);
-            for (auto arc = mularcs_x.cbegin(); arc != (mularcs_x.cend()) && sligshot; ++arc) {
-              sligshot = graph->is_vec_T_consistent_color(arc->second);
-              /*if (arc->first == Infty) { 
-                ++count_infty;
-              }*/
-            }
-            sligshot = sligshot && (mularcs_y.cbegin()->second == mularcs_x.union_multicolors());
+    for (vertex_t const & x: *this->graph) {  
+      mularcs_t const & mularcs = this->graph->get_adjacent_multiedges(x);
         
-            if (sligshot) { 
-              //if (count_infty == 0) { 
-                std::string pseudo_vertex = "o" + std::to_string(pseudo_infinity_vertex) + "o";
-                //std::cerr << "We have fake 2-break " << x << " " << y << " " << Infty << " " << pseudo_vertex << " " << genome_match::mcolor_to_name(mularcs_y.cbegin()->second) << std::endl;
-                ++pseudo_infinity_vertex;
-                pseudo_infinity_verteces.insert(pseudo_vertex);
-                fake_twobreak_t ft(arc_t(x, y), mularcs_x, edge_t(pseudo_vertex, mularcs_y.cbegin()->second), true);  
-                graph->apply(ft);
-                assert(graph->get_adjacent_multiedges(x).number_unique_edge() == 1 && graph->get_adjacent_multiedges(x).union_multicolors() == graph->get_complete_color()); 
-                ++number_rear;
-              /*} else if (count_infty == 1 && mularcs_x.size() == 2) { 
-                if (mularcs_x.cbegin()->first == Infty) { 
-                  twobreak_t br2(x, (++mularcs_x.cbegin())->first, Infty, Infty, (++mularcs_x.cbegin())->second);  
-                  graph->apply(br2);
-                  ++number_rear;
-                } else if ((++mularcs_x.cbegin())->first == Infty) {
-                  twobreak_t br2(x, mularcs_x.cbegin()->first, Infty, Infty, mularcs_x.cbegin()->second);  
-                  graph->apply(br2);
-                  ++number_rear;
-                }
-                twobreak_t br21(y, mother, x, Infty, mularcs_y.cbegin()->second);  
-                graph->apply(br21);
-                ++number_rear;
-              }*/
-            }
-          } else {
-            bool sligshot = (mularcs_y.size() == 1) && (mularcs_x.size() != 1) 
-            && graph->is_vec_T_consistent_color(mularcs_y.cbegin()->second);
-            for (auto arc = mularcs_x.cbegin(); arc != mularcs_x.cend() && sligshot; ++arc) {
-              sligshot = graph->is_vec_T_consistent_color(arc->second);
-            } 
-            sligshot = sligshot && mularcs_y.cbegin()->second == mularcs_x.union_multicolors();
-            if (sligshot) { 
-              fake_twobreak_t ft(arc_t(x, y), mularcs_x, *(mularcs_y.cbegin()), false);  
-              //std::cerr << "Create clone " << x << " " << y << " " /*<< *(mularcs_y.cbegin())*/ << std::endl;
-              graph->apply(ft);
+      bool found = false;
+      for(auto im = mularcs.cbegin(); (im != mularcs.cend()) && !found; ++im) {
+        vertex_t const & y = im->first; // Q == im->second - color of central edge
+
+        if (y == Infty) {
+          continue;
+        }
+
+        if (!this->graph->is_mobility_edge(x, y)) {  
+          mularcs_t && mularcs_y = this->graph->get_adjacent_multiedges_with_info(y);
+          mularcs_y.erase(x);
+          mularcs_t && mularcs_x = this->graph->get_adjacent_multiedges_with_info(x);
+          mularcs_x.erase(y);
+
+          bool sligshot = (mularcs_y.size() == 1) && (mularcs_x.size() != 1) && this->graph->is_vec_T_consistent_color(mularcs_y.cbegin()->second);
+          for (auto arc = mularcs_x.cbegin(); arc != (mularcs_x.cend()) && sligshot; ++arc) {
+            sligshot = this->graph->is_vec_T_consistent_color(arc->second);
+          }
+          sligshot = sligshot && (mularcs_y.cbegin()->second == mularcs_x.union_multicolors());
+
+          if (sligshot) { 
+            vertex_t const & mother = mularcs_y.begin()->first;        
+
+            if (mother == Infty) { 
+              std::string pseudo_vertex = "o" + std::to_string(pseudo_infinity_vertex) + "o";
+              //std::cerr << "We have fake 2-break " << x << " " << y << " " << Infty << " " << pseudo_vertex << " " << genome_match::mcolor_to_name(mularcs_y.cbegin()->second) << std::endl;
+              ++pseudo_infinity_vertex;
+              clone_t clone(arc_t(x, y), mularcs_x, edge_t(pseudo_vertex, mularcs_y.cbegin()->second), true);  
+              this->graph->apply(clone);
               ++number_rear;
-              assert(graph->get_adjacent_multiedges(x).number_unique_edge() == 1 && graph->get_adjacent_multiedges(x).union_multicolors() == graph->get_complete_color()); 
-            }
-          }  
-        } 
-      }
-    } 
-  }  
-
-  return (number_rear != 0);
-}
-
-template<class graph_t>
-bool Algorithm<graph_t>::stage71() {
-  size_t number_rear = 0; // number of rearrangements 
-
-  for (auto const & x: *graph) {  
-    mularcs_t const & mularcs = graph->get_adjacent_multiedges(x);
-      
-    bool found = false;
-    for(auto im = mularcs.cbegin(); (im != mularcs.cend()) && !found; ++im) {
-      vertex_t const & y = im->first; // Q == im->second - color of central edge
-    
-      if (y == Infty) {
-        continue;
-      }
-
-      if (!graph->is_T_consistent_color(im->second)) { 
-      mularcs_t mularcs_x = graph->get_adjacent_multiedges(x);
-      mularcs_x.erase(y);
-
-      mularcs_t mularcs_y = graph->get_adjacent_multiedges(y);
-      mularcs_y.erase(x);
- 
-      size_t count = 0;
-      bool is_y = false;
-      std::pair<vertex_t, mcolor_t> pr;
-      for (auto left = mularcs_x.begin(); left != mularcs_x.end(); ++left) {  
-        if (!graph->is_T_consistent_color(left->second)) {
-          pr = *left;
-          ++count;
-        } 
-      }   	
-
-      for (auto right = mularcs_y.begin(); right != mularcs_y.end(); ++right) { 
-        if (!graph->is_T_consistent_color(right->second)) {
-          pr = *right;
-          is_y = true;
-          ++count;
-        } 
-      }
-
-      if (count == 1 && pr.first != Infty) { 
-        size_t count_f = graph->split_color(im->second).size(); 
-        size_t count_s = graph->split_color(pr.second).size();
-
-        if (count_f == count_s) { 
-	  //std::cerr << "Situation " << x << " " << y << " " << pr.first << std::endl;
-          mularcs_t mul_x = graph->get_adjacent_multiedges_with_info(x, false);
-          mularcs_t mul_y = graph->get_adjacent_multiedges_with_info(y, false);
-          size_t count_central = calculate_cost(y, mul_x, mul_y);
-          size_t count_another = 0;
-          if (is_y) { 
-            auto temp = graph->get_adjacent_multiedges_with_info(pr.first, false);
-            temp.erase(y);
-            count_another = calculate_cost(pr.first, graph->get_adjacent_multiedges_with_info(y, false), temp);
-	  } else {
-            auto temp = graph->get_adjacent_multiedges_with_info(pr.first, false);
-            temp.erase(y);
-	    count_another = calculate_cost(pr.first, graph->get_adjacent_multiedges_with_info(x, false), temp);
-          } 
-
-          if (count_central == std::min(count_central, count_another)) {
-            mul_x.erase(y);
-            std::vector<twobreak_t> history;  
-            bool good = true;
-            for (auto const &arc : mul_x) {
-	      vertex_t const & v = mularcs_y.get_vertex(arc.second); 
-              if (!v.empty() && graph->is_vec_T_consistent_color(arc.second)) {
-                  //std::cerr << "Two_break " << x << " " << arc.first << " " << y << " " << v << " " << genome_match::mcolor_to_name(arc.second) << std::endl;                
-                  history.push_back(twobreak_t(x, arc.first, y, v, arc.second));
-        	  //graph->apply(twobreak_t(x, arc.first, y, v, arc.second));
-              } else { 
-                good = false;
-              }  
-            }
-
-            if (good) { 
               found = true;
-              for (auto const & break2 : history) {
-                graph->apply(break2);
-                ++number_rear; 
-              }
-            } 
+              assert(this->graph->get_edge_multicolor(x, y) == this->graph->get_complete_color()); 
+            } else {
+              //std::cerr << "Create clone " << x << " " << y << " " << mother << " " 
+              //  << genome_match::mcolor_to_name(mularcs_y.cbegin()->second) << std::endl;
+              clone_t clone(arc_t(x, y), mularcs_x, *(mularcs_y.cbegin()), false);  
+              this->graph->apply(clone);
+              ++number_rear;
+              found = true;
+              assert(this->graph->get_edge_multicolor(x, y) == this->graph->get_complete_color()); 
+            }  
           } 
         }
-      }
-      }  
+      } 
+    }  
+
+    if (number_rear != 0) { 
+      isChanged = true;
     } 
-  }
- 
-  return (number_rear != 0);
-}
- 
-/*template<class graph_t>
-bool Algorithm<graph_t>::stage7() {
-  size_t number_rear = 0; // number of rearrangements 
-
-  for (auto const & x: *graph) {  
-    mularcs_t const & mularcs = graph->get_adjacent_multiedges(x);
-      
-    bool found = false;
-    for(auto im = mularcs.cbegin(); (im != mularcs.cend()) && !found; ++im) {
-      vertex_t const & y = im->first; // Q == im->second - color of central edge
-      if (y == Infty) {
-        continue;
-      }
- 
-      mularcs_t&& mularcs_x = graph->get_adjacent_multiedges_with_info(x);
-      mularcs_x.erase(y);
-      mularcs_t&& mularcs_y = graph->get_adjacent_multiedges_with_info(y);
-      mularcs_y.erase(x);
-
-      bool sligshot = true;
-      for (auto arc = mularcs_x.cbegin(); arc != mularcs_x.cend() && sligshot; ++arc) {
-        sligshot = graph->is_vec_T_consistent_color(arc->second);
-      } 
-       
-      if (sligshot && (mularcs_y.size() == 1) && 
-           graph->is_vec_T_consistent_color(mularcs_y.cbegin()->second) && (mularcs_y.cbegin()->first != Infty) &&  
-           mularcs_y.cbegin()->second == mularcs_x.union_multicolors()
-	   && graph->is_T_consistent_color(im->second)) {
-         size_t count = 0;
-         vertex_t const & mother = mularcs_y.cbegin()->first; 
-         mularcs_t&& end_s = graph->get_adjacent_multiedges_with_info(mother);
-         end_s.erase(y);
-         for (auto arc = end_s.cbegin(); arc != end_s.cend(); ++arc) { 
-           if (!mularcs_x.defined(arc->first) && canformQ(arc->first, mularcs_y.cbegin()->second)) {
-             ++count;
-           }
-         }  
-           
-         if (count == 0) { 
-           fake_twobreak_t ft(arc_t(x, y), mularcs_x, *(mularcs_y.cbegin()));  
-           //std::cerr << mother << " " << y << std::endl;
-           graph->apply(ft);
-           graph->registrate_real_edge(mother, mularcs_y.cbegin()->second, arc_t(x, y));
-           assert(graph->get_adjacent_multiedges(x).number_unique_edge() == 1 && graph->get_adjacent_multiedges(x).union_multicolors() == graph->get_complete_color()); 
-           ++number_rear;
-         } 
-      } 
-    }
-  }  
+  } while (number_rear > 0); 
 
   return (number_rear != 0);
-}*/ 
+} 
 
 #endif

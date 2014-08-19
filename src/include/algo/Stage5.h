@@ -24,7 +24,7 @@ private:
 	void get_specific_edges(bridges_t & regular_edges, bridges_t & irregular_edges, 
     equiv_t & connected_components, mcolor_t const & color) const {
     for(vertex_t const &x : *this->graph) {
-      mularcs_t const & mularcs = this->graph->get_adjacent_multiedges(x); 
+      mularcs_t const & mularcs = this->graph->get_all_adjacent_multiedges(x); 
       for(auto const & arc : mularcs) {    
         if (arc.second == color) { 
           if (arc.first == Infty) { 
@@ -61,6 +61,57 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 		    		continue;
 		  		}	
 
+          if (bridges.second.size() == 4 && irregular_edges[bridges.first].size() == 0) {
+            arc_t const & p = *(bridges.second.begin());
+            arc_t const & q = *(++bridges.second.begin());
+
+            arc_t const & r = *(++(++bridges.second.begin()));
+            arc_t const & t = *(++(++(++bridges.second.begin())));
+
+            if (processed.count(connected_components[p.second]) == 0 && processed.count(connected_components[q.second]) == 0
+                && processed.count(connected_components[r.second]) == 0 && processed.count(connected_components[t.second]) == 0) { 
+              typedef std::pair<twobreak_t, twobreak_t> twobreaks_t;
+
+              twobreaks_t possible_twobreaks1(twobreak_t(p, q, *vtc), twobreak_t(r, t, *vtc));              
+              twobreaks_t possible_twobreaks2(twobreak_t(p, r, *vtc), twobreak_t(q, t, *vtc));
+              twobreaks_t possible_twobreaks3(twobreak_t(p, t, *vtc), twobreak_t(q, r, *vtc));
+              
+              auto const & calc_score = [&] (twobreaks_t const & possible_twobreaks) -> int {
+                auto first_scores = this->graph->is_decrease_verteces_score(possible_twobreaks.first);
+                auto second_scores = this->graph->is_decrease_verteces_score(possible_twobreaks.second);
+                return ((int)(first_scores.first + second_scores.first) - (int)(first_scores.second + second_scores.second));
+              };   
+               
+              std::vector<int> scores({calc_score(possible_twobreaks1), calc_score(possible_twobreaks2), calc_score(possible_twobreaks3)}); 
+
+              bool flag = false; 
+              for(int elem : scores) { 
+                if (elem != 0) { 
+                  flag = true; 
+                  break;
+                } 
+              }
+
+              if (flag) {
+                auto const & apply_lambda = [&] (twobreaks_t const & possible_twobreaks) -> void {
+                  this->graph->apply(possible_twobreaks.first);
+                  this->graph->apply(possible_twobreaks.second);
+                  number_rear += 2;
+                  repeat = true;      
+                };
+
+                processed.insert({connected_components[p.first], connected_components[p.second], connected_components[q.second], connected_components[r.second], connected_components[t.second]});
+                if (scores.cbegin() == std::max_element(scores.cbegin(), scores.cend())) { 
+                  apply_lambda(possible_twobreaks1);
+                } else if ((scores.cbegin() + 1) == std::max_element(scores.cbegin(), scores.cend())) { 
+                  apply_lambda(possible_twobreaks2);
+                } else if ((scores.cbegin() + 2) == std::max_element(scores.cbegin(), scores.cend())) { 
+                  apply_lambda(possible_twobreaks3);
+                }
+              }
+            } 
+          }
+
 		  		if (bridges.second.size() == 2 && irregular_edges[bridges.first].size() == 0) {
 		    		arc_t const & p = *(bridges.second.begin());
 		    		arc_t const & q = *(bridges.second.rbegin());
@@ -68,6 +119,7 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 		    		// N.B. we have CC[p.first] == CC[q.first] == ie->first
         		if (processed.count(connected_components[p.second]) == 0 && processed.count(connected_components[q.second]) == 0) { 
         			processed.insert({connected_components[p.first], connected_components[p.second], connected_components[q.second]});
+              //std::cerr << p.first << " " << p.second << " " << q.first << " " << q.second << " " << genome_match::mcolor_to_name(*vtc) << std::endl;
 		    			this->graph->apply(twobreak_t(p, q, *vtc));
 		    			++number_rear;
 		    			repeat = true;      
@@ -82,7 +134,7 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 	    
 		    		for(auto ii = irregular_edges[bridges.first].cbegin(); (ii != irregular_edges[bridges.first].cend()) && !found;) {
 	      			arc_t const & ireg_edge = *ii; // edge
-	      			mcolor_t color(*vtc, this->graph->get_edge_multicolor(p.first, ireg_edge.first), mcolor_t::Union);
+	      			mcolor_t color(*vtc, this->graph->get_all_multicolor_edge(p.first, ireg_edge.first), mcolor_t::Union);
 					
   						if (color.size() > vtc->size() && this->graph->is_T_consistent_color(color)) {
   							// let check what would happen with (be-)edge e=(p.first, irreg.first)

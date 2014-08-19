@@ -37,7 +37,7 @@ struct Statistics {
     std::unordered_set<vertex_t> processed; 
     for(vertex_t const & x : *graph) {
       if (processed.count(x) == 0) {
-        mularcs_t const & mularcs = graph->get_adjacent_multiedges(x);
+        mularcs_t const & mularcs = graph->get_all_adjacent_multiedges(x);
         if (mularcs.size() == 1 && mularcs.union_multicolors() == graph->get_complete_color()) { 
 	        edges.push_back(arc_t(x, mularcs.cbegin()->first));
           processed.insert({x, mularcs.cbegin()->first});
@@ -94,7 +94,7 @@ void Statistics<graph_t>::count_vertex_statistics() {
 	++vertex_statistics[2];
     } 
 
-    mularcs_t const & current = graph->get_adjacent_multiedges(x); //current is list with adjacent multiedge&
+    mularcs_t const & current = graph->get_all_adjacent_multiedges(x); //current is list with adjacent multiedge&
     for (auto it = current.cbegin(); it != current.cend(); ++it) {
 	if (!it->second.is_one_to_one_match()) {
 	  ++vertex_statistics[3];
@@ -108,7 +108,7 @@ void Statistics<graph_t>::count_complete_multiedges() {
   std::unordered_set<std::string> processed;
 
   for(auto const &x : *graph) {
-    mularcs_t const & current = graph->get_adjacent_multiedges(x); //current is list with adjacent multiedges
+    mularcs_t const & current = graph->get_all_adjacent_multiedges(x); //current is list with adjacent multiedges
 
     ++multidegree_count[current.size()]; //current.size - is degree vertex *it
 
@@ -141,7 +141,7 @@ void Statistics<graph_t>::count_complete_multiedges() {
 
   // count lonely vertices (short paths) 
   for(auto const & v : processed) {
-    mularcs_t const & current = graph->get_adjacent_multiedges(v);
+    mularcs_t const & current = graph->get_all_adjacent_multiedges(v);
     if (processed.find(current.cbegin()->first) == processed.end() && processed.find(current.crbegin()->first) == processed.end()) {
       ++simple_vertices_alone_count[std::min(current.cbegin()->second, current.crbegin()->second)]; //no good neighbors
     }
@@ -157,7 +157,7 @@ void Statistics<graph_t>::count_cycles() {
       continue; 
     } 
 
-    mularcs_t const & mularcs_x = graph->get_adjacent_multiedges(x); 
+    mularcs_t const & mularcs_x = graph->get_all_adjacent_multiedges(x); 
 
     if (!(graph->is_simple_vertex(x) && graph->get_complement_color(mularcs_x.cbegin()->second) == mularcs_x.crbegin()->second)) { 
       continue;
@@ -174,7 +174,7 @@ void Statistics<graph_t>::count_cycles() {
         break;
       }
 
-      mularcs_t const & mularcs_y = graph->get_adjacent_multiedges(current);
+      mularcs_t const & mularcs_y = graph->get_all_adjacent_multiedges(current);
 
       if (prev == mularcs_y.cbegin()->first) {
         prev = current;
@@ -186,12 +186,12 @@ void Statistics<graph_t>::count_cycles() {
 
       while (current == Infty) {
       	if (special_Q.empty()) {
-      	  special_Q = graph->get_edge_multicolor(prev, current); 
+      	  special_Q = graph->get_all_multicolor_edge(prev, current); 
       	  prev = x;
       	  current = mularcs_x.cbegin()->first; 
       	} else {
-      	  if (special_Q != graph->get_edge_multicolor(prev, current)) {
-      	    ++special_cycle_count[std::min(special_Q, graph->get_edge_multicolor(prev, current))]; 	  
+      	  if (special_Q != graph->get_all_multicolor_edge(prev, current)) {
+      	    ++special_cycle_count[std::min(special_Q, graph->get_all_multicolor_edge(prev, current))]; 	  
       	  }
       	  break;
       	}
@@ -260,14 +260,14 @@ void Statistics<graph_t>::count_indel_statistics() {
 
   for (auto const & a1 : *graph) {  
     vertex_t const & a2 = graph->get_obverse_vertex(a1);
-    mularcs_t const & mularcs = graph->get_adjacent_multiedges(a1);
+    mularcs_t const & mularcs = graph->get_all_adjacent_multiedges(a1);
 
     if (graph->is_indel_vertex(a1) && (processed.count(a1) == 0) && graph->is_indel_vertex(a2))  {
       processed.insert({a1, a2});
 
       mcolor_t const & indel_color = mularcs.union_multicolors(); 
       mcolor_t const & bar_indel_color = graph->get_complement_color(indel_color);
-      assert(indel_color == graph->get_adjacent_multiedges(a2).union_multicolors());
+      assert(indel_color == graph->get_all_adjacent_multiedges(a2).union_multicolors());
 
       if (temp.count(std::make_pair(bar_indel_color, indel_color)) == 0) {
         temp.insert(std::make_pair(std::make_pair(bar_indel_color, indel_color), 1));

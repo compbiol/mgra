@@ -58,7 +58,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
   int infv = 0;
   std::unordered_set<vertex_t> mark; // vertex set
   for(auto const & x : graph) { 
-    mularcs_t const & Mx = graph.get_adjacent_multiedges(x);
+    mularcs_t const & Mx = graph.get_all_adjacent_multiedges(x);
 
     if (Mx.size() == 1 && Mx.union_multicolors() == graph.get_complete_color()) { 
       continue; // trivial cycle
@@ -66,10 +66,16 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
 
     for(auto im = Mx.cbegin(); im != Mx.cend(); ++im) {
       vertex_t const & y = im->first;
-
       if (mark.find(y) != mark.end()) { 
         continue; // already output
       }    
+
+#ifdef PSEUDO_EDGE
+      bool is_pseudo_x = graph.is_pseudo_edge(x, im->second); 
+      bool is_pseudo_y = graph.is_pseudo_edge(y, im->second);
+#endif
+
+      //std::cerr << x << " " << is_pseudo << " " << y << std::endl;
 
       if (graph.is_vec_T_consistent_color(im->second)) { 
         mcolor_t const & C = im->second;
@@ -85,17 +91,29 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
             } else { 
               dot << y << "\"\t[";
             } 
-
+#ifdef PSEUDO_EDGE
+            if (is_pseudo_x && is_pseudo_y) {
+              dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=both, penwidth=3, style=dotted];" << std::endl;
+            } else if (is_pseudo_x) { 
+              dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=back, penwidth=3, style=dotted];" << std::endl;
+            } else if (is_pseudo_y) {
+              dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=forward, penwidth=3, style=dotted];" << std::endl;
+            } else {
+              dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
+            }
+#else 
             dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
+#endif   
           }
         }
       } else { 
         auto split_colors = graph.split_color(im->second);
+
         if (split_colors.size() == 2) { 
           auto const & C = *split_colors.begin();
           for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
             for (size_t i = 0; i < ic->second; ++i) { 
-              /*************** output edge (x,y) **************** */
+              //************** output edge (x,y) **************** 
               dot << "\t\"" << x << "\"\t--\t\"";
               if (y == Infty) {
                 if (ic == C.cbegin()) { 
@@ -106,7 +124,19 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
                 dot << y << "\"\t[";
               }
 
+#ifdef PSEUDO_EDGE
+              if (is_pseudo_x && is_pseudo_y) {
+                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=both, style=dashed];" << std::endl;
+              } else if (is_pseudo_x) { 
+                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=back, style=dashed];" << std::endl;
+              } else if (is_pseudo_y) {      
+                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=forward, style=dashed];" << std::endl;
+              } else { 
+                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", style=dashed];" << std::endl;   
+              }
+#else 
               dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", style=dashed];" << std::endl;   
+#endif
             }
           } 
 
@@ -114,7 +144,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
           auto const & C1 = *(++split_colors.cbegin());
           for(auto ic = C1.cbegin(); ic != C1.cend(); ++ic) {
             for (size_t i = 0; i < ic->second; ++i) { 
-              /*************** output edge (x,y) **************** */
+              //************** output edge (x,y) **************** 
               dot << "\t\"" << x << "\"\t--\t\"";
               if (y == Infty) {
                 if (ic == C1.cbegin()) { 
@@ -125,11 +155,25 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
                 dot << y << "\"\t[";
               }
 
+#ifdef PSEUDO_EDGE
+              if (is_pseudo_x && is_pseudo_y) {
+                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=both, style=dotted];" << std::endl;
+              } else if (is_pseudo_x) { 
+                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=back, style=dotted];" << std::endl;
+              } else if (is_pseudo_y) {
+                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=forward, style=dotted];" << std::endl;
+              } else {
+                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;   
+              } 
+#else
               dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;   
+#endif
             }
           }           
         } else { 
           mcolor_t const & C = im->second;
+          size_t number_splits = graph.split_color(im->second).size();
+          bool out = false;
           for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
             for (size_t i = 0; i < ic->second; ++i) { 
               /*************** output edge (x,y) **************** */
@@ -143,7 +187,36 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
                 dot << y << "\"\t[";
               } 
 
-              dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;  
+              if (!out && number_splits != 1) {
+                out = true; 
+#ifdef PSEUDO_EDGE
+                if (is_pseudo_x && is_pseudo_y) {
+                  dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", label=" << number_splits << ", dir=both, style=dotted];" << std::endl;
+                } else if (is_pseudo_x) { 
+                  dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", label=" << number_splits << ", dir=back, style=dotted];" << std::endl;
+                } else if (is_pseudo_y) {
+                  dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", label=" << number_splits << ", dir=forward, style=dotted];" << std::endl;  
+                } else { 
+                  dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", label=" << number_splits << "];" << std::endl;  
+                }
+#else
+                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", label=" << number_splits << "];" << std::endl;  
+#endif
+              } else { 
+#ifdef PSEUDO_EDGE
+                if (is_pseudo_x && is_pseudo_y) {
+                  dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=both, style=dotted];" << std::endl;
+                } else if (is_pseudo_x) { 
+                  dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=back, style=dotted];" << std::endl;
+                } else if (is_pseudo_y) {
+                  dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", dir=forward, style=dotted];" << std::endl;
+                } else { 
+                  dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;  
+                } 
+#else
+                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;  
+#endif
+              } 
             } 
           }
         }
@@ -209,7 +282,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, size
       	continue;
       } 
 
-      mularcs_t const & Mx = graph.get_adjacent_multiedges(x);
+      mularcs_t const & Mx = graph.get_all_adjacent_multiedges(x);
 
       if (Mx.union_multicolors() == graph.get_complete_color()) { 
         continue; // trivial cycle

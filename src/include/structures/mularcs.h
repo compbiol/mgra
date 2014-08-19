@@ -26,6 +26,16 @@ struct Mularcs {
     m_mularcs.erase(v);
   }
  
+  inline void erase(vertex_t const & v, mcolor_t const & color) { 
+    for (auto iter = m_mularcs.begin(); iter != m_mularcs.end();) { 
+      if (iter->first == v && iter->second == color) { 
+        m_mularcs.erase(iter++);    
+      } else { 
+        ++iter;
+      }
+    }    
+  }
+
   inline vertex_t get_vertex(mcolor_t const & color) const { //FIXME: MAYBE OPTIONAL
     vertex_t v = "";
     for (auto const & arc : m_mularcs) {

@@ -26,6 +26,8 @@ struct Algorithm {
 
   void convert_to_identity_bgraph();
   
+  void bruteforce_convert();
+
 private: 
   typedef typename graph_t::mcolor_type mcolor_t;
   typedef typename graph_t::mularcs_t mularcs_t; 
@@ -59,22 +61,29 @@ private:
   struct IncreaseNumberComponents;
 
   struct BruteForce;
-  
-  //Stage 6: brutoforce stage
-  bool stage6();
-  
-  std::multimap<size_t, arc_t> create_minimal_matching(std::set<vertex_t> const & vertex_set); 
-  std::multimap<size_t, arc_t> wrapper_create_minimal_matching(std::set<vertex_t> const & vertex_set);
 
-  size_t take_edge_on_color(vertex_t const & x, mcolor_t const & color, vertex_t const & y);
+  struct BruteForceTwo;
+
+  struct ExperemProcessClone;
   
+  struct MegaStage; 
+
   /*EXPERIMENTAL STAGE OR EXISTS BUT NOT USED */
   //Stage -: process tandem duplication events
   bool stage5_4();
   //bool stage71();
-  //stage5_3()    
+  bool stage5_3();
+
+  typedef typename utility::equivalence<vertex_t> equiv_t;
+  typedef typename std::map<vertex_t, std::set<arc_t> > bridges_t;
+
+  void get_specific_edges(bridges_t & regular_edges, bridges_t & irregular_edges, 
+    equiv_t & connected_components, mcolor_t const & color) const; 
   //stage4_td(); 
   
+  /*TOTAL BRUTEFORCE*/
+  struct ProcessTCedges;
+  struct TotalBruteForce; 
 private: 
   std::shared_ptr<graph_t> graph; 
 
@@ -88,18 +97,15 @@ private:
 };
 
 template<class graph_t>
-void Algorithm<graph_t>::convert_to_identity_bgraph() {
+void Algorithm<graph_t>::bruteforce_convert() {
   std::unordered_set<size_t> print_dots;
   size_t stage = 0; 
   bool isChanged = false;
-  bool process_compl = true; 
-
-  std::vector<std::shared_ptr<Stage> > algorithm(5); 
+  
+  std::vector<std::shared_ptr<Stage> > algorithm(3); 
   algorithm[0] = std::shared_ptr<Stage>(new Balance(graph));
-  algorithm[1] = std::shared_ptr<Stage>(new ProcessSimplePath(graph));
-  algorithm[2] = std::shared_ptr<Stage>(new ProcessFairEdges(graph));
-  algorithm[3] = std::shared_ptr<Stage>(new ProcessClone(graph));
-  algorithm[4] = std::shared_ptr<Stage>(new IncreaseNumberComponents(graph));
+  algorithm[1] = std::shared_ptr<Stage>(new ProcessTCedges(graph));
+  algorithm[2] = std::shared_ptr<Stage>(new TotalBruteForce(graph, write_dots));
   
   auto const saveInfoLambda = [&](size_t st) -> void { 
     if ((print_dots.count(st) == 0) && !isChanged) {
@@ -113,8 +119,54 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
   saveInfoLambda(stage++);
   write_dots.write_legend_dot();
 
+  graph->update_number_of_splits(3);  
+
+  std::cerr << "Stage " << stage << ": " << algorithm[0]->get_name() << std::endl; 
+  isChanged = algorithm[0]->do_action();
+  saveInfoLambda(stage++);
+
+  std::cerr << "Stage " << stage << " " << algorithm[1]->get_name() << std::endl;
+  isChanged = algorithm[1]->do_action();
+  saveInfoLambda(stage++);
+
+  std::cerr << "Stage " << stage << " " << algorithm[2]->get_name() << std::endl;
+  isChanged = algorithm[2]->do_action();
+  saveInfoLambda(stage++);
+
+  write_dots.save_final_dot(*graph);
+}
+
+template<class graph_t>
+void Algorithm<graph_t>::convert_to_identity_bgraph() {
+  std::unordered_set<size_t> print_dots;
+  size_t stage = 0; 
+  bool isChanged = false;
+  bool process_compl = true; 
+
+  std::vector<std::shared_ptr<Stage> > algorithm(5); 
+  algorithm[0] = std::shared_ptr<Stage>(new Balance(graph));
+  algorithm[1] = std::shared_ptr<Stage>(new ProcessSimplePath(graph));
+  //algorithm[2] = std::shared_ptr<Stage>(new MegaStage(graph));
+  //algorithm[3] = std::shared_ptr<Stage>(new IncreaseNumberComponents(graph))  
+  algorithm[2] = std::shared_ptr<Stage>(new ProcessFairEdges(graph, write_dots));
+  //algorithm[3] = std::shared_ptr<Stage>(new ProcessClone(graph));
+  algorithm[3] = std::shared_ptr<Stage>(new ExperemProcessClone(graph));
+  algorithm[4] = std::shared_ptr<Stage>(new IncreaseNumberComponents(graph));
+  
+  auto const saveInfoLambda = [&](size_t st) -> void { 
+    if ((print_dots.count(st) == 0) && !isChanged) {
+      print_dots.insert(st);
+      Statistics<graph_t> stat(graph);
+      write_stats.print_all_statistics(st, stat, *graph);
+      write_dots.save_dot(*graph, st);
+    } 
+  };
+
+  saveInfoLambda(stage++);
+  write_dots.write_legend_dot();
+  
   if (stages >= 1) { 
-    graph->update_number_of_splits(rounds);  
+    graph->update_number_of_splits(3);  
     std::cerr << "Stage " << stage << ": " << algorithm[0]->get_name() << std::endl; 
     isChanged = algorithm[0]->do_action();
     saveInfoLambda(stage++);
@@ -132,7 +184,6 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
 
       for (size_t j = 1; j < 5 && !isChanged; ++j) {
         std::cerr << "Stage " << stage << ": " << algorithm[j]->get_name() << std::endl;
-        write_dots.save_dot(*graph, 100);      
         isChanged = algorithm[j]->do_action();
         saveInfoLambda(stage++);
       } 
@@ -153,8 +204,8 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
     
     /*if (!isChanged) {
       std::cerr << "Stage 5: Experement stage" << stage << std::endl;
-      graph->update_number_of_splits(3);
-      isChanged = stage5_4();
+      graph->update_number_of_splits(1);
+      isChanged = stage5_3();
       saveInfoLambda(stage++);
     }*/
 
@@ -169,13 +220,16 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
     }  
 
     if ((max_size_component != 0) && !isChanged) {
-      std::cerr << "Brute force stage: " << std::endl;
+      BruteForceTwo bruteforce_action(graph);
+      //BruteForce bruteforce_action(graph, max_size_component);
+      std::cerr << "Stage " << stage << " " << bruteforce_action.get_name() << std::endl;
       graph->update_number_of_splits(3);
-      isChanged = stage6();
+      isChanged = bruteforce_action.do_action();
       saveInfoLambda(stage++);
     }
   }	
-  
+
+       
   //graph->print();
   graph->update_number_of_splits(3);
   write_dots.save_final_dot(*graph);
@@ -189,6 +243,10 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
 #include "algo/Stage6.h"
 #include "algo/Stage7.h"
 #include "algo/ExperemStages.h"
+#include "algo/MegaStage.hpp"
 
+#include "algo/BruteForce.hpp"
+#include "algo/TotalBruteForce.hpp"
+#include "algo/ProcessTCedge.hpp"
 
 #endif

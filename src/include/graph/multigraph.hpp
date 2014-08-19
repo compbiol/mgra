@@ -1,13 +1,13 @@
-#ifndef MBGRAPH_H_
-#define MBGRAPH_H_
+#ifndef MULTIGRAPH_HPP
+#define MULTIGRAPH_HPP
 
 #include "defined.h" 
 
-struct MBGraph {
+struct MultiGraph {
   typedef structure::Genome genome_t;
   typedef std::string orf_t;
 
-  explicit MBGraph(std::vector<genome_t> const & genomes) 
+  explicit MultiGraph(std::vector<genome_t> const & genomes) 
   : m_local_graphs(genomes.size()) 
   { 
     std::unordered_set<orf_t> blocks;
@@ -51,12 +51,11 @@ struct MBGraph {
     return m_local_graphs[index].erase(u, v);
   } 
 
-/*  template<class mularcs_t>
-  mularcs_t get_adjacent_multiedges(vertex_t const & u) const; 
+  template<class mularcs_t>
+  mularcs_t get_all_adjacent_multiedges(vertex_t const & u) const; 
 
   template<class mcolor_t>
-  mcolor_t get_edge_multicolor(vertex_t const & u, vertex_t const & v) const;
-*/
+  mcolor_t get_all_multicolor_edge(vertex_t const & u, vertex_t const & v) const;
 
   size_t degree_vertex(vertex_t const & u) const { 
     std::unordered_set<vertex_t> processed;
@@ -133,6 +132,40 @@ protected:
   std::unordered_map<vertex_t, vertex_t> obverse_edges; //obverse relation 
   std::vector<partgraph_t> m_local_graphs; //local graphs of each color 
 };	
+
+template<class mularcs_t>
+mularcs_t MultiGraph::get_all_adjacent_multiedges(vertex_t const & u) const {
+  assert(u != Infty);
+  
+  mularcs_t output;
+
+  for (size_t i = 0; i < m_local_graphs.size(); ++i) {
+    auto iters = m_local_graphs[i].equal_range(u);
+    for (auto it = iters.first; it != iters.second; ++it) { 
+      output.insert(it->second, i); 
+    }
+  }
+
+  return output;
+} 
+
+template<class mcolor_t>
+mcolor_t MultiGraph::get_all_multicolor_edge(vertex_t const & u, vertex_t const & v) const {
+  assert(u != Infty || v != Infty);
+
+  mcolor_t result;
+
+  for (size_t i = 0; i < m_local_graphs.size(); ++i) {
+    auto iters = m_local_graphs[i].equal_range(u);
+    for (auto it = iters.first; it != iters.second; ++it) { 
+      if (it->second == v) { 
+        result.insert(i);
+      }
+    } 
+  } 
+
+  return result;
+}
 
   //FIXME IF WE RECONSTRUCT ANCESTORS WITH DUPLICATION EQUAL RANGE
   /*inline vertex_t get_adjecent_vertex(size_t index, vertex_t const & first) const {  

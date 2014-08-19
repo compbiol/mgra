@@ -36,7 +36,7 @@ struct TwoBreak : public event::Event {
       m_arcs[1].second = v; 
     } 
   }
-   
+  
   inline TwoBreak inverse() const {
     return TwoBreak(m_arcs[0].first, m_arcs[1].first, m_arcs[0].second, m_arcs[1].second, m_multicolor);
   }
@@ -61,6 +61,17 @@ struct TwoBreak : public event::Event {
 
   void apply_single(partgraph_t& local_graph) const;
 
+  TwoBreak get_canonical_twobreak() const;
+   
+  bool is_independent(TwoBreak const & tested) const;
+
+  bool operator < (TwoBreak const & second) const; 
+
+  bool operator > (TwoBreak const & second) const { 
+    return (second < *this);
+  }
+
+
   DECLARE_GETTER( mcolor_t, m_multicolor, mcolor )
   
   DECLARE_CONST_ITERATOR( citer, m_multicolor, begin, cbegin )  
@@ -74,6 +85,132 @@ private:
   mcolor_t m_multicolor; 
 };
 
+}
+
+template<class mcolor_t>
+bool event::TwoBreak<mcolor_t>::operator < (TwoBreak const & twobreak) const { 
+  auto const less_lambda = [&](vertex_t const & v, vertex_t const & u) -> bool { 
+    if (u == Infty) { 
+      return true;
+    } else if (v == Infty) {
+      return false; 
+    } else if (std::stoi(v.substr(0, v.length() - 1)) < std::stoi(u.substr(0, u.length() - 1))) { 
+      return true;
+    } else if (std::stoi(v.substr(0, v.length() - 1)) == std::stoi(u.substr(0, u.length() - 1))) {
+      if (*v.crbegin() < *u.crbegin()) {
+        return true; 
+      } else { 
+        return false; 
+      }
+    } else { 
+      return false; 
+    }
+  };
+
+  auto const equal = [&](vertex_t const & v, vertex_t const & u) -> bool { 
+    return !(less_lambda(v, u) && less_lambda(u, v));
+  };
+
+  if (less_lambda(m_arcs[0].first, twobreak.m_arcs[0].first)) {
+    return true; 
+  } else if (equal(m_arcs[0].first, twobreak.m_arcs[0].first)) {
+    if (less_lambda(m_arcs[0].second, twobreak.m_arcs[0].second)) {
+      return true; 
+    } else if (equal(m_arcs[0].second, twobreak.m_arcs[0].second)) {
+      if (less_lambda(m_arcs[1].first, twobreak.m_arcs[1].first)) {
+        return true; 
+      } else if (equal(m_arcs[1].first, twobreak.m_arcs[1].first)) {
+        if (less_lambda(m_arcs[1].second, twobreak.m_arcs[1].second)) {
+          return true; 
+        } else if (equal(m_arcs[1].second, twobreak.m_arcs[1].second)) {
+          return (m_multicolor < twobreak.m_multicolor);
+        }
+      }   
+    }
+  }
+
+  return false;
+  /*std::tuple<vertex_t, vertex_t, vertex_t, vertex_t, mcolor_t> first(m_arcs[0].first, m_arcs[0].second, 
+          m_arcs[1].first, m_arcs[1].second, m_multicolor);
+  std::tuple<vertex_t, vertex_t, vertex_t, vertex_t, mcolor_t> second(twobreak.m_arcs[0].first, twobreak.m_arcs[0].second, 
+          twobreak.m_arcs[1].first, twobreak.m_arcs[1].second, twobreak.m_multicolor);
+  return (first < second);*/
+}
+
+template<class mcolor_t>
+bool event::TwoBreak<mcolor_t>::is_independent(TwoBreak const & tested) const {
+  mcolor_t inter_color(m_multicolor, tested.m_multicolor, mcolor_t::Intersection); 
+
+  if (inter_color.empty()) {
+    return true; 
+  } else {
+    auto check_lambda = [&] (size_t ind1, size_t ind2, size_t ind3) -> bool {
+      if (tested.m_arcs[ind1] == std::make_pair(get_vertex(ind2), get_vertex(ind3))) { 
+        return false;
+      } 
+      if (tested.m_arcs[ind1] == std::make_pair(get_vertex(ind3), get_vertex(ind2))) { 
+        return false;
+      }
+      return true;
+    };
+
+    bool answer = true;
+    for (size_t j = 0; j < 2; ++j) { 
+      answer = answer && check_lambda(j, 0, 2) && check_lambda(j, 1, 3);
+    }
+    return answer;
+  }
+
+}
+
+template<class mcolor_t>
+event::TwoBreak<mcolor_t> event::TwoBreak<mcolor_t>::get_canonical_twobreak() const { 
+  arc_t new_arc[2];    
+  
+  auto const less_lambda = [&](vertex_t const & v, vertex_t const & u) -> bool { 
+    if (u == Infty) { 
+      return true;
+    } else if (v == Infty) {
+      return false; 
+    } else if (std::stoi(v.substr(0, v.length() - 1)) < std::stoi(u.substr(0, u.length() - 1))) { 
+      return true;
+    } else if (std::stoi(v.substr(0, v.length() - 1)) == std::stoi(u.substr(0, u.length() - 1))) {
+      if (*v.crbegin() < *u.crbegin()) {
+        return true; 
+      } else { 
+        return false; 
+      }
+    } else { 
+      return false; 
+    }
+  };
+
+  /*if (m_arcs[0].first > m_arcs[0].second && m_arcs[1].first >= m_arcs[1].second) {
+    new_arc[0] = arc_t(m_arcs[0].second, m_arcs[0].first);          
+    new_arc[1] = arc_t(m_arcs[1].second, m_arcs[1].first);          
+  } else {
+    new_arc[0] = m_arcs[0]; 
+    new_arc[1] = m_arcs[1];
+  }*/
+
+  if (!less_lambda(m_arcs[0].first, m_arcs[0].second) && !less_lambda(m_arcs[1].first, m_arcs[1].second)) {
+    new_arc[0] = arc_t(m_arcs[0].second, m_arcs[0].first);          
+    new_arc[1] = arc_t(m_arcs[1].second, m_arcs[1].first);          
+  } else {
+    new_arc[0] = m_arcs[0]; 
+    new_arc[1] = m_arcs[1];
+  }
+
+  if (new_arc[0].first > new_arc[1].first) { 
+    std::swap(new_arc[0], new_arc[1]);
+  } 
+
+  
+  if (!less_lambda(new_arc[0].first, new_arc[1].first)) { 
+    std::swap(new_arc[0], new_arc[1]);
+  }
+  
+  return TwoBreak(new_arc[0], new_arc[1], m_multicolor);
 }
 
 template<class mcolor_t>
@@ -94,4 +231,3 @@ void event::TwoBreak<mcolor_t>::apply_single(partgraph_t& local_graph) const {
 } 
 
 #endif
-

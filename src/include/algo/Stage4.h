@@ -8,7 +8,7 @@ bool Algorithm<graph_t>::stage4_td() {
 
   for (const auto &v : *graph) {
     if (graph->is_duplication_vertex(v) && !graph->is_have_self_loop(v)) {
-      mularcs_t mularcs = graph->get_adjacent_multiedges(v); 
+      mularcs_t mularcs = graph->get_all_adjacent_multiedges(v); 
       bool find = false; 
 
       for (auto im = mularcs.cbegin(); im != mularcs.cend() && !find; ++im) {
@@ -20,7 +20,7 @@ bool Algorithm<graph_t>::stage4_td() {
 	  bool is_go = true;    
 	  while (v != graph->get_obverse_vertex(current) && is_go) {	
 	    current = graph->get_obverse_vertex(current); 
-	    mularcs_t current_mularcs = graph->get_adjacent_multiedges(current);
+	    mularcs_t current_mularcs = graph->get_all_adjacent_multiedges(current);
 	    is_go = false; 
 	    for (auto is = current_mularcs.cbegin(); (is != current_mularcs.cend()) && !is_go; ++is) {
 	      if (is->first != Infty && is->second.how_much_includes(color) >= 2) {
@@ -37,16 +37,17 @@ bool Algorithm<graph_t>::stage4_td() {
 	      graph->apply(dupl);	
 	      ++number_dupl;
 	    } else if (!graph->is_vec_T_consistent_color(graph->get_complement_color(color)) && split_bad_colors) {
-		auto colors = graph->split_color(color);
-		for(const auto &col: colors) {
-		  tandem_duplication_t dupl(duplication, col, true, false);
+      		auto colors = graph->split_color(color);
+      		for(const auto &col: colors) {
+      		  tandem_duplication_t dupl(duplication, col, true, false);
 	          graph->apply(dupl);	
 	          ++number_dupl;
-		} 
-	    } 
-            find = true;	
-          }
-	}
+		      }  
+      }
+
+      find = true;	
+    }
+    }
       }
     }
   } 
@@ -64,14 +65,14 @@ bool Algorithm<graph_t>::stage4_rtd() {
       //std::cerr << "vertex " << *it;
       std::vector<arc_t> duplication({std::make_pair(v, v)}); 
 		
-      mularcs_t mularcs = graph->get_adjacent_multiedges(v); 
+      mularcs_t mularcs = graph->get_all_adjacent_multiedges(v); 
       vertex_t current = graph->get_obverse_vertex(v);
       const auto& color = mularcs.get_multicolor(v); 
       bool flag = true; 
 
       while (flag) {
 	flag = false; 
-	mularcs_t current_mularcs = graph->get_adjacent_multiedges(current);
+	mularcs_t current_mularcs = graph->get_all_adjacent_multiedges(current);
 	for (auto im = current_mularcs.cbegin(); (im != current_mularcs.cend()) && !flag; ++im) { 
 	  if (im->second.how_much_includes(color) == 2) {
 	    flag = true; 
@@ -86,7 +87,7 @@ bool Algorithm<graph_t>::stage4_rtd() {
 
       //std::cerr << " --> " << current;
 			
-      mularcs_t current_mularcs = graph->get_adjacent_multiedges(current);
+      mularcs_t current_mularcs = graph->get_all_adjacent_multiedges(current);
       std::unordered_set<vertex_t> count_included;
 
       for (const auto &arc : current_mularcs) { 
@@ -155,8 +156,8 @@ bool Algorithm<graph_t>::stage4_conv_to_td() {
   
     if ((processed.count(a1) == 0) && graph->is_duplication_vertex(a1) && graph->is_duplication_vertex(a2)) {		
       processed.insert({a1, a2});
-      mularcs_t mularcs_a1 = graph->get_adjacent_multiedges(a1); 
-      mularcs_t mularcs_a2 = graph->get_adjacent_multiedges(a2);
+      mularcs_t mularcs_a1 = graph->get_all_adjacent_multiedges(a1); 
+      mularcs_t mularcs_a2 = graph->get_all_adjacent_multiedges(a2);
 
       if (mularcs_a1.size() == 2 && mularcs_a1.size() == mularcs_a2.size()) { 
         mcolor_t color(mularcs_a1.cbegin()->second, mularcs_a1.crbegin()->second, mcolor_t::Intersection);

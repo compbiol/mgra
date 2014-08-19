@@ -116,6 +116,8 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
     recovered_graphs.resize(graph.count_vec_T_consitent_color(), graph.get_partgraph(0)); 
 #endif
 
+    size_t remember = 0; 
+
     for(auto it = graph.crbegin_2break_history(); it != graph.crend_2break_history(); ++it) {
       size_t i = 0;
       for(auto im = graph.cbegin_vec_T_consistent_color(); im != graph.cend_vec_T_consistent_color(); ++im, ++i) {
@@ -124,6 +126,7 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
           //std::cerr << it->get_vertex(0) << " " << it->get_vertex(1) << " " << it->get_vertex(2) << " " << it->get_vertex(3) << std::endl;
           it->inverse().apply_single(recovered_graphs[i]);
         }
+
         if (it->get_mcolor() == *im) {
           recovered_transformation[i].push_front(*it);
         }

@@ -7,11 +7,8 @@ struct ColorsGraph {
   template<class conf_t>
   ColorsGraph(conf_t const & cfg); 
 
-  //FIXME: remove later
-  std::set<mcolor_t> split_color(mcolor_t const & color, size_t number_splits) const;
-
   std::set<mcolor_t> split_color_on_tc_color(mcolor_t const & color, size_t number_splits) const;
-  std::set<mcolor_t> split_color_on_vtc_color(mcolor_t const & color, size_t number_splits) const;
+  std::set<mcolor_t> split_color_on_vtc_color(mcolor_t const & color) const;
 
   inline mcolor_t const & get_complement_color(mcolor_t const & color) { 
     assert(color.is_one_to_one_match()); 
@@ -110,58 +107,76 @@ ColorsGraph<mcolor_t>::ColorsGraph(conf_t const & cfg)
 }
 
 template<class mcolor_t>
-std::set<mcolor_t> ColorsGraph<mcolor_t>::split_color(mcolor_t const & color, size_t number_splits) const {
+std::set<mcolor_t> ColorsGraph<mcolor_t>::split_color_on_tc_color(mcolor_t const & color, size_t number_splits) const {
   if (is_T_consistent_color(color) || (number_splits == 1)) {
     return std::set<mcolor_t>({color}); 
   } else {  
-    std::set<mcolor_t> answer;
-    
+    std::set<mcolor_t> answer;    
     /*if (hashing_split_colors.count(std::make_pair(color, number_of_splits)) != 0) {
       answer = hashing_split_colors.find(std::make_pair(color, number_of_splits))->second;
     } else {   */
-      utility::equivalence<size_t> equiv;
-      std::for_each(color.cbegin(), color.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
-        equiv.addrel(col.first, col.first);
-      }); 
+    utility::equivalence<size_t> equiv;
+    std::for_each(color.cbegin(), color.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
+      equiv.addrel(col.first, col.first);
+    }); 
 
-      #ifndef VERSION1  
-      for (auto const & tc: T_consistent_colors) { 
-        mcolor_t inter_color(tc, color, mcolor_t::Intersection);
-        if (inter_color.size() >= 2 && inter_color.size() == tc.size()) { 
-          std::for_each(inter_color.cbegin(), inter_color.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
-            equiv.addrel(col.first, inter_color.cbegin()->first);
-          });
-        }
+    for (auto const & tc: T_consistent_colors) { 
+      mcolor_t inter_color(tc, color, mcolor_t::Intersection);
+      if (inter_color.size() >= 2 && inter_color.size() == tc.size()) { 
+        std::for_each(inter_color.cbegin(), inter_color.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
+          equiv.addrel(col.first, inter_color.cbegin()->first);
+        });
       }
-      #else 
-        for (auto const & vtc: vec_T_consistent_colors) { 
-          mcolor_t inter_color(vtc, color, mcolor_t::Intersection);
-          if (inter_color.size() >= 2 && inter_color.size() == vtc.size()) {
-            std::for_each(inter_color.cbegin(), inter_color.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
-              equiv.addrel(col.first, inter_color.cbegin()->first);
-            });
-          }
-        }
-      }
-      #endif
+    }
+    
+    equiv.update();
+    std::map<size_t, mcolor_t> const & classes = equiv.get_eclasses<mcolor_t>(); 
+    //std::cerr << "color " << genome_match::mcolor_to_name(color) << std::endl;
+    for(auto const & col : classes) {
+      answer.insert(col.second);
+    }
 
-      equiv.update();
-      std::map<size_t, mcolor_t> const & classes = equiv.get_eclasses<mcolor_t>(); 
-      //std::cerr << "color " << genome_match::mcolor_to_name(color) << std::endl;
-      for(auto const & col : classes) {
-        answer.insert(col.second);
-      }
+    if (answer.size() > number_splits) { 
+      answer.clear(); 
+      answer.insert(color);   
+    }
 
-      if (answer.size() > number_splits) { 
-        answer.clear(); 
-        answer.insert(color);  	
-      }
-
-      //hashing_split_colors.insert(std::make_pair(std::make_pair(color, number_of_splits), answer));
-    //}
     return answer;
+  }    
+}
+
+template<class mcolor_t>
+std::set<mcolor_t> ColorsGraph<mcolor_t>::split_color_on_vtc_color(mcolor_t const & color) const {
+  if (is_vec_T_consistent_color(color)) {
+    return std::set<mcolor_t>({color}); 
+  } else {  
+    std::set<mcolor_t> answer;    
+
+    utility::equivalence<size_t> equiv;
+    std::for_each(color.cbegin(), color.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
+      equiv.addrel(col.first, col.first);
+    }); 
+
+    for (auto const & vtc: vec_T_consistent_colors) { 
+      mcolor_t inter_color(vtc, color, mcolor_t::Intersection);
+      if (inter_color.size() >= 2 && inter_color.size() == vtc.size()) {
+        std::for_each(inter_color.cbegin(), inter_color.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
+          equiv.addrel(col.first, inter_color.cbegin()->first);
+        });
+      }
+    }
+
+    equiv.update();
+    std::map<size_t, mcolor_t> const & classes = equiv.get_eclasses<mcolor_t>(); 
+    //std::cerr << "color " << genome_match::mcolor_to_name(color) << std::endl;
+    for(auto const & col : classes) {
+      answer.insert(col.second);
+    }
+
+    return answer;
+ 
   }
-} 
+}
 
 
 #endif

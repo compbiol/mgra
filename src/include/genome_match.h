@@ -19,28 +19,37 @@ struct genome_match {
     }
   } 
   
-  inline static bool member_name (const std::string& i) { 
+  inline static bool member_name (std::string const & i) { 
     return (genome_to_number.find(i) != genome_to_number.end());
   } 
 	
-  inline static size_t get_number(const std::string& s) {
+  inline static size_t get_number(std::string const & s) {
     assert(member_name(s));
     return genome_to_number.find(s)->second;
   }
 
-  static mcolor_t name_to_mcolor(const std::string& name) {
-    mcolor_t current;
-
-    for (size_t j = 0; j < name.size(); ++j) {
-      std::string t = name.substr(j, 1);
-      if (genome_to_number.find(t) == genome_to_number.end()) {
-      	std::cerr << "ERROR: Malformed multicolor " << name << std::endl;
-      	exit(1);
-      }
-      current.insert(genome_to_number.find(t)->second);
+  static mcolor_t name_to_mcolor(std::string const & temp) {
+    mcolor_t answer; 
+    if (temp[0] == '{' && temp[temp.length() - 1] == '}') { 
+      std::string current = "";
+      for (size_t i = 1; i < temp.length(); ++i) { 
+        if (temp[i] == ',' || temp[i] == '}') { 
+          if (genome_to_number.find(current) != genome_to_number.end()) {  
+            answer.insert(genome_to_number.find(current)->second);
+          }   
+          current = "";
+        } else if (std::isalpha(temp[i]) || std::isdigit(temp[i])) { 
+          current += temp[i];
+        } else { 
+          std::cerr << "Bad format target " << temp << std::endl;
+          exit(1);
+        }  
+      } 
+    } else {
+      std::cerr << "Bad format target " << temp << std::endl;
+      exit(1);
     }
-
-    return current;
+    return answer;
   }
 
   static std::string mcolor_to_name(mcolor_t const & S) {

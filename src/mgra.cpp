@@ -74,6 +74,49 @@ bool organize_output_directory( fs::path const & path ) {
   return creater_lambda(debug_dir) && creater_lambda(genomes_dir) && creater_lambda(transformation_dir);
 }
 
+std::vector<BreakpointGraph<structure::Mcolor>::twobreak_t> save_total_history(fs::path const & path, BreakpointGraph<structure::Mcolor> const & graph, 
+        ProblemInstance<structure::Mcolor> const & cfg) {
+  typedef BreakpointGraph<structure::Mcolor>::twobreak_t twobreak_t;
+  
+  std::vector<twobreak_t> transform;
+
+  std::cerr << "Save total history:::: " << std::endl;
+  for(auto il = graph.cbegin_2break_history(); il != graph.cend_2break_history(); ++il) {
+    vertex_t const & p = il->get_vertex(0);
+    vertex_t const & q = il->get_vertex(1);
+    vertex_t const & x = il->get_vertex(2);
+    vertex_t const & y = il->get_vertex(3);
+
+    //std::cerr << p << " " << q << " " << x << " " << y << " " << cfg.mcolor_to_name(il->get_mcolor()) << std::endl; 
+
+    auto twobreak = il->get_canonical_twobreak();
+    transform.push_back(twobreak); 
+  } 
+
+  for (size_t i = 0; i < transform.size() - 1; ++i) { 
+    for (size_t j = 0; j < transform.size() - i - 1; ++j) { 
+      if ((transform[j] > transform[j + 1]) && transform[j].is_independent(transform[j + 1])) {
+        std::swap(transform[j], transform[j + 1]); 
+      }
+    }
+  }
+
+  fs::ofstream tr(path / "sorted_full_history.txt");
+  
+  for (auto il = transform.cbegin(); il != transform.cend(); ++il) { 
+    vertex_t const & p = il->get_vertex(0);
+    vertex_t const & q = il->get_vertex(1);
+    vertex_t const & x = il->get_vertex(2);
+    vertex_t const & y = il->get_vertex(3);
+
+    tr << p << " " << q << " " << x << " " << y << " " << cfg.mcolor_to_name(il->get_mcolor()) << std::endl; 
+  }
+
+  tr.close();
+
+  return transform;
+}
+
 /*
 void init(std::string const & file) {
   logging::add_file_log
@@ -241,6 +284,7 @@ int main(int argc, char* argv[]) {
   Algorithm<graph_t> main_algo(graph, cfg);
   main_algo.init_writers(out_path_directory, colorscheme, "stage", debug);
   main_algo.convert_to_identity_bgraph(); 
+  //main_algo.bruteforce_convert();
 
   if (cfg.get_target().empty() && !graph->is_identity()) {
     std::clog << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; 
@@ -275,8 +319,35 @@ int main(int argc, char* argv[]) {
   for (auto br = graph->cbegin_2break_history(); br != graph->cend_2break_history(); ++br) {
     //std::cerr << br->get_vertex(0) << " " << br->get_vertex(1) << " " << br->get_vertex(2) 
     //<< " " << br->get_vertex(3) << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
+    /*if (br->get_vertex(0) == "480h" && br->get_vertex(1) == "29t" && br->get_vertex(2) == "497h"
+        && br->get_vertex(3) == "418t") { 
+      auto color = new_graph->get_all_multicolor_edge("480h", "29t");
+      std::cerr << genome_match::mcolor_to_name(color)  << std::endl;
+      color = new_graph->get_all_multicolor_edge("497h", "418t");
+      std::cerr << genome_match::mcolor_to_name(color)  << std::endl;
+    } */
     new_graph->apply(*br);
   }
+
+  save_total_history(out_path_directory, *graph, cfg);
+
+  /*std::shared_ptr<graph_t> new_graph1(new graph_t(genomes, cfg)); 
+  Algorithm<graph_t> alg1(new_graph1, cfg);  
+  Algorithm<graph_t>::Balance balance1(new_graph1);
+  balance1.do_action();
+
+  for (auto br = another_history.cbegin(); br != another_history.cend(); ++br) {
+    std::cerr << br->get_vertex(0) << " " << br->get_vertex(1) << " " << br->get_vertex(2) 
+    << " " << br->get_vertex(3) << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
+    if (br->get_vertex(0) == "29h" && br->get_vertex(1) == "29t" && br->get_vertex(2) == "105t"
+        && br->get_vertex(3) == "104h") { 
+      auto color = new_graph1->get_all_multicolor_edge("29h", "29t");
+      std::cerr << genome_match::mcolor_to_name(color)  << std::endl;
+      color = new_graph1->get_all_multicolor_edge("105t", "104h");
+      std::cerr << genome_match::mcolor_to_name(color)  << std::endl;
+    }
+    new_graph1->apply(*br);
+  }*/
 
   auto bad_edges = graph->get_bad_edges();
   std::clog << "Start reconstruct genomes." << std::endl;
@@ -320,4 +391,3 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-

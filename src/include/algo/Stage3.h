@@ -22,19 +22,18 @@ struct Algorithm<graph_t>::Balance : public Algorithm<graph_t>::Stage {
 template<class graph_t>
 bool Algorithm<graph_t>::Balance::do_action() { 
   size_t number_indel_event = 0; 
-  //graph->update_number_of_splits(rounds);  
     
   std::unordered_set<vertex_t > processed; 
   for (vertex_t const &a1 : *(this->graph)) {  
     vertex_t const & a2 = this->graph->get_obverse_vertex(a1);
-    mularcs_t const & mularcs = this->graph->get_adjacent_multiedges(a1);
+    mularcs_t const & mularcs = this->graph->get_all_adjacent_multiedges(a1);
 
     if (this->graph->is_indel_vertex(a1) && (processed.count(a1) == 0) && this->graph->is_indel_vertex(a2) && mularcs.size() != 0)  {
       processed.insert({a1, a2}); 
       
       mcolor_t const & indel_color = mularcs.union_multicolors(); 
       mcolor_t const & bar_indel_color = this->graph->get_complement_color(indel_color);
-      assert(indel_color == this->graph->get_adjacent_multiedges(a2).union_multicolors());
+      assert(indel_color == this->graph->get_all_adjacent_multiedges(a2).union_multicolors());
       
       std::set<mcolor_t> const & set_split_indel = this->graph->split_color(indel_color); 
       bool i_tc = false;
@@ -59,13 +58,14 @@ bool Algorithm<graph_t>::Balance::do_action() {
       }  
 
       bool is_insertion = true;
-      if (i_tc || c_vtc_bar_indel == std::min(c_vtc_indel, c_vtc_bar_indel)) { 
+      if (i_tc || (c_vtc_bar_indel == std::min(c_vtc_indel, c_vtc_bar_indel))) { 
         is_insertion = true;
-      } else if (bi_tc || c_vtc_indel == std::min(c_vtc_indel, c_vtc_bar_indel)) { 
+      } else if (bi_tc || (c_vtc_indel == std::min(c_vtc_indel, c_vtc_bar_indel))) { 
         is_insertion = false;
       } else { 
         assert(false);
       }
+
       this->graph->apply(insertion_t(a1, a2, bar_indel_color, is_insertion));
       ++number_indel_event; 
     } 

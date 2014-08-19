@@ -33,7 +33,7 @@ bool Algorithm<graph_t>::ProcessClone::do_action() {
     number_rear = 0; 
 
     for (vertex_t const & x: *this->graph) {  
-      mularcs_t const & mularcs = this->graph->get_adjacent_multiedges(x);
+      mularcs_t const & mularcs = this->graph->get_all_adjacent_multiedges(x);
         
       bool found = false;
       for(auto im = mularcs.cbegin(); (im != mularcs.cend()) && !found; ++im) {
@@ -44,9 +44,9 @@ bool Algorithm<graph_t>::ProcessClone::do_action() {
         }
 
         if (!this->graph->is_mobility_edge(x, y)) {  
-          mularcs_t && mularcs_y = this->graph->get_adjacent_multiedges_with_info(y);
+          mularcs_t && mularcs_y = this->graph->get_all_adjacent_multiedges_with_info(y);
           mularcs_y.erase(x);
-          mularcs_t && mularcs_x = this->graph->get_adjacent_multiedges_with_info(x);
+          mularcs_t && mularcs_x = this->graph->get_all_adjacent_multiedges_with_info(x);
           mularcs_x.erase(y);
 
           bool sligshot = (mularcs_y.size() == 1) && (mularcs_x.size() != 1) && this->graph->is_vec_T_consistent_color(mularcs_y.cbegin()->second);
@@ -66,7 +66,7 @@ bool Algorithm<graph_t>::ProcessClone::do_action() {
               this->graph->apply(clone);
               ++number_rear;
               found = true;
-              assert(this->graph->get_edge_multicolor(x, y) == this->graph->get_complete_color()); 
+              assert(this->graph->get_all_multicolor_edge(x, y) == this->graph->get_complete_color()); 
             } else {
               //std::cerr << "Create clone " << x << " " << y << " " << mother << " " 
               //  << genome_match::mcolor_to_name(mularcs_y.cbegin()->second) << std::endl;
@@ -74,7 +74,7 @@ bool Algorithm<graph_t>::ProcessClone::do_action() {
               this->graph->apply(clone);
               ++number_rear;
               found = true;
-              assert(this->graph->get_edge_multicolor(x, y) == this->graph->get_complete_color()); 
+              assert(this->graph->get_all_multicolor_edge(x, y) == this->graph->get_complete_color()); 
             }  
           } 
         }
@@ -86,7 +86,7 @@ bool Algorithm<graph_t>::ProcessClone::do_action() {
     } 
   } while (number_rear > 0); 
 
-  return (number_rear != 0);
+  return isChanged;
 } 
 
 #endif

@@ -49,14 +49,14 @@ Acknowledgements
 The work was supported by National Science Foundation under the grant No IIS-1253614.
 
 We would like to thank:
--- Aleksey Gurevich (testing and some useful suggestions)
+- Aleksey Gurevich (testing and some useful suggestions)
 
 Licence
 -------
 "MGRA" is distributed under GNU GPL v2 license, see LICENSE.
 
 It also uses third-party librarires and programs:
-* Blossom V (see *src/libs/LICENSE.TXT*), author Vladimir Kolmogorov
+* Blossom V (see *src/libs/blossom5/LICENSE.TXT*), author Vladimir Kolmogorov
 http://pub.ist.ac.at/~vnk/software.html#BLOSSOM5
 * Boost (Boost Software License)
 http://www.boost.org

@@ -1,5 +1,5 @@
-#ifndef DEFINED_H_
-#define DEFINED_H_
+#ifndef DEFINED_HPP
+#define DEFINED_HPP
 
 #include <list>
 #include <vector>
@@ -37,22 +37,18 @@
 namespace sys = boost::system;
 namespace fs = boost::filesystem;
 
-#include "utility/sym_multi_hashmap.h"
-#include "utility/equivalence.h"
-
 typedef std::string vertex_t;
 vertex_t const Infty = "oo"; 
 
-#include "property.h"
-#include "genome.h"
-#include "mcolor.h"
-#include "mularcs.h"
-#include "Tree.h"
+#include "property.hpp"
 
-typedef utility::sym_multi_hashmap<vertex_t> edges_t;
-typedef utility::sym_multi_hashmap<vertex_t> partgraph_t;
-typedef std::pair<vertex_t, vertex_t> arc_t;
-typedef std::pair<vertex_t, structure::Mcolor> edge_t; //FIXME CHECK on all
+#include "utility/sym_multihashmap.hpp"
+#include "utility/equivalence.hpp"
+
+#include "structures/mcolor.hpp"
+#include "structures/mularcs.hpp"
+#include "structures/genome.hpp"
+#include "structures/Tree.h"
 
 #endif
 

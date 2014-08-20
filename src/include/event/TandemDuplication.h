@@ -5,11 +5,11 @@ namespace event {
 
 template <class mcolor_t>
 struct TandemDuplication {
-  typedef std::pair<vertex_t, vertex_t> arc_t;
   typedef typename mcolor_t::citer citer;
-  typedef std::vector<arc_t>::const_iterator citer_vect;  
+  typedef std::pair<vertex_t, vertex_t> edge_t;
+  typedef std::vector<edge_t>::const_iterator citer_vect;  
 	
-  TandemDuplication(const std::vector<arc_t>& es, const mcolor_t& Q, bool is_del, bool is_revs)
+  TandemDuplication(const std::vector<edge_t>& es, const mcolor_t& Q, bool is_del, bool is_revs)
   : edges(es) 
   , mcolor(Q) 
   , is_reverse(is_revs)
@@ -50,7 +50,7 @@ struct TandemDuplication {
   }
 
 private: 
-  std::vector<arc_t> edges; 
+  std::vector<edge_t> edges; 
   mcolor_t mcolor; 
   bool is_reverse;
   bool is_deletion; 

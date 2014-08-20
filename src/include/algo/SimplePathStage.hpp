@@ -8,7 +8,6 @@ struct Algorithm<graph_t>::ProcessSimplePath : public Algorithm<graph_t>::Stage 
   typedef typename graph_t::mularcs_t mularcs_t; 
   typedef typename graph_t::twobreak_t twobreak_t;
   
-
   explicit ProcessSimplePath(std::shared_ptr<graph_t> const & graph)
   : Stage(graph) 
   {

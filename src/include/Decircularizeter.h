@@ -3,12 +3,14 @@
 
 template<class graph_t>
 struct Decircularizeter {
-  typedef structure::Mcolor mcolor_t; 
-  typedef event::TwoBreak<mcolor_t> twobreak_t; 
-  typedef std::list<twobreak_t> transform_t;
 
+  typedef typename graph_t::mcolor_type mcolor_t;
+  typedef typename graph_t::edge_t edge_t;
+  typedef typename graph_t::twobreak_t twobreak_t; 
+  typedef typename graph_t::transform_t transform_t;
+  typedef typename graph_t::partgraph_t partgraph_t; 
   
-  Decircularizeter(graph_t const & gr, edges_t const & b_edges) 
+  Decircularizeter(graph_t const & gr, partgraph_t const & b_edges) 
   : graph(gr)
   , bad_edges(b_edges)
   { 
@@ -21,7 +23,7 @@ private:
   bool is_circular_chromosome(partgraph_t const & local_graph, vertex_t const & x, std::unordered_set<vertex_t>& processed) const;
 private: 
   graph_t const & graph;
-  edges_t const & bad_edges;
+  partgraph_t const & bad_edges;
 }; 
 
 template<class graph_t>
@@ -98,7 +100,7 @@ size_t Decircularizeter<graph_t>::count_circular_chromosome(partgraph_t const & 
  * Transformation may contain only multicolors Q' with Q'\cap Q = 0 or Q.
 */
 template<class graph_t>
-std::list<event::TwoBreak<structure::Mcolor> > Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_t& TG) {
+typename graph_t::transform_t Decircularizeter<graph_t>::decircularize(partgraph_t& PG, transform_t& TG) {
   // decircularizing sub-transform that is removed
   transform_t D;
 
@@ -135,7 +137,7 @@ std::list<event::TwoBreak<structure::Mcolor> > Decircularizeter<graph_t>::decirc
 
 			//outlog << "... trying to swap with " << s << endl;
 
-	    arc_t p1, q1, p2, q2;
+	    edge_t p1, q1, p2, q2;
 
 	    bool usearc = false;
 

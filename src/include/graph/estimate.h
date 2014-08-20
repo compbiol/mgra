@@ -5,8 +5,10 @@
 
 template<class graph_t>
 struct Statistics { 
-  typedef structure::Mcolor mcolor_t; 
-  typedef structure::Mularcs<mcolor_t> mularcs_t; 
+  typedef typename graph_t::mcolor_type mcolor_t;
+  typedef typename graph_t::mularcs_t mularcs_t;
+  typedef typename graph_t::edge_t edge_t;
+   
 
   Statistics(std::shared_ptr<graph_t> const & gr)
   : graph(gr) 
@@ -32,14 +34,14 @@ struct Statistics {
     return indel_stats; 
   }
 
-  std::vector<arc_t> get_complete_edge() const {
-    std::vector<arc_t> edges; 
+  std::vector<edge_t> get_complete_edge() const {
+    std::vector<edge_t> edges; 
     std::unordered_set<vertex_t> processed; 
     for(vertex_t const & x : *graph) {
       if (processed.count(x) == 0) {
         mularcs_t const & mularcs = graph->get_all_adjacent_multiedges(x);
         if (mularcs.size() == 1 && mularcs.union_multicolors() == graph->get_complete_color()) { 
-	        edges.push_back(arc_t(x, mularcs.cbegin()->first));
+	        edges.push_back(edge_t(x, mularcs.cbegin()->first));
           processed.insert({x, mularcs.cbegin()->first});
         } 
       } 

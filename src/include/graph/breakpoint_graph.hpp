@@ -12,12 +12,14 @@ struct BreakpointGraph {
   typedef mcolor_t mcolor_type; 
   typedef typename structure::Mularcs<mcolor_t> mularcs_t; 
   
-  typedef std::pair<vertex_t, vertex_t> graph_edge_t;
-  typedef std::pair<vertex_t, mcolor_t> graph_acr_t; 
+  typedef std::pair<vertex_t, vertex_t> edge_t;
+  typedef std::pair<vertex_t, mcolor_t> arc_t; 
 
+  typedef typename MultiGraph::partgraph_t partgraph_t; 
+  
   typedef typename HistoryGraph<mcolor_t>::twobreak_t twobreak_t; 
   typedef typename HistoryGraph<mcolor_t>::clone_t clone_t;            
-  typedef typename HistoryGraph<mcolor_t>::insertion_t insertion_t;
+  typedef typename HistoryGraph<mcolor_t>::insdel_t insdel_t;
   typedef typename HistoryGraph<mcolor_t>::tandem_duplication_t tandem_duplication_t;
   typedef typename HistoryGraph<mcolor_t>::transform_t transform_t;
   
@@ -31,7 +33,6 @@ struct BreakpointGraph {
   { 
   } 
 
-  void print() const;
   /*
    * We can change graph use Event operations only. Folow methods do this. 
    * Implementation see in apply_func_impl.hpp file. 
@@ -39,87 +40,53 @@ struct BreakpointGraph {
   void apply(twobreak_t const & twobreak, bool record = true); 
   void apply(clone_t const & clone, bool record = true); 
   void apply(tandem_duplication_t const & tandem_duplication, bool record = true);
-  void apply(insertion_t const & insdel, bool record = true);
+  void apply(insdel_t const & insdel, bool record = true);
 
   bool is_simple_vertex(vertex_t const & x) const;
   bool is_indel_vertex(vertex_t const & x) const;  
   bool is_duplication_vertex(vertex_t const & x) const;
   bool is_have_self_loop(vertex_t const & x) const; 
 
-  size_t mobility_score(graph_edge_t const & viewed, mcolor_t const & color, graph_edge_t const & removed) const;
-
-  /* 
-   * Very specific function. 
-   * --- Parametrs: 
-   * Both edges have mobilty score = 1 and this score calculate on mobilty_score function.  
-   * Input edges are equal to mobility_score function. (Method manualy tested result).
-   * --- Return: if true - then edge is mobile. 
-   * Implementation see in property_func_impl.hpp file. 
-   */
-#ifdef PSEUDO_EDGE
-  bool is_result_mobility_edge(graph_edge_t const & viewed, mcolor_t const & new_color, graph_edge_t const & removed) const;
-#endif
-  
-  std::pair<size_t, size_t> is_decrease_verteces_score(twobreak_t const & twobreak) const; 
-
-  bool is_contain_T_consistent_color(vertex_t const & x, vertex_t const & y) const; 
   /*
    *
    */
   int calculate_cost(vertex_t const & x, vertex_t const & y) const;
 
+  size_t mobility_score(edge_t const & viewed, mcolor_t const & color, edge_t const & removed) const;
+
+  /*
+   * 
+   */
   bool is_mobility_edge(vertex_t const & x, vertex_t const & y) const;
   bool is_mobility_edge(vertex_t const & x, mcolor_t const & color, vertex_t const & y) const;
 
-#ifdef PSEUDO_EDGE
-  bool is_pseudo_edge(vertex_t const & mother, mcolor_t const & color) const; 
-  bool is_pseudo_edge(vertex_t const & x, mcolor_t const & color, vertex_t const & y) const;
-#endif
+  bool is_contain_T_consistent_color(vertex_t const & x, vertex_t const & y) const; 
+
+  std::pair<size_t, size_t> is_decrease_verteces_score(twobreak_t const & twobreak) const; 
 
   /*
-   * get_[all | real]_multicolor_edge_[with_info]
+   * get_all_multicolor_edge_[with_info]
    * all - return pseudo and real edge with all multicolor
-   * real - return only real edge with real multicolor
    * with_info - return split edges corresponding rounds   
    * Implementation see in property_func_impl.hpp
    */
   mcolor_t get_all_multicolor_edge(vertex_t const & x, vertex_t const & y) const;
-
-#ifdef PSEUDO_EDGE
-  mcolor_t get_real_multicolor_edge(vertex_t const & x, vertex_t const & y) const;  
-#endif
-
   std::set<mcolor_t> get_all_multicolor_edge_with_info(vertex_t const & u, vertex_t const & v, bool with_bad_edge = true) const;
 
-  /* get_[all | real | clones]_adjacent_multiedges_[with_info]
+  /* 
    *
   */
   mularcs_t get_all_adjacent_multiedges(vertex_t const & u) const; 
   mularcs_t get_all_adjacent_multiedges_with_info(vertex_t const & u, bool with_bad_edge = true) const;
 
-#ifdef PSEUDO_EDGE
-  mularcs_t get_real_adjacent_multiedges_with_info(vertex_t const & u, bool with_bad_edge = true) const; 
-  mularcs_t get_clones_adjacent_multiedges_with_info(vertex_t const & u, mcolor_t const & color, bool with_bad_edge = true) const; 
-#endif  
-
-  /*
-   * go to private section
-   */
-  mularcs_t get_all_adjacent_vtc_multiedges(vertex_t const & u) const; 
-  
   /*
    *
    */
   utility::equivalence<vertex_t> split_on_components(bool not_drop_complete_edge = true) const;
   utility::equivalence<vertex_t> split_on_components_with_color(mcolor_t const & color) const;
 
-  // This metod not used. Never tested
-#ifdef PSEUDO_EDGE  
-  std::pair<vertex_t, vertex_t> get_real_edge(vertex_t const & x, mcolor_t const & color, vertex_t const & y) const; 
-#endif
-
+  partgraph_t get_bad_edges() const;
   bool check_consistency_graph() const; 
-  edges_t get_bad_edges() const;
 
   inline void update_number_of_splits(size_t ns) {
     if (ns == 3) { 
@@ -131,6 +98,7 @@ struct BreakpointGraph {
   
   DECLARE_GETTER(bool, canformQoo, canformQoo) 
   DECLARE_SETTER(bool, canformQoo, canformQoo)
+  
   inline bool is_postponed_deletion(vertex_t const & u, vertex_t const & v) const { 
     return this->postponed_deletions.defined(u, v);
   }
@@ -154,8 +122,9 @@ struct BreakpointGraph {
    * Delegators for multicolors. See in file graph_colors.hpp
    */
   std::set<mcolor_t> split_color(mcolor_t const & color) const { 
-    return multicolors.split_color_on_tc_color(color, number_of_splits);
+    return multicolors.split_color_on_tc_color(color, graph.count_local_graphs() + 1);
   }
+
   DECLARE_DELEGATE_PARAM_METHOD(mcolor_t const&, multicolors, get_complement_color, mcolor_t const &, get_complement_color)
   DECLARE_DELEGATE_PARAM_CONST_METHOD(bool, multicolors, is_T_consistent_color, mcolor_t const &, is_T_consistent_color)
   DECLARE_DELEGATE_PARAM_CONST_METHOD(bool, multicolors, is_vec_T_consistent_color, mcolor_t const &, is_vec_T_consistent_color)
@@ -182,19 +151,16 @@ struct BreakpointGraph {
 
 private:
   mularcs_t get_all_adjacent_tc_multiedges(vertex_t const & u) const; 
-
+  mularcs_t get_all_adjacent_vtc_multiedges(vertex_t const & u) const; 
+  
   //can incident multiedges of x form multicolor Q (current don't check T-consistent formation)
   //if return false, then Q cannot be formed
   //if true - who knows... 
-  bool canformQ(graph_acr_t const & input_edge, mcolor_t const & color) const;
+  bool canformQ(arc_t const & input_edge, mcolor_t const & color) const;
 
   void check_changed_vertex(vertex_t const & vertex);
   
   size_t mobility_score_relative_vertex(vertex_t const & x, mcolor_t const & color, vertex_t const & y, vertex_t const & about) const;
-
-#ifdef PSEUDO_EDGE    
-  std::set<mcolor_t> split_edge_on_pseudo_edge(vertex_t const & u, mcolor_t const & color, vertex_t const & v) const;
-#endif
 
 private:
   MultiGraph graph; 
@@ -205,8 +171,8 @@ private:
   bool canformQoo;  // safe choice, at later stages may change to false
   bool is_mobile_irregular_edge; 
 
-  edges_t insertions;
-  edges_t postponed_deletions;   
+  partgraph_t insertions;
+  partgraph_t postponed_deletions;   
 
   std::unordered_map<vertex_t, std::list<size_t> > mother_verteces;
 };
@@ -219,21 +185,12 @@ private:
 //if return false, then Q cannot be formed
 //if true - who knows... 
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::canformQ(graph_acr_t const & input_edge, mcolor_t const & color) const { 
+bool BreakpointGraph<mcolor_t>::canformQ(arc_t const & input_edge, mcolor_t const & color) const { 
   if (input_edge.first == Infty) {
     return canformQoo;
   }
    
-  mularcs_t mularcs;
-#ifdef PSEUDO_EDGE
-  if (is_pseudo_edge(input_edge.first, input_edge.second)) { 
-    mularcs = get_clones_adjacent_multiedges_with_info(input_edge.first, input_edge.second); 
-  } else { 
-    mularcs = get_real_adjacent_multiedges_with_info(input_edge.first); 
-  }
-#else 
-  mularcs = get_all_adjacent_multiedges_with_info(input_edge.first);
-#endif
+  mularcs_t mularcs = get_all_adjacent_multiedges_with_info(input_edge.first);
 
   bool canform = true;
   for(auto arc = mularcs.cbegin(); (arc != mularcs.cend()) && canform; ++arc) { 
@@ -245,39 +202,6 @@ bool BreakpointGraph<mcolor_t>::canformQ(graph_acr_t const & input_edge, mcolor_
 
   return canform;
 }
-
-#ifdef PSEUDO_EDGE    
-template<class mcolor_t>
-std::set<mcolor_t> BreakpointGraph<mcolor_t>::split_edge_on_pseudo_edge(vertex_t const & u, mcolor_t const & color, vertex_t const & v) const { 
-  std::set<mcolor_t> result({color});
-
-  auto const & split_lambda = [&](vertex_t const & a) -> void { 
-    if (this->mother_verteces.count(a) != 0) {
-
-      auto const & clones = this->mother_verteces.find(a)->second;
-      for (auto clone_ind = clones.crbegin(); clone_ind != clones.crend(); ++clone_ind) { 
-        std::set<mcolor_t> current;
-        mcolor_t const & clone_color = history.get_clone(*clone_ind).get_mcolor();
-        for (mcolor_t const & edge_color : result) {  
-          mcolor_t inter_color(clone_color, edge_color, mcolor_t::Intersection);
-          if (inter_color.size() > 0 && inter_color.size() < clone_color.size() && inter_color.size() != edge_color.size()) { 
-            current.insert(inter_color);
-            current.insert(mcolor_t(edge_color, inter_color, mcolor_t::Difference));
-          } else {
-            current.insert(edge_color);
-          } 
-        }
-        result = current; 
-      } 
-    }
-  };         
-
-  split_lambda(u);
-  split_lambda(v);
-  
-  return result;
-}
-#endif
 
 template<class mcolor_t>
 void BreakpointGraph<mcolor_t>::check_changed_vertex(vertex_t const & v) {
@@ -340,8 +264,8 @@ void BreakpointGraph<mcolor_t>::check_changed_vertex(vertex_t const & v) {
 }
 
 template<class mcolor_t>
-edges_t BreakpointGraph<mcolor_t>::get_bad_edges() const { 
-  edges_t answer; 
+typename MultiGraph::partgraph_t BreakpointGraph<mcolor_t>::get_bad_edges() const { 
+  partgraph_t answer; 
 
   for (auto const & edge: insertions) { 
     answer.insert(edge.first, edge.second);
@@ -350,6 +274,7 @@ edges_t BreakpointGraph<mcolor_t>::get_bad_edges() const {
   for (auto const & edge: postponed_deletions) {
     answer.insert(edge.first, edge.second);
   }
+
   return answer;
 } 
 
@@ -366,25 +291,11 @@ bool BreakpointGraph<mcolor_t>::check_consistency_graph() const {
 
     mcolor_t const & color = get_all_multicolor_edge(a1, a2);
     if (color != multicolors.get_complete_color()) {    
-      //std::cerr << a1 << " " << a2 << std::endl;
       ++bad_postponed_deletion; 
     } 
   }
+
   return (bad_postponed_deletion == 0);
 }
-
-template<class mcolor_t> 
-void BreakpointGraph<mcolor_t>::print() const {  
-  std::cerr << "CLONING " << mother_verteces.size() << std::endl;
-  for (auto const & mother : this->mother_verteces) {
-    std::cerr << mother.first << " ";
-    auto const & clones = mother.second; 
-    for (auto const & clone : clones) { 
-      std::cerr << genome_match::mcolor_to_name(history.get_clone(clone).get_mcolor()) << " ";
-    }
-    std::cerr << std::endl;
-  }
-}
-
 
 #endif

@@ -24,22 +24,13 @@ configure_file (
 set(ROOT_DIR "${CMAKE_SOURCE_DIR}/../")
 set (OPTIMIZE_FLAG " -std=c++11 -O2 -pipe -finline-functions -finline-limit=1000") # -DPSEUDO_EDGE  
 set (WARNS "-Wall -Werror -Wextra -pedantic-errors")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG}") #" ${WARNS}") 
 
-#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${DEBUG}")
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${DEBUG}")
-# -DBOOST_LOG_DYN_LINK")
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${WARNS}") 
 
 include_directories(${CMAKE_BINARY_DIR} 
 			${PROJECT_SOURCE_DIR}/include 
-			${PROJECT_SOURCE_DIR}/include/writer 
-			${PROJECT_SOURCE_DIR}/include/algo 
-			${PROJECT_SOURCE_DIR}/include/graph
-			${PROJECT_SOURCE_DIR}/include/structures
-			${PROJECT_SOURCE_DIR}/include/event
 			${PROJECT_SOURCE_DIR}/libs 
-		   ) 
+		  ) 
 
 find_package(Boost COMPONENTS program_options filesystem system REQUIRED) #log log_setup thread date_time 
 if(NOT ${Boost_FOUND})

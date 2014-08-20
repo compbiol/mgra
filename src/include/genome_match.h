@@ -2,7 +2,7 @@
 #define GENOME_MATCH_ 
 
 #include "defined.h"
-#include "pconf.h"
+#include "structures/pconf.h"
 
 struct genome_match { 
   typedef structure::Genome genome_t;

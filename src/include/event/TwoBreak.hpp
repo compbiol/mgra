@@ -1,26 +1,25 @@
-#ifndef TWOBREAK_H_
-#define TWOBREAK_H_
-
-#include "Event.h"
+#ifndef TWOBREAK_HPP
+#define TWOBREAK_HPP
 
 namespace event { 
 
 template<class mcolor_t>
-struct TwoBreak : public event::Event {
-  typedef std::pair<vertex_t, vertex_t> arc_t;
+struct TwoBreak {
   typedef typename mcolor_t::citer citer; 
-
+  typedef std::pair<vertex_t, vertex_t> edge_t;
+  typedef utility::sym_multihashmap<vertex_t> partgraph_t;
+  
   TwoBreak() { 
   } 
   	
-  TwoBreak(arc_t const & a1, arc_t const & a2, mcolor_t const & multicolor)
+  TwoBreak(edge_t const & a1, edge_t const & a2, mcolor_t const & multicolor)
   : m_arcs({a1, a2}) 
   , m_multicolor(multicolor) 
   {
   }
 
   TwoBreak(vertex_t const & x1, vertex_t const & y1, vertex_t const & x2, vertex_t const & y2, mcolor_t const & multicolor)
-  : m_arcs({arc_t(x1, y1), arc_t(x2, y2)})
+  : m_arcs({edge_t(x1, y1), edge_t(x2, y2)})
   , m_multicolor(multicolor) 
   {
   }
@@ -41,7 +40,7 @@ struct TwoBreak : public event::Event {
     return TwoBreak(m_arcs[0].first, m_arcs[1].first, m_arcs[0].second, m_arcs[1].second, m_multicolor);
   }
 
-  inline arc_t get_arc(size_t index) const { 
+  inline edge_t get_arc(size_t index) const { 
     assert(index < 2); 
     return m_arcs[index];
   } 
@@ -71,7 +70,6 @@ struct TwoBreak : public event::Event {
     return (second < *this);
   }
 
-
   DECLARE_GETTER( mcolor_t, m_multicolor, mcolor )
   
   DECLARE_CONST_ITERATOR( citer, m_multicolor, begin, cbegin )  
@@ -80,12 +78,28 @@ struct TwoBreak : public event::Event {
   DECLARE_CONST_ITERATOR( citer, m_multicolor, cend, cend )
 
 private: 
-  //std::array<vertex_t, 4> arcs;
-  arc_t m_arcs[2]; // (x1,y1) x (x2,y2) = (x1,x2) + (y1,y2)
+  std::array<edge_t, 2> m_arcs; // (x1,y1) x (x2,y2) = (x1,x2) + (y1,y2)
   mcolor_t m_multicolor; 
 };
 
 }
+
+template<class mcolor_t>
+void event::TwoBreak<mcolor_t>::apply_single(partgraph_t& local_graph) const {
+  for(size_t i = 0; i < 2; ++i) {
+    if (m_arcs[i].first != Infty || m_arcs[i].second != Infty) {
+      local_graph.erase(m_arcs[i].first, m_arcs[i].second);
+    }
+  }
+  
+  if (m_arcs[0].first != Infty || m_arcs[1].first != Infty) {
+    local_graph.insert(m_arcs[0].first, m_arcs[1].first);
+  }
+
+  if (m_arcs[0].second != Infty || m_arcs[1].second != Infty) {
+    local_graph.insert(m_arcs[0].second, m_arcs[1].second);
+  }
+} 
 
 template<class mcolor_t>
 bool event::TwoBreak<mcolor_t>::operator < (TwoBreak const & twobreak) const { 
@@ -130,11 +144,6 @@ bool event::TwoBreak<mcolor_t>::operator < (TwoBreak const & twobreak) const {
   }
 
   return false;
-  /*std::tuple<vertex_t, vertex_t, vertex_t, vertex_t, mcolor_t> first(m_arcs[0].first, m_arcs[0].second, 
-          m_arcs[1].first, m_arcs[1].second, m_multicolor);
-  std::tuple<vertex_t, vertex_t, vertex_t, vertex_t, mcolor_t> second(twobreak.m_arcs[0].first, twobreak.m_arcs[0].second, 
-          twobreak.m_arcs[1].first, twobreak.m_arcs[1].second, twobreak.m_multicolor);
-  return (first < second);*/
 }
 
 template<class mcolor_t>
@@ -165,7 +174,7 @@ bool event::TwoBreak<mcolor_t>::is_independent(TwoBreak const & tested) const {
 
 template<class mcolor_t>
 event::TwoBreak<mcolor_t> event::TwoBreak<mcolor_t>::get_canonical_twobreak() const { 
-  arc_t new_arc[2];    
+  edge_t new_arc[2];    
   
   auto const less_lambda = [&](vertex_t const & v, vertex_t const & u) -> bool { 
     if (u == Infty) { 
@@ -185,17 +194,9 @@ event::TwoBreak<mcolor_t> event::TwoBreak<mcolor_t>::get_canonical_twobreak() co
     }
   };
 
-  /*if (m_arcs[0].first > m_arcs[0].second && m_arcs[1].first >= m_arcs[1].second) {
-    new_arc[0] = arc_t(m_arcs[0].second, m_arcs[0].first);          
-    new_arc[1] = arc_t(m_arcs[1].second, m_arcs[1].first);          
-  } else {
-    new_arc[0] = m_arcs[0]; 
-    new_arc[1] = m_arcs[1];
-  }*/
-
   if (!less_lambda(m_arcs[0].first, m_arcs[0].second) && !less_lambda(m_arcs[1].first, m_arcs[1].second)) {
-    new_arc[0] = arc_t(m_arcs[0].second, m_arcs[0].first);          
-    new_arc[1] = arc_t(m_arcs[1].second, m_arcs[1].first);          
+    new_arc[0] = edge_t(m_arcs[0].second, m_arcs[0].first);          
+    new_arc[1] = edge_t(m_arcs[1].second, m_arcs[1].first);          
   } else {
     new_arc[0] = m_arcs[0]; 
     new_arc[1] = m_arcs[1];
@@ -212,22 +213,5 @@ event::TwoBreak<mcolor_t> event::TwoBreak<mcolor_t>::get_canonical_twobreak() co
   
   return TwoBreak(new_arc[0], new_arc[1], m_multicolor);
 }
-
-template<class mcolor_t>
-void event::TwoBreak<mcolor_t>::apply_single(partgraph_t& local_graph) const {
-  for(size_t i = 0; i < 2; ++i) {
-    if (m_arcs[i].first != Infty || m_arcs[i].second != Infty) {
-      local_graph.erase(m_arcs[i].first, m_arcs[i].second);
-    }
-  }
-	
-  if (m_arcs[0].first != Infty || m_arcs[1].first != Infty) {
-    local_graph.insert(m_arcs[0].first, m_arcs[1].first);
-  }
-
-  if (m_arcs[0].second != Infty || m_arcs[1].second != Infty) {
-    local_graph.insert(m_arcs[0].second, m_arcs[1].second);
-  }
-} 
 
 #endif

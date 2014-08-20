@@ -4,8 +4,9 @@
 #include "defined.h" 
 
 struct MultiGraph {
-  typedef structure::Genome genome_t;
   typedef std::string orf_t;
+  typedef structure::Genome genome_t;
+  typedef utility::sym_multihashmap<vertex_t> partgraph_t;
 
   explicit MultiGraph(std::vector<genome_t> const & genomes) 
   : m_local_graphs(genomes.size()) 

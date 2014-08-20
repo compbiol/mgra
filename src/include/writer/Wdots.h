@@ -223,7 +223,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
       } 
       /*for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
         for (size_t i = 0; i < ic->second; ++i) { 
-          /*************** output edge (x,y) **************** 
+          ************** output edge (x,y) **************** 
           dot << "\t\"" << x << "\"\t--\t\"";
           if (y == Infty) {
             if (ic == C.cbegin()) { 

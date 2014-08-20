@@ -21,7 +21,7 @@ void writer::Wstats::print_all_statistics(size_t stage, Statistics<BreakpointGra
   //print_estimated_dist(stage, cfg, graph);
 } 
 
-void writer::Wstats::print_complete_edges(std::vector<arc_t> const & edges) { 
+void writer::Wstats::print_complete_edges(std::vector<edge_t> const & edges) { 
   ofstat << "... complete multiedges:";
   for(auto const & edge : edges) {
     ofstat << " " << edge.first << "~" << edge.second;
@@ -75,7 +75,7 @@ void writer::Wstats::print_indel_statistics(const std::vector<std::pair<std::pai
 } 
 
 void writer::Wstats::print_history_statistics(BreakpointGraph<mcolor_t> const & graph) {
-  edges_t const & bad_edges = graph.get_bad_edges();
+  auto const & bad_edges = graph.get_bad_edges();
   std::map<mcolor_t, size_t> n2br;
   std::map<mcolor_t, size_t> nins;
   std::map<mcolor_t, size_t> ndel; 
@@ -146,7 +146,7 @@ void writer::Wstats::print_history_statistics(BreakpointGraph<mcolor_t> const & 
   ofstat << std::endl;*/
 }
 
-/*void writer::Wstats::print_postponed_deletion_statistics(const std::map<arc_t, Mcolor>& postponed_deletions) {
+/*void writer::Wstats::print_postponed_deletion_statistics(const std::map<edge_t, Mcolor>& postponed_deletions) {
   ofstat << std::endl << "Total number of postponed deletions: " << postponed_deletions.size() << std::endl;
 
   std::map<Mcolor, size_t> npdel; 

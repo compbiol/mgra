@@ -3,11 +3,14 @@
 
 template<class graph_t>
 struct Algorithm<graph_t>::IncreaseNumberComponents : public Algorithm<graph_t>::Stage {
-	typedef typename graph_t::mcolor_type mcolor_t;
+	
+  typedef typename graph_t::mcolor_type mcolor_t;
   typedef typename graph_t::mularcs_t mularcs_t; 
+  typedef typename graph_t::edge_t edge_t; 
+
 	typedef typename graph_t::twobreak_t twobreak_t;
 	typedef typename utility::equivalence<vertex_t> equiv_t;
-	typedef typename std::map<vertex_t, std::set<arc_t> > bridges_t;
+	typedef typename std::map<vertex_t, std::set<edge_t> > bridges_t;
 
 	explicit IncreaseNumberComponents(std::shared_ptr<graph_t> const & graph)
 	: Stage(graph) 
@@ -62,11 +65,11 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 		  		}	
 
           if (bridges.second.size() == 4 && irregular_edges[bridges.first].size() == 0) {
-            arc_t const & p = *(bridges.second.begin());
-            arc_t const & q = *(++bridges.second.begin());
+            edge_t const & p = *(bridges.second.begin());
+            edge_t const & q = *(++bridges.second.begin());
 
-            arc_t const & r = *(++(++bridges.second.begin()));
-            arc_t const & t = *(++(++(++bridges.second.begin())));
+            edge_t const & r = *(++(++bridges.second.begin()));
+            edge_t const & t = *(++(++(++bridges.second.begin())));
 
             if (processed.count(connected_components[p.second]) == 0 && processed.count(connected_components[q.second]) == 0
                 && processed.count(connected_components[r.second]) == 0 && processed.count(connected_components[t.second]) == 0) { 
@@ -76,13 +79,14 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
               twobreaks_t possible_twobreaks2(twobreak_t(p, r, *vtc), twobreak_t(q, t, *vtc));
               twobreaks_t possible_twobreaks3(twobreak_t(p, t, *vtc), twobreak_t(q, r, *vtc));
               
-              auto const & calc_score = [&] (twobreaks_t const & possible_twobreaks) -> int {
+              auto const & calc_score_lambda = [&] (twobreaks_t const & possible_twobreaks) -> int {
                 auto first_scores = this->graph->is_decrease_verteces_score(possible_twobreaks.first);
                 auto second_scores = this->graph->is_decrease_verteces_score(possible_twobreaks.second);
                 return ((int)(first_scores.first + second_scores.first) - (int)(first_scores.second + second_scores.second));
               };   
                
-              std::vector<int> scores({calc_score(possible_twobreaks1), calc_score(possible_twobreaks2), calc_score(possible_twobreaks3)}); 
+              std::vector<int> scores({calc_score_lambda(possible_twobreaks1), 
+                calc_score_lambda(possible_twobreaks2), calc_score_lambda(possible_twobreaks3)}); 
 
               bool flag = false; 
               for(int elem : scores) { 
@@ -113,8 +117,8 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
           }
 
 		  		if (bridges.second.size() == 2 && irregular_edges[bridges.first].size() == 0) {
-		    		arc_t const & p = *(bridges.second.begin());
-		    		arc_t const & q = *(bridges.second.rbegin());
+		    		edge_t const & p = *(bridges.second.begin());
+		    		edge_t const & q = *(bridges.second.rbegin());
 
 		    		// N.B. we have CC[p.first] == CC[q.first] == ie->first
         		if (processed.count(connected_components[p.second]) == 0 && processed.count(connected_components[q.second]) == 0) { 
@@ -129,11 +133,11 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 		  		// connected component with a single external edge and look for irregular edges
 		  		if (bridges.second.size() == 1 && !repeat) {
 		  			bool found = false;
-		    		arc_t const & p = *(bridges.second.begin());
-		    		arc_t q;
+		    		edge_t const & p = *(bridges.second.begin());
+		    		edge_t q;
 	    
 		    		for(auto ii = irregular_edges[bridges.first].cbegin(); (ii != irregular_edges[bridges.first].cend()) && !found;) {
-	      			arc_t const & ireg_edge = *ii; // edge
+	      			edge_t const & ireg_edge = *ii; // edge
 	      			mcolor_t color(*vtc, this->graph->get_all_multicolor_edge(p.first, ireg_edge.first), mcolor_t::Union);
 					
   						if (color.size() > vtc->size() && this->graph->is_T_consistent_color(color)) {

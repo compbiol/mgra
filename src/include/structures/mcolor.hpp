@@ -1,7 +1,5 @@
-#ifndef MCOLOR_H_
-#define MCOLOR_H_
-
-#include <map>
+#ifndef MCOLOR_HPP
+#define MCOLOR_HPP
 
 namespace structure { 
 
@@ -205,4 +203,4 @@ private:
 
 } 
 
-#endif  /* end of include guard: MCOLOR_H_ */
+#endif  /* end of include guard: MCOLOR_HPP */

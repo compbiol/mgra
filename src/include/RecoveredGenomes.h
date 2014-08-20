@@ -5,7 +5,10 @@
 
 template<class graph_t>
 struct RecoveredGenomes {
+  
   typedef typename graph_t::mcolor_type mcolor_t;
+  
+  typedef typename graph_t::partgraph_t partgraph_t;
   typedef typename graph_t::twobreak_t twobreak_t; 
   typedef typename graph_t::transform_t transform_t;
  
@@ -13,7 +16,7 @@ struct RecoveredGenomes {
   typedef structure::Chromosome chromosome_t;
 
   template<class pconf_t>
-  RecoveredGenomes(graph_t const & gr, pconf_t const & conf, edges_t const & b_edges);
+  RecoveredGenomes(graph_t const & gr, pconf_t const & conf, partgraph_t const & b_edges);
 
   inline std::vector<genome_t> get_genomes() { 
     std::vector<genome_t> genomes;
@@ -35,7 +38,7 @@ private:
 
 private: 
   graph_t const & graph;
-  edges_t bad_edges;
+  partgraph_t bad_edges;
   std::vector<std::string> name_genomes;
   std::vector<partgraph_t> recovered_graphs;
   std::vector<transform_t> recovered_transformation;
@@ -74,7 +77,7 @@ bool RecoveredGenomes<graph_t>::are_adjacent_branches(mcolor_t const & mcolor_a,
 
 template<class graph_t>
 template<class pconf_t>
-RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & conf, edges_t const & b_edges)  
+RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & conf, partgraph_t const & b_edges)  
 : graph(gr)
 , bad_edges(b_edges)
 {
@@ -115,8 +118,6 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
 #else 
     recovered_graphs.resize(graph.count_vec_T_consitent_color(), graph.get_partgraph(0)); 
 #endif
-
-    size_t remember = 0; 
 
     for(auto it = graph.crbegin_2break_history(); it != graph.crend_2break_history(); ++it) {
       size_t i = 0;

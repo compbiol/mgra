@@ -1,8 +1,9 @@
-#ifndef PCONF_H_
-#define PCONF_H_
+#ifndef PCONF_HPP
+#define PCONF_HPP
 
 #include "defined.h"
-#include "2break.h"
+
+#include "event/TwoBreak.hpp"
 
 /*This structures containes information from *.cfg file */
 template<class mcolor_t>
@@ -259,4 +260,5 @@ std::string ProblemInstance<mcolor_t>::mcolor_to_name(mcolor_t const & color) co
     return answer; 
   } 
 }
+
 #endif

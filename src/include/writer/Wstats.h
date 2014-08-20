@@ -1,7 +1,6 @@
 #ifndef WSTATS_H_
 #define WSTATS_H_
 
-//#include "graph/mbgraph_history.h"
 #include "graph/breakpoint_graph.hpp"
 #include "graph/estimate.h"
 #include "structures/pconf.h"
@@ -12,6 +11,7 @@ namespace writer {
 struct Wstats { 
   typedef structure::Mcolor mcolor_t;
   typedef structure::Mularcs<mcolor_t> mularcs_t;
+  typedef std::pair<vertex_t, vertex_t> edge_t;
 
   Wstats()
   {
@@ -34,8 +34,8 @@ struct Wstats {
   void print_all_statistics(size_t stage, Statistics<BreakpointGraph<mcolor_t> >& info, BreakpointGraph<mcolor_t> const & graph); 
   void print_history_statistics(BreakpointGraph<mcolor_t> const & graph);
 
-  //void print_postponed_deletion_statistics(const std::map<arc_t, Mcolor>& postponed_deletions);
-  //void print_bad_complete_edges(const mbgraph_with_history<Mcolor>& graph, const std::multimap<arc_t, Mcolor>& insertions);
+  //void print_postponed_deletion_statistics(const std::map<edge_t, Mcolor>& postponed_deletions);
+  //void print_bad_complete_edges(const mbgraph_with_history<Mcolor>& graph, const std::multimap<edge_t, Mcolor>& insertions);
 private:
   inline void print_vertex_statistics(std::array<size_t, 4> const & answer) {
     ofstat << "... Duplication vertex: " << answer[0] << std::endl;
@@ -44,7 +44,7 @@ private:
     ofstat << "... Colors is not one-to-one match: " << answer[3] << std::endl; 
   } 
 
-  void print_complete_edges(std::vector<arc_t> const & edges); 
+  void print_complete_edges(std::vector<edge_t> const & edges); 
   void print_connected_components(const BreakpointGraph<mcolor_t>& graph);
   void print_rear_characters(const std::vector<std::string>& info);
   void print_indel_statistics(const std::vector<std::pair<std::pair<mcolor_t, mcolor_t>, std::array<size_t, 3> > >& indel); 

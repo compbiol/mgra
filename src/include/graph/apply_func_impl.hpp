@@ -76,13 +76,6 @@ void BreakpointGraph<mcolor_t>::apply(clone_t const & clone, bool record) {
 
   this->mother_verteces[mother_edge.first].push_back(number);
 
-  /*
-  this->pseudo_edges[mother_edge.first].insert(mother_edge.second);
-  if (clone.is_have_pseudo_vertex() && record) {
-    this->pseudo_infinity_verteces[mother_edge.first].insert(std::make_pair(mother_edge.second, number));
-  } 
-  */
-
   check_changed_vertex(mother_edge.first);
   check_changed_vertex(central_edge.first);
   check_changed_vertex(central_edge.second);
@@ -92,7 +85,7 @@ void BreakpointGraph<mcolor_t>::apply(clone_t const & clone, bool record) {
 } 
 
 template<class mcolor_t>
-void BreakpointGraph<mcolor_t>::apply(insertion_t const & insdel, bool record) { 
+void BreakpointGraph<mcolor_t>::apply(insdel_t const & insdel, bool record) { 
   if (record) { 
     ;
   }
@@ -109,41 +102,41 @@ void BreakpointGraph<mcolor_t>::apply(insertion_t const & insdel, bool record) {
 }
 
 template<class mcolor_t>
-void BreakpointGraph<mcolor_t>::apply(tandem_duplication_t const & dupl, bool record) {
+void BreakpointGraph<mcolor_t>::apply(tandem_duplication_t const & duplication, bool record) {
   if (record) {
-    history.save_tandem_duplication(dupl);
+    history.save_tandem_duplication(duplication);
   }
  
-  if (dupl.is_deletion_oper()) {
-    for (auto it = dupl.cbegin_edges(); it != (--dupl.cend_edges()); ++it) {
-      for (auto const &color : dupl) {  
+  if (duplication.is_deletion_oper()) {
+    for (auto it = duplication.cbegin_edges(); it != (--duplication.cend_edges()); ++it) {
+      for (auto const &color : duplication) {  
         graph.erase_edge(color.first, it->first, it->second);
       }
     } 
 
-    if (dupl.is_reverse_tandem_duplication()) {
-      for (auto const &color : dupl) {
-        graph.add_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
+    if (duplication.is_reverse_tandem_duplication()) {
+      for (auto const &color : duplication) {
+        graph.add_edge(color.first, (--duplication.cend_edges())->first, (--duplication.cend_edges())->second);
       }
     } else {
-      for (auto const &color : dupl) {
-        graph.erase_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
+      for (auto const &color : duplication) {
+        graph.erase_edge(color.first, (--duplication.cend_edges())->first, (--duplication.cend_edges())->second);
       }
     }
   } else {
-    for (auto it = dupl.cbegin_edges(); it != (--dupl.cend_edges()); ++it) {
-      for (auto const &color : dupl) {
+    for (auto it = duplication.cbegin_edges(); it != (--duplication.cend_edges()); ++it) {
+      for (auto const &color : duplication) {
         graph.add_edge(color.first, it->first, it->second);
       }
     } 
 
-    if (dupl.is_reverse_tandem_duplication()) {
-      for (auto const &color : dupl) {
-        graph.erase_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
+    if (duplication.is_reverse_tandem_duplication()) {
+      for (auto const &color : duplication) {
+        graph.erase_edge(color.first, (--duplication.cend_edges())->first, (--duplication.cend_edges())->second);
       }
     } else {
-      for (auto const &color : dupl) {
-        graph.add_edge(color.first, (--dupl.cend_edges())->first, (--dupl.cend_edges())->second);
+      for (auto const &color : duplication) {
+        graph.add_edge(color.first, (--duplication.cend_edges())->first, (--duplication.cend_edges())->second);
       }
     }
   } 

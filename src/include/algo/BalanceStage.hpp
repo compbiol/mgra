@@ -5,7 +5,7 @@ template<class graph_t>
 struct Algorithm<graph_t>::Balance : public Algorithm<graph_t>::Stage { 
   typedef typename graph_t::mcolor_type mcolor_t;
   typedef typename graph_t::mularcs_t mularcs_t; 
-  typedef typename graph_t::insertion_t insertion_t;
+  typedef typename graph_t::insdel_t insdel_t;
   
   explicit Balance(std::shared_ptr<graph_t> const & graph)
   : Stage(graph)
@@ -66,7 +66,7 @@ bool Algorithm<graph_t>::Balance::do_action() {
         assert(false);
       }
 
-      this->graph->apply(insertion_t(a1, a2, bar_indel_color, is_insertion));
+      this->graph->apply(insdel_t(a1, a2, bar_indel_color, is_insertion));
       ++number_indel_event; 
     } 
   }

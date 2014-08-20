@@ -1,25 +1,24 @@
-#ifndef TOTAL_BRUTE_FORCE_HPP
-#define TOTAL_BRUTE_FORCE_HPP
+#ifndef BRUTE_FORCE_WITH_BLOSSOM_HPP
+#define BRUTE_FORCE_WITH_BLOSSOM_HPP
 
 #include "blossom5/PerfectMatching.h"
 
 template<class graph_t>
-struct Algorithm<graph_t>::TotalBruteForce : public Algorithm<graph_t>::Stage {
+struct Algorithm<graph_t>::ProcessWithBlossomV : public Algorithm<graph_t>::Stage {
   typedef Stage base;
 
   typedef std::pair<int, int> int_edge_t;
   typedef std::tuple<int, int, int> weight_edge_t;
-  typedef std::pair<vertex_t, vertex_t> edge_t;
   
+  typedef typename graph_t::edge_t edge_t;
   typedef typename graph_t::mcolor_type mcolor_t;
   typedef typename graph_t::mularcs_t mularcs_t; 
   typedef typename graph_t::twobreak_t twobreak_t;
 
-  TotalBruteForce(std::shared_ptr<graph_t> const & graph, writer::Wdots<graph_t, ProblemInstance<mcolor_t> > w)
+  ProcessWithBlossomV(std::shared_ptr<graph_t> const & graph)
   : Stage(graph) 
   , max_number(0)
   , super_infinity("ooo")
-  , writer(w)
   { 
   }
 
@@ -29,17 +28,14 @@ struct Algorithm<graph_t>::TotalBruteForce : public Algorithm<graph_t>::Stage {
     return "Total resolve component with score function."; 
   }
 
-  void init_process_tc_edges(std::set<vertex_t> const & vertex_set);
-
-private:
-  size_t process_component(std::set<vertex_t> & vertex_set);
-  
-  std::vector<weight_edge_t> init(std::set<vertex_t> & vertex_set);
-  
   std::list<twobreak_t> take_edge_on_color(vertex_t const & x, mcolor_t const & color, vertex_t const & y);
 
-  void update_process_tc_edges(edge_t const & central, std::list<twobreak_t> const & twobreaks);
-
+private:
+  size_t process_component(std::set<vertex_t> const & vertex_set);
+  
+  void init_process_tc_edges(std::set<vertex_t> const & vertex_set);
+  std::vector<weight_edge_t> init(std::set<vertex_t> const & vertex_set);
+  
   int vertex_to_number(vertex_t const & a) {
     if (this->vertex2num.count(a) != 0) { 
       return this->vertex2num.find(a)->second;
@@ -51,177 +47,116 @@ private:
     } 
   }
 
-  bool is_one_component(std::set<vertex_t> const & vertex_set) { 
-    if (vertex_set.size() >= 1) { 
-      utility::equivalence<vertex_t> components = this->graph->split_on_components();
-      auto iter = vertex_set.cbegin(); 
-      for (auto it = (++vertex_set.cbegin()); it != vertex_set.cend(); ++it, ++iter) { 
-        if (!components.isequiv(*iter, *it)) { 
-          return false; 
-        }
-      }
-    }
-    return true;
-  }
-
 private:
   int max_number;
-
+  vertex_t super_infinity;
+  
   std::multimap<int, edge_t> queue_tc_edges; 
   std::map<edge_t, int> tc_edges;
   std::map<edge_t, int> score_edges;
 
-  vertex_t super_infinity;
   std::unordered_map<int, vertex_t> num2vertex;
   std::unordered_map<vertex_t, int> vertex2num;  
 
   std::unordered_set<int> pseudo_infinity_verteces;  
   std::unordered_set<int> double_pseudo_infinity_verteces;  
-
-  writer::Wdots<graph_t, ProblemInstance<mcolor_t> > writer;
 };
 
 template<class graph_t>
-bool Algorithm<graph_t>::TotalBruteForce::do_action() {
+bool Algorithm<graph_t>::ProcessWithBlossomV::do_action() {
   size_t number_rear = 0; 
-  bool isChanged = true; 
 
-  while(isChanged) {
-    isChanged = false;   
-    utility::equivalence<vertex_t> components = this->graph->split_on_components();
-    std::map<vertex_t, std::set<vertex_t> > const & classes = components.get_eclasses<std::set<vertex_t> >();
-  
-    for (auto const & vertex_set : classes) { 
-      std::set<vertex_t> component = vertex_set.second; 
-      //std::cerr << "Start work with new component " << std::endl;
-      size_t local_number_rear = process_component(component);
-      if (local_number_rear != 0) { 
-        number_rear += local_number_rear;
-        isChanged = true; 
-      }
-    }
-  } 
+  utility::equivalence<vertex_t> components = this->graph->split_on_components();
+  std::map<vertex_t, std::set<vertex_t> > const & classes = components.get_eclasses<std::set<vertex_t> >();
+
+  for (auto const & vertex_set : classes) { 
+    std::set<vertex_t> component = vertex_set.second; 
+    number_rear += process_component(component);
+  }
 
   return (number_rear != 0);
 } 
 
 template<class graph_t>
-size_t Algorithm<graph_t>::TotalBruteForce::process_component(std::set<vertex_t> & vertex_set) {
-  tc_edges.clear(); 
-  queue_tc_edges.clear();
+size_t Algorithm<graph_t>::ProcessWithBlossomV::process_component(std::set<vertex_t> const & vertex_set) {
   size_t number_rear = 0;
 
   init_process_tc_edges(vertex_set);
+  
+  //std::cerr << "Start process tc edges" << std::endl; 
+  if (!tc_edges.empty()) {
+    edge_t edge = queue_tc_edges.begin()->second;
+    std::list<twobreak_t> twobreaks = take_edge_on_color(edge.first, this->graph->get_complete_color(), edge.second);      
+    number_rear += twobreaks.size(); 
+  } else {
+    auto graph_edges = init(vertex_set);
 
-  while (!vertex_set.empty()) { 
-    edge_t edge; 
+    PerfectMatching pm(num2vertex.size(), graph_edges.size());
     
-    auto main_stage_lambda = [&]() -> void {
-      std::list<twobreak_t> twobreaks = take_edge_on_color(edge.first, this->graph->get_complete_color(), edge.second);      
-      number_rear += twobreaks.size(); 
-
-      vertex_set.erase(edge.first);
-      vertex_set.erase(edge.second);
-
-      update_process_tc_edges(edge, twobreaks);        
-    };
-
-    //std::cerr << "Start process tc edges" << std::endl; 
-    while (!tc_edges.empty() && !vertex_set.empty()) { 
-      auto iter = queue_tc_edges.begin();
-      edge = iter->second;
-
-      tc_edges.erase(edge);
-      queue_tc_edges.erase(iter);
-
-      main_stage_lambda();    
+    for (auto const & edge : graph_edges) { 
+      int x = 0; 
+      int y = 0; 
+      int score = 0;
+      std::tie(x, y, score) = edge;
+      pm.AddEdge(x, y, score);
     }
 
-    if (!is_one_component(vertex_set)) {
-      return number_rear;
-    }
+    pm.Solve();
 
-    //std::cerr << "Start process other edges" << std::endl;
-    while (tc_edges.empty() && !vertex_set.empty()) { 
-      auto graph_edges = init(vertex_set);
-     
-      if (vertex_set.empty()) { 
-        break;
-      }
-    
-      PerfectMatching pm(num2vertex.size(), graph_edges.size());
-      for (auto const & edge : graph_edges) { 
-        int x = 0; 
-        int y = 0; 
-        int score = 0;
-        std::tie(x, y, score) = edge;
+    auto get_min_edge_in_matching_lambda = [&]() -> edge_t { 
+      edge_t min_edge;
+      int score_min_edge = std::numeric_limits<int>::max();
 
-        //std::cerr << x << " " << y << std::endl;
-        //std::cerr << num2vertex.find(x)->second << " " << num2vertex.find(y)->second << std::endl; 
+      for (vertex_t const & v : vertex_set) {
+        assert(vertex2num.find(v) != vertex2num.end());
+        int num_x = vertex2num.find(v)->second;
+        int num_y = pm.GetMatch(num_x);
+        assert(num2vertex.find(num_y) != num2vertex.end());
+        vertex_t u = num2vertex.find(num_y)->second;
+        if (pseudo_infinity_verteces.count(num_y) != 0) {
+          u = Infty;
+        }
 
-        pm.AddEdge(x, y, score);
-      }
-      pm.Solve();
-
-      auto get_min_edge_in_matching_lambda = [&]() -> edge_t { 
-        edge_t min_edge;
-        int score_min_edge = std::numeric_limits<int>::max();
-
-        for (vertex_t const & v : vertex_set) {
-          assert(vertex2num.find(v) != vertex2num.end());
-          int num_x = vertex2num.find(v)->second;
-          int num_y = pm.GetMatch(num_x);
-          assert(num2vertex.find(num_y) != num2vertex.end());
-          vertex_t u = num2vertex.find(num_y)->second;
-          if (pseudo_infinity_verteces.count(num_y) != 0) {
-            u = Infty;
-          }
-
-          auto iter = score_edges.find(edge_t(v, u)); 
-          if (iter == score_edges.end()) {
-            iter = score_edges.find(edge_t(u, v));
-          } 
-
-          int score = std::numeric_limits<int>::max();
-
-          if (iter != score_edges.end()) {
-            score = iter->second;
-          }
-        
-          if (score < score_min_edge) { 
-            score_min_edge = score; 
-            min_edge = edge_t(v, u);
-          }          
+        auto iter = score_edges.find(edge_t(v, u)); 
+        if (iter == score_edges.end()) {
+          iter = score_edges.find(edge_t(u, v));
         } 
 
-        return min_edge;
-      };
+        int score = std::numeric_limits<int>::max();
 
-      edge = get_min_edge_in_matching_lambda();
+        if (iter != score_edges.end()) {
+          score = iter->second;
+        }
+      
+        if (score < score_min_edge) { 
+          score_min_edge = score; 
+          min_edge = edge_t(v, u);
+        }          
+      } 
 
-      main_stage_lambda();
+      return min_edge;
+    };
 
-      if (!is_one_component(vertex_set)) {
-        return number_rear; 
-      }
-    }    
+    edge_t edge = get_min_edge_in_matching_lambda();
+
+    std::list<twobreak_t> twobreaks = take_edge_on_color(edge.first, this->graph->get_complete_color(), edge.second);      
+    number_rear += twobreaks.size(); 
   } 
-
-  //std::cerr << "End all " << std::endl;
 
   return number_rear;
 }
 
 template<class graph_t>
-void Algorithm<graph_t>::TotalBruteForce::init_process_tc_edges(std::set<vertex_t> const & vertex_set) {
+void Algorithm<graph_t>::ProcessWithBlossomV::init_process_tc_edges(std::set<vertex_t> const & vertex_set) {
+  queue_tc_edges.clear();
+  tc_edges.clear(); 
   std::unordered_set<vertex_t> processed;
 
   for (vertex_t const & v : vertex_set) {
     mularcs_t mularcs = this->graph->get_all_adjacent_multiedges(v);
 
     for (auto const & arc : mularcs) { 
-      if ((processed.count(arc.first) == 0) 
-          && (this->graph->is_contain_T_consistent_color(v, arc.first))) { //|| this->graph->is_postponed_deletion(v, arc.first))) { 
+      if ((processed.count(arc.first) == 0) && (this->graph->is_contain_T_consistent_color(v, arc.first))) {
         int score = this->graph->calculate_cost(v, arc.first);
         queue_tc_edges.insert(std::make_pair(score, edge_t(v, arc.first)));
         tc_edges.insert(std::make_pair(edge_t(v, arc.first), score));
@@ -229,11 +164,14 @@ void Algorithm<graph_t>::TotalBruteForce::init_process_tc_edges(std::set<vertex_
     }
     processed.insert(v);
   }
+
 }
 
 template<class graph_t>
-std::vector<std::tuple<int, int, int> > Algorithm<graph_t>::TotalBruteForce::init(std::set<vertex_t> & vertex_set) {
+std::vector<std::tuple<int, int, int> > Algorithm<graph_t>::ProcessWithBlossomV::init(std::set<vertex_t> const & vertex_set) {
   max_number = 0; 
+
+  score_edges.clear();
   tc_edges.clear();
   queue_tc_edges.clear();
   vertex2num.clear();
@@ -242,18 +180,8 @@ std::vector<std::tuple<int, int, int> > Algorithm<graph_t>::TotalBruteForce::ini
   double_pseudo_infinity_verteces.clear();
 
   std::vector<weight_edge_t> graph_edges;
-
-  for (auto iter = vertex_set.begin(); iter != vertex_set.end();) {
-    mularcs_t mularcs = this->graph->get_all_adjacent_multiedges(*iter);
-    if (mularcs.size() == 1 && this->graph->get_complete_color() == mularcs.begin()->second) { 
-      vertex_set.erase(iter++);
-    } else { 
-      ++iter;
-    }
-  } 
-
-  std::unordered_set<vertex_t> processed;
    //Create verteces and edges for graph
+  std::unordered_set<vertex_t> processed;
   for (vertex_t const & v : vertex_set) {
     mularcs_t mularcs = this->graph->get_all_adjacent_multiedges(v);
 
@@ -297,62 +225,11 @@ std::vector<std::tuple<int, int, int> > Algorithm<graph_t>::TotalBruteForce::ini
   return graph_edges;
 }
 
-template<class graph_t>
-void Algorithm<graph_t>::TotalBruteForce::update_process_tc_edges(edge_t const & central, std::list<twobreak_t> const & twobreaks) {
-  std::unordered_set<vertex_t> viewed_vertex;
-  
-  for (twobreak_t const & twobreak : twobreaks) { 
-    viewed_vertex.insert({twobreak.get_vertex(0), twobreak.get_vertex(1), twobreak.get_vertex(2), twobreak.get_vertex(3)});
-  }
-
-  viewed_vertex.erase(Infty);
-  viewed_vertex.erase(central.first);
-  viewed_vertex.erase(central.second);
-
-  std::unordered_set<vertex_t> processed;
-
-  for (vertex_t const & viewed : viewed_vertex) { 
-    mularcs_t mularcs = this->graph->get_all_adjacent_multiedges(viewed);
-
-    for (auto const & arc : mularcs) { 
-      if (processed.count(arc.first) == 0 
-        && (this->graph->is_contain_T_consistent_color(viewed, arc.first))) { // || this->graph->is_postponed_deletion(viewed, arc.first))) { 
-        auto iter = tc_edges.find(edge_t(viewed, arc.first)); 
-        if (iter == tc_edges.end()) {
-          iter = tc_edges.find(edge_t(arc.first, viewed));
-        } 
-
-        int new_score = this->graph->calculate_cost(viewed, arc.first);
-        if (iter == tc_edges.end()) {
-          queue_tc_edges.insert(std::make_pair(new_score, edge_t(viewed, arc.first)));
-          tc_edges.insert(std::make_pair(edge_t(viewed, arc.first), new_score));        
-        } else { 
-          if (new_score != iter->second) { 
-            auto range = queue_tc_edges.equal_range(iter->second);
-            
-            for (auto it = range.first; it != range.second; ++it) { 
-              if (it->second == iter->first) { 
-                queue_tc_edges.erase(it);
-                break;
-              }
-            }
-
-            queue_tc_edges.insert(std::make_pair(new_score, iter->first));
-            iter->second = new_score;
-          } 
-        }
-      }
-    }
-    processed.insert(viewed);
-  }  
-} 
-
 
 template<class graph_t>
-std::list<typename graph_t::twobreak_t> Algorithm<graph_t>::TotalBruteForce::take_edge_on_color(vertex_t const & x, mcolor_t const & color, vertex_t const & y) {
+std::list<typename graph_t::twobreak_t> Algorithm<graph_t>::ProcessWithBlossomV::take_edge_on_color(vertex_t const & x, mcolor_t const & color, vertex_t const & y) {
   std::list<twobreak_t> result;
   //std::cerr << "Start to work with (" << x << ", " << y << "): " << genome_match::mcolor_to_name(color) << std::endl;   
-  //size_t num_rear = 0; 
 
   if (y == Infty) {
     mcolor_t need_color(color, this->graph->get_all_multicolor_edge(x, y), mcolor_t::Difference);    
@@ -363,7 +240,6 @@ std::list<typename graph_t::twobreak_t> Algorithm<graph_t>::TotalBruteForce::tak
       if (need_color.includes(arc.second) && this->graph->is_vec_T_consistent_color(arc.second)) {
         twobreak_t twobreak(x, arc.first, Infty, Infty, arc.second);
         this->graph->apply(twobreak);
-        //++num_rear;
         result.push_back(twobreak);
       } 
     }
@@ -462,7 +338,6 @@ std::list<typename graph_t::twobreak_t> Algorithm<graph_t>::TotalBruteForce::tak
           //std::cerr << "Good 2-break: " << x << " " << left.begin()->second << " " << y << " " << right.begin()->second <<  " " << genome_match::mcolor_to_name(left.begin()->first) << std::endl;
           twobreak_t twobreak(x, left.begin()->second, y, right.begin()->second, left.begin()->first);
           this->graph->apply(twobreak);
-          //++num_rear;
           result.push_back(twobreak);
         } 
       } else if (left.size() == 1 || right.size() == 1) {  
@@ -471,12 +346,12 @@ std::list<typename graph_t::twobreak_t> Algorithm<graph_t>::TotalBruteForce::tak
           assert(this->graph->is_vec_T_consistent_color(left.begin()->first)); 
           
           std::list<twobreak_t> local_twobreaks; 
-          //size_t local_twobreaks = 0; 
+
           auto iter_right = right.begin();
-          while ((local_twobreaks.empty())/*(local_twobreaks == 0)*/ && (iter_right != right.end())) { 
+          while ((local_twobreaks.empty()) && (iter_right != right.end())) { 
             //std::cerr << "See on " << iter_right->second << std::endl;
             local_twobreaks = take_edge_on_color(y, left.begin()->first, iter_right->second);
-            if (local_twobreaks.empty()) { //} == 0) {
+            if (local_twobreaks.empty()) { 
               ++iter_right;
             } 
           } 
@@ -485,22 +360,19 @@ std::list<typename graph_t::twobreak_t> Algorithm<graph_t>::TotalBruteForce::tak
             //std::cerr << "Left 2-break: " << x << " " << left.begin()->second << " " << y << " " << iter_right->second <<  " " << genome_match::mcolor_to_name(left.begin()->first) << std::endl;
             twobreak_t twobreak(x, left.begin()->second, y, iter_right->second, left.begin()->first);
             this->graph->apply(twobreak);
-           // num_rear += (local_twobreaks + 1);
             result.insert(result.end(), local_twobreaks.begin(), local_twobreaks.end());
             result.push_back(twobreak);
-          }
-          
+          }          
         } else if (right.size() == 1 && need_color.includes(right.begin()->first)) {
           //std::cerr << "Right and go recursevly left" << std::endl;
           assert(this->graph->is_vec_T_consistent_color(right.begin()->first));  
           
           std::list<twobreak_t> local_twobreaks;
-          //size_t local_twobreaks = 0; 
           auto iter_left = left.begin();
-          while ((local_twobreaks.empty())/*(local_twobreaks == 0)*/ && (iter_left != left.end())) {
+          while ((local_twobreaks.empty()) && (iter_left != left.end())) {
             //std::cerr << "See on " << iter_left->second << std::endl; 
             local_twobreaks = take_edge_on_color(x, right.begin()->first, iter_left->second);
-            if (local_twobreaks.empty()) { // == 0) {
+            if (local_twobreaks.empty()) { 
               ++iter_left;
             } 
           }
@@ -509,7 +381,6 @@ std::list<typename graph_t::twobreak_t> Algorithm<graph_t>::TotalBruteForce::tak
             //std::cerr << "Right 2-break: " << x << " " << iter_left->second << " " << y << " " << right.begin()->second <<  " " << genome_match::mcolor_to_name(right.begin()->first) << std::endl;
             twobreak_t twobreak(x, iter_left->second, y, right.begin()->second, right.begin()->first);
             this->graph->apply(twobreak);
-            //num_rear += (local_twobreaks + 1);
             result.insert(result.end(), local_twobreaks.begin(), local_twobreaks.end());
             result.push_back(twobreak);
           }             
@@ -522,7 +393,7 @@ std::list<typename graph_t::twobreak_t> Algorithm<graph_t>::TotalBruteForce::tak
     } 
   } 
 
-  return result; //num_rear;
+  return result; 
 }
 
 #endif

@@ -186,5 +186,6 @@ void structure::BinaryTree<mcolor_t>::Node::get_name_for_colors(std::map<mcolor_
   if (right_child) {
     right_child->get_name_for_colors(colors);
   }
-} 
+}
+ 
 #endif

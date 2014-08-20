@@ -1,5 +1,5 @@
-#ifndef MULARCS_H_
-#define MULARCS_H_
+#ifndef MULARCS_HPP
+#define MULARCS_HPP
 
 namespace structure { 
 
@@ -36,14 +36,16 @@ struct Mularcs {
     }    
   }
 
-  inline vertex_t get_vertex(mcolor_t const & color) const { //FIXME: MAYBE OPTIONAL
+  inline vertex_t get_vertex(mcolor_t const & color) const { 
     vertex_t v = "";
+
     for (auto const & arc : m_mularcs) {
       if (arc.second == color) { 
         v = arc.first;
         break;
       }
     }
+
     return v;   
   } 
   
@@ -52,12 +54,14 @@ struct Mularcs {
   } 
  
   inline mcolor_t union_multicolors() const {
-    mcolor_t un; 
-    for (auto const &arc : m_mularcs) { 
-      mcolor_t temp(un, arc.second, mcolor_t::Union);  
-      un = temp;
+    mcolor_t union_color; 
+    
+    for (auto const & arc : m_mularcs) { 
+      mcolor_t temp(union_color, arc.second, mcolor_t::Union);  
+      union_color = temp;
     }
-    return un;
+
+    return union_color;
   }
  
   inline bool defined(vertex_t const & v) const { 

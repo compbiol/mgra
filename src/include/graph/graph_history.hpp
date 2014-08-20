@@ -1,16 +1,16 @@
 #ifndef GRAPHS_HISTORY_HPP
 #define GRAPHS_HISTORY_HPP
 
-#include "event/2break.h"
-#include "event/Insdel.h"
+#include "event/InsDel.hpp"
+#include "event/TwoBreak.hpp"
+#include "event/Clone.hpp"
 #include "event/TandemDuplication.h"
-#include "event/Fake2break.h"
 
 template<class mcolor_t>
 struct HistoryGraph { 
   typedef event::TwoBreak<mcolor_t> twobreak_t; 
-  typedef event::FakeTwoBreak<mcolor_t> clone_t;            
-  typedef event::InsDel<mcolor_t> insertion_t;
+  typedef event::Clone<mcolor_t> clone_t;            
+  typedef event::InsDel<mcolor_t> insdel_t;
   typedef event::TandemDuplication<mcolor_t> tandem_duplication_t;
   typedef std::list<twobreak_t> transform_t;
 
@@ -19,7 +19,7 @@ struct HistoryGraph {
     complete_history.push_back(std::make_pair(twobreak_action, twobreak_history.size() - 1)); 
   }
 
-  inline void save_insertion(insertion_t const & insertion) {
+  inline void save_insertion(insdel_t const & insertion) {
     insertion_history.push_back(insertion);
     complete_history.push_back(std::make_pair(insertion_action, insertion_history.size() - 1));
   }
@@ -30,7 +30,7 @@ struct HistoryGraph {
     return (clone_history.size() - 1);
   }
 
-  inline size_t save_stop_clone(size_t index, twobreak_t const & twobreak) {
+  inline void save_stop_clone(size_t index, twobreak_t const & twobreak) {
     stop_clone_history.push_back(std::make_pair(index, twobreak));
     complete_history.push_back(std::make_pair(stop_clone_action, stop_clone_history.size() - 1));
   }
@@ -60,7 +60,7 @@ private:
   std::list<std::pair<type_action, size_t> > complete_history;
   //std::vector<std::pair<type_action, size_t> > complete_history;
   
-  std::vector<insertion_t> insertion_history;
+  std::vector<insdel_t> insertion_history;
   std::vector<twobreak_t> twobreak_history;
   std::vector<clone_t> clone_history;
   
@@ -164,7 +164,6 @@ void HistoryGraph<mcolor_t>::change_history() {
       auto const & fakebreak2 = clone_history[action->second];
       auto const & central = fakebreak2.get_central_arc();
       auto const & mother_edge = fakebreak2.get_mother_edge();
-      auto const & end_edges = fakebreak2.get_end_edges(); 
 
       //std::cerr << "Clone " << central.first << " " << central.second << " " << mother_edge.first << " " << genome_match::mcolor_to_name(mother_edge.second) << std::endl;  
 

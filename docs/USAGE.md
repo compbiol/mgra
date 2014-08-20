@@ -29,9 +29,9 @@ Input
 ----- 
 MGRA takes as input: 
 
-	* Names of genomes
-	* Algorithmic parameters
-	* Phylogenetic tree containing all genomes in NEWICK format
+* Names of genomes
+* Algorithmic parameters
+* Phylogenetic tree containing all genomes in NEWICK format
 
 All these parameters should be described in a single configuration file.
 See the example of such file below.

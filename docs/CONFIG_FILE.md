@@ -19,20 +19,20 @@ Reservation for future. Does not support now.
 
 ###[Algorithm]
 
-	* stages <number>
+* stages <number>
 
-	This parameter determines the number of steps that the algorithm will make. About detailed description of each step refer to the article. Minimal value = 0, maximum value = 4. (e.g. stage 3, MGRA runs on first, second and third stage).
+This parameter determines the number of steps that the algorithm will make. About detailed description of each step refer to the article. Minimal value = 0, maximum value = 4. (e.g. stage 3, MGRA runs on first, second and third stage).
 
-	* rounds <number>
+* rounds <number>
 
-	This parameter determines the number of rounds that the algorithm will make. About detailed description of each round refer to the article. Minimal value = 0, maximum value = 3. (e.g. round 2, MGRA runs on first and second round).
+This parameter determines the number of rounds that the algorithm will make. About detailed description of each round refer to the article. Minimal value = 0, maximum value = 3. (e.g. round 2, MGRA runs on first and second round).
 
-	* bruteforce 
+* bruteforce 
 
-	This parameter is switched on experimental stage which can resolve complex component after latest stage with BlossumV algorithm. It will lead to long-term data processing. 
+This parameter is switched on experimental stage which can resolve complex component after latest stage with BlossumV algorithm. It will lead to long-term data processing. 
 
-	* recostructed_tree
+* recostructed_tree
 	
-	Reservation for future. Does not support now.
+Reservation for future. Does not support now.
 
 ###[Completion]

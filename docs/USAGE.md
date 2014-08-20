@@ -6,18 +6,19 @@ In this manual it is assumed that MGRA is properly installed.
                      [-o OUTPUT_DIR] [--colorscheme COLORSCHEME_ARG] [--debug] [--version]
 
 Supported arguments:
+
 	-h [ --help ]           show help message and exit
 	-v [ --version ]        show program's version number and exit
 	-c [ --config ] arg     input configure file
 	-f [ --format ] {grimm, infercars} input format file for genomes file
 	-g [ --genomes ] arg    input file which contains genomes
 	-o [ --output_dir ] arg path to the output directory
-  	--colorscheme arg       colorscheme, which used in output breakpoint graph (default : use mgra colorscheme)
+	--colorscheme arg       colorscheme, which used in output breakpoint graph (default : use mgra colorscheme)
 	-d [ --debug ]          enable debug output (default: False)
 	--assembly		Reservation for future. Does not support now.
 
 Examples
----------
+--------
 
 You can try MGRA on the provided ready-to-use examples:
 

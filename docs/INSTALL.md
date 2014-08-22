@@ -1,8 +1,14 @@
 Installation instructions for MGRA
 ==================================
-Availability
+Supported operating systems
 ------------
 MGRA was tested under Linux and Mac OS.
+
+Binary distribution
+-------------------
+While we recommend to build MGRA from the source code, it is also possible to 
+use pre-compiled binaries, which are available for Linux and Mac OS from 
+at Github: https://github.com/ablab/mgra/releases
 
 Build requirements
 ------------------
@@ -11,17 +17,9 @@ Build requirements
 * GCC C++ compiler with C++11 support (version 4.6.3+ works fine)
 * BOOST library 1.54.0+
 
-Binary distribution
--------------------
-While we recommend to build MGRA from source on each machine, you also can
-use pre-compiled binaries which are available for Linux and Mac OS from 
-Releases page on Github: https://github.com/ablab/mgra/releases
-
-In this case, you do not need any installation procedures.
-
-Building from the Source Code
+Building from the source code
 -----------------------------
-To build and install the program under Linux, type following:
+Building and installing MGRA from the source code is done with the following commands: 
 
 	mkdir build
 	cd build
@@ -29,9 +27,9 @@ To build and install the program under Linux, type following:
 	make
 	sudo make install 
 
-If you do not have the root access or you want to install MGRA to a
-location other than /usr/local/bin, run CMake with -DCMAKE_INSTALL_PREFIX
-option set:
+If user does not have the root access or wants to install MGRA to a
+location other than /usr/local/bin, one needs to run CMake with -DCMAKE_INSTALL_PREFIX
+option:
 
 	cd build
 	cmake ../src -DCMAKE_INSTALL_PREFIX="<install destination>"

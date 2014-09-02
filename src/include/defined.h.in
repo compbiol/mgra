@@ -4,6 +4,7 @@
 #include <list>
 #include <vector>
 #include <array>
+#include <queue>
 #include <unordered_set>
 #include <unordered_map>
 #include <set> 
@@ -48,6 +49,7 @@ vertex_t const Infty = "oo";
 #include "structures/mcolor.hpp"
 #include "structures/mularcs.hpp"
 #include "structures/genome.hpp"
+#include "genome_match.h" //FIXME REMOVE LATER
 #include "structures/Tree.h"
 
 #endif

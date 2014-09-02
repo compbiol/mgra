@@ -58,10 +58,23 @@ struct TwoBreak {
     assert(false);
   } 
 
+  /* 
+   * Apply current two-break on local graph without color
+   */
   void apply_single(partgraph_t& local_graph) const;
 
-  TwoBreak get_canonical_twobreak() const;
-   
+  /*
+   * This function tested two two-break on depeneds without multicolor two-break.
+   * If you want to test on depeneds with multicolor, see on function is_independent.  
+   * Return: 0 - indepented, 1 - weakly dependent, 2 - strong dependent
+   */
+  size_t is_dependent(TwoBreak const & tested) const;
+ 
+  /*
+   * This function tested two two-break on depeneds with multicolor two-break.
+   * If you want to test on depeneds without multicolor, see on function is_depend.  
+   * Return: True - indepented, False - weakly or strong dependly
+   */
   bool is_independent(TwoBreak const & tested) const;
 
   bool operator < (TwoBreak const & second) const; 
@@ -70,6 +83,8 @@ struct TwoBreak {
     return (second < *this);
   }
 
+  TwoBreak get_canonical_twobreak() const;
+  
   DECLARE_GETTER( mcolor_t, m_multicolor, mcolor )
   
   DECLARE_CONST_ITERATOR( citer, m_multicolor, begin, cbegin )  
@@ -101,6 +116,53 @@ void event::TwoBreak<mcolor_t>::apply_single(partgraph_t& local_graph) const {
   }
 } 
 
+template<class mcolor_t>
+bool event::TwoBreak<mcolor_t>::is_independent(TwoBreak const & tested) const {
+  mcolor_t inter_color(m_multicolor, tested.m_multicolor, mcolor_t::Intersection); 
+
+  if (inter_color.empty()) {
+    return true; 
+  } else {
+    auto check_lambda = [&] (size_t ind1, size_t ind2, size_t ind3) -> bool {
+      if (tested.m_arcs[ind1] != edge_t(Infty, Infty)) { 
+        if (tested.m_arcs[ind1] == std::make_pair(get_vertex(ind2), get_vertex(ind3))) { 
+          return false;
+        } 
+        if (tested.m_arcs[ind1] == std::make_pair(get_vertex(ind3), get_vertex(ind2))) { 
+          return false;
+        }
+      } 
+      return true;
+    };
+
+    bool answer = true;
+    for (size_t j = 0; j < 2; ++j) { 
+      answer = answer && check_lambda(j, 0, 2) && check_lambda(j, 1, 3);
+    }
+    return answer;
+  }
+}
+
+template<class mcolor_t>
+size_t event::TwoBreak<mcolor_t>::is_dependent(TwoBreak const & tested) const { 
+  auto check_lambda = [&] (size_t ind1, size_t ind2, size_t ind3) -> size_t {
+    if (tested.m_arcs[ind1] != edge_t(Infty, Infty)) { 
+      if (tested.m_arcs[ind1] == std::make_pair(get_vertex(ind2), get_vertex(ind3))) { 
+        return 1;
+      } 
+      if (tested.m_arcs[ind1] == std::make_pair(get_vertex(ind3), get_vertex(ind2))) { 
+        return 1;
+      }
+    } 
+    return 0;
+  };
+
+  size_t first = check_lambda(0, 0, 2) + check_lambda(1, 1, 3);
+  size_t second = check_lambda(0, 1, 3) + check_lambda(1, 0, 2);
+  
+  return std::max(first, second);
+}
+ 
 template<class mcolor_t>
 bool event::TwoBreak<mcolor_t>::operator < (TwoBreak const & twobreak) const { 
   auto const less_lambda = [&](vertex_t const & v, vertex_t const & u) -> bool { 
@@ -144,32 +206,6 @@ bool event::TwoBreak<mcolor_t>::operator < (TwoBreak const & twobreak) const {
   }
 
   return false;
-}
-
-template<class mcolor_t>
-bool event::TwoBreak<mcolor_t>::is_independent(TwoBreak const & tested) const {
-  mcolor_t inter_color(m_multicolor, tested.m_multicolor, mcolor_t::Intersection); 
-
-  if (inter_color.empty()) {
-    return true; 
-  } else {
-    auto check_lambda = [&] (size_t ind1, size_t ind2, size_t ind3) -> bool {
-      if (tested.m_arcs[ind1] == std::make_pair(get_vertex(ind2), get_vertex(ind3))) { 
-        return false;
-      } 
-      if (tested.m_arcs[ind1] == std::make_pair(get_vertex(ind3), get_vertex(ind2))) { 
-        return false;
-      }
-      return true;
-    };
-
-    bool answer = true;
-    for (size_t j = 0; j < 2; ++j) { 
-      answer = answer && check_lambda(j, 0, 2) && check_lambda(j, 1, 3);
-    }
-    return answer;
-  }
-
 }
 
 template<class mcolor_t>

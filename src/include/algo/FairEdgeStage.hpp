@@ -25,31 +25,6 @@ struct Algorithm<graph_t>::ProcessFairEdge : public Algorithm<graph_t>::Stage {
 private: 
   typedef std::set<arc_t> set_arc_t;
 
-  void split_by_mobile_property(vertex_t const & v, mularcs_t const & mularcs, 
-      set_arc_t& mobiles, set_arc_t& non_mobiles) const {
-
-    for (auto const & arc : mularcs) { 
-      if (this->graph->is_mobility_edge(v, arc.second, arc.first)) { 
-        mobiles.insert(arc); 
-      } else { 
-        non_mobiles.insert(arc);
-      }
-    }   
-  }
-
-  mcolor_t get_min_addit_color_for_tc(mcolor_t const & color) const { 
-    mcolor_t min_color = this->graph->get_complete_color();
-    for (auto col = this->graph->cbegin_T_consistent_color(); col != this->graph->cend_T_consistent_color(); ++col) {
-      if (col->includes(color)) {
-        mcolor_t diff_color(*col, color, mcolor_t::Difference);
-        if (diff_color.size() < min_color.size()) {
-          min_color = diff_color;
-        } 
-      } 
-    } 
-    return min_color;
-  }
-
   bool is_good_twobreaks(std::vector<twobreak_t> const & twobreaks) const;
 };
 
@@ -89,11 +64,11 @@ bool Algorithm<graph_t>::ProcessFairEdge::do_action() {
           /*SPLIT ALL EDGES ON MOBILE AND NON MOBILE*/
           set_arc_t mobile_edges_x; 
           set_arc_t non_mobile_edges_x;
-          split_by_mobile_property(x, mularcs_x, mobile_edges_x, non_mobile_edges_x);
+          this->split_by_mobile_property(x, mularcs_x, mobile_edges_x, non_mobile_edges_x);
           
           set_arc_t mobile_edges_y; 
           set_arc_t non_mobile_edges_y;
-          split_by_mobile_property(y, mularcs_y, mobile_edges_y, non_mobile_edges_y);
+          this->split_by_mobile_property(y, mularcs_y, mobile_edges_y, non_mobile_edges_y);
 
           /*CREATE POSSIBLE MOBILE TWO-BREAKS*/
           size_t count_bad_edges = 0;
@@ -126,12 +101,16 @@ bool Algorithm<graph_t>::ProcessFairEdge::do_action() {
                 this->graph->apply(twobreak);
                 ++number_rear;
               } 
+
+              if (found) {
+                assert(this->graph->get_all_multicolor_edge(x, y).empty() || this->graph->get_all_multicolor_edge(x, y) == this->graph->get_complete_color()); 
+              }
             }
           } 
 
           /*CASE 2: Create min T-consistent color*/          
           if (!found) {
-            mcolor_t additional_color = get_min_addit_color_for_tc(this->graph->get_all_multicolor_edge(x, y));
+            mcolor_t additional_color = this->get_min_addit_color_for_tc(this->graph->get_all_multicolor_edge(x, y));
             
             if (!additional_color.empty() && additional_color != this->graph->get_complete_color()) {
               std::vector<twobreak_t> included_twobreaks;
@@ -152,6 +131,10 @@ bool Algorithm<graph_t>::ProcessFairEdge::do_action() {
                   found = true;
                   ++number_rear;
                 }
+
+                if (found) { 
+                  assert(this->graph->get_all_multicolor_edge(x, y).empty() || this->graph->is_T_consistent_color(this->graph->get_all_multicolor_edge(x, y)));
+                } 
               } 
             } 
           } 
@@ -168,8 +151,7 @@ bool Algorithm<graph_t>::ProcessFairEdge::do_action() {
                 //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) << " " << twobreak.get_vertex(3) << " " << genome_match::mcolor_to_name(twobreak.get_mcolor()) << std::endl;
                 this->graph->apply(twobreak);
                 found = true;
-                ++number_rear;
-                   
+                ++number_rear;     
               } 
             }
           }
@@ -202,7 +184,7 @@ bool Algorithm<graph_t>::ProcessFairEdge::is_good_twobreaks(std::vector<twobreak
     }
       
     if (vec_target_color.empty() && (count_diff != 1)) {
-      is_all_good = false; 
+      is_all_good = (!this->graph->canformQ(twobreaks.begin()->get_vertex(0), *vec_color) && !this->graph->canformQ(twobreaks.begin()->get_vertex(2), *vec_color));
     }
   }
 

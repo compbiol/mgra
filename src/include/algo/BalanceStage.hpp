@@ -34,7 +34,7 @@ bool Algorithm<graph_t>::Balance::do_action() {
       mcolor_t const & indel_color = mularcs.union_multicolors(); 
       mcolor_t const & bar_indel_color = this->graph->get_complement_color(indel_color);
       assert(indel_color == this->graph->get_all_adjacent_multiedges(a2).union_multicolors());
-      
+      /*
       std::set<mcolor_t> const & set_split_indel = this->graph->split_color(indel_color); 
       bool i_tc = false;
       size_t c_vtc_indel = 0; 
@@ -55,16 +55,16 @@ bool Algorithm<graph_t>::Balance::do_action() {
         } else { 
           bi_tc = true; 
         }
-      }  
-
+      } 
+      */
       bool is_insertion = true;
-      if (i_tc || (c_vtc_bar_indel == std::min(c_vtc_indel, c_vtc_bar_indel))) { 
+      /*if (i_tc || (c_vtc_bar_indel == std::min(c_vtc_indel, c_vtc_bar_indel))) { 
         is_insertion = true;
       } else if (bi_tc || (c_vtc_indel == std::min(c_vtc_indel, c_vtc_bar_indel))) { 
         is_insertion = false;
       } else { 
         assert(false);
-      }
+      } */ 
 
       this->graph->apply(insdel_t(a1, a2, bar_indel_color, is_insertion));
       ++number_indel_event; 

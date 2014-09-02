@@ -55,6 +55,9 @@ struct sym_multihashmap: public std::unordered_multimap<item_class, item_class, 
       abort();
     }
 
+    if (!defined(x, y)) {
+      std::cerr << "sym_multihashmap::erase() error: unmapped pair (" << x << "," << y << ")" << std::endl;
+    } 
     const_iterator rem = find(x, y);
     assert(rem != multi_hashmap::end()); 
     multi_hashmap::erase(rem);

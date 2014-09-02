@@ -16,7 +16,7 @@ struct ProblemInstance {
   {
   }  
 
-  ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input, bool is_colorscheme); 
+  ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input); 
 
   mcolor_t name_to_mcolor(std::string const & temp) const;
   std::string mcolor_to_name(mcolor_t const & temp) const;
@@ -47,6 +47,7 @@ struct ProblemInstance {
   DECLARE_GETTER(size_t, size_component_brute_force, size_component_in_brutforce)
   DECLARE_GETTER(mcolor_t const &, target, target)
   DECLARE_GETTER(std::list<twobreak_t>, completion, completion)
+  DECLARE_GETTER(std::string, m_colorscheme, colorscheme)
   DECLARE_GETTER(int, RGBcoeff, RGBcoeff)
   
   typedef typename std::vector<phylogeny_tree_t>::const_iterator citer_tree; 
@@ -54,7 +55,7 @@ struct ProblemInstance {
   DECLARE_CONST_ITERATOR( citer_tree, trees, cend_trees, cend ) 
 
 private: 
-  void init_basic_rgb_colors(bool flag = true); 
+  void init_basic_rgb_colors(); 
 
 private:
   size_t const MAX_NUMBER_STAGE;
@@ -74,17 +75,19 @@ private:
 	
   std::list<twobreak_t> completion;
 
+  std::string m_colorscheme;
   std::vector<std::string> RGBcolors;
   int RGBcoeff; 
 };
 
 template<class mcolor_t>
-ProblemInstance<mcolor_t>::ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input, bool is_colorscheme) 
+ProblemInstance<mcolor_t>::ProblemInstance(std::unordered_map<std::string, std::vector<std::string> > const & input) 
 : MAX_NUMBER_STAGE(12)
 , stages(5) 
 , max_number_of_split_colors(2)
 , size_component_brute_force(0) 
 , reconstructed_trees(false)
+, m_colorscheme("")
 { 
   std::vector<std::string> genomes; 
   if (input.find("[Genomes]") != input.cend()) {  
@@ -175,14 +178,34 @@ ProblemInstance<mcolor_t>::ProblemInstance(std::unordered_map<std::string, std::
     }
   } 
     
-  init_basic_rgb_colors(is_colorscheme);
+  init_basic_rgb_colors();
 } 
 
 template<class mcolor_t>
-void ProblemInstance<mcolor_t>::init_basic_rgb_colors(bool flag) { 
-  size_t const number_colors = 136;
+void ProblemInstance<mcolor_t>::init_basic_rgb_colors() { 
 
-  if (flag) { 	
+  if (priority_name.size() < 10) {
+    m_colorscheme = "set19";
+    for(size_t i = 1; i < priority_name.size() + 1; ++i) {
+      RGBcolors.push_back(std::to_string(i)); 
+    } 
+    RGBcoeff = 1; 
+  } else if (priority_name.size() < 13) {
+    m_colorscheme = "";
+    size_t const number_colors = 13;
+    std::string cols[number_colors] = { 
+      "red3", "green3", "blue", "purple", "black", "orange", "greenyellow", "pink",
+      "cyan", "magenta",  "yellow3", "grey70", "darkorange4"
+    };    
+  
+    for(size_t i = 0; i < number_colors; ++i) { 
+      RGBcolors.push_back(cols[i]);       
+    }   
+  
+    RGBcoeff = 1; 
+  } else { 	
+    m_colorscheme = "";
+    size_t const number_colors = 136;
     std::string cols[number_colors] = {
       "#C91F16","#CA2316","#CC2A13","#D03815","#CC3615","#D23D16","#D34810","#D44B0D",
       "#D9580E","#D95B0F","#DA5F0E","#DB640D","#DD680B","#DC6E0D","#E37509","#E7860B",
@@ -208,12 +231,7 @@ void ProblemInstance<mcolor_t>::init_basic_rgb_colors(bool flag) {
     } 	
 
     RGBcoeff = (number_colors - 1) / (get_count_genomes() - 1);
-  } else { 
-    for(size_t i = 0; i < number_colors; ++i) {
-      RGBcolors.push_back(std::to_string(i + 1)); 
-    } 
-    RGBcoeff = 1;
-  }
+  } 
 } 
 
 

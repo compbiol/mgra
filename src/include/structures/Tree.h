@@ -5,56 +5,84 @@ namespace structure {
 
 template<class mcolor_t>
 struct BinaryTree { 
-  struct Node { 
-    std::string name;   
-    std::vector<std::string> childs;
-    mcolor_t data;
-    std::shared_ptr<Node> left_child;    
-    std::shared_ptr<Node> right_child; 
-
-    Node () 
-    : left_child (nullptr)
-    , right_child (nullptr) 
-    { 
-    }
-
-    Node(std::string const & tree, std::unordered_map<std::string, size_t> const & genome_number, std::vector<std::string> const & priority_name);     
-
-    std::string get_nodes(std::vector<std::string>& info) const;
-
-    void get_dicolors(std::set<mcolor_t>& dicolor) const; 
-    void get_name_for_colors(std::map<mcolor_t, std::string>& colors) const;
-  };
-
   BinaryTree(std::string const & st, std::unordered_map<std::string, size_t> const & genome_number, std::vector<std::string> const & priority_name) 
-  : root(st, genome_number, priority_name)
-  { 
+  : root(new Node(nullptr, st, genome_number, priority_name))
+  {
   } 
 
   void get_nodes(std::vector<std::string>& info) const {
-    root.get_nodes(info);	
+    root->get_nodes(info);	
   }
 
   std::set<mcolor_t> build_vec_T_consistent_colors() const {
     std::set<mcolor_t> dicolor;
-    root.get_dicolors(dicolor);
+    root->get_dicolors(dicolor);
     return dicolor;	
   }
 
   std::map<mcolor_t, std::string> get_name_for_colors() const {
     std::map<mcolor_t, std::string> colors;
-    root.get_name_for_colors(colors);
+    root->get_name_for_colors(colors);
     return colors;	
   }
 
+  template<class linearizator_t>
+  void walk_and_linearizeate(
+    linearizator_t const & linearizator, 
+    std::map<mcolor_t, typename linearizator_t::partgraph_t> & graphs, 
+    std::map<mcolor_t, typename linearizator_t::transform_t> & transformations) const 
+  {
+    root->walk_and_linearizeate(linearizator, graphs, transformations);
+  }
+
 private: 
-  Node root; 
+  struct Node { 
+    std::string name;   
+    std::vector<std::string> childs;
+    
+    mcolor_t data;
+
+    Node * const parent;    
+    std::unique_ptr<Node> left_child;    
+    std::unique_ptr<Node> right_child; 
+
+    Node() 
+    : parent(nullptr) 
+    , left_child (nullptr)
+    , right_child (nullptr) 
+    { 
+    }
+
+    Node(Node * const par, std::string const & tree, 
+      std::unordered_map<std::string, size_t> const & genome_number, 
+      std::vector<std::string> const & priority_name);     
+
+    std::string get_nodes(std::vector<std::string>& info) const;
+
+    void get_dicolors(std::set<mcolor_t>& dicolor) const; 
+    void get_name_for_colors(std::map<mcolor_t, std::string>& colors) const;
+
+    template<class linearizator_t>
+    void walk_and_linearizeate(
+      linearizator_t const & linearizator, 
+      std::map<mcolor_t, typename linearizator_t::partgraph_t> & graphs, 
+      std::map<mcolor_t, typename linearizator_t::transform_t> & transformations) const;
+  };
+
+private: 
+  std::shared_ptr<Node> root; 
 };
 
 }
 
 template<class mcolor_t>
-structure::BinaryTree<mcolor_t>::Node::Node(std::string const & tree, std::unordered_map<std::string, size_t> const & genome_number, std::vector<std::string> const & priority_name) {
+structure::BinaryTree<mcolor_t>::Node::Node(Node * const par, std::string const & tree, 
+    std::unordered_map<std::string, size_t> const & genome_number, 
+    std::vector<std::string> const & priority_name) 
+: parent(par) 
+, left_child (nullptr)
+, right_child (nullptr) 
+{
   int i = 0; 
   for (i = tree.length() - 1; tree[i] != ':' && tree[i] != ')' && tree[i] != '}' && i >= 0; --i) 
     ; 
@@ -85,8 +113,8 @@ structure::BinaryTree<mcolor_t>::Node::Node(std::string const & tree, std::unord
       	--p;
       } else if (new_tree[j] == ',') { 
       	if (p == 0) {
-          left_child = std::make_shared<Node>(Node(new_tree.substr(1, j - 1), genome_number, priority_name)); 
-      	  right_child = std::make_shared<Node>(Node(new_tree.substr(j + 1, new_tree.size() - j - 2), genome_number, priority_name));
+          left_child = std::unique_ptr<Node>(new Node(this, new_tree.substr(1, j - 1), genome_number, priority_name)); 
+      	  right_child = std::unique_ptr<Node>(new Node(this, new_tree.substr(j + 1, new_tree.size() - j - 2), genome_number, priority_name));
       	} 
       } 
       if (p < 0) {
@@ -133,8 +161,6 @@ structure::BinaryTree<mcolor_t>::Node::Node(std::string const & tree, std::unord
       data.insert(genome_number.find(new_tree)->second);
       name = priority_name[genome_number.find(new_tree)->second]; 
     }   
-    left_child = nullptr;
-    right_child = nullptr;
   }
 }
 
@@ -187,5 +213,84 @@ void structure::BinaryTree<mcolor_t>::Node::get_name_for_colors(std::map<mcolor_
     right_child->get_name_for_colors(colors);
   }
 }
- 
+
+template<class mcolor_t>
+template<class linearizator_t>
+void structure::BinaryTree<mcolor_t>::Node::walk_and_linearizeate(
+      linearizator_t const & linearizator, 
+      std::map<mcolor_t, typename linearizator_t::partgraph_t> & graphs, 
+      std::map<mcolor_t, typename linearizator_t::transform_t> & transformations) const { 
+  if (left_child) { 
+    left_child->walk_and_linearizeate(linearizator, graphs, transformations); 
+  }
+
+  if (right_child) { 
+    right_child->walk_and_linearizeate(linearizator, graphs, transformations); 
+  }
+
+  if (left_child && right_child && graphs.find(this->data) != graphs.end()) { 
+    size_t count_left = linearizator.count_circular_chromosome(graphs[left_child->data]); 
+    size_t central = linearizator.count_circular_chromosome(graphs[this->data]); 
+    size_t count_right = linearizator.count_circular_chromosome(graphs[right_child->data]); 
+    //std::cerr << "Left have " << count_left << std::endl 
+    //      << " Central have " << central << std::endl << "Right have " << count_right << std::endl;
+
+    if (count_left == 0 && count_right == 0 && central != 0) { 
+      typedef typename linearizator_t::twobreak_t twobreak_t;
+      typedef typename linearizator_t::transform_t transform_t;
+      typedef typename linearizator_t::partgraph_t partgraph_t;
+
+      //std::cerr << "Start linearizator " << genome_match::mcolor_to_name(this->data) 
+      //  << " -> " << genome_match::mcolor_to_name(left_child->data) << std::endl;
+      std::pair<transform_t, transform_t> new_history = linearizator.linearizate(graphs[this->data], transformations[left_child->data], graphs[left_child->data]); 
+
+      /*Apply linearization twobreaks*/      
+      for (twobreak_t const & twobreak : new_history.first) {
+        //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) 
+        //<< " " << twobreak.get_vertex(3) << " " << std::endl;    
+        twobreak.apply_single(graphs[this->data]); 
+        //std::cerr << linearizator.count_circular_chromosome(graphs[this->data]) << std::endl;
+      }
+      
+      /*Check that all is good*/
+      //std::cerr << "Result genome have " << linearizator.count_circular_chromosome(graphs[this->data]) << std::endl;
+      assert(linearizator.count_circular_chromosome(graphs[this->data]) == 0);
+
+      //std::cerr << "Start to check linearizator " << std::endl;
+      partgraph_t current = graphs[this->data]; 
+      for (twobreak_t const & twobreak : new_history.second) { 
+        //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) 
+        //<< " " << twobreak.get_vertex(3) << " " << std::endl;    
+        
+        twobreak.apply_single(current);
+      } 
+      //std::cerr << "Check that we get good history " << std::endl;
+      assert(current == graphs[left_child->data]);
+
+      /*Modify transformation*/
+      //std::cerr << "modify transformation" << std::endl;
+      for (twobreak_t const & twobreak : new_history.first) { 
+        transformations[this->data].push_back(twobreak);
+        transformations[right_child->data].push_front(twobreak.inverse());  
+      } 
+      transformations[left_child->data] = new_history.second;
+
+      //std::cerr << "apply on right child" << std::endl;
+      current = graphs[this->data]; 
+      for (twobreak_t const & twobreak : transformations[right_child->data]) { 
+        twobreak.apply_single(current);
+      } 
+      assert(current == graphs[right_child->data]);
+
+      if (this->parent->parent != nullptr) {  
+        current = graphs[this->parent->data]; 
+        for (twobreak_t const & twobreak : transformations[this->data]) { 
+          twobreak.apply_single(current);
+        } 
+        assert(current == graphs[this->data]);
+      } 
+    }
+  } 
+}
+
 #endif

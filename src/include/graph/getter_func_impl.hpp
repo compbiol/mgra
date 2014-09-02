@@ -2,7 +2,7 @@
 #define GETTER_FUNC_IMPL_HPP
 
 /*
- * Implementation of the function to get all incident edges from vertex v. 
+ * Implementation of the function to get all incident edges from vertex u. 
  */
 template<class mcolor_t>
 structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_multiedges(vertex_t const & u) const {  
@@ -34,6 +34,24 @@ structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_multied
 } 
 
 template<class mcolor_t>
+structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_tc_multiedges(vertex_t const & u) const { 
+  mularcs_t current = graph.get_all_adjacent_multiedges<mularcs_t>(u);
+  
+  mularcs_t split;
+  for(auto const & arc : current) {
+    if (!multicolors.is_T_consistent_color(arc.second) && arc.second.size() < graph.count_local_graphs()) {
+      auto const & colors = multicolors.split_color_on_tc_color(arc.second, graph.count_local_graphs() + 1);
+      for(auto const & color : colors) {  
+        split.insert(arc.first, color); 
+      }
+    } else { 
+      split.insert(arc.first, arc.second); 
+    }
+  } 
+  return split; 
+}
+
+template<class mcolor_t>
 structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_vtc_multiedges(vertex_t const & u) const { 
   mularcs_t current = graph.get_all_adjacent_multiedges<mularcs_t>(u);
   
@@ -49,24 +67,6 @@ structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_vtc_mul
     }
   } 
 
-  return split; 
-}
-
-template<class mcolor_t>
-structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_tc_multiedges(vertex_t const & u) const { 
-  mularcs_t current = graph.get_all_adjacent_multiedges<mularcs_t>(u);
-  
-  mularcs_t split;
-  for(auto const & arc : current) {
-    if (!multicolors.is_T_consistent_color(arc.second) && arc.second.size() < graph.count_local_graphs()) {
-      auto const & colors = multicolors.split_color_on_tc_color(arc.second, graph.count_local_graphs() + 1);
-      for(auto const & color : colors) {  
-        split.insert(arc.first, color); 
-      }
-    } else { 
-      split.insert(arc.first, arc.second); 
-    }
-  } 
   return split; 
 }
 

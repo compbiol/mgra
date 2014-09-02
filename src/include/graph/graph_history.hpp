@@ -176,13 +176,17 @@ void HistoryGraph<mcolor_t>::change_history() {
           if (br->get_vertex(ind) == mother_edge.first) {
             mcolor_t inter_color(mother_edge.second, color, mcolor_t::Intersection);
             if (inter_color.size() > 0 && (inter_color.size() < mother_edge.second.size())) { 
+              
               //std::cerr << "Change " << br->get_vertex(0) << " " << br->get_vertex(1) << " " 
               //<< br->get_vertex(2) << " " << br->get_vertex(3) << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;            
+              
               old_two_break = *br;
               br->change_vertex(ind, central.first);
               last_twobreak = br;
+              
               //std::cerr << "Result " << br->get_vertex(0) << " " << br->get_vertex(1) << " " 
               //<< br->get_vertex(2) << " " << br->get_vertex(3) << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
+              
             } 
           }
 
@@ -199,6 +203,7 @@ void HistoryGraph<mcolor_t>::change_history() {
         change_lambda(3);
       } 
 
+      auto inserted_iterator = break2_history.end(); 
       if (last_twobreak != break2_history.end()) {
         ++last_twobreak;
         
@@ -221,12 +226,55 @@ void HistoryGraph<mcolor_t>::change_history() {
           assert(false);
         } 
 
-        twobreak_t two_break = twobreak_t(central.first, where, central.second, mother, mother_edge.second);
-        break2_history.insert(last_twobreak, two_break);
+        twobreak_t twobreak = twobreak_t(central.first, where, central.second, mother, mother_edge.second);
+        inserted_iterator = break2_history.insert(last_twobreak, twobreak);
+        
         //std::cerr << "Insert two break " << std::endl;
         //std::cerr << central.first << " " << where << " " << central.second << " " 
         //<< mother << " " << genome_match::mcolor_to_name(mother_edge.second) << std::endl;
-      } 
+      }
+
+      std::list<twobreak_t> new_2break_history;
+      std::list<twobreak_t> replaced_twobreak;
+      for (auto br = break2_history.begin(); br != inserted_iterator; ++br) {    
+        if (!inserted_iterator->is_independent(*br)) { 
+          replaced_twobreak.push_front(*br);
+        } else { 
+          bool flag = false; 
+
+          for (auto rep_br = replaced_twobreak.rbegin(); rep_br != replaced_twobreak.rend() && (!flag); ++rep_br) { 
+            if (!rep_br->is_independent(*br)) { 
+              replaced_twobreak.push_front(*br);
+              flag = true;
+            }
+          } 
+
+          if (!flag) { 
+            new_2break_history.push_back(*br);
+          }
+        }
+      }
+
+      /*if (central.first == "120t" && central.second == "93t" && mother_edge.first == "492h") {
+        std::cerr << "Replaced " << std::endl;
+        for (auto rep_br = replaced_twobreak.rbegin(); rep_br != replaced_twobreak.rend(); ++rep_br) { 
+          std::cerr << rep_br->get_vertex(0) << " " << rep_br->get_vertex(1) << " " 
+              << rep_br->get_vertex(2) << " " << rep_br->get_vertex(3) << " " << genome_match::mcolor_to_name(rep_br->get_mcolor()) << std::endl;
+        } 
+      }*/
+
+      new_2break_history.push_back(*inserted_iterator);
+
+      for (auto rep_br = replaced_twobreak.rbegin(); rep_br != replaced_twobreak.rend(); ++rep_br) { 
+        new_2break_history.push_back(*rep_br);
+      }
+
+      ++inserted_iterator;
+      for (auto br = inserted_iterator; br != break2_history.end(); ++br) {    
+        new_2break_history.push_back(*br);
+      }
+ 
+      break2_history = new_2break_history; 
     }
   }
 } 

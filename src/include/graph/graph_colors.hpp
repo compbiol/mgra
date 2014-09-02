@@ -7,7 +7,16 @@ struct ColorsGraph {
   template<class conf_t>
   ColorsGraph(conf_t const & cfg); 
 
+  /*
+   * Split input multiolor COLOR on T-consistent multicolors according number of splits.
+   * If multicolor split to more than NUMBER_SPLITS value return input color. 
+   * If less returned set of T-consistent color.
+   */
   std::set<mcolor_t> split_color_on_tc_color(mcolor_t const & color, size_t number_splits) const;
+
+  /*
+   * Split input multiolor COLOR on vec{T}-consistent multicolors.
+   */
   std::set<mcolor_t> split_color_on_vtc_color(mcolor_t const & color) const;
 
   inline mcolor_t const & get_complement_color(mcolor_t const & color) { 
@@ -56,11 +65,13 @@ template<class mcolor_t>
 template<class conf_t>
 ColorsGraph<mcolor_t>::ColorsGraph(conf_t const & cfg) 
 {
+  //Leaf have a vec{T}-consistent multicolor.
   for (size_t i = 0; i < cfg.get_count_genomes(); ++i) {
     complete_color.insert(i);
     vec_T_consistent_colors.insert(mcolor_t(i));
   }
 
+  //Get all vec{T}-consistent colors corresponding input [sub]tree[s]. 
   std::set<mcolor_t> nodes_color;
   for (auto it = cfg.cbegin_trees(); it != cfg.cend_trees(); ++it) {
     auto const & tree_color = it->build_vec_T_consistent_colors();
@@ -68,6 +79,8 @@ ColorsGraph<mcolor_t>::ColorsGraph(conf_t const & cfg)
   }
   nodes_color.erase(complete_color);
 
+  //If target is empty we put root in nearest node. Work fine only complete tree.
+  //Need tested on subtrees. 
   if (cfg.get_target().empty()) { 
     for (auto const & color : nodes_color) {
       auto const & compl_color = compute_complement_color(color);
@@ -84,12 +97,14 @@ ColorsGraph<mcolor_t>::ColorsGraph(conf_t const & cfg)
   }
 
   vec_T_consistent_colors = nodes_color;
+
+  //If target not empty do this color rooted color. 
   if (!cfg.get_target().empty()) { 
     remove_color = cfg.get_target();
     vec_T_consistent_colors.erase(cfg.get_target());
   } 
 
-  //check consistency
+  //check consistency for multicolors
   for (auto id = vec_T_consistent_colors.cbegin(); id != vec_T_consistent_colors.cend(); ++id) {
     for(auto jd = id; jd != vec_T_consistent_colors.end(); ++jd) {
       mcolor_t color(*id, *jd, mcolor_t::Intersection);
@@ -100,6 +115,7 @@ ColorsGraph<mcolor_t>::ColorsGraph(conf_t const & cfg)
     }
   }
    
+  //init T consistent multicolors (vec{T}-consistent multicolors and addition).  
   for (auto const & vtc : vec_T_consistent_colors) {
     T_consistent_colors.insert(vtc);
     T_consistent_colors.insert(compute_complement_color(vtc));
@@ -168,13 +184,11 @@ std::set<mcolor_t> ColorsGraph<mcolor_t>::split_color_on_vtc_color(mcolor_t cons
 
     equiv.update();
     std::map<size_t, mcolor_t> const & classes = equiv.get_eclasses<mcolor_t>(); 
-    //std::cerr << "color " << genome_match::mcolor_to_name(color) << std::endl;
     for(auto const & col : classes) {
       answer.insert(col.second);
     }
 
     return answer;
- 
   }
 }
 

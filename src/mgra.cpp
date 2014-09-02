@@ -12,6 +12,7 @@
 
 #include "reader.h"
 #include "RecoveredGenomes.h"
+#include "RecoveredInfo.hpp"
 
 #include <boost/program_options.hpp>
 
@@ -110,7 +111,6 @@ int main(int argc, char* argv[]) {
   std::string type; 
   std::string blocks_file;
   std::string out_path; 
-  std::string colorscheme;
   bool debug = false; 
 
   /*Reading flags*/
@@ -124,7 +124,6 @@ int main(int argc, char* argv[]) {
     ("format,f", po::value<std::string>(&type)->required(), "Input format file in genomes file")
     ("genomes,g", po::value<std::string>(&blocks_file)->required(), "Input file contains genomes")
     ("output_dir,o", po::value<std::string>(&out_path)->required(), "Output directory")
-    ("colorscheme", po::value<std::string>(), "colorscheme, which used in output breakpoint graph")
     ("debug,d", "Switch on debug output")
     ;
 
@@ -162,10 +161,6 @@ int main(int argc, char* argv[]) {
   } catch (po::error& e) { 
     std::cerr << "ERROR: " << e.what() << std::endl; 
     return 1;
-  }
-
-  if ( vm.count("colorscheme") ) { 
-    colorscheme = vm["colorscheme"].as<std::string>();
   }
 
   if ( vm.count("debug") ) { 
@@ -212,7 +207,7 @@ int main(int argc, char* argv[]) {
   typedef structure::Mcolor mcolor_t;
   typedef BreakpointGraph<mcolor_t> graph_t;
 
-  ProblemInstance<mcolor_t> cfg(reader::read_cfg_file(in_path_cfg), colorscheme.empty()); 
+  ProblemInstance<mcolor_t> cfg(reader::read_cfg_file(in_path_cfg)); 
 
   if (cfg.get_count_genomes() < 2) {
     std::cerr << "ERROR: at least two input genomes required" << std::endl;
@@ -251,7 +246,7 @@ int main(int argc, char* argv[]) {
 
   std::clog << "Start algorithm for convert from breakpoint graph to identity breakpoint graph" << std::endl;
   Algorithm<graph_t> main_algo(graph, cfg);
-  main_algo.init_writers(out_path_directory, colorscheme, "stage", debug);
+  main_algo.init_writers(out_path_directory, "stage", debug);
   main_algo.convert_to_identity_bgraph(); 
 
   if (cfg.get_target().empty() && !graph->is_identity()) {
@@ -281,17 +276,16 @@ int main(int argc, char* argv[]) {
   Algorithm<graph_t>::Balance balance(new_graph);
   balance.do_action();
   //writer::Wdots<graph_t, ProblemInstance<mcolor_t> > write_dots(cfg);
-  //write_dots.init(out_path_directory, colorscheme, "stage", true);
   //write_dots.save_dot(*new_graph, cfg, 100);
 
   for (auto br = graph->cbegin_2break_history(); br != graph->cend_2break_history(); ++br) {
     //std::cerr << br->get_vertex(0) << " " << br->get_vertex(1) << " " << br->get_vertex(2) 
     //<< " " << br->get_vertex(3) << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
-    /*if (br->get_vertex(0) == "480h" && br->get_vertex(1) == "29t" && br->get_vertex(2) == "497h"
-        && br->get_vertex(3) == "418t") { 
-      auto color = new_graph->get_all_multicolor_edge("480h", "29t");
+    /*if (br->get_vertex(0) == "190h" && br->get_vertex(1) == "423t" && br->get_vertex(2) == "120t"
+        && br->get_vertex(3) == "946h") { 
+      auto color = new_graph->get_all_multicolor_edge("190h", "423t");
       std::cerr << genome_match::mcolor_to_name(color)  << std::endl;
-      color = new_graph->get_all_multicolor_edge("497h", "418t");
+      color = new_graph->get_all_multicolor_edge("120t", "946h");
       std::cerr << genome_match::mcolor_to_name(color)  << std::endl;
     } */
     new_graph->apply(*br);
@@ -301,8 +295,8 @@ int main(int argc, char* argv[]) {
 
   auto bad_edges = graph->get_bad_edges();
   std::clog << "Start reconstruct genomes." << std::endl;
-  RecoveredGenomes<graph_t> reductant(*graph, cfg, bad_edges); 
-
+  RecoveredInfo<graph_t> reductant(*graph, cfg); 
+  
   std::clog << "Save history in files." << std::endl;
   if (cfg.get_target().empty()) {
     size_t i = 0;
@@ -335,6 +329,7 @@ int main(int argc, char* argv[]) {
     } 
   }
 
+  
   std::clog << "Save ancestor genomes in files." << std::endl; 
   writer::Wgenome<genome_t> writer_genome(out_path_directory / "genomes");
   writer_genome.save_genomes(reductant.get_genomes(), cfg.get_target().empty()); 

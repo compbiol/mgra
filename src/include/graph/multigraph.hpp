@@ -69,7 +69,6 @@ struct MultiGraph {
     return processed.size();
   }
 
-
   inline vertex_t get_obverse_vertex(vertex_t const & v) const {
     assert(v != Infty);
     if (obverse_edges.count(v) != 0) {

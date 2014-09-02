@@ -113,11 +113,7 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
     }*/
   } else {
     recovered_transformation.resize(graph.count_vec_T_consitent_color());
-#ifndef VERSION1
     recovered_graphs.resize(graph.count_vec_T_consitent_color() + 1, graph.get_partgraph(0));
-#else 
-    recovered_graphs.resize(graph.count_vec_T_consitent_color(), graph.get_partgraph(0)); 
-#endif
 
     for(auto it = graph.crbegin_2break_history(); it != graph.crend_2break_history(); ++it) {
       size_t i = 0;
@@ -138,20 +134,20 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
     Decircularizeter<graph_t> dec(graph, bad_edges);          
     for (auto im = graph.cbegin_vec_T_consistent_color(); im != graph.cend_vec_T_consistent_color(); ++im, ++i) {    
       name_genomes.push_back(conf.mcolor_to_name(*im));
-      std::cerr << "Start decircularize procedure for " << conf.mcolor_to_name(*im) << std::endl;
+      //std::cerr << "Start decircularize procedure for " << conf.mcolor_to_name(*im) << std::endl;
       //std::cerr << "Initial we have " << dec.count_circular_chromosome(recovered_graphs[i]) << std::endl;
-      transform_t T = dec.decircularize(recovered_graphs[i], recovered_transformation[i]);
+      //transform_t T = dec.decircularize(recovered_graphs[i], recovered_transformation[i]);
       //std::cerr << "After we have " << dec.count_circular_chromosome(recovered_graphs[i]) << std::endl;
 
       // move to adjacent branches
-      for (auto const &it : T) {
+      /*for (auto const &it : T) {
         size_t j = 0; 
         for (auto jt = graph.cbegin_vec_T_consistent_color(); jt != graph.cend_vec_T_consistent_color(); ++jt, ++j) {
           if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && are_adjacent_branches(*im, *jt)) {
             recovered_transformation[j].push_back(it);
           }
         }
-      }
+      }*/
     }
     name_genomes.push_back(conf.mcolor_to_name(graph.get_root_color()));
   }

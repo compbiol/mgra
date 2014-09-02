@@ -1,8 +1,6 @@
 #ifndef ALGORITHM_H_
 #define ALGORITHM_H_
 
-#include "genome_match.h" //FIXME REMOVE LATER
-
 #include "graph/breakpoint_graph.hpp"
 #include "writer/Wstats.h"
 #include "writer/Wdots.h"
@@ -19,9 +17,9 @@ struct Algorithm {
   {
   } 
 
-  void init_writers(fs::path const & work_dir, std::string const & colorscheme, std::string const & graphname, bool debug) { 
+  void init_writers(fs::path const & work_dir, std::string const & graphname, bool debug) { 
     write_stats.open(work_dir, "stats.txt");
-    write_dots.init(work_dir, colorscheme, graphname, debug);
+    write_dots.init(work_dir, graphname, debug);
   }
 
   void convert_to_identity_bgraph();
@@ -31,20 +29,7 @@ private:
   typedef typename graph_t::mularcs_t mularcs_t; 
   typedef typename graph_t::twobreak_t twobreak_t;
   
-  struct Stage {
-    explicit Stage(std::shared_ptr<graph_t> const & gr) 
-    : graph(gr)
-    {
-    }
-
-    virtual bool do_action() = 0;
-    virtual std::string get_name() = 0;
-    virtual ~Stage() 
-    {
-    }
-  protected:
-    std::shared_ptr<graph_t> graph;
-  };
+  struct Stage;
 
 public:
   struct Balance; 	
@@ -55,6 +40,8 @@ private:
   struct ProcessFairEdge; 
 
   struct ProcessClone;
+
+  struct ProcessTwoBreakAndClone;
 
   struct IncreaseNumberComponents;
 
@@ -81,13 +68,14 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
   bool isChanged = false;
   bool process_compl = true; 
 
-  std::vector<std::shared_ptr<Stage> > algorithm(5); 
+  std::vector<std::shared_ptr<Stage> > algorithm(6);
   algorithm[0] = std::shared_ptr<Stage>(new Balance(graph));
   algorithm[1] = std::shared_ptr<Stage>(new ProcessSimplePath(graph));
   algorithm[2] = std::shared_ptr<Stage>(new ProcessFairEdge(graph));
   algorithm[3] = std::shared_ptr<Stage>(new ProcessClone(graph));
+  //algorithm[4] = std::shared_ptr<Stage>(new ProcessTwoBreakAndClone(graph));
   algorithm[4] = std::shared_ptr<Stage>(new IncreaseNumberComponents(graph));
-  
+
   auto const saveInfoLambda = [&](size_t st) -> void { 
     if ((print_dots.count(st) == 0) && !isChanged) {
       print_dots.insert(st);
@@ -125,7 +113,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
     } 
 
     if (graph->get_canformQoo() && !isChanged) { 
-      std::cerr << "Change canformQoo "  << std::endl;
+      std::cerr << "Change canformQ2oo "  << std::endl;
       graph->set_canformQoo(false);
       isChanged = true;
     }
@@ -147,16 +135,19 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
       isChanged = bruteforce_action.do_action();
       saveInfoLambda(stage++);
     }
+
   }	
        
   graph->update_number_of_splits(3);
   write_dots.save_final_dot(*graph);
 }          
 
+#include "algo/Stage.hpp"
 #include "algo/BalanceStage.hpp"
 #include "algo/SimplePathStage.hpp" 
 #include "algo/FairEdgeStage.hpp"
 #include "algo/CloneStage.hpp"
+#include "algo/BothStage.hpp"
 #include "algo/IncreaseComponents.hpp"
 
 #include "algo/BruteForce.hpp"

@@ -2,7 +2,6 @@
 #define GENOME_MATCH_ 
 
 #include "defined.h"
-#include "structures/pconf.h"
 
 struct genome_match { 
   typedef structure::Genome genome_t;
@@ -10,7 +9,8 @@ struct genome_match {
   
   typedef std::unordered_map<std::string, size_t> gen2num; 
  
-  static void init_name_genomes(const ProblemInstance<mcolor_t>& cfg, const std::vector<genome_t>& genomes) {
+  template<class conf_t>
+  static void init_name_genomes(const conf_t& cfg, const std::vector<genome_t>& genomes) {
     number_to_genome.resize(genomes.size());
 	
     for(size_t i = 0; i < genomes.size(); ++i) { 

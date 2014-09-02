@@ -33,7 +33,6 @@ bool Decircularizeter<graph_t>::is_circular_chromosome(partgraph_t const & local
   vertex_t current = x; 
   vertex_t previous = x;
   processed.insert(x);
- // std::pair() 
 
   do { 
     previous = current; 
@@ -132,8 +131,8 @@ typename graph_t::transform_t Decircularizeter<graph_t>::decircularize(partgraph
 
 	    auto kt = jt--; // jt, kt are successive, *kt == t
 
+      twobreak_t const & s = *jt;
 	    twobreak_t const & t = *kt;
-	    twobreak_t const & s = *jt;
 
 			//outlog << "... trying to swap with " << s << endl;
 
@@ -158,7 +157,6 @@ typename graph_t::transform_t Decircularizeter<graph_t>::decircularize(partgraph
   			  if (t.get_arc(j) == std::make_pair(jt->get_vertex(0), jt->get_vertex(2))) { 
   					usearc = true;
   	    
-  					p2 = t.get_arc(j);
   					q2 = t.get_arc(1 - j);
   		    
   					p1 = jt->get_arc(0);
@@ -166,7 +164,6 @@ typename graph_t::transform_t Decircularizeter<graph_t>::decircularize(partgraph
   			  } else if (t.get_arc(j) == std::make_pair(jt->get_vertex(2), jt->get_vertex(0))) {
   					usearc = true;
   		    
-  					p2 = t.get_arc(j);
   					q2 = t.get_arc(1 - j);
   		    
   					p1 = jt->get_arc(1);
@@ -174,7 +171,6 @@ typename graph_t::transform_t Decircularizeter<graph_t>::decircularize(partgraph
   			  } else if (t.get_arc(j) == std::make_pair(jt->get_vertex(1), jt->get_vertex(3))) {
   					usearc = true;
   		    
-  					p2 = t.get_arc(j);
   					q2 = t.get_arc(1 - j);
   		    
   					p1 = std::make_pair(jt->get_vertex(1), jt->get_vertex(0));
@@ -182,7 +178,6 @@ typename graph_t::transform_t Decircularizeter<graph_t>::decircularize(partgraph
   			  } else if (t.get_arc(j) == std::make_pair(jt->get_vertex(3), jt->get_vertex(1))) {
   					usearc = true;
   		    
-  					p2 = t.get_arc(j);
   					q2 = t.get_arc(1 - j);
   		    
   					p1 = std::make_pair(jt->get_vertex(3), jt->get_vertex(2));
@@ -203,8 +198,8 @@ typename graph_t::transform_t Decircularizeter<graph_t>::decircularize(partgraph
           //std::cerr << "Insert " << std::endl;
           //std::cerr << q2.second << " " << p1.second << " " << q1.first << " " << q1.second << genome_match::mcolor_to_name(t.get_mcolor()) << std::endl;
           //std::cerr << p1.first << " " << p1.second << " " << q2.first << " " << q2.second << genome_match::mcolor_to_name(t.get_mcolor()) << std::endl;
+          *jt = twobreak_t(p1.first, p1.second, q2.first, q2.second, t.get_mcolor());
   				*kt = twobreak_t(q2.second, p1.second, q1.first, q1.second, t.get_mcolor());
-  				*jt = twobreak_t(p1.first, p1.second, q2.first, q2.second, t.get_mcolor());
 		    } else {
           //std::cerr << "Swap " << std::endl;
   				twobreak_t temp = *kt;
@@ -262,6 +257,5 @@ typename graph_t::transform_t Decircularizeter<graph_t>::decircularize(partgraph
 
   return D;
 }
-
 
 #endif

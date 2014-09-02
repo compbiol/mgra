@@ -39,7 +39,9 @@ bool BreakpointGraph<mcolor_t>::is_duplication_vertex(vertex_t const & v) const 
 } 
 
 /*
- * Implementation of the function about property for edges
+ * Implementation of the function for calculate different scores. 
+ * Mobility score, verteces score, twobreak score. 
+ * Detailed about this scores see in journal paper corresponding MGRA 2.0.
  */
 template<class mcolor_t>
 size_t BreakpointGraph<mcolor_t>::mobility_score(edge_t const & viewed, mcolor_t const & color, edge_t const & removed) const {
@@ -56,7 +58,7 @@ size_t BreakpointGraph<mcolor_t>::mobility_score(edge_t const & viewed, mcolor_t
     
     size_t number_variant = 0; 
     for (auto const & arc : mularcs) { 
-      if (this->canformQ(arc, color)) {
+      if (this->canformQ2(arc, color)) {
         ++number_variant;
       } 
     }
@@ -116,13 +118,14 @@ std::pair<size_t, size_t> BreakpointGraph<mcolor_t>::is_decrease_verteces_score(
       for (auto iter = all_colors.first; iter != all_colors.second; ++iter) { 
         union_color = mcolor_t(union_color, iter->second, mcolor_t::Union);
       }
+    
       mularcs.erase(inserted); 
 
       std::set<mcolor_t> results = multicolors.split_color_on_tc_color(union_color, graph.count_local_graphs() + 1);          
       for (mcolor_t const & col : results) {
         mularcs.insert(inserted, col);
       }
-     
+
       return calc_score_lambda(mularcs);
     } else { 
       return 0; 
@@ -143,18 +146,6 @@ std::pair<size_t, size_t> BreakpointGraph<mcolor_t>::is_decrease_verteces_score(
 
   return std::make_pair(before_score, future_score);         
 }
-
-
-template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::is_contain_T_consistent_color(vertex_t const & u, vertex_t const & v) const { 
-  auto edge_colors = multicolors.split_color_on_tc_color(this->get_all_multicolor_edge(u, v), 20); //graph.count_local_graphs());
-  for (auto const & color : edge_colors) { 
-    if (multicolors.is_T_consistent_color(color) && !multicolors.is_vec_T_consistent_color(color)) { 
-      return true;
-    }
-  }
-  return false; 
-} 
 
 template<class mcolor_t>
 int BreakpointGraph<mcolor_t>::calculate_cost(vertex_t const & u, vertex_t const & v) const {
@@ -217,7 +208,7 @@ size_t BreakpointGraph<mcolor_t>::mobility_score_relative_vertex(vertex_t const 
     mularcs_about.erase(remove_vertex); 
     
     for (auto const & arc : mularcs_about) { 
-      if (this->canformQ(arc, color)) {
+      if (this->canformQ2(arc, color)) {
         ++result;
       }
     } 
@@ -236,6 +227,20 @@ size_t BreakpointGraph<mcolor_t>::mobility_score_relative_vertex(vertex_t const 
   return answer;
 }
 
+/*
+ * Implementation of the function for different edges property. 
+ */
+template<class mcolor_t>
+bool BreakpointGraph<mcolor_t>::is_contain_T_consistent_color(vertex_t const & u, vertex_t const & v) const { 
+  auto edge_colors = multicolors.split_color_on_tc_color(this->get_all_multicolor_edge(u, v), graph.count_local_graphs() + 1); 
+  for (auto const & color : edge_colors) { 
+    if (multicolors.is_T_consistent_color(color) && !multicolors.is_vec_T_consistent_color(color)) { 
+      return true;
+    }
+  }
+  return false; 
+} 
+
 template<class mcolor_t>
 bool BreakpointGraph<mcolor_t>::is_mobility_edge(vertex_t const & x, mcolor_t const & color, vertex_t const & y) const {
   size_t answer = mobility_score_relative_vertex(x, color, y, x) + mobility_score_relative_vertex(x, color, y, y);
@@ -244,8 +249,8 @@ bool BreakpointGraph<mcolor_t>::is_mobility_edge(vertex_t const & x, mcolor_t co
 
 template<class mcolor_t>
 bool BreakpointGraph<mcolor_t>::is_mobility_edge(vertex_t const & x, vertex_t const & y) const {
-  if ((x == Infty || y == Infty) && is_mobile_irregular_edge) { 
-    return true;
+  if (x == Infty || y == Infty) { 
+    return !is_contain_T_consistent_color(x, y);
   }
 
   bool non_mobile = false; 

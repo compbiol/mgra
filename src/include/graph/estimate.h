@@ -1,8 +1,6 @@
 #ifndef ESTIMATE_H_
 #define ESTIMATE_H_
 
-#include "genome_match.h" //FIXME REMOVE LATER
-
 template<class graph_t>
 struct Statistics { 
   typedef typename graph_t::mcolor_type mcolor_t;

@@ -56,7 +56,7 @@ private:
     return result; 
   }
 
-  bool is_good_actions(std::set<mcolor_t> const & actions) const;
+  bool is_good_actions(vertex_t const & x, std::set<mcolor_t> const & actions, vertex_t const & y) const;
 };
 
 template<class graph_t>
@@ -155,7 +155,7 @@ bool Algorithm<graph_t>::ProcessTwoBreakAndClone::do_action() {
             std::set<mcolor_t> clone_action = get_worked_colors(possible_clones);
             actions.insert(clone_action.begin(), clone_action.end()); 
 
-             if (is_good_actions(actions)) { 
+             if (is_good_actions(x, actions, y)) { 
               //std::cerr << "Do cloning and two-break in first case" << std::endl;
               for (auto const & twobreak : possible_twobreaks) {
                 //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) << " " << twobreak.get_vertex(3) << " " << genome_match::mcolor_to_name(twobreak.get_mcolor()) << std::endl;
@@ -206,7 +206,7 @@ bool Algorithm<graph_t>::ProcessTwoBreakAndClone::do_action() {
                 std::set<mcolor_t> clone_action = get_worked_colors(included_clones);
                 actions.insert(clone_action.begin(), clone_action.end()); 
              
-                if (is_good_actions(actions)) {                
+                if (is_good_actions(x, actions, y)) {                
                    for (auto const & twobreak : included_twobreaks) {
                     this->graph->apply(twobreak);
                     found = true;
@@ -277,7 +277,7 @@ std::pair<bool, typename graph_t::clone_t> Algorithm<graph_t>::ProcessTwoBreakAn
 }
 
 template<class graph_t>
-bool Algorithm<graph_t>::ProcessTwoBreakAndClone::is_good_actions(std::set<mcolor_t> const & actions) const {
+bool Algorithm<graph_t>::ProcessTwoBreakAndClone::is_good_actions(vertex_t const & x, std::set<mcolor_t> const & actions, vertex_t const & y) const {
   bool is_all_good = true;
 
   for (auto vec_color = this->graph->cbegin_vec_T_consistent_color(); vec_color != this->graph->cend_vec_T_consistent_color(); ++vec_color) {
@@ -291,7 +291,7 @@ bool Algorithm<graph_t>::ProcessTwoBreakAndClone::is_good_actions(std::set<mcolo
     }
 
     if (vec_target_color.empty() && (count_diff != 1)) {
-      is_all_good = false; 
+      is_all_good = (!this->graph->canformQ(x, *vec_color) || !this->graph->canformQ(y, *vec_color)); //false 
     }
   }
 

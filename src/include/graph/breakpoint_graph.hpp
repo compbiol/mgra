@@ -216,7 +216,7 @@ private:
    * if return false, then COLOR cannot be formed
    * if true - who knows... 
    */
-  bool canformQ2(arc_t const & input_edge, mcolor_t const & color) const;
+  std::set<std::tuple<vertex_t, vertex_t, mcolor_t> > canformQ2(vertex_t const & vertex, mcolor_t const & required_color) const;
 
   void check_changed_vertex(vertex_t const & vertex);
   
@@ -241,8 +241,97 @@ private:
 #include "graph/getter_func_impl.hpp"
 
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::canformQ(vertex_t const & vertex, mcolor_t const & color) const {
+bool BreakpointGraph<mcolor_t>::canformQ(vertex_t const & vertex, mcolor_t const & required_color) const { 
+  assert(multicolors.is_vec_T_consistent_color(required_color));
+  
+  if (vertex == Infty) {
+    return canformQoo;
+  }
+
+  //std::cerr << "-- Start canformQ function " << vertex << " " << genome_match::mcolor_to_name(required_color) << std::endl;
+  mularcs_t mularcs = get_all_adjacent_multiedges_with_info(vertex);
+   
+  bool canform = true;
+  std::set<std::tuple<vertex_t, vertex_t, mcolor_t> > edges;
+
+  for(auto arc = mularcs.cbegin(); (arc != mularcs.cend()) && canform; ++arc) { 
+    mcolor_t inter_color(required_color, arc->second, mcolor_t::Intersection); 
+    if (inter_color.size() > 0 && inter_color.size() < arc->second.size()) { 
+      canform = false;
+    } else if (!inter_color.empty()) { 
+      edges.insert(std::make_tuple(vertex, arc->first, arc->second)); 
+    }
+  }
+
+  if (!canform) { 
+    //std::cerr << "Cannot form. Return false" << std::endl; 
+    return canform; 
+  }
+
+  //std::cerr << "--After basic see, we can continue " << edges.size() << std::endl;
+  canform = false;
+  for (auto edge = edges.cbegin(); edge != edges.cend() && !canform; ++edge) { 
+    vertex_t x; 
+    vertex_t y; 
+    mcolor_t color_edge; 
+    std::tie(x, y, color_edge) = *edge;
+    mcolor_t bar_color_edge = mcolor_t(required_color, color_edge, mcolor_t::Difference);
+    //std::cerr << " Start see on edge " << x << " " << y << " " << genome_match::mcolor_to_name(color_edge) << std::endl;
+    //std::cerr << " COLOR WE NEED " << genome_match::mcolor_to_name(bar_color_edge) << std::endl;
+
+    std::set<mcolor_t> bar_colors = multicolors.split_color_on_vtc_color(bar_color_edge);
+    std::set<mcolor_t> saved_colors; 
+
+    while (!bar_colors.empty()) { 
+      std::set<mcolor_t> next_colors; 
+
+      /*std::cerr << " Start iteration with:  "; 
+      for (auto q = bar_colors.cbegin(); q != bar_colors.cend(); ++q) { 
+        std::cerr << genome_match::mcolor_to_name(*q) << " ";
+      } 
+      std::cerr << std::endl;*/
+
+      //std::cerr << "Start to see on bar colors " << std::endl;
+      for (auto q = bar_colors.cbegin(); q != bar_colors.cend(); ++q) { 
+        bool flag = canformQ(x, *q) && canformQ(y, *q); 
+
+        if (flag) {
+          //std::cerr << "Save " << genome_match::mcolor_to_name(*q) << std::endl; 
+          saved_colors.insert(*q);
+        } else { 
+          //std::cerr << "Split on next " << genome_match::mcolor_to_name(*q) << std::endl;
+          std::set<mcolor_t> another = multicolors.split_color_on_next_vtc_color(*q);
+
+          if (!another.empty()) { 
+            //std::cerr << "Yehh splited " << std::endl;
+            next_colors.insert(another.begin(), another.end());
+          } 
+        }
+      }
+      //std::cerr << "End to see on bar colors " << std::endl;
+
+      bar_colors = next_colors; 
+    }
+
+    mcolor_t union_color; 
+    for (auto const & color: saved_colors) { 
+      union_color = mcolor_t(union_color, color, mcolor_t::Union);
+    }
+    if (union_color == bar_color_edge) { 
+      canform = true; 
+    } else { 
+      canform = false; 
+    }
+  } 
+
+  //std::cerr << "Final RETURN " << canform << std::endl;
+  return canform;
+}
+
+template<class mcolor_t>
+bool BreakpointGraph<mcolor_t>::supercanformQ(vertex_t const & vertex, mcolor_t const & color) const {
   assert(multicolors.is_vec_T_consistent_color(color));
+  
   if (vertex == Infty) {
     return canformQoo;
   }
@@ -250,44 +339,45 @@ bool BreakpointGraph<mcolor_t>::canformQ(vertex_t const & vertex, mcolor_t const
   mularcs_t mularcs = get_all_adjacent_multiedges_with_info(vertex);
 
   bool canform = true;
-  std::set<arc_t> how_many;
   for(auto arc = mularcs.cbegin(); (arc != mularcs.cend()) && canform; ++arc) { 
     mcolor_t inter_color(color, arc->second, mcolor_t::Intersection); 
     if (inter_color.size() > 0 && inter_color.size() < arc->second.size()) { 
       canform = false;
-    } else if (!inter_color.empty()) { 
-      how_many.insert(*arc);
     } 
-  }
-
-  if (!canform && how_many.size() == 2) {
-    return (canformQ2(*how_many.begin(), how_many.rbegin()->second) || canformQ2(*how_many.rbegin(), how_many.begin()->second));      
   }
 
   return canform;
 }
 
-template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::canformQ2(arc_t const & input_edge, mcolor_t const & color) const { 
-  assert(multicolors.is_vec_T_consistent_color(color)); 
+/*template<class mcolor_t>
+std::set<std::tuple<vertex_t, vertex_t, mcolor_t> > BreakpointGraph<mcolor_t>::canformQ2(vertex_t const & vertex, mcolor_t const & required_color) const { 
+  assert(multicolors.is_vec_T_consistent_color(required_color)); 
 
-  if (input_edge.first == Infty) {
+  if (vertex == Infty) {
     return canformQoo;
   }
    
-  mularcs_t mularcs = get_all_adjacent_multiedges_with_info(input_edge.first);
- 
+  mularcs_t mularcs = get_all_adjacent_multiedges_with_info(vertex);
+   
   bool canform = true;
+  std::set<std::tuple<vertex_t, vertex_t, mcolor_t> > edges;
+
   for(auto arc = mularcs.cbegin(); (arc != mularcs.cend()) && canform; ++arc) { 
-    mcolor_t inter_color(color, arc->second, mcolor_t::Intersection); 
+    mcolor_t inter_color(required_color, arc->second, mcolor_t::Intersection); 
     if (inter_color.size() > 0 && inter_color.size() < arc->second.size()) { 
       canform = false;
-    } 
+    } else if (!inter_color.empty()) { 
+      edges.insert(std::make_tuple(vertex, arc->first, arc->second)); 
+    }
   }
 
-  return canform;
-}
+  if (!canform) { 
+    edges.clear(); 
+  }
 
+  return edges;
+}
+*/
 template<class mcolor_t>
 void BreakpointGraph<mcolor_t>::check_changed_vertex(vertex_t const & vertex) {
   std::queue<vertex_t> queue; 
@@ -388,4 +478,139 @@ bool BreakpointGraph<mcolor_t>::check_consistency_graph() const {
   return (bad_postponed_deletion == 0);
 }
 
+/*
+
+    auto left_edges = canformQ2(x, bar_color_edge); 
+    auto right_edges = canformQ2(y, bar_color_edge); 
+
+    if (left_edges.empty() || right_edges.empty()) { 
+      std::cerr << "One of intersect in big color" << std::endl;
+      canform = false; 
+    } else { 
+      std::set<mcolor_t> last_set; 
+      for (auto left_edge = left_edges.cbegin(); left_edge != left_edges.cend(); ++left_edge) { 
+        for (auto right_edge = right_edges.cbegin(); right_edge != right_edges.cend(); ++right_edge) { 
+          if (std::get<2>(*left_edge) == std::get<2>(*right_edge)) { 
+            last_set.insert(std::get<2>(*left_edge));
+          } else if (std::get<2>(*left_edge).includes*(std::get<2>(*right_edge))) { 
+            last_set.insert(std::get<2>(*right_edge));
+          } else if (std::get<2>(*right_edge).includes*(std::get<2>(*right_edge))) { 
+            last_set.insert(std::get<2>(*right_edge));
+          }
+        } 
+      }
+    }
+  } 
+
+
+
+  if (canform) {  
+    canform = false; 
+
+    std::cerr << "--Start advanced test " << canform << std::endl;
+    auto get_output_edges_lambda = [&] (vertex_t const & v, mcolor_t const & target_color) -> std::set<mcolor_t> { 
+      std::set<mcolor_t> result; 
+      mularcs_t const & mularcs_v = get_all_adjacent_multiedges_with_info(v);
+      
+      for (auto const & arc : mularcs_v) {
+        if (target_color.includes(arc.second)) { 
+          result.insert(arc.second);  
+        } 
+      }
+
+      return result;       
+    };
+
+    for (auto edge = edges.cbegin(); edge != edges.cend() && !canform; ++edge) { 
+      vertex_t x; 
+      vertex_t y; 
+      mcolor_t color_edge; 
+      std::tie(x, y, color_edge) = *edge;
+      mcolor_t bar_color_edge = mcolor_t(require_color, color_edge, mcolor_t::Difference);
+
+      std::cerr << "WE HAVE " << x << " " << genome_match::mcolor_to_name(color_edge) << " " << y << std::endl;
+      std::cerr << "WE NEED " << genome_match::mcolor_to_name(bar_color_edge) << std::endl;
+
+      std::set<mcolor_t> left_x = get_output_edges_lambda(x, bar_color_edge);
+      std::set<mcolor_t> right_y = get_output_edges_lambda(y, bar_color_edge);
+
+      std::cerr << "Left have" << std::endl;
+      for (auto const & color : left_x) { 
+        std::cerr << genome_match::mcolor_to_name(color) << std::endl;
+      }
+
+      std::cerr << "Right have" << std::endl;
+      for (auto const & color : right_y) { 
+        std::cerr << genome_match::mcolor_to_name(color) << std::endl;
+      }
+
+      std::queue<mcolor_t> queue; 
+      std::set<mcolor_t> bar_colors = multicolors.split_color_on_vtc_color(bar_color_edge);
+      for (auto const & color : bar_colors) {
+        queue.push(color); 
+      }
+
+      canform = true;
+      std::set<mcolor_t> saved_colors; 
+      std::cerr << "Start algorithm" << std::endl;
+      while(!queue.empty() && canform) { 
+        mcolor_t q = queue.front(); 
+        queue.pop();
+        std::cerr << "See on " << genome_match::mcolor_to_name(q) << std::endl;
+
+        if (left_x.count(q) != 0 && right_y.count(q) != 0) { 
+          std::cerr << "First case " << std::endl;
+          saved_colors.insert(q);
+        } else if (left_x.count(q) == 0 && right_y.count(q) != 0) { 
+          canform = canformQ(x, q);
+          std::cerr << "Second case " << canform << std::endl;
+          if (canform) { 
+            saved_colors.insert(q);
+          }
+        } else if (left_x.count(q) != 0 && right_y.count(q) == 0) { 
+          canform = canformQ(y, q);
+          std::cerr << "Third case " << canform << std::endl;
+          if (canform) { 
+            saved_colors.insert(q);
+          } 
+        } else { 
+          std::cerr << "Fourth case " << std::endl;
+          canform = canformQ(x, q) && canformQ(y, q); 
+
+          if (canform) {
+            saved_colors.insert(q); 
+          } else {
+            canform = true; 
+            std::set<mcolor_t> another = multicolors.split_color_on_next_vtc_color(q);
+            std::cerr << "Split " << genome_match::mcolor_to_name(q) << std::endl;
+            for (auto const & color : another) { 
+              std::cerr << "we have " << genome_match::mcolor_to_name(color) << std::endl; 
+              queue.push(color); 
+            } 
+            assert(!another.empty());
+            assert(*another.begin() != q);
+
+            std::cerr << "Finish" << std::endl;
+          }
+        }
+      }
+
+      mcolor_t union_color; 
+      for (auto const & color: saved_colors) { 
+        union_color = mcolor_t(union_color, color, mcolor_t::Union);
+      }
+
+      if (union_color == bar_color_edge) { 
+        canform = true; 
+      } else { 
+        std::cerr << "Potential good situation" << std::endl;
+        assert(canform == false);
+      }
+    }
+
+    if (!canform) { 
+      std::cerr << "YEHH we find" << std::endl;
+    }
+  } 
+*/
 #endif

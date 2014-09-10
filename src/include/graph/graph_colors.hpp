@@ -19,6 +19,8 @@ struct ColorsGraph {
    */
   std::set<mcolor_t> split_color_on_vtc_color(mcolor_t const & color) const;
 
+  std::set<mcolor_t> split_color_on_next_vtc_color(mcolor_t const & color) const;
+
   inline mcolor_t const & get_complement_color(mcolor_t const & color) { 
     assert(color.is_one_to_one_match()); 
     if (compliment_colors.count(color) == 0) {  
@@ -190,6 +192,40 @@ std::set<mcolor_t> ColorsGraph<mcolor_t>::split_color_on_vtc_color(mcolor_t cons
 
     return answer;
   }
+}
+
+template<class mcolor_t>
+std::set<mcolor_t> ColorsGraph<mcolor_t>::split_color_on_next_vtc_color(mcolor_t const & color) const { 
+  assert(is_vec_T_consistent_color(color));
+  std::set<mcolor_t> answer;    
+
+  utility::equivalence<size_t> equiv;
+  std::for_each(color.cbegin(), color.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
+    equiv.addrel(col.first, col.first);
+  }); 
+  
+  for (auto const & vtc: vec_T_consistent_colors) { 
+    if (vtc != color) {  
+      mcolor_t inter_color(vtc, color, mcolor_t::Intersection);
+      if (inter_color.size() >= 2 && inter_color.size() == vtc.size()) {
+        std::for_each(inter_color.cbegin(), inter_color.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
+          equiv.addrel(col.first, inter_color.cbegin()->first);
+        });
+      }
+    } 
+  }
+
+  equiv.update();
+  std::map<size_t, mcolor_t> const & classes = equiv.get_eclasses<mcolor_t>(); 
+  for(auto const & col : classes) {
+    answer.insert(col.second);
+  }
+
+  if (answer.size() == 1 && *answer.begin() == color) { 
+    answer.clear();
+  } 
+  
+  return answer;
 }
 
 

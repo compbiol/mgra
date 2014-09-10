@@ -295,8 +295,9 @@ int main(int argc, char* argv[]) {
 
   auto bad_edges = graph->get_bad_edges();
   std::clog << "Start reconstruct genomes." << std::endl;
-  RecoveredInfo<graph_t> reductant(*graph, cfg); 
-  
+  //RecoveredInfo<graph_t> reductant(*graph, cfg); 
+  RecoveredGenomes<graph_t> reductant(*graph, cfg, bad_edges);
+
   std::clog << "Save history in files." << std::endl;
   if (cfg.get_target().empty()) {
     size_t i = 0;
@@ -329,7 +330,6 @@ int main(int argc, char* argv[]) {
     } 
   }
 
-  
   std::clog << "Save ancestor genomes in files." << std::endl; 
   writer::Wgenome<genome_t> writer_genome(out_path_directory / "genomes");
   writer_genome.save_genomes(reductant.get_genomes(), cfg.get_target().empty()); 

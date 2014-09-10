@@ -66,6 +66,10 @@ bool Algorithm<graph_t>::Balance::do_action() {
         assert(false);
       } */ 
 
+      if (a1 == "73h" || a1 == "73t") { 
+        std::cerr << genome_match::mcolor_to_name(bar_indel_color) << std::endl;
+      }
+
       this->graph->apply(insdel_t(a1, a2, bar_indel_color, is_insertion));
       ++number_indel_event; 
     } 

@@ -137,7 +137,7 @@ void Algorithm<graph_t>::convert_to_identity_bgraph() {
     }
 
   }	
-       
+      
   graph->update_number_of_splits(3);
   write_dots.save_final_dot(*graph);
 }          

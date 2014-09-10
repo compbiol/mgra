@@ -184,7 +184,7 @@ bool Algorithm<graph_t>::ProcessFairEdge::is_good_twobreaks(std::vector<twobreak
     }
       
     if (vec_target_color.empty() && (count_diff != 1)) {
-      is_all_good = (!this->graph->canformQ(twobreaks.begin()->get_vertex(0), *vec_color) && !this->graph->canformQ(twobreaks.begin()->get_vertex(2), *vec_color));
+      is_all_good = (!this->graph->canformQ(twobreaks.begin()->get_vertex(0), *vec_color) || !this->graph->canformQ(twobreaks.begin()->get_vertex(2), *vec_color));
     }
   }
 

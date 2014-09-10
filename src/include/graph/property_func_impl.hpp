@@ -58,7 +58,7 @@ size_t BreakpointGraph<mcolor_t>::mobility_score(edge_t const & viewed, mcolor_t
     
     size_t number_variant = 0; 
     for (auto const & arc : mularcs) { 
-      if (this->canformQ2(arc, color)) {
+      if (this->canformQ(arc.first, color)) {
         ++number_variant;
       } 
     }
@@ -208,7 +208,7 @@ size_t BreakpointGraph<mcolor_t>::mobility_score_relative_vertex(vertex_t const 
     mularcs_about.erase(remove_vertex); 
     
     for (auto const & arc : mularcs_about) { 
-      if (this->canformQ2(arc, color)) {
+      if (this->canformQ(arc.first, color)) {
         ++result;
       }
     } 

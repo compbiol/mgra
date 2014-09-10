@@ -136,18 +136,18 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
       name_genomes.push_back(conf.mcolor_to_name(*im));
       //std::cerr << "Start decircularize procedure for " << conf.mcolor_to_name(*im) << std::endl;
       //std::cerr << "Initial we have " << dec.count_circular_chromosome(recovered_graphs[i]) << std::endl;
-      //transform_t T = dec.decircularize(recovered_graphs[i], recovered_transformation[i]);
+      transform_t T = dec.decircularize(recovered_graphs[i], recovered_transformation[i]);
       //std::cerr << "After we have " << dec.count_circular_chromosome(recovered_graphs[i]) << std::endl;
 
       // move to adjacent branches
-      /*for (auto const &it : T) {
+      for (auto const &it : T) {
         size_t j = 0; 
         for (auto jt = graph.cbegin_vec_T_consistent_color(); jt != graph.cend_vec_T_consistent_color(); ++jt, ++j) {
           if ((j != i) && includes(im->cbegin(), im->cend(), jt->cbegin(), jt->cend()) && are_adjacent_branches(*im, *jt)) {
             recovered_transformation[j].push_back(it);
           }
         }
-      }*/
+      }
     }
     name_genomes.push_back(conf.mcolor_to_name(graph.get_root_color()));
   }

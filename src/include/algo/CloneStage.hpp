@@ -252,7 +252,8 @@ bool Algorithm<graph_t>::ProcessClone::is_good_clones(std::vector<clone_t> const
     }
 
     if (vec_target_color.empty() && (count_diff != 1)) {
-      is_all_good = false; 
+      is_all_good = (!this->graph->canformQ(clones.begin()->get_central_arc().first, *vec_color) 
+        || !this->graph->canformQ(clones.begin()->get_central_arc().second, *vec_color));
     }
   }
 

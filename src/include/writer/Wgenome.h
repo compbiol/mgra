@@ -6,7 +6,7 @@ namespace writer {
 template <class genome_t>
 struct Wgenome {
 
-  explicit Wgenome(fs::path const & path) 
+  explicit Wgenome(std::string const & path) 
   : m_path(path)
   { 
   }
@@ -19,8 +19,12 @@ struct Wgenome {
 
 private: 
   void save_genome_in_text_format(genome_t const & genome, bool isEmptyTarget) const;
+
 private: 
-  fs::path m_path;
+  std::string m_path;
+
+private:
+  DECL_LOGGER("GenomeWriter");
 };
 
 } 
@@ -28,7 +32,7 @@ private:
 template <class genome_t>
 void writer::Wgenome<genome_t>::save_genome_in_text_format(genome_t const & genome, bool isEmptyTarget) const { 
   std::string const & outname = genome.get_name();  
-  fs::ofstream out(m_path / (outname + ".gen"));
+  std::ofstream out(path::append_path(m_path, (outname + ".gen")));
 
   out << "# Genome " << genome.get_name() << std::endl;
 
@@ -73,16 +77,16 @@ void writer::Wgenome<genome_t>::save_genome_in_text_format(genome_t const & geno
     } 
   }
 
+  {
+    std::ostringstream ost; 
+    ost << "Reconstructed genome " << outname << " has " << genome.count_chromosome() << " " 
+        << chr_title << "s" << " out of which " << number_circular << " are circular of total length " << length_circular;
+    INFO(ost.str())        
+  }  
+  
   out << std::endl << "# Reconstructed genome " << outname << " has " << genome.count_chromosome() << " " << chr_title << "s" << std::endl;
-#ifndef VERSION1
-  std::cout << std::endl << "# Reconstructed genome " << outname << " has " << genome.count_chromosome() << " " << chr_title << "s" << std::endl;
-#endif
-
   if (number_circular) {
     out << "#\tout of which " << number_circular << " are circular of total length " << length_circular << std::endl;
-#ifndef VERSION1
-    std::cout << "#\tout of which " << number_circular << " are circular of total length " << length_circular << std::endl;
-#endif
   }
   out.close();
 }

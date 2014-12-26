@@ -1,20 +1,20 @@
 #include "reader.h"
 
-std::vector<structure::Genome> reader::read_infercars(ProblemInstance<mcolor_t> const & cfg, fs::path const & path_to_file) {
-  fs::ifstream input(path_to_file);
+std::vector<structure::Genome> reader::read_infercars(std::string const & path_to_file) {
+  std::ifstream input(path_to_file);
 
-  if(!input) {
+  if (!input) {
     std::cerr << "Unable to open " << path_to_file << std::endl;
     exit(1);
   }
 
-  std::vector<genome_t> genomes(cfg.get_count_genomes());    
+  std::vector<genome_t> genomes(cfg::get().get_count_genomes());    
   std::string gene;
-  std::vector<std::string> chromosome(cfg.get_count_genomes());
-  std::vector<std::string> sign(cfg.get_count_genomes()); 
-  std::vector<size_t> start_block(cfg.get_count_genomes());  
-  std::vector<size_t> end_block(cfg.get_count_genomes()); 
-  std::vector<size_t> count_block(cfg.get_count_genomes());
+  std::vector<std::string> chromosome(cfg::get().get_count_genomes());
+  std::vector<std::string> sign(cfg::get().get_count_genomes()); 
+  std::vector<size_t> start_block(cfg::get().get_count_genomes());  
+  std::vector<size_t> end_block(cfg::get().get_count_genomes()); 
+  std::vector<size_t> count_block(cfg::get().get_count_genomes());
 
   while(!input.eof()) {
     std::string line;
@@ -52,8 +52,8 @@ std::vector<structure::Genome> reader::read_infercars(ProblemInstance<mcolor_t> 
       std::istringstream istr(line);
       std::string genome_name;
       istr >> genome_name;
-      if (cfg.is_genome_name(genome_name)) {
-        size_t k = cfg.get_genome_number(genome_name);
+      if (cfg::get().is_genome_name(genome_name)) {
+        size_t k = cfg::get().get_genome_number(genome_name);
         istr >> chromosome[k] >> start_block[k] >> end_block[k] >> sign[k];
         ++count_block[k];
       } else { 
@@ -67,8 +67,8 @@ std::vector<structure::Genome> reader::read_infercars(ProblemInstance<mcolor_t> 
 }
 
 
-std::vector<structure::Genome> reader::read_grimm(ProblemInstance<mcolor_t> const & cfg, fs::path const & path_to_file) {
-  fs::ifstream input(path_to_file);
+std::vector<structure::Genome> reader::read_grimm(std::string const & path_to_file) {
+  std::ifstream input(path_to_file);
     
   if (!input) {
     std::cerr << "Unable to open " << path_to_file << std::endl;
@@ -77,7 +77,7 @@ std::vector<structure::Genome> reader::read_grimm(ProblemInstance<mcolor_t> cons
 
   size_t nchr = 0;
   size_t number_genome = 0;
-  std::vector<genome_t> genomes(cfg.get_count_genomes());   
+  std::vector<genome_t> genomes(cfg::get().get_count_genomes());   
   auto inserter_lambda = [&] (std::string gene, std::string const & chr, size_t offset) {
     int sign = (gene[0] == '-')? -1: +1; 
     if (gene[0] == '-' || gene[0] == '+') {
@@ -93,8 +93,8 @@ std::vector<structure::Genome> reader::read_grimm(ProblemInstance<mcolor_t> cons
 	
     if (line[0] == '>') {		
       line = trim(line.substr(1));
-      if (cfg.is_genome_name(line)) {
-        number_genome = cfg.get_genome_number(line);
+      if (cfg::get().is_genome_name(line)) {
+        number_genome = cfg::get().get_genome_number(line);
         nchr = 0; 
       } else { 
         std::cerr << "Unknown genome: " << line << std::endl;
@@ -131,31 +131,3 @@ std::vector<structure::Genome> reader::read_grimm(ProblemInstance<mcolor_t> cons
   input.close();
   return genomes;
 }
-
-std::unordered_map<std::string, std::vector<std::string> > reader::read_cfg_file(fs::path const & path_to_file) { 
-  std::unordered_map<std::string, std::vector<std::string> > problem_config;
-	
-  fs::ifstream input(path_to_file);
-	
-  if (!input.good()) {
-    std::cerr << "ERROR: Cannot open " << path_to_file << std::endl;
-    exit(1); 
-  }
-	
-  std::string section;
-  while(input.good()) {
-    std::string line;
-    std::getline(input, line);
-    line = trim(line);
-
-    if (line[0] == '[' && line[line.size() - 1] == ']') {
-      section = line;
-    } else if (!line.empty() && (line[0] != '#')) {
-      problem_config[section].push_back(line);
-    }
-  } 
-  input.close();
-
-  return problem_config;
-} 
-

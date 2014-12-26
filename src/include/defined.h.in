@@ -31,26 +31,27 @@
 #define MGRA_VERSION_MINOR @MGRA_VERSION_MINOR@
 #define MGRA_VERSION_PATCH @MGRA_VERSION_PATCH@
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/filesystem/exception.hpp>
-
-namespace sys = boost::system;
-namespace fs = boost::filesystem;
-
 typedef std::string vertex_t;
 vertex_t const Infty = "oo"; 
 
-#include "property.hpp"
-
+#include "utility/config_singl.hpp"
+#include "utility/property.hpp"
 #include "utility/sym_multihashmap.hpp"
 #include "utility/equivalence.hpp"
+
+#include "logger/logger.hpp"
 
 #include "structures/mcolor.hpp"
 #include "structures/mularcs.hpp"
 #include "structures/genome.hpp"
-#include "genome_match.h" //FIXME REMOVE LATER
 #include "structures/Tree.h"
+
+namespace reader { 
+  inline std::string trim(std::string s, std::string const & drop = " \t\r\n") {
+    s = s.erase(s.find_last_not_of(drop) + 1);
+    return s.erase(0, s.find_first_not_of(drop));
+  }
+} 
 
 #endif
 

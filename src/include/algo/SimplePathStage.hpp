@@ -21,10 +21,14 @@ struct Algorithm<graph_t>::ProcessSimplePath : public Algorithm<graph_t>::Stage 
 
 private:
   size_t process_simple_path(path_t& path); 
+
+private:
+  DECL_LOGGER("SimplePathStage");
 };
 
 template<class graph_t>
 bool Algorithm<graph_t>::ProcessSimplePath::do_action() { 
+  INFO("Start process good and simple paths.")
   bool isChanged = false; 
   size_t number_rear = 0; // number of rearrangements 
 
@@ -81,12 +85,9 @@ bool Algorithm<graph_t>::ProcessSimplePath::do_action() {
           return current;
         };
 
-        //std::cerr << std::endl << "start " << v << std::endl; 
-        //std::cerr << "go to " << current.cbegin()->first << genome_match::mcolor_to_name(current.cbegin()->second) << std::endl; 
         mularcs_t const & current = this->graph->get_all_adjacent_multiedges(v);
         vertex_t const & last = find_simple_path_lambda(v, current.cbegin()->first, true);
         if (last != v) { 
-          //std::cerr << "go to " << current.crbegin()->first << genome_match::mcolor_to_name(current.crbegin()->second) << std::endl; 
           find_simple_path_lambda(v, current.crbegin()->first, false);
         }         
 
@@ -107,12 +108,13 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
   size_t number_rear = 0;
 
   if (path.size() >= 4 || (path.size() == 3 && *path.begin() == *path.rbegin())) {
-    /*std::cerr << std::endl << "Processing a path of length " << path.size() - 1 << std::endl;
-    std::cerr << "path:\t" << *path.begin();
-    for(auto ip = ++path.begin(); ip != path.end(); ++ip) {
-      std::cerr << " -- " << *ip;
-    }
-    std::cerr << std::endl;*/
+    {
+      std::stringstream ss; 
+      ss << "\nProcessing a path of length " << path.size() - 1 << "\npath:\t" << *path.begin();
+      for(auto ip = ++path.cbegin(); ip != path.cend(); ++ip) ss << " -- " << *ip;
+      TRACE(ss.str()) 
+    } 
+
     auto const count_lambda = [&] (vertex_t const & v) -> std::pair<size_t, bool> {
       size_t vtc = 0;
       bool tc = false;
@@ -146,10 +148,10 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
 
     if ((path.size() % 2 != 0) && (*path.begin() != *path.rbegin())) {
       if (process_color != this->graph->get_all_multicolor_edge(*(++path.begin()), *path.begin())) { 
-        //std::cerr << "Erase first" << std::endl;
+        TRACE("Erase first")
         path.erase(path.begin());
       } else {
-        //std::cerr << "Erase second" << std::endl;
+        TRACE("Erase second")
         path.erase(--path.end());
       }
     }
@@ -157,7 +159,7 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
     if (*path.begin() == *path.rbegin()) {
       if (path.size() % 2 == 0) {
         if (process_color == this->graph->get_all_multicolor_edge(*(++path.begin()), *path.begin())) {
-          //std::cerr << "... semi-cycle, fusion applied" << std::endl;
+          TRACE("... semi-cycle, fusion applied");
           vertex_t const & self_v = *(path.begin());
           vertex_t const & x0 = *(++path.begin());
           vertex_t const & y0 = *(++path.rbegin());
@@ -171,7 +173,7 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
           path.erase(--path.end());
           *path.begin() = y0;
         } else {
-          //std::cerr << "... semi-cycle, fission applied" << std::endl;
+          TRACE("... semi-cycle, fission applied");
           vertex_t const & self_v = *(path.begin());
           vertex_t const & y0 = *(++path.rbegin());
           vertex_t const & y1 = *(++++path.rbegin());
@@ -190,21 +192,21 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
           return number_rear;
         }
       } else { 
-        ;//std::cerr << "... cycle" << std::endl;
+        TRACE("... cycle");
       }
     }
   
     mcolor_t current_color = this->graph->get_all_multicolor_edge(*(++path.begin()), *path.begin());
     while (process_color != current_color) {
       // multicolor of (z1,z2). N.B.: x2 is NOT oo
-      //std::cerr << "... multicolors of first and second multiedges: ";
+      TRACE("... multicolors of first and second multiedges: ");
       if (*path.begin() == *path.rbegin()) {
-        //std::cerr << "... rotating" << std::endl;
+        TRACE("... rotating");
         path.push_back(*path.begin());  
         path.erase(path.begin());
       } else {
         if (*path.begin() == Infty && *path.rbegin() != Infty) {
-          //std::cerr << "... flipping" << std::endl;
+          TRACE("... flipping");
           for(auto ip = ++path.begin(); ip != path.end();) {
       	    path.push_front(*ip);
       	    path.erase(ip++);
@@ -212,11 +214,11 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
         }
 
         if (*path.rbegin() == Infty) {
-          //std::cerr << "... extending beyond oo" << std::endl;
+          TRACE("... extending beyond oo");
           path.push_back(Infty);
           path.erase(path.begin());
         } else {
-          //std::cerr << "... truncating ??" << std::endl;
+          TRACE("... truncating ??");
           path.erase(path.begin());
           path.erase(--path.end());
           if (path.size() < 4) { 
@@ -247,7 +249,7 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
       }
     }
 
-    //std::cerr << "... resolved with " << number_rear << " 2-breaks" << std::endl;
+    TRACE("... resolved with " << number_rear << " 2-breaks");
   }
   return number_rear;
 }

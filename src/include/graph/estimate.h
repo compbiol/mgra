@@ -334,7 +334,7 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() {
       second = current;
     }
 
-    os <<  genome_match::mcolor_to_name(first) << " + "  <<  genome_match::mcolor_to_name(second) << "} & " 
+    os <<  cfg::get().mcolor_to_name(first) << " + "  <<  cfg::get().mcolor_to_name(second) << "} & " 
       // multiedges
        << m1 << " + " << m2 << " = " << m1 + m2 << " & " 
       // simple vertices

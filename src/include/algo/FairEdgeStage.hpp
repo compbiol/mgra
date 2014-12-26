@@ -26,10 +26,14 @@ private:
   typedef std::set<arc_t> set_arc_t;
 
   bool is_good_twobreaks(std::vector<twobreak_t> const & twobreaks) const;
+
+private:
+  DECL_LOGGER("ProcessFairEdge");
 };
 
 template<class graph_t>
 bool Algorithm<graph_t>::ProcessFairEdge::do_action() { 
+  INFO("Start process generalization fair edge")
   bool isChanged = false; 
   size_t number_rear = 0; // number of rearrangements 
 
@@ -52,6 +56,7 @@ bool Algorithm<graph_t>::ProcessFairEdge::do_action() {
         } 
  
         if (!this->graph->is_mobility_edge(x, y)) { 
+          TRACE("See on non mobile edge " << x << " " << y)
           mularcs_t mularcs_x = this->graph->get_all_adjacent_multiedges_with_info(x);
           mularcs_x.erase(y);
 
@@ -94,9 +99,15 @@ bool Algorithm<graph_t>::ProcessFairEdge::do_action() {
           if (non_mobile_edges_x.empty() && non_mobile_edges_y.empty() && mobile_edges_x.size() == possible_twobreaks.size()) {
             assert(count_bad_edges == 0);
             if (is_good_twobreaks(possible_twobreaks)) {
+              TRACE("Start do two-breaks in case 1 (Create complete brackets)")
               for (auto const & twobreak : possible_twobreaks) {
-                //std::cerr << "Do two break in first case" << std::endl;
-                //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) << " " << twobreak.get_vertex(3) << " " << genome_match::mcolor_to_name(twobreak.get_mcolor()) << std::endl;
+                {
+                  std::ostringstream out; 
+                  out << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " 
+                      << twobreak.get_vertex(2) << " " << twobreak.get_vertex(3) << " " 
+                      << cfg::get().mcolor_to_name(twobreak.get_mcolor());
+                  TRACE(out.str())
+                }
                 found = true;
                 this->graph->apply(twobreak);
                 ++number_rear;
@@ -111,7 +122,7 @@ bool Algorithm<graph_t>::ProcessFairEdge::do_action() {
           /*CASE 2: Create min T-consistent color*/          
           if (!found) {
             mcolor_t additional_color = this->get_min_addit_color_for_tc(this->graph->get_all_multicolor_edge(x, y));
-            
+              
             if (!additional_color.empty() && additional_color != this->graph->get_complete_color()) {
               std::vector<twobreak_t> included_twobreaks;
 
@@ -124,9 +135,21 @@ bool Algorithm<graph_t>::ProcessFairEdge::do_action() {
               }
 
               if (additional_color.empty() && is_good_twobreaks(included_twobreaks)) { 
+                TRACE("Start do two-breaks in case 2 (Create min T-consistent color)")
+                {
+                  auto str_color = cfg::get().mcolor_to_name(additional_color); 
+                  TRACE("Need to create " << str_color << " on edge")
+                }
+
                 for (auto const & twobreak : included_twobreaks) {
-                  //std::cerr << " Do 2-break in second case " << std::endl;
-                  //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) << " " << twobreak.get_vertex(3) << " " << genome_match::mcolor_to_name(twobreak.get_mcolor()) << std::endl;
+                  {
+                    std::ostringstream out; 
+                    out << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " 
+                        << twobreak.get_vertex(2) << " " << twobreak.get_vertex(3) << " " 
+                        << cfg::get().mcolor_to_name(twobreak.get_mcolor());
+                    TRACE(out.str())
+                  }
+                
                   this->graph->apply(twobreak);
                   found = true;
                   ++number_rear;
@@ -141,14 +164,21 @@ bool Algorithm<graph_t>::ProcessFairEdge::do_action() {
 
           /*CASE 3: Process unique two-breaks*/          
           if (!found) {
+            TRACE("Start do two-breaks in case 3 (unique two-breaks)")
+    
             for (auto const & twobreak : possible_twobreaks) {
               size_t count = this->graph->mobility_score(twobreak.get_arc(0), twobreak.get_mcolor(), twobreak.get_arc(1)) + 
                   this->graph->mobility_score(twobreak.get_arc(1), twobreak.get_mcolor(), twobreak.get_arc(0));      
 
               auto scores = this->graph->is_decrease_verteces_score(twobreak);
               if ((count == 0) && (scores.first > scores.second)) { 
-                //std::cerr << " Do 2-break in third case " << std::endl;
-                //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) << " " << twobreak.get_vertex(3) << " " << genome_match::mcolor_to_name(twobreak.get_mcolor()) << std::endl;
+                {
+                  std::ostringstream out; 
+                  out << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " 
+                      << twobreak.get_vertex(2) << " " << twobreak.get_vertex(3) << " " 
+                      << cfg::get().mcolor_to_name(twobreak.get_mcolor());
+                  TRACE(out.str())
+                }
                 this->graph->apply(twobreak);
                 found = true;
                 ++number_rear;     
@@ -184,7 +214,8 @@ bool Algorithm<graph_t>::ProcessFairEdge::is_good_twobreaks(std::vector<twobreak
     }
       
     if (vec_target_color.empty() && (count_diff != 1)) {
-      is_all_good = (!this->graph->canformQ(twobreaks.begin()->get_vertex(0), *vec_color) || !this->graph->canformQ(twobreaks.begin()->get_vertex(2), *vec_color));
+      is_all_good = false; 
+      //(!this->graph->canformQ(twobreaks.begin()->get_vertex(0), *vec_color) || !this->graph->canformQ(twobreaks.begin()->get_vertex(2), *vec_color));
     }
   }
 

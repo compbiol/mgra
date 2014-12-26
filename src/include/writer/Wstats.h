@@ -1,9 +1,11 @@
 #ifndef WSTATS_H_
 #define WSTATS_H_
 
+
 #include "graph/breakpoint_graph.hpp"
 #include "graph/estimate.h"
-#include "structures/pconf.h"
+#include "io/path_helper.hpp"
+#include "structures/config_struct.hpp"
 #include "reader.h"
 
 namespace writer { 
@@ -17,18 +19,18 @@ struct Wstats {
   {
   }
 
-  explicit Wstats(fs::path const & path_to_file) 
+  explicit Wstats(std::string const & path_to_file) 
   : ofstat(path_to_file)
   {
   } 
 
-  Wstats(fs::path const & path_to_file, std::string const & name_file) 
-  : ofstat(path_to_file / name_file)
+  Wstats(std::string const & path_to_file, std::string const & name_file) 
+  : ofstat(path::append_path(path_to_file, name_file))
   { 
   } 
 
-  void open(fs::path const & path_to_file, std::string const & name_file) {
-    ofstat.open(path_to_file / name_file);
+  void open(std::string const & path_to_file, std::string const & name_file) {
+    ofstat.open(path::append_path(path_to_file, name_file));
   }
 
   void print_all_statistics(size_t stage, Statistics<BreakpointGraph<mcolor_t> >& info, BreakpointGraph<mcolor_t> const & graph); 
@@ -50,7 +52,7 @@ private:
   void print_indel_statistics(const std::vector<std::pair<std::pair<mcolor_t, mcolor_t>, std::array<size_t, 3> > >& indel); 
 
   //void print_fair_edges(const mbgraph_with_history<Mcolor>& graph, Statistics<mbgraph_with_history<Mcolor>>& info);	
-  //void print_estimated_dist(size_t stage, const ProblemInstance<Mcolor>& cfg, const mbgraph_with_history<Mcolor>& graph);
+  //void print_estimated_dist(size_t stage, const main_config<Mcolor>& cfg, const mbgraph_with_history<Mcolor>& graph);
 private: 
   void print_start_table(size_t count_column) {
     ofstat << "\\begin{table}[h]" << std::endl;
@@ -69,7 +71,7 @@ private:
     ofstat << std::endl;
   } 
 private: 
-  fs::ofstream ofstat;
+  std::ofstream ofstat;
 };
 
 } 

@@ -16,9 +16,7 @@ struct RecoveredInfo {
   typedef structure::Chromosome chromosome_t; 
   typedef std::tuple<transform_t, transform_t, transform_t> history_t;
 
-
-  template<class pconf_t>
-  RecoveredInfo(graph_t const & graph, pconf_t const & config);
+  RecoveredInfo(graph_t const & graph);
 
   DECLARE_GETTER(std::vector<genome_t>, genomes, genomes);
   DECLARE_GETTER(std::vector<transform_t>, transformations, history);
@@ -64,12 +62,11 @@ void RecoveredInfo<graph_t>::get_ugly_history(
 }
 
 template<class graph_t>
-template<class pconf_t>
-RecoveredInfo<graph_t>::RecoveredInfo(graph_t const & graph, pconf_t const & config) 
+RecoveredInfo<graph_t>::RecoveredInfo(graph_t const & graph) 
 : m_graph(graph)
 , bad_edges(graph.get_bad_edges())
 { 
-  assert(config.get_target().empty());
+  assert(!cfg::get().is_target_build);
 
   /*Get transformation and graphs for linearization*/
   std::map<mcolor_t, partgraph_t> recovered_graphs;
@@ -79,13 +76,13 @@ RecoveredInfo<graph_t>::RecoveredInfo(graph_t const & graph, pconf_t const & con
   /*Algorithm for linearization*/
   Linearizator<graph_t> linearizator(graph);
     
-  for (auto it = config.cbegin_trees(); it != config.cend_trees(); ++it) {
-    it->walk_and_linearizeate(linearizator, recovered_graphs, recovered_transformations); 
+  for (auto const & tree : cfg::get().phylotrees) {
+    tree.walk_and_linearizeate(linearizator, recovered_graphs, recovered_transformations); 
   }
 
   /*Recover genomes and transformation*/
   for (auto const & local_graph : recovered_graphs) {
-    genomes.push_back(get_genome(config.mcolor_to_name(local_graph.first), local_graph.second)); 
+    genomes.push_back(get_genome(cfg::get().mcolor_to_name(local_graph.first), local_graph.second)); 
     transformations.push_back(recovered_transformations[local_graph.first]);
   }
 }

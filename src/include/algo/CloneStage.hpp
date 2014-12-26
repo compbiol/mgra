@@ -47,10 +47,14 @@ private:
     equiv.update();
     return equiv.template get_eclasses<std::set<ind_acrs_t> >();    
   }
+
+private:
+  DECL_LOGGER("ProcessClone");
 };
 
 template<class graph_t>
-bool Algorithm<graph_t>::ProcessClone::do_action() { 
+bool Algorithm<graph_t>::ProcessClone::do_action() {
+  INFO("Process clone situation in fair edge.") 
   bool isChanged = false;
   size_t number_rear = 0; // number of rearrangements 
   
@@ -252,8 +256,9 @@ bool Algorithm<graph_t>::ProcessClone::is_good_clones(std::vector<clone_t> const
     }
 
     if (vec_target_color.empty() && (count_diff != 1)) {
-      is_all_good = (!this->graph->canformQ(clones.begin()->get_central_arc().first, *vec_color) 
-        || !this->graph->canformQ(clones.begin()->get_central_arc().second, *vec_color));
+      is_all_good = false; 
+      //(!this->graph->canformQ(clones.begin()->get_central_arc().first, *vec_color) 
+      //  || !this->graph->canformQ(clones.begin()->get_central_arc().second, *vec_color));
     }
   }
 

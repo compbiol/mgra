@@ -8,6 +8,11 @@ struct MultiGraph {
   typedef structure::Genome genome_t;
   typedef utility::sym_multihashmap<vertex_t> partgraph_t;
 
+  explicit MultiGraph(size_t number_colors) 
+  : m_local_graphs(number_colors)
+  {
+  }
+
   explicit MultiGraph(std::vector<genome_t> const & genomes) 
   : m_local_graphs(genomes.size()) 
   { 

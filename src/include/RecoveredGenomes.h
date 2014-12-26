@@ -15,8 +15,7 @@ struct RecoveredGenomes {
   typedef structure::Genome genome_t;
   typedef structure::Chromosome chromosome_t;
 
-  template<class pconf_t>
-  RecoveredGenomes(graph_t const & gr, pconf_t const & conf, partgraph_t const & b_edges);
+  RecoveredGenomes(graph_t const & gr, partgraph_t const & b_edges);
 
   inline std::vector<genome_t> get_genomes() { 
     std::vector<genome_t> genomes;
@@ -76,12 +75,11 @@ bool RecoveredGenomes<graph_t>::are_adjacent_branches(mcolor_t const & mcolor_a,
 }
 
 template<class graph_t>
-template<class pconf_t>
-RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & conf, partgraph_t const & b_edges)  
+RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, partgraph_t const & b_edges)  
 : graph(gr)
 , bad_edges(b_edges)
 {
-  if (!conf.get_target().empty()) { 
+  if (cfg::get().is_target_build) { 
     ;
     /*mcolor_t const & target = conf.get_target();
     name_genomes.push_back(conf.mcolor_to_name(target));
@@ -133,7 +131,7 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
     size_t i = 0; 
     Decircularizeter<graph_t> dec(graph, bad_edges);          
     for (auto im = graph.cbegin_vec_T_consistent_color(); im != graph.cend_vec_T_consistent_color(); ++im, ++i) {    
-      name_genomes.push_back(conf.mcolor_to_name(*im));
+      name_genomes.push_back(cfg::get().mcolor_to_name(*im));
       //std::cerr << "Start decircularize procedure for " << conf.mcolor_to_name(*im) << std::endl;
       //std::cerr << "Initial we have " << dec.count_circular_chromosome(recovered_graphs[i]) << std::endl;
       transform_t T = dec.decircularize(recovered_graphs[i], recovered_transformation[i]);
@@ -149,7 +147,7 @@ RecoveredGenomes<graph_t>::RecoveredGenomes(graph_t const & gr, pconf_t const & 
         }
       }
     }
-    name_genomes.push_back(conf.mcolor_to_name(graph.get_root_color()));
+    name_genomes.push_back(cfg::get().mcolor_to_name(graph.get_root_color()));
   }
 }
 

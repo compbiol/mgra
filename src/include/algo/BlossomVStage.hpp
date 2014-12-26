@@ -60,10 +60,14 @@ private:
 
   std::unordered_set<int> pseudo_infinity_verteces;  
   std::unordered_set<int> double_pseudo_infinity_verteces;  
+
+private:
+  DECL_LOGGER("WrapperBlossomV");
 };
 
 template<class graph_t>
 bool Algorithm<graph_t>::ProcessWithBlossomV::do_action() {
+  INFO("Total resolve component with score function.")
   size_t number_rear = 0; 
 
   utility::equivalence<vertex_t> components = this->graph->split_on_components();
@@ -101,7 +105,9 @@ size_t Algorithm<graph_t>::ProcessWithBlossomV::process_component(std::set<verte
       pm.AddEdge(x, y, score);
     }
 
+    INFO("Start Blossom V algorithm.")
     pm.Solve();
+    INFO("Finish Blossom V algorithm.")
 
     auto get_min_edge_in_matching_lambda = [&]() -> edge_t { 
       edge_t min_edge;

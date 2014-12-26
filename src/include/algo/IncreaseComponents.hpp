@@ -39,10 +39,16 @@ private:
       }
     }
   }
+
+private:
+  DECL_LOGGER("IncreaseNumberComponents");
+
 };
 
 template<class graph_t>
 bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() { 
+  INFO("Start stage for increasing number of components.")
+  
 	bool isChanged = false;
 	size_t number_rear = 0; // number of rearrangements 
 

@@ -67,7 +67,7 @@ void writer::Wstats::print_indel_statistics(const std::vector<std::pair<std::pai
 
   for (auto line = indels.crbegin(); line != indels.crend(); ++line) { 
     const std::array<size_t, 3>& temp = line->second;
-    ofstat << "{" << genome_match::mcolor_to_name(line->first.first) << " + " << genome_match::mcolor_to_name(line->first.second) << "} & " 
+    ofstat << "{" << cfg::get().mcolor_to_name(line->first.first) << " + " << cfg::get().mcolor_to_name(line->first.second) << "} & " 
 	<< temp[0]	<< " & " << (temp[0] * std::min(temp[1], temp[2])) << " & " << temp[1] << " & " << temp[2] << "\\\\" << std::endl;
   } 
 
@@ -115,19 +115,19 @@ void writer::Wstats::print_history_statistics(BreakpointGraph<mcolor_t> const & 
   ofstat << std::endl << "Total number of 2-breaks: " << tbr << std::endl;
 
   for(const auto &event : n2br) {
-    ofstat << genome_match::mcolor_to_name(event.first) << "\t" << event.second << std::endl;
+    ofstat << cfg::get().mcolor_to_name(event.first) << "\t" << event.second << std::endl;
   }
   ofstat << std::endl;
 
   ofstat << std::endl << "Total number of insertion events: " << ins << std::endl;
   for(const auto &event : nins) {
-    ofstat << genome_match::mcolor_to_name(event.first) << "\t" << event.second << std::endl;
+    ofstat << cfg::get().mcolor_to_name(event.first) << "\t" << event.second << std::endl;
   }
   ofstat << std::endl;
 
   ofstat << std::endl << "Total number of deletion events: " << del << std::endl;
   for(const auto &event : ndel) {
-    ofstat << genome_match::mcolor_to_name(event.first) << "\t" << event.second << std::endl;
+    ofstat << cfg::get().mcolor_to_name(event.first) << "\t" << event.second << std::endl;
   }
   ofstat << std::endl;
 

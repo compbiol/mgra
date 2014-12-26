@@ -1,6 +1,7 @@
 #ifndef BREAKPOINT_GRAPH_HPP
 #define BREAKPOINT_GRAPH_HPP
 
+#include "structures/config_struct.hpp"
 #include "graph/multigraph.hpp"
 #include "graph/graph_colors.hpp"
 #include "graph/graph_history.hpp"
@@ -21,10 +22,9 @@ struct BreakpointGraph {
   typedef typename HistoryGraph<mcolor_t>::tandem_duplication_t tandem_duplication_t;
   typedef typename HistoryGraph<mcolor_t>::transform_t transform_t;
   
-  template <class conf_t>
-  BreakpointGraph(std::vector<MultiGraph::genome_t> const & genomes, conf_t const & cfg)
+  BreakpointGraph(std::vector<MultiGraph::genome_t> const & genomes)
   : graph(genomes)
-  , multicolors(cfg)
+  , multicolors()
   , number_of_splits(1)
   , canformQoo(true)
   { 
@@ -178,7 +178,8 @@ struct BreakpointGraph {
   std::set<mcolor_t> split_color(mcolor_t const & color) const { 
     return multicolors.split_color_on_tc_color(color, graph.count_local_graphs() + 1);
   }
-
+  DECLARE_DELEGATE_CONST_METHOD(std::vector<std::set<mcolor_t> >, multicolors, get_medians_colors, get_medians_colors)  
+  
   DECLARE_DELEGATE_PARAM_METHOD(mcolor_t const&, multicolors, get_complement_color, mcolor_t const &, get_complement_color)
   DECLARE_DELEGATE_PARAM_CONST_METHOD(bool, multicolors, is_T_consistent_color, mcolor_t const &, is_T_consistent_color)
   DECLARE_DELEGATE_PARAM_CONST_METHOD(bool, multicolors, is_vec_T_consistent_color, mcolor_t const &, is_vec_T_consistent_color)
@@ -241,7 +242,7 @@ private:
 #include "graph/getter_func_impl.hpp"
 
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::canformQ(vertex_t const & vertex, mcolor_t const & required_color) const { 
+bool BreakpointGraph<mcolor_t>::supercanformQ(vertex_t const & vertex, mcolor_t const & required_color) const { 
   assert(multicolors.is_vec_T_consistent_color(required_color));
   
   if (vertex == Infty) {
@@ -329,7 +330,7 @@ bool BreakpointGraph<mcolor_t>::canformQ(vertex_t const & vertex, mcolor_t const
 }
 
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::supercanformQ(vertex_t const & vertex, mcolor_t const & color) const {
+bool BreakpointGraph<mcolor_t>::canformQ(vertex_t const & vertex, mcolor_t const & color) const {
   assert(multicolors.is_vec_T_consistent_color(color));
   
   if (vertex == Infty) {

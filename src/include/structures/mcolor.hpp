@@ -36,6 +36,10 @@ struct Mcolor {
     } 
   } 
 
+  inline void clear() { 
+    main_color.clear();
+  }
+
   inline bool is_one_to_one_match() const {
     for (auto const  &col : main_color) { 
       if (col.second != 1) { 

@@ -17,10 +17,14 @@ struct Algorithm<graph_t>::Balance : public Algorithm<graph_t>::Stage {
   std::string get_name() override { 
     return "Balance graph and remove insertions and deletions event."; 
   }
+
+private:
+  DECL_LOGGER("BalanceStage");
 }; 
 
 template<class graph_t>
 bool Algorithm<graph_t>::Balance::do_action() { 
+  INFO("Start balance stage for remove insertions and deletions event")
   size_t number_indel_event = 0; 
     
   std::unordered_set<vertex_t > processed; 
@@ -34,8 +38,8 @@ bool Algorithm<graph_t>::Balance::do_action() {
       mcolor_t const & indel_color = mularcs.union_multicolors(); 
       mcolor_t const & bar_indel_color = this->graph->get_complement_color(indel_color);
       assert(indel_color == this->graph->get_all_adjacent_multiedges(a2).union_multicolors());
-      /*
-      std::set<mcolor_t> const & set_split_indel = this->graph->split_color(indel_color); 
+      
+      /*std::set<mcolor_t> const & set_split_indel = this->graph->split_color(indel_color); 
       bool i_tc = false;
       size_t c_vtc_indel = 0; 
       for (mcolor_t const & color: set_split_indel) {  
@@ -50,13 +54,21 @@ bool Algorithm<graph_t>::Balance::do_action() {
       bool bi_tc = false;
       size_t c_vtc_bar_indel = 0;        
       for (mcolor_t const & color: set_split_bar_indel) {  
+        
         if (this->graph->is_vec_T_consistent_color(color)) {
           ++c_vtc_bar_indel; 
         } else { 
           bi_tc = true; 
-        }
+        } 
       } 
-      */
+      
+
+      if (i_tc || (c_vtc_bar_indel == std::min(c_vtc_indel, c_vtc_bar_indel))) { 
+        ; //is_insertion = true;
+      } else if (bi_tc || (c_vtc_indel == std::min(c_vtc_indel, c_vtc_bar_indel))) { 
+        std::cerr << a1 << " " << a2 << std::endl;
+      }*/
+
       bool is_insertion = true;
       /*if (i_tc || (c_vtc_bar_indel == std::min(c_vtc_indel, c_vtc_bar_indel))) { 
         is_insertion = true;
@@ -65,10 +77,6 @@ bool Algorithm<graph_t>::Balance::do_action() {
       } else { 
         assert(false);
       } */ 
-
-      if (a1 == "73h" || a1 == "73t") { 
-        std::cerr << genome_match::mcolor_to_name(bar_indel_color) << std::endl;
-      }
 
       this->graph->apply(insdel_t(a1, a2, bar_indel_color, is_insertion));
       ++number_indel_event; 

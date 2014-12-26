@@ -10,308 +10,225 @@
 #include "algo/Algorithm.h"
 #include "writer/Wgenome.h"
 
+#include "io/path_helper.hpp"
+#include "logger/logger.hpp"
+#include "logger/log_writers.hpp"
+
 #include "reader.h"
 #include "RecoveredGenomes.h"
 #include "RecoveredInfo.hpp"
 
-#include <boost/program_options.hpp>
+#include "tclap/CmdLine.h"
 
-std::vector<std::string> genome_match::number_to_genome;
-genome_match::gen2num genome_match::genome_to_number;   
-
-void tell_root_besides(BreakpointGraph<structure::Mcolor> const & graph) {
-  // tell where the root resides
-  std::clog << "the root resides in between:";
-
-  std::set<structure::Mcolor> colors(graph.cbegin_vec_T_consistent_color(), graph.cend_vec_T_consistent_color()); 
-
-  for (auto it = colors.begin(); it != colors.end(); ++it) {
-    for (auto jt = it; ++jt != colors.end(); ) {
-      structure::Mcolor C(*it, *jt, structure::Mcolor::Intersection);
-      if (C.size() == it->size()) {
-        colors.erase(it++);
-        jt = it;
-        continue;
-      }
-      if (C.size() == jt->size()) {
-        colors.erase(jt++);
-        --jt;
-      }
-    }
-    std::clog << " " << genome_match::mcolor_to_name(*it);
-  }
-  std::clog << std::endl;
-}
-
-bool organize_output_directory( fs::path const & path ) { 
-  auto creater_lambda = [](fs::path const & directory) -> bool {
-    sys::error_code error; 
-    if ( fs::exists(directory, error) ) {
-      if ( !fs::is_directory(directory, error) ) {
-        return false;
-      }
+bool organize_output_directory(std::string const & path, bool is_debug) { 
+  auto creater_lambda = [](std::string const & directory) -> bool {
+    if (path::check_existence(directory)) {
+      if (path::FileExists(directory)) return false; 
     } else {
-      bool flag = fs::create_directory(directory, error); 
-
-      if ( !flag || error != 0 ) { 
-        return false;
-      }
+      return path::make_dir(directory);
     }
     return true; 
   };
 
-  fs::path debug_dir = path / "debug"; 
-  fs::path genomes_dir = path / "genomes"; 
-  fs::path transformation_dir = path / "transformations";
+  std::string genomes_dir = path::append_path(path, "genomes"); 
+  std::string transformation_dir = path::append_path(path, "transformations");
+  bool res = creater_lambda(genomes_dir) && creater_lambda(transformation_dir);
 
-  return creater_lambda(debug_dir) && creater_lambda(genomes_dir) && creater_lambda(transformation_dir);
-}
-
-std::vector<BreakpointGraph<structure::Mcolor>::twobreak_t> save_total_history(fs::path const & path, BreakpointGraph<structure::Mcolor> const & graph, 
-        ProblemInstance<structure::Mcolor> const & cfg) {
-  typedef BreakpointGraph<structure::Mcolor>::twobreak_t twobreak_t;
-  
-  std::vector<twobreak_t> transform;
-
-  std::cerr << "::::Save total history:::: " << std::endl;
-  for(auto il = graph.cbegin_2break_history(); il != graph.cend_2break_history(); ++il) {
-    auto twobreak = il->get_canonical_twobreak();
-    transform.push_back(twobreak); 
+  if (is_debug) {
+    std::string debug_dir =  path::append_path(path, "debug"); 
+    res = res && creater_lambda(debug_dir);
   } 
 
-  for (size_t i = 0; i < transform.size() - 1; ++i) { 
-    for (size_t j = 0; j < transform.size() - i - 1; ++j) { 
-      if ((transform[j] > transform[j + 1]) && transform[j].is_independent(transform[j + 1])) {
-        std::swap(transform[j], transform[j + 1]); 
-      }
-    }
-  }
+  return res;
+}
 
-  fs::ofstream tr(path / "sorted_full_history.txt");
+void create_console_logger(std::string const & file_path, std::string const & log_filename) {
+  using namespace logging;
+  /*
+   * Need to create proporties file for logger and use it in build. 
+   */
+  std::string log_file = path::append_path(file_path, log_filename);
   
-  for (auto il = transform.cbegin(); il != transform.cend(); ++il) { 
-    vertex_t const & p = il->get_vertex(0);
-    vertex_t const & q = il->get_vertex(1);
-    vertex_t const & x = il->get_vertex(2);
-    vertex_t const & y = il->get_vertex(3);
-
-    tr << p << " " << q << " " << x << " " << y << " " << cfg.mcolor_to_name(il->get_mcolor()) << std::endl; 
-  }
-
-  tr.close();
-
-  return transform;
+  logger *lg = create_logger();
+  lg->add_writer(std::make_shared<file_writer>(log_file));
+  lg->add_writer(std::make_shared<console_writer>());
+  attach_logger(lg);
 }
 
 int main(int argc, char* argv[]) {
   std::string const VERSION(std::to_string(MGRA_VERSION_MAJOR) + "." + std::to_string(MGRA_VERSION_MINOR) + "."
     + std::to_string(MGRA_VERSION_PATCH));
-
-  std::string cfg_file;
-  std::string type; 
-  std::string blocks_file;
-  std::string out_path; 
-  bool debug = false; 
+  std::string const LOGGER_FILENAME = "mgra.log";
 
   /*Reading flags*/
-  namespace po = boost::program_options;
-  po::options_description desc("Options"); 
+  try {  
 
-  desc.add_options()
-    ("help,h", "Show help message")
-    ("version,v", "Print version program")
-    ("config,c", po::value<std::string>(&cfg_file), "Input configure file")
-    ("format,f", po::value<std::string>(&type)->required(), "Input format file in genomes file")
-    ("genomes,g", po::value<std::string>(&blocks_file)->required(), "Input file contains genomes")
-    ("output_dir,o", po::value<std::string>(&out_path)->required(), "Output directory")
-    ("debug,d", "Switch on debug output")
-    ;
+  TCLAP::CmdLine cmd("MGRA (Multiple Genome Rearrangements & Ancestors) (c) 2008-2014 by Pavel Avdeyev, Shuai Jiang, Max Alekseyev. Distributed under GNU GENERAL PUBLIC LICENSE license.", ' ', VERSION);
 
-  po::positional_options_description p;
-  p.add("config", -1);
+  TCLAP::ValueArg<std::string> path_to_cfg_file_arg("c",
+    "config",
+    "Input configure file",
+    true,
+    "",
+    "filename", 
+    cmd);
 
-  po::variables_map vm; 
-  try { 
-    po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm); 
+  TCLAP::ValueArg<std::string> path_to_blocks_grimm_file_arg("g",
+    "grimm_genomes",
+    "Input file contains genomes in GRIMM format",
+    true,
+    "", 
+    "filename");
 
-    if ( vm.count("help") ) {
-      std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) version " << VERSION << std::endl;
-      std::cout << "(c) 2008-2014 by Pavel Avdeyev, Shuai Jiang, Max Alekseyev" << std::endl;
-      std::cout << "Distributed under GNU GENERAL PUBLIC LICENSE license." << std::endl;
-      std::cout << std::endl;
-      std::cout << desc << std::endl;
-      return 0;
-    }
+  TCLAP::ValueArg<std::string> path_to_blocks_infercars_file_arg("i",
+    "infercars_genomes",
+    "Input file contains genomes in InferCARs format",
+    true, 
+    "", 
+    "filename");
 
-    if ( vm.count("version") ) {
-      std::cout << "MGRA (Multiple Genome Rearrangements & Ancestors) version " << VERSION << std::endl;
-      return 0;
-    }
-
-    po::notify(vm);
-
-    if ( !vm.count("config") ) { 
-      throw po::required_option("--config");
-    }
-    
-  } catch (po::required_option& e) {
-    std::cerr << "ERROR: " << e.what() << std::endl; 
-    std::cerr << desc << std::endl;
-    return 1;
-  } catch (po::error& e) { 
-    std::cerr << "ERROR: " << e.what() << std::endl; 
-    return 1;
-  }
-
-  if ( vm.count("debug") ) { 
-    debug = true; 
-  }
+  cmd.xorAdd( path_to_blocks_grimm_file_arg, path_to_blocks_infercars_file_arg );
+  
+  TCLAP::ValueArg<std::string> output_arg("o",
+    "output",
+    "Output directory",
+    true,
+    "",
+    "dirname", 
+    cmd);
+  
+  TCLAP::SwitchArg debug_arg("d",
+    "debug",
+    "Switch on debug output",
+    cmd,
+    false);
+  
+  cmd.parse(argc, argv); 
 
   /*Check paths for cfg file, block file and output directory*/
-  sys::error_code error;
-  fs::path out_path_directory(out_path);
-  fs::path in_path_cfg(cfg_file);
-  fs::path in_path_blocks(blocks_file);
-
-  if ( !fs::exists(in_path_cfg, error) || !fs::is_regular_file(in_path_cfg, error) ) { 
-    std::cerr << "ERROR: Problem with configuration file: " << cfg_file << std::endl;
+  path::CheckFileExistenceFATAL(path_to_cfg_file_arg.getValue());
+  if (path_to_blocks_grimm_file_arg.isSet()) { 
+    path::CheckFileExistenceFATAL(path_to_blocks_grimm_file_arg.getValue());
+  } else if (path_to_blocks_infercars_file_arg.isSet()) { 
+    path::CheckFileExistenceFATAL(path_to_blocks_infercars_file_arg.getValue());
   }
-
-  if ( !fs::exists(in_path_blocks, error) || !fs::is_regular_file(in_path_blocks, error) ) { 
-    std::cerr << "ERROR: Problem with genomes file: " << blocks_file << std::endl;
-  }
-
-  if ( fs::exists(out_path_directory, error) ) {
-    if ( !fs::is_directory(out_path_directory, error) ) {
-      std::cerr << "ERROR: " << out_path << " is not directory" << std::endl;
+  
+  std::string out_path_directory = path::make_full_path(output_arg.getValue());
+  if (path::check_existence(out_path_directory)) {
+    if (path::FileExists(out_path_directory)) {
+      std::cerr << "ERROR: " << out_path_directory << " is not directory" << std::endl;
       return 1;
     }
   } else {
-    bool flag = fs::create_directory(out_path_directory, error); 
-
-    if ( !flag || error != 0 ) { 
-      std::cerr << "ERROR: Problem to create " << out_path << " directory" << std::endl; 
+    if (!path::make_dir(out_path_directory)) { 
+      std::cerr << "ERROR: Problem to create " << out_path_directory << " directory" << std::endl; 
       return 1;
     }
   }
 
-  out_path_directory = fs::canonical(out_path_directory);
-  bool is_create = organize_output_directory(out_path_directory); 
-  if ( !is_create ) {
+  if (!organize_output_directory(out_path_directory, debug_arg.getValue())) {
     std::cerr << "ERROR: problem with organize output directory " << out_path_directory << std::endl;
     return 1; 
   }  
+
+  create_console_logger(out_path_directory, LOGGER_FILENAME);
 
   /*Reading problem configuration and genomes*/
   typedef structure::Genome genome_t;
   typedef structure::Mcolor mcolor_t;
   typedef BreakpointGraph<mcolor_t> graph_t;
 
-  ProblemInstance<mcolor_t> cfg(reader::read_cfg_file(in_path_cfg)); 
-
-  if (cfg.get_count_genomes() < 2) {
-    std::cerr << "ERROR: at least two input genomes required" << std::endl;
+  cfg::create_instance(path_to_cfg_file_arg.getValue());
+  
+  if (cfg::get().get_count_genomes() < 2) {
+    ERROR("At least two input genomes required")
     return 1;
   }
   
   std::vector<genome_t> genomes; 
-  if (type == "infercars") {
-    genomes = reader::read_infercars(cfg, in_path_blocks);
-  } else if (type == "grimm") {
-    genomes = reader::read_grimm(cfg, in_path_blocks);
-  } else {
-    std::cerr << "ERROR: unknown synteny blocks format" << type << std::endl;
-    return 1;
-  }
-
-  /*Do job work*/
-  //if ( debug ) { 
-  genome_match::init_name_genomes(cfg, genomes); //FIXME: IT'S DEBUG
-  //}
-
-  for(size_t i = 0; i < genomes.size(); ++i) { 
-    std::clog << "Genome " << cfg.get_priority_name(i) << " blocks: " << genomes[i].size() << std::endl;
+  if (path_to_blocks_infercars_file_arg.isSet()) {
+    genomes = reader::read_infercars(path_to_blocks_infercars_file_arg.getValue());
+  } else if (path_to_blocks_grimm_file_arg.isSet()) {
+    genomes = reader::read_grimm(path_to_blocks_grimm_file_arg.getValue());
   } 
 
+  /*Do job work*/
+  for(size_t i = 0; i < genomes.size(); ++i) { 
+    std::ostringstream out; 
+    out << "Download genome " << cfg::get().get_priority_name(i) << " with " << genomes[i].size() << " blocks.";
+    INFO(out.str())
+  } 
 
-  std::shared_ptr<graph_t> graph(new graph_t(genomes, cfg)); 
+  INFO("Start build graph")
+  std::shared_ptr<graph_t> graph(new graph_t(genomes)); 
+  INFO("End build graph")
 
-  std::clog << "vecT-consistent colors: " << graph->count_vec_T_consitent_color() << std::endl;
-  for (auto id = graph->cbegin_vec_T_consistent_color(); id != graph->cend_vec_T_consistent_color(); ++id) {
-    std::clog << "\t" << genome_match::mcolor_to_name(*id);  ///FIXME: CHANGE
-  }
-  std::clog << std::endl;
+  { 
+    std::ostringstream out; 
+    out << "Determine " << graph->count_vec_T_consitent_color() << " \\vec{T}-consistent colors in tree:\n"; 
+    for (auto id = graph->cbegin_vec_T_consistent_color(); id != graph->cend_vec_T_consistent_color(); ++id) {
+      out << cfg::get().mcolor_to_name(*id) << " ";  
+    }
+    INFO(out.str());
+  } 
 
-  tell_root_besides(*graph); 	
-
-  std::clog << "Start algorithm for convert from breakpoint graph to identity breakpoint graph" << std::endl;
-  Algorithm<graph_t> main_algo(graph, cfg);
-  main_algo.init_writers(out_path_directory, "stage", debug);
+  INFO("Start algorithm for convert from breakpoint graph to identity breakpoint graph");
+  Algorithm<graph_t> main_algo(graph);
+  main_algo.init_writers(out_path_directory, "stage", debug_arg.getValue());
   main_algo.convert_to_identity_bgraph(); 
 
-  if (cfg.get_target().empty() && !graph->is_identity()) {
-    std::clog << "T-transformation is not complete. Cannot reconstruct genomes." << std::endl; 
+  if (!cfg::get().is_target_build && !graph->is_identity()) {
+    INFO("T-transformation is not complete. Cannot reconstruct genomes.")
     return 1;
   } 
   
   bool consist = graph->check_consistency_graph();
-  if (cfg.get_target().empty() && !consist) {
-    std::cerr << "We have problem with edges, corresponding postponed deletions." << std::endl;
-    std::cerr << "If you have indentity breakpoint graph after stages, please contact us." << std::endl;
+  if (!cfg::get().is_target_build && !consist) {
+    INFO("We have problem with edges, corresponding postponed deletions.")
+    INFO("If you have indentity breakpoint graph after stages, please contact us.")
     return 1;
   } 
 
-  //FIXME: go to mgra cpp
-  std::cerr << "start to change history " << std::endl;
-
+  //FIXME: go from mgra cpp
+  INFO("Start to replace cloning to 2-breaks")
   graph->change_history();
-  
+  INFO("Finish to replace cloning to 2-breaks")
+
   writer::Wstats write_stats;
   write_stats.open(out_path_directory, "history_stats.txt");
   write_stats.print_history_statistics(*graph);
 
-  //std::shared_ptr<graph_t> new_graph(new graph_t(genomes, cfg)); 
-  std::shared_ptr<graph_t> new_graph(new graph_t(genomes, cfg)); 
-  Algorithm<graph_t> alg(new_graph, cfg);  
+  std::shared_ptr<graph_t> new_graph(new graph_t(genomes)); 
+  Algorithm<graph_t> alg(new_graph);  
   Algorithm<graph_t>::Balance balance(new_graph);
   balance.do_action();
-  //writer::Wdots<graph_t, ProblemInstance<mcolor_t> > write_dots(cfg);
-  //write_dots.save_dot(*new_graph, cfg, 100);
-
+  
+  INFO("Check that history is correct");
   for (auto br = graph->cbegin_2break_history(); br != graph->cend_2break_history(); ++br) {
-    //std::cerr << br->get_vertex(0) << " " << br->get_vertex(1) << " " << br->get_vertex(2) 
-    //<< " " << br->get_vertex(3) << " " << genome_match::mcolor_to_name(br->get_mcolor()) << std::endl;
-    /*if (br->get_vertex(0) == "190h" && br->get_vertex(1) == "423t" && br->get_vertex(2) == "120t"
-        && br->get_vertex(3) == "946h") { 
-      auto color = new_graph->get_all_multicolor_edge("190h", "423t");
-      std::cerr << genome_match::mcolor_to_name(color)  << std::endl;
-      color = new_graph->get_all_multicolor_edge("120t", "946h");
-      std::cerr << genome_match::mcolor_to_name(color)  << std::endl;
-    } */
     new_graph->apply(*br);
   }
 
-  save_total_history(out_path_directory, *graph, cfg);
-
   auto bad_edges = graph->get_bad_edges();
-  std::clog << "Start reconstruct genomes." << std::endl;
+  INFO("Start linearization genomes.")
   //RecoveredInfo<graph_t> reductant(*graph, cfg); 
-  RecoveredGenomes<graph_t> reductant(*graph, cfg, bad_edges);
+  RecoveredGenomes<graph_t> reductant(*graph, bad_edges);
+  INFO("Finsih linearization genomes.")
 
-  std::clog << "Save history in files." << std::endl;
-  if (cfg.get_target().empty()) {
+  INFO("Save transformations in files.")
+  if (!cfg::get().is_target_build) {
     size_t i = 0;
     auto recover_transformation = reductant.get_history();
     for (auto im = graph->cbegin_vec_T_consistent_color(); im != graph->cend_vec_T_consistent_color(); ++im, ++i) {
-      std::string namefile = cfg.mcolor_to_name(*im) + ".trs";
-      fs::ofstream tr(out_path_directory / "transformations" / namefile);
+      std::string namefile = cfg::get().mcolor_to_name(*im) + ".trs";
+      std::string new_path = path::append_path(out_path_directory, path::append_path("transformations", namefile));
+      std::ofstream tr(new_path);
       for(auto const & event : recover_transformation[i]) {
         vertex_t const & p = event.get_vertex(0);
         vertex_t const & q = event.get_vertex(1);
         vertex_t const & x = event.get_vertex(2);
         vertex_t const & y = event.get_vertex(3);
       
-      	tr << "(" << p << ", " << q << ") x (" << x << ", " << y << ") " << genome_match::mcolor_to_name(event.get_mcolor()); 
+      	tr << "(" << p << ", " << q << ") x (" << x << ", " << y << ") " << cfg::get().mcolor_to_name(event.get_mcolor()); 
 
       	if (p != Infty && q != Infty && x != Infty && y != Infty) { 
       	  if (p == graph->get_obverse_vertex(x) && bad_edges.defined(p, x)) { 
@@ -330,9 +247,18 @@ int main(int argc, char* argv[]) {
     } 
   }
 
-  std::clog << "Save ancestor genomes in files." << std::endl; 
-  writer::Wgenome<genome_t> writer_genome(out_path_directory / "genomes");
-  writer_genome.save_genomes(reductant.get_genomes(), cfg.get_target().empty()); 
+  INFO("Save ancestor genomes in files.")
+  writer::Wgenome<genome_t> writer_genome(path::append_path(out_path_directory, "genomes"));
+  writer_genome.save_genomes(reductant.get_genomes(), !cfg::get().is_target_build); 
+
+  std::string path_to_logfile = path::append_path(out_path_directory, LOGGER_FILENAME);
+  INFO("MGRA log can be found here " << path_to_logfile)
+  INFO("Thank you for using MGRA!")
+
+  } catch (TCLAP::ArgException &e) { 
+    std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; 
+    return 1;
+  }
 
   return 0;
 }

@@ -291,7 +291,8 @@ bool Algorithm<graph_t>::ProcessTwoBreakAndClone::is_good_actions(vertex_t const
     }
 
     if (vec_target_color.empty() && (count_diff != 1)) {
-      is_all_good = (!this->graph->canformQ(x, *vec_color) || !this->graph->canformQ(y, *vec_color)); //false 
+      is_all_good = false; 
+      //(!this->graph->canformQ(x, *vec_color) || !this->graph->canformQ(y, *vec_color)); //false 
     }
   }
 

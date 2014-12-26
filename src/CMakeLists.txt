@@ -8,7 +8,7 @@ set(PROJECT_NAME mgra)
 
 set (MGRA_VERSION_MAJOR 2)
 set (MGRA_VERSION_MINOR 2)
-set (MGRA_VERSION_PATCH 0)
+set (MGRA_VERSION_PATCH 1)
 
 set(MGRA_SOURCE mgra.cpp
 	reader.cpp
@@ -21,25 +21,17 @@ configure_file (
   [@ONLY]
   )
 
-set(ROOT_DIR "${CMAKE_SOURCE_DIR}/../")
+set(ROOT_DIR "${CMAKE_SOURCE_DIR}/..")
 set (OPTIMIZE_FLAG " -std=c++11 -O2 -pipe -finline-functions -finline-limit=1000") # -DPSEUDO_EDGE  
 set (WARNS "-Wall -Werror -Wextra -pedantic-errors")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${WARNS}") 
 
 include_directories(${CMAKE_BINARY_DIR} 
-			${PROJECT_SOURCE_DIR}/include 
+			${PROJECT_SOURCE_DIR}/include
+			${PROJECT_SOURCE_DIR}/utils 
 			${PROJECT_SOURCE_DIR}/libs 
 		  ) 
-
-find_package(Boost COMPONENTS program_options filesystem system REQUIRED) #log log_setup thread date_time 
-if(NOT ${Boost_FOUND})
-    message(SEND_ERROR "Failed to find boost::program_options or boost::filesystem or boost::system.")
-    return()
-else()
-	include_directories(${Boost_INCLUDE_DIRS})
-	link_directories(${Boost_LIBRARY_DIR})
-endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7")
@@ -56,13 +48,19 @@ else()
     return()
 endif()
 
+add_subdirectory(utils/io)
 add_subdirectory(libs/blossom5)
 set_property(TARGET BLOSSOM5 APPEND_STRING PROPERTY COMPILE_FLAGS " -w")
 
 add_executable(${PROJECT_NAME} ${MGRA_SOURCE})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+
 add_dependencies(${PROJECT_NAME} BLOSSOM5)
 target_link_libraries(${PROJECT_NAME} BLOSSOM5)
+
+add_dependencies(${PROJECT_NAME} input)
+target_link_libraries(${PROJECT_NAME} input)
+
 
 if(WIN32)
 	message(SEND_ERROR "Windows is unsupported system, please use UNIX or OS X systems")

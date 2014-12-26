@@ -12,7 +12,7 @@ set(BLOSSOM5_SOURCE
 		PMshrink.cpp
 		misc.cpp
 		MinCost/MinCost.cpp
-	) 
+	 ) 
 
 set (OPTIMIZE_FLAG " -O2 -pipe -finline-functions -finline-limit=1000")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG}")

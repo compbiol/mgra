@@ -237,13 +237,15 @@ void HistoryGraph<mcolor_t>::change_history() {
       std::list<twobreak_t> new_2break_history;
       std::list<twobreak_t> replaced_twobreak;
       for (auto br = break2_history.begin(); br != inserted_iterator; ++br) {    
-        if (!inserted_iterator->is_independent(*br)) { 
+        if (!inserted_iterator->is_independent(*br) && br->get_mcolor().includes(inserted_iterator->get_mcolor()) ) { 
+          //br->is_independent(*inserted_iterator)) { 
           replaced_twobreak.push_front(*br);
         } else { 
           bool flag = false; 
 
           for (auto rep_br = replaced_twobreak.rbegin(); rep_br != replaced_twobreak.rend() && (!flag); ++rep_br) { 
-            if (!rep_br->is_independent(*br)) { 
+            if (!rep_br->is_independent(*br) && br->get_mcolor().includes(rep_br->get_mcolor())) { 
+              //br->is_independent(*rep_br)) { 
               replaced_twobreak.push_front(*br);
               flag = true;
             }
@@ -255,7 +257,7 @@ void HistoryGraph<mcolor_t>::change_history() {
         }
       }
 
-      /*if (central.first == "120t" && central.second == "93t" && mother_edge.first == "492h") {
+      /*if (central.first == "1157h" && central.second == "786t" && mother_edge.first == "1354t") {
         std::cerr << "Replaced " << std::endl;
         for (auto rep_br = replaced_twobreak.rbegin(); rep_br != replaced_twobreak.rend(); ++rep_br) { 
           std::cerr << rep_br->get_vertex(0) << " " << rep_br->get_vertex(1) << " " 
@@ -269,8 +271,7 @@ void HistoryGraph<mcolor_t>::change_history() {
         new_2break_history.push_back(*rep_br);
       }
 
-      ++inserted_iterator;
-      for (auto br = inserted_iterator; br != break2_history.end(); ++br) {    
+      for (auto br = (++inserted_iterator); br != break2_history.end(); ++br) {    
         new_2break_history.push_back(*br);
       }
  

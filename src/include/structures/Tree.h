@@ -1,10 +1,12 @@
-#ifndef TREE_H_ 
-#define TREE_H_
+#ifndef TREE_HPP 
+#define TREE_HPP
 
 namespace structure { 
 
 template<class mcolor_t>
 struct BinaryTree { 
+  typedef std::set<mcolor_t> colors_median_t; 
+
   BinaryTree(std::string const & st, std::unordered_map<std::string, size_t> const & genome_number, std::vector<std::string> const & priority_name) 
   : root(new Node(nullptr, st, genome_number, priority_name))
   {
@@ -24,6 +26,12 @@ struct BinaryTree {
     std::map<mcolor_t, std::string> colors;
     root->get_name_for_colors(colors);
     return colors;	
+  }
+
+  std::vector<colors_median_t> get_median_colors() const { 
+    std::vector<colors_median_t> medians; 
+    root->get_median_colors(root->data, medians);
+    return medians;
   }
 
   template<class linearizator_t>
@@ -59,6 +67,7 @@ private:
 
     std::string get_nodes(std::vector<std::string>& info) const;
 
+    void get_median_colors(mcolor_t const & complete_color, std::vector<colors_median_t>& medians) const; 
     void get_dicolors(std::set<mcolor_t>& dicolor) const; 
     void get_name_for_colors(std::map<mcolor_t, std::string>& colors) const;
 
@@ -202,6 +211,30 @@ void structure::BinaryTree<mcolor_t>::Node::get_dicolors(std::set<mcolor_t>& dic
 } 
 
 template<class mcolor_t>
+void structure::BinaryTree<mcolor_t>::Node::get_median_colors(mcolor_t const & complete_color, std::vector<colors_median_t>& medians) const {
+  if (left_child) { 
+    left_child->get_median_colors(complete_color, medians); 
+  }
+
+  if (right_child) { 
+    right_child->get_median_colors(complete_color, medians); 
+  }
+
+  if (left_child && right_child && this->parent != nullptr) { 
+    std::array<mcolor_t, 6> colors;  
+    colors[0] = left_child->data;
+    colors[1] = right_child->data;
+    colors[3] = this->data;
+    colors[2] = mcolor_t(complete_color, colors[3], mcolor_t::Difference);
+    colors[4] = mcolor_t(colors[2], colors[0], mcolor_t::Union);
+    colors[5] = mcolor_t(colors[2], colors[1], mcolor_t::Union);
+    medians.push_back(std::set<mcolor_t>(colors.begin(), colors.end()));
+  }
+  
+}
+    
+
+template<class mcolor_t>
 void structure::BinaryTree<mcolor_t>::Node::get_name_for_colors(std::map<mcolor_t, std::string>& colors) const {
   if (left_child) {
     left_child->get_name_for_colors(colors);
@@ -247,7 +280,7 @@ void structure::BinaryTree<mcolor_t>::Node::walk_and_linearizeate(
       /*Apply linearization twobreaks*/      
       for (twobreak_t const & twobreak : new_history.first) {
         //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) 
-        //<< " " << twobreak.get_vertex(3) << " " << std::endl;    
+        //<< " " << twobreak.get_vertex(3) << p" " << std::endl;    
         twobreak.apply_single(graphs[this->data]); 
         //std::cerr << linearizator.count_circular_chromosome(graphs[this->data]) << std::endl;
       }

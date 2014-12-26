@@ -1,19 +1,23 @@
 #ifndef WDOTS_H_
 #define WDOTS_H_
 
+/*
+ * Fixme remove RGDCoeff graph picture
+ *
+ */
 namespace writer {
   template<class graph_t, class conf_t>
   struct Wdots { 
-    typedef structure::Mcolor mcolor_t;
-    typedef structure::Mularcs<mcolor_t> mularcs_t;
+    typedef typename graph_t::edge_t edge_t;
+    typedef typename graph_t::mcolor_type mcolor_t;
+    typedef typename graph_t::mularcs_t mularcs_t;
 
-    Wdots(conf_t const & cfg) 
-    : m_cfg(cfg)
-    , m_debug(false)
+    Wdots() 
+    : m_debug(false)
     {
     }
 
-    void init(fs::path const & path, std::string const & graphname, bool debug) {
+    void init(std::string const & path, std::string const & graphname, bool debug) {
       m_path = path; 
       m_graphname = graphname;
       m_debug = debug;
@@ -27,19 +31,20 @@ namespace writer {
     void save_dot(graph_t const & graph, size_t stage) {
       if (m_debug) {
         std::string dotname = m_graphname + std::to_string(stage) + ".dot";
-        save_dot(graph, m_path / "debug", dotname);    
+        save_dot(graph, path::append_path(m_path, "debug"), dotname);    
       }
     }
 
     void save_components(graph_t const & graph, size_t stage);
     void write_legend_dot();
 
-  private: 
-    void save_dot(graph_t const & graph, fs::path const & path, std::string const & dotname);
+    void save_median(std::string const & name, std::vector<std::pair<edge_t, mcolor_t> > const & edges);
 
   private: 
-    conf_t const & m_cfg;
-    fs::path m_path;
+    void save_dot(graph_t const & graph, std::string const & path, std::string const & dotname);
+
+  private: 
+    std::string m_path;
     std::string m_colorscheme;
     std::string m_graphname;
     bool m_debug;
@@ -47,12 +52,50 @@ namespace writer {
 } 
 
 template<class graph_t, class conf_t>
-void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path const & path, std::string const & dotname) { 
-  fs::ofstream dot(path / dotname);
+void writer::Wdots<graph_t, conf_t>::save_median(std::string const & dotname, std::vector<std::pair<edge_t, mcolor_t> > const & edges) { 
+  std::ofstream dot(path::append_path(m_path, dotname));
+  
+  dot << "graph {" << std::endl;
+  
+  if (!cfg::get().colorscheme.empty()) { 
+    dot << "edge [colorscheme=" << cfg::get().colorscheme << "];" << std::endl;
+  } 
+
+  int infv = 0;
+  for(auto const & edge : edges) { 
+    mcolor_t const & color = edge.second;
+    for(auto ic = color.cbegin(); ic != color.cend(); ++ic) {
+      for (size_t i = 0; i < ic->second; ++i) { 
+      
+        dot << "\t\"" << edge.first.first << "\"\t--\t\"";
+        if (edge.first.second == Infty) {
+          if (ic == color.cbegin()) { 
+            --infv;
+          } 
+          dot << infv << "\"\t[len=0.75,";
+        } else { 
+          dot << edge.first.second << "\"\t[";
+        } 
+        dot << "color=" <<  cfg::get().get_RGBcolor(ic->first) << ", penwidth=3];" << std::endl;
+      }
+    } 
+  }  
+
+  for(int i = infv; i < 0; ++i) {
+    dot << "\t\"" << i << "\"\t[shape=point,color=black];" << std::endl;
+  }
+  
+  dot << "}" << std::endl;
+  dot.close();
+}
+
+template<class graph_t, class conf_t>
+void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, std::string const & path, std::string const & dotname) { 
+  std::ofstream dot(path::append_path(path, dotname));
 
   dot << "graph {" << std::endl;
-  if (!m_cfg.get_colorscheme().empty()) { 
-    dot << "edge [colorscheme=" << m_cfg.get_colorscheme() << "];" << std::endl;
+  if (!cfg::get().colorscheme.empty()) { 
+    dot << "edge [colorscheme=" << cfg::get().colorscheme << "];" << std::endl;
   } 
 
   int infv = 0;
@@ -87,7 +130,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
               dot << y << "\"\t[";
             } 
 
-            dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
+            dot << "color=" <<  cfg::get().get_RGBcolor(ic->first) << ", penwidth=3];" << std::endl;
           }
         }
       } else { 
@@ -108,7 +151,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
                 dot << y << "\"\t[";
               }
 
-              dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", style=dashed];" << std::endl;   
+              dot << "color=" <<  cfg::get().get_RGBcolor(ic->first) << ", style=dashed];" << std::endl;   
 
             }
           } 
@@ -128,7 +171,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
                 dot << y << "\"\t[";
               }
 
-              dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;   
+              dot << "color=" <<  cfg::get().get_RGBcolor(ic->first) << "];" << std::endl;   
             }
           }           
         } else { 
@@ -151,9 +194,9 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, fs::path co
               if (!out && number_splits != 1) {
                 out = true; 
 
-                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", label=" << number_splits << "];" << std::endl;  
+                dot << "color=" <<  cfg::get().get_RGBcolor(ic->first) << ", label=" << number_splits << "];" << std::endl;  
               } else { 
-                dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;  
+                dot << "color=" <<  cfg::get().get_RGBcolor(ic->first) << "];" << std::endl;  
               } 
             } 
           }
@@ -184,7 +227,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, size
     }
   
     std::string namefile = dotname + "_" + std::to_string(++i) + ".dot"; 
-    fs::ofstream dot(m_path / namefile);
+    std::ofstream dot(path::append_path(m_path, namefile));
 
     dot << "graph {" << std::endl;
     if (!m_colorscheme.empty()) { 
@@ -227,9 +270,9 @@ void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, size
 	      dot << y << "\"\t[";
 	    } 
 	    if (vec_T_color) {
-	      dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << ", penwidth=3];" << std::endl;
+	      dot << "color=" <<  cfg::get().get_RGBcolor(ic->first) << ", penwidth=3];" << std::endl;
 	    } else {
-	      dot << "color=" <<  m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * (ic->first)) << "];" << std::endl;	
+	      dot << "color=" <<  cfg::get().get_RGBcolor(ic->first) << "];" << std::endl;	
 	    }
 	  }
 	}
@@ -248,7 +291,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, size
 
 template<class graph_t, class conf_t>
 void writer::Wdots<graph_t, conf_t>::write_legend_dot() { 
-  fs::ofstream output(m_path / "legend.dot");
+  std::ofstream output(path::append_path(m_path, "legend.dot"));
 
   output << "digraph legend {" << std::endl;
   output << "\tnode [style=filled"; 
@@ -257,14 +300,14 @@ void writer::Wdots<graph_t, conf_t>::write_legend_dot() {
   } 
   output << "];" << std::endl;
 
-  for (size_t j = 0; j < m_cfg.get_count_genomes(); ++j) {
-    output << "\t\"" << m_cfg.get_priority_name(j) << "\" [fillcolor=" 
-      << m_cfg.get_RGBcolor(m_cfg.get_RGBcoeff() * j)  << "];" << std::endl;
+  for (size_t j = 0; j < cfg::get().get_count_genomes(); ++j) {
+    output << "\t\"" << cfg::get().get_priority_name(j) << "\" [fillcolor=" 
+      << cfg::get().get_RGBcolor(j)  << "];" << std::endl;
   } 
 
   std::vector<std::string> info;
-  for(auto it = m_cfg.cbegin_trees(); it != m_cfg.cend_trees(); ++it) {
-    it->get_nodes(info);
+  for(auto const & tree : cfg::get().phylotrees) {
+    tree.get_nodes(info);
   }
  
   for(auto const & str : info) {

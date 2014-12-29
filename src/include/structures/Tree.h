@@ -37,10 +37,28 @@ struct BinaryTree {
   template<class linearizator_t>
   void walk_and_linearizeate(
     linearizator_t const & linearizator, 
+    std::map<mcolor_t, mcolor_t> & parent_colors,
     std::map<mcolor_t, typename linearizator_t::partgraph_t> & graphs, 
     std::map<mcolor_t, typename linearizator_t::transform_t> & transformations) const 
   {
-    root->walk_and_linearizeate(linearizator, graphs, transformations);
+    root->walk_and_linearizeate(linearizator, parent_colors, graphs, transformations);
+
+    mcolor_t left = parent_colors[root->left_child->data];
+    mcolor_t right = parent_colors[root->right_child->data];
+
+    if (transformations[left].size() < transformations[right].size()) { 
+      parent_colors.erase(left); 
+      for (auto const & twobreak : transformations[left]) { 
+        transformations[right].push_front(twobreak.inverse());
+      }
+      transformations.erase(left);
+    } else { 
+      parent_colors.erase(right); 
+      for (auto const & twobreak : transformations[right]) { 
+        transformations[left].push_front(twobreak.inverse());
+      }
+      transformations.erase(right);
+    }
   }
 
 private: 
@@ -74,6 +92,7 @@ private:
     template<class linearizator_t>
     void walk_and_linearizeate(
       linearizator_t const & linearizator, 
+      std::map<mcolor_t, mcolor_t> & parent_colors,
       std::map<mcolor_t, typename linearizator_t::partgraph_t> & graphs, 
       std::map<mcolor_t, typename linearizator_t::transform_t> & transformations) const;
   };
@@ -247,18 +266,32 @@ void structure::BinaryTree<mcolor_t>::Node::get_name_for_colors(std::map<mcolor_
   }
 }
 
+/*ERROR, FIXME, think about edge from root in this function*/
 template<class mcolor_t>
 template<class linearizator_t>
 void structure::BinaryTree<mcolor_t>::Node::walk_and_linearizeate(
       linearizator_t const & linearizator, 
+      std::map<mcolor_t, mcolor_t> & parent_colors,
       std::map<mcolor_t, typename linearizator_t::partgraph_t> & graphs, 
       std::map<mcolor_t, typename linearizator_t::transform_t> & transformations) const { 
+  if (this->parent != nullptr) {  
+    if (this->parent->parent != nullptr) { 
+      parent_colors.insert(std::make_pair(this->data, this->parent->data));
+    } else { 
+      if (this->parent->left_child.get() == this) { 
+        parent_colors.insert(std::make_pair(this->data, this->parent->right_child->data));
+      } else if (this->parent->right_child.get() == this) { 
+        parent_colors.insert(std::make_pair(this->data, this->parent->left_child->data));
+      }
+    }
+  } 
+
   if (left_child) { 
-    left_child->walk_and_linearizeate(linearizator, graphs, transformations); 
+    left_child->walk_and_linearizeate(linearizator, parent_colors, graphs, transformations); 
   }
 
   if (right_child) { 
-    right_child->walk_and_linearizeate(linearizator, graphs, transformations); 
+    right_child->walk_and_linearizeate(linearizator, parent_colors, graphs, transformations); 
   }
 
   if (left_child && right_child && graphs.find(this->data) != graphs.end()) { 

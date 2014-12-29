@@ -15,7 +15,6 @@
 #include "logger/log_writers.hpp"
 
 #include "reader.h"
-#include "RecoveredGenomes.h"
 #include "RecoveredInfo.hpp"
 
 #include "tclap/CmdLine.h"
@@ -210,8 +209,7 @@ int main(int argc, char* argv[]) {
 
   auto bad_edges = graph->get_bad_edges();
   INFO("Start linearization genomes.")
-  //RecoveredInfo<graph_t> reductant(*graph, cfg); 
-  RecoveredGenomes<graph_t> reductant(*graph, bad_edges);
+  RecoveredInfo<graph_t> reductant(*graph); 
   INFO("Finsih linearization genomes.")
 
   INFO("Save transformations in files.")

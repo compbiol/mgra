@@ -19,7 +19,7 @@ std::vector<structure::Genome> reader::read_infercars(std::string const & path_t
   while(!input.eof()) {
     std::string line;
     std::getline(input, line);
-    line = trim(line);
+    boost::trim(line);
     if (line.empty()) {
       if (gene.empty()) { 
         continue;
@@ -89,10 +89,10 @@ std::vector<structure::Genome> reader::read_grimm(std::string const & path_to_fi
   while(!input.eof()) {
     std::string line;
     std::getline(input, line);
-    line = trim(line);
+    boost::trim(line);
 	
     if (line[0] == '>') {		
-      line = trim(line.substr(1));
+      line = boost::trim_left_copy(line.substr(1));
       if (cfg::get().is_genome_name(line)) {
         number_genome = cfg::get().get_genome_number(line);
         nchr = 0; 

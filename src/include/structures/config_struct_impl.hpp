@@ -69,7 +69,7 @@ void load(main_config<mcolor_t>& cfg, std::string const & filename) {
   while(input.good()) {
     std::string line;
     std::getline(input, line);
-    line = reader::trim(line);
+    boost::trim(line);
 
     if (line[0] == '[' && line[line.size() - 1] == ']') {
       section = line;

@@ -34,6 +34,9 @@ private:
 
   std::vector<genome_t> genomes;
   std::vector<transform_t> transformations;
+
+private:
+  DECL_LOGGER("RecoveredInfo");
 }; 
 
 template<class graph_t>
@@ -69,17 +72,20 @@ RecoveredInfo<graph_t>::RecoveredInfo(graph_t const & graph)
   assert(!cfg::get().is_target_build);
 
   /*Get transformation and graphs for linearization*/
+  std::map<mcolor_t, mcolor_t> parent_mcolor;
   std::map<mcolor_t, partgraph_t> recovered_graphs;
   std::map<mcolor_t, transform_t> recovered_transformations;
+
+  INFO("Get history from process graph")
   get_ugly_history(recovered_graphs, recovered_transformations);
   
   /*Algorithm for linearization*/
   Linearizator<graph_t> linearizator(graph);
-    
+  INFO("Start walk on tree and run algorithm for linearizeate")
   for (auto const & tree : cfg::get().phylotrees) {
-    tree.walk_and_linearizeate(linearizator, recovered_graphs, recovered_transformations); 
+    tree.walk_and_linearizeate(linearizator, parent_mcolor, recovered_graphs, recovered_transformations); 
   }
-
+  
   /*Recover genomes and transformation*/
   for (auto const & local_graph : recovered_graphs) {
     genomes.push_back(get_genome(cfg::get().mcolor_to_name(local_graph.first), local_graph.second)); 

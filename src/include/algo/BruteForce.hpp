@@ -80,7 +80,7 @@ std::multimap<size_t, typename graph_t::edge_t> Algorithm<graph_t>::BruteForce::
 
     if (this->graph->is_postponed_deletion(edge.first.first, edge.first.second) || is_have_tc) { 
       current.insert(edge.first); 
-      processed.insert({edge.first.first, edge.first.second});
+      processed.insert(edge.first.first); processed.insert(edge.first.second);
       processed.erase(Infty);
     } 
   } 
@@ -92,7 +92,7 @@ std::multimap<size_t, typename graph_t::edge_t> Algorithm<graph_t>::BruteForce::
     std::function<void()> findLambda = [&] () -> void { 
       for (auto const &e : weight_edges) { 
         if (processed.count(e.first.first) == 0 && processed.count(e.first.second) == 0) { 
-          processed.insert({e.first.first, e.first.second});
+          processed.insert(e.first.first); processed.insert(e.first.second);
           processed.erase(Infty);
       	  current.insert(e.first);
           findLambda();
@@ -109,7 +109,7 @@ std::multimap<size_t, typename graph_t::edge_t> Algorithm<graph_t>::BruteForce::
     for (auto const &edge : weight_edges) { 
       if (processed.count(edge.first.first) == 0 && processed.count(edge.first.second) == 0) { 	
         current.insert(edge.first); 
-        processed.insert({edge.first.first, edge.first.second});
+        processed.insert(edge.first.first); processed.insert(edge.first.second);
         processed.erase(Infty);
         findLambda();  
         current.erase(edge.first);

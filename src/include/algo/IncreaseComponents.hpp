@@ -91,8 +91,10 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
                 return ((int)(first_scores.first + second_scores.first) - (int)(first_scores.second + second_scores.second));
               };   
                
-              std::vector<int> scores({calc_score_lambda(possible_twobreaks1), 
-                calc_score_lambda(possible_twobreaks2), calc_score_lambda(possible_twobreaks3)}); 
+              std::vector<int> scores;
+              scores.push_back(calc_score_lambda(possible_twobreaks1));
+              scores.push_back(calc_score_lambda(possible_twobreaks2));
+              scores.push_back(calc_score_lambda(possible_twobreaks3)); 
 
               bool flag = false; 
               for(int elem : scores) { 
@@ -110,7 +112,9 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
                   repeat = true;      
                 };
 
-                processed.insert({connected_components[p.first], connected_components[p.second], connected_components[q.second], connected_components[r.second], connected_components[t.second]});
+                processed.insert(connected_components[p.first]); processed.insert(connected_components[p.second]);
+                processed.insert(connected_components[q.second]); processed.insert(connected_components[r.second]);
+                processed.insert(connected_components[t.second]);
                 if (scores.cbegin() == std::max_element(scores.cbegin(), scores.cend())) { 
                   apply_lambda(possible_twobreaks1);
                 } else if ((scores.cbegin() + 1) == std::max_element(scores.cbegin(), scores.cend())) { 
@@ -128,7 +132,8 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 
 		    		// N.B. we have CC[p.first] == CC[q.first] == ie->first
         		if (processed.count(connected_components[p.second]) == 0 && processed.count(connected_components[q.second]) == 0) { 
-        			processed.insert({connected_components[p.first], connected_components[p.second], connected_components[q.second]});
+        			processed.insert(connected_components[p.first]); processed.insert(connected_components[p.second]);
+              processed.insert(connected_components[q.second]);
               //std::cerr << p.first << " " << p.second << " " << q.first << " " << q.second << " " << genome_match::mcolor_to_name(*vtc) << std::endl;
 		    			this->graph->apply(twobreak_t(p, q, *vtc));
 		    			++number_rear;

@@ -40,7 +40,7 @@ struct Statistics {
         mularcs_t const & mularcs = graph->get_all_adjacent_multiedges(x);
         if (mularcs.size() == 1 && mularcs.union_multicolors() == graph->get_complete_color()) { 
 	        edges.push_back(edge_t(x, mularcs.cbegin()->first));
-          processed.insert({x, mularcs.cbegin()->first});
+          processed.insert(x); processed.insert(mularcs.cbegin()->first);
         } 
       } 
     }
@@ -263,7 +263,7 @@ void Statistics<graph_t>::count_indel_statistics() {
     mularcs_t const & mularcs = graph->get_all_adjacent_multiedges(a1);
 
     if (graph->is_indel_vertex(a1) && (processed.count(a1) == 0) && graph->is_indel_vertex(a2))  {
-      processed.insert({a1, a2});
+      processed.insert(a1); processed.insert(a2);
 
       mcolor_t const & indel_color = mularcs.union_multicolors(); 
       mcolor_t const & bar_indel_color = graph->get_complement_color(indel_color);

@@ -33,8 +33,8 @@ bool Algorithm<graph_t>::Balance::do_action() {
     mularcs_t const & mularcs = this->graph->get_all_adjacent_multiedges(a1);
 
     if (this->graph->is_indel_vertex(a1) && (processed.count(a1) == 0) && this->graph->is_indel_vertex(a2) && mularcs.size() != 0)  {
-      processed.insert({a1, a2}); 
-      
+      processed.insert(a1); processed.insert(a2);
+
       mcolor_t const & indel_color = mularcs.union_multicolors(); 
       mcolor_t const & bar_indel_color = this->graph->get_complement_color(indel_color);
       assert(indel_color == this->graph->get_all_adjacent_multiedges(a2).union_multicolors());

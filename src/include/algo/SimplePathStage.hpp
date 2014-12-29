@@ -36,8 +36,9 @@ bool Algorithm<graph_t>::ProcessSimplePath::do_action() {
     number_rear = 0; 
     for (vertex_t const & v: *(this->graph)) {  
       if (this->graph->is_simple_vertex(v)) { 
-        path_t path({v});
-        std::unordered_set<vertex_t> processed({v, Infty}); // we count oo as already processed
+        path_t path; path.push_back(v);
+        std::unordered_set<vertex_t> processed;
+        processed.insert(v); processed.insert(Infty); // we count oo as already processed
 
         auto const find_simple_path_lambda = [&] (vertex_t const & prev, vertex_t const & cur, bool is_next) -> vertex_t { 
           vertex_t previous = prev;

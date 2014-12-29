@@ -49,7 +49,7 @@ size_t BreakpointGraph<mcolor_t>::mobility_score(edge_t const & viewed, mcolor_t
     mularcs_t mularcs; 
     
     if (target != Infty) { 
-      mularcs = get_all_adjacent_multiedges_with_info(target); 
+      mularcs = this->get_all_adjacent_multiedges_with_info(target); 
     } 
 
     mularcs.erase(other);
@@ -202,7 +202,7 @@ size_t BreakpointGraph<mcolor_t>::mobility_score_relative_vertex(vertex_t const 
     mularcs_t mularcs_about; 
     
     if (my_about != Infty) { 
-      mularcs_about = get_all_adjacent_multiedges_with_info(my_about);
+      mularcs_about = this->get_all_adjacent_multiedges_with_info(my_about);
     }
 
     mularcs_about.erase(remove_vertex); 

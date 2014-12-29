@@ -19,8 +19,11 @@ struct RecoveredInfo {
   RecoveredInfo(graph_t const & graph);
 
   DECLARE_GETTER(std::vector<genome_t>, genomes, genomes);
-  DECLARE_GETTER(std::vector<transform_t>, transformations, history);
-   
+  //DECLARE_GETTER(std::vector<transform_t>, transformations, history);
+  
+  typedef std::map<std::pair<mcolor_t,mcolor_t>,transform_t> transform_to_color_t;
+  DECLARE_GETTER(transform_to_color_t, transformations, history);
+
 private: 
   void get_ugly_history(std::map<mcolor_t, partgraph_t> & local_graphs, std::map<mcolor_t, transform_t> & transformations) const;
 
@@ -33,7 +36,8 @@ private:
   partgraph_t bad_edges;
 
   std::vector<genome_t> genomes;
-  std::vector<transform_t> transformations;
+  std::map<std::pair<mcolor_t, mcolor_t>, transform_t> transformations;
+  //std::vector<transform_t> transformations;
 
 private:
   DECL_LOGGER("RecoveredInfo");
@@ -85,12 +89,18 @@ RecoveredInfo<graph_t>::RecoveredInfo(graph_t const & graph)
   for (auto const & tree : cfg::get().phylotrees) {
     tree.walk_and_linearizeate(linearizator, parent_mcolor, recovered_graphs, recovered_transformations); 
   }
+  INFO("End walk on tree and run algorithm for linearizeate")
   
   /*Recover genomes and transformation*/
+  INFO("Recover genomes")
   for (auto const & local_graph : recovered_graphs) {
     genomes.push_back(get_genome(cfg::get().mcolor_to_name(local_graph.first), local_graph.second)); 
-    transformations.push_back(recovered_transformations[local_graph.first]);
+    auto iter = parent_mcolor.find(local_graph.first);
+    if (iter != parent_mcolor.end()) {
+      transformations.insert(std::make_pair(*iter, recovered_transformations[local_graph.first]));
+    }
   }
+  INFO("End genomes")
 }
 
 template<class graph_t>

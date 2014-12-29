@@ -7,17 +7,20 @@
 ** 
 */
 
+#include "tclap/CmdLine.h"
+
+#include "reader.h"
+
 #include "algo/Algorithm.h"
-#include "writer/Wgenome.h"
 
 #include "io/path_helper.hpp"
 #include "logger/logger.hpp"
 #include "logger/log_writers.hpp"
 
-#include "reader.h"
 #include "RecoveredInfo.hpp"
 
-#include "tclap/CmdLine.h"
+#include "writer/Wgenome.h"
+#include "writer/Wtransform.hpp"
 
 bool organize_output_directory(std::string const & path, bool is_debug) { 
   auto creater_lambda = [](std::string const & directory) -> bool {
@@ -207,16 +210,20 @@ int main(int argc, char* argv[]) {
     new_graph->apply(*br);
   }
 
-  auto bad_edges = graph->get_bad_edges();
   INFO("Start linearization genomes.")
   RecoveredInfo<graph_t> reductant(*graph); 
   INFO("Finsih linearization genomes.")
 
   INFO("Save transformations in files.")
   if (!cfg::get().is_target_build) {
-    size_t i = 0;
-    auto recover_transformation = reductant.get_history();
-    for (auto im = graph->cbegin_vec_T_consistent_color(); im != graph->cend_vec_T_consistent_color(); ++im, ++i) {
+    writer::Wtransformation<graph_t> writer_transform(out_path_directory, *graph); 
+    auto recover_transformations = reductant.get_history();
+    for (auto const & transformation : recover_transformations) { 
+      writer_transform.save_transformation(transformation.first, transformation.second);
+      writer_transform.save_reverse_transformation(transformation.first, transformation.second);
+    }
+
+    /*for (auto im = graph->cbegin_vec_T_consistent_color(); im != graph->cend_vec_T_consistent_color(); ++im, ++i) {
       std::string namefile = cfg::get().mcolor_to_name(*im) + ".trs";
       std::string new_path = path::append_path(out_path_directory, path::append_path("transformations", namefile));
       std::ofstream tr(new_path);
@@ -242,7 +249,7 @@ int main(int argc, char* argv[]) {
       	tr << std::endl;  
       }
       tr.close(); 
-    } 
+    } */
   }
 
   INFO("Save ancestor genomes in files.")

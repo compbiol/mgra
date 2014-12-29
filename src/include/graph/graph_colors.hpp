@@ -130,10 +130,12 @@ ColorsGraph<mcolor_t>::ColorsGraph() {
 
 template<class mcolor_t>
 std::set<mcolor_t> ColorsGraph<mcolor_t>::split_color_on_tc_color(mcolor_t const & color, size_t number_splits) const {
+  std::set<mcolor_t> answer;    
+  
   if (is_T_consistent_color(color) || (number_splits == 1)) {
-    return std::set<mcolor_t>({color}); 
+    answer.insert(color);
   } else {  
-    std::set<mcolor_t> answer;    
+    
     /*if (hashing_split_colors.count(std::make_pair(color, number_of_splits)) != 0) {
       answer = hashing_split_colors.find(std::make_pair(color, number_of_splits))->second;
     } else {   */
@@ -162,15 +164,16 @@ std::set<mcolor_t> ColorsGraph<mcolor_t>::split_color_on_tc_color(mcolor_t const
       answer.clear(); 
       answer.insert(color);   
     }
-
-    return answer;
-  }    
+  }  
+  return answer;  
 }
 
 template<class mcolor_t>
 std::set<mcolor_t> ColorsGraph<mcolor_t>::split_color_on_vtc_color(mcolor_t const & color) const {
+  std::set<mcolor_t> answer; 
+
   if (is_vec_T_consistent_color(color)) {
-    return std::set<mcolor_t>({color}); 
+    answer.insert(color);
   } else {  
     std::set<mcolor_t> answer;    
 
@@ -193,9 +196,9 @@ std::set<mcolor_t> ColorsGraph<mcolor_t>::split_color_on_vtc_color(mcolor_t cons
     for(auto const & col : classes) {
       answer.insert(col.second);
     }
-
-    return answer;
   }
+
+  return answer;
 }
 
 template<class mcolor_t>

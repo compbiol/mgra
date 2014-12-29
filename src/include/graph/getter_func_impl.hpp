@@ -83,7 +83,8 @@ std::set<mcolor_t> BreakpointGraph<mcolor_t>::get_all_multicolor_edge_with_info(
   assert(u != Infty || v != Infty);
 
   mcolor_t current = get_all_multicolor_edge(u, v);
-  std::set<mcolor_t> output({current});
+  std::set<mcolor_t> output;
+  output.insert(current);
 
   if (this->number_of_splits != 1) { 
     std::set<mcolor_t> results;

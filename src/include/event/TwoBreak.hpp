@@ -13,15 +13,17 @@ struct TwoBreak {
   } 
   	
   TwoBreak(edge_t const & a1, edge_t const & a2, mcolor_t const & multicolor)
-  : m_arcs({a1, a2}) 
-  , m_multicolor(multicolor) 
+  : m_multicolor(multicolor) 
   {
+    m_arcs[0] = a1;
+    m_arcs[1] = a2;
   }
 
   TwoBreak(vertex_t const & x1, vertex_t const & y1, vertex_t const & x2, vertex_t const & y2, mcolor_t const & multicolor)
-  : m_arcs({edge_t(x1, y1), edge_t(x2, y2)})
-  , m_multicolor(multicolor) 
+  : m_multicolor(multicolor) 
   {
+    m_arcs[0] = edge_t(x1, y1); 
+    m_arcs[1] = edge_t(x2, y2); 
   }
  
   inline void change_vertex(size_t index, vertex_t const & v) {

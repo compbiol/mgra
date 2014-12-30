@@ -56,6 +56,7 @@ std::string main_config<mcolor_t>::mcolor_to_name(mcolor_t const & color) const 
  */
 template<class mcolor_t>
 void load(main_config<mcolor_t>& cfg, std::string const & filename) { 
+  TRACE("Start load cfg file in MGRA1 format")
   std::unordered_map<std::string, std::vector<std::string> > problem_config;
 	
   std::ifstream input(filename);
@@ -88,6 +89,7 @@ void load(main_config<mcolor_t>& cfg, std::string const & filename) {
 template<class mcolor_t>
 void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<std::string> > const & input) {  
   if (input.find("[Genomes]") != input.cend()) {  
+    TRACE("Parse genomes section")
     parse_genomes(input.find("[Genomes]")->second);
   } else { 
     ERROR("Cann't find genomes section");
@@ -95,6 +97,7 @@ void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<st
   }
 
   if (input.find("[Trees]") != input.cend()) {  
+    TRACE("Parse trees section")
     parse_trees(input.find("[Trees]")->second);
   } else { 
     ERROR("Cann't find trees section");
@@ -102,6 +105,7 @@ void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<st
   }
 
   if (input.find("[Algorithm]") != input.cend()) {  
+    TRACE("Parse algorithm section")
     parse_algorithm(input.find("[Algorithm]")->second);
   } else { 
     ERROR("Cann't find algorithm section");

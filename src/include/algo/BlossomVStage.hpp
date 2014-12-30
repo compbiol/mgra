@@ -87,7 +87,6 @@ size_t Algorithm<graph_t>::ProcessWithBlossomV::process_component(std::set<verte
 
   init_process_tc_edges(vertex_set);
   
-  //std::cerr << "Start process tc edges" << std::endl; 
   if (!tc_edges.empty()) {
     edge_t edge = queue_tc_edges.begin()->second;
     std::list<twobreak_t> twobreaks = take_edge_on_color(edge.first, this->graph->get_complete_color(), edge.second);      
@@ -204,12 +203,15 @@ std::vector<std::tuple<int, int, int> > Algorithm<graph_t>::ProcessWithBlossomV:
           int num_z = vertex_to_number(double_pseudo_vertex);
           this->double_pseudo_infinity_verteces.insert(num_z);
 
-          graph_edges.push_back(std::make_tuple(num_y, num_z, 0));   
+          //graph_edges.push_back(std::make_tuple(num_y, num_z, 0));   
         } else { 
-          num_y = vertex_to_number(arc.first); 
+          num_y = vertex_to_number(arc.first);
         }        
         assert(num_y != -1);
+
         int score = this->graph->calculate_cost(v, arc.first);
+        //std::cerr << "\"" << num_x << "\" -- \"" << num_y << "\"" << std::endl;
+      
         score_edges.insert(std::make_pair(edge_t(v, arc.first), score));
         graph_edges.push_back(std::make_tuple(num_x, num_y, score)); 
       } 
@@ -217,7 +219,9 @@ std::vector<std::tuple<int, int, int> > Algorithm<graph_t>::ProcessWithBlossomV:
     processed.insert(v);
   }
 
-  if (vertex2num.size() % 2 != 0 && !pseudo_infinity_verteces.empty()) { 
+  //std::cerr << vertex2num.size() << " " << pseudo_infinity_verteces.size() << " " << double_pseudo_infinity_verteces.size() << std::endl;
+
+  if (vertex2num.size() % 2 != 0 && !pseudo_infinity_verteces.empty()) {   
     int num_y = vertex_to_number(super_infinity);
 
     for (int num_x : double_pseudo_infinity_verteces) { 

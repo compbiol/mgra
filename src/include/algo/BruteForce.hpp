@@ -33,6 +33,7 @@ private:
 
 template<class graph_t>
 bool Algorithm<graph_t>::BruteForce::do_action() { 
+  INFO("Run BruteForce stage")
   size_t number_rear = 0; // number of rearrangements 
 
   utility::equivalence<vertex_t> components = this->graph->split_on_components();

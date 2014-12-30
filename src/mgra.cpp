@@ -140,6 +140,7 @@ int main(int argc, char* argv[]) {
   typedef structure::Mcolor mcolor_t;
   typedef BreakpointGraph<mcolor_t> graph_t;
 
+  INFO("Parse configure file")
   cfg::create_instance(path_to_cfg_file_arg.getValue());
   
   if (cfg::get().get_count_genomes() < 2) {
@@ -147,6 +148,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   
+  INFO("Parse genomes file")
   std::vector<genome_t> genomes; 
   if (path_to_blocks_infercars_file_arg.isSet()) {
     genomes = reader::read_infercars(path_to_blocks_infercars_file_arg.getValue());
@@ -154,7 +156,7 @@ int main(int argc, char* argv[]) {
     genomes = reader::read_grimm(path_to_blocks_grimm_file_arg.getValue());
   } 
 
-  /*Do job work*/
+  /*Do job*/
   for(size_t i = 0; i < genomes.size(); ++i) { 
     std::ostringstream out; 
     out << "Download genome " << cfg::get().get_priority_name(i) << " with " << genomes[i].size() << " blocks.";
@@ -212,7 +214,7 @@ int main(int argc, char* argv[]) {
 
   INFO("Start linearization genomes.")
   RecoveredInfo<graph_t> reductant(*graph); 
-  INFO("Finsih linearization genomes.")
+  INFO("Finish linearization genomes.")
 
   INFO("Save transformations in files.")
   if (!cfg::get().is_target_build) {
@@ -221,35 +223,7 @@ int main(int argc, char* argv[]) {
     for (auto const & transformation : recover_transformations) { 
       writer_transform.save_transformation(transformation.first, transformation.second);
       writer_transform.save_reverse_transformation(transformation.first, transformation.second);
-    }
-
-    /*for (auto im = graph->cbegin_vec_T_consistent_color(); im != graph->cend_vec_T_consistent_color(); ++im, ++i) {
-      std::string namefile = cfg::get().mcolor_to_name(*im) + ".trs";
-      std::string new_path = path::append_path(out_path_directory, path::append_path("transformations", namefile));
-      std::ofstream tr(new_path);
-      for(auto const & event : recover_transformation[i]) {
-        vertex_t const & p = event.get_vertex(0);
-        vertex_t const & q = event.get_vertex(1);
-        vertex_t const & x = event.get_vertex(2);
-        vertex_t const & y = event.get_vertex(3);
-      
-      	tr << "(" << p << ", " << q << ") x (" << x << ", " << y << ") " << cfg::get().mcolor_to_name(event.get_mcolor()); 
-
-      	if (p != Infty && q != Infty && x != Infty && y != Infty) { 
-      	  if (p == graph->get_obverse_vertex(x) && bad_edges.defined(p, x)) { 
-      	    tr << " # deletion"; 
-          } else if (q == graph->get_obverse_vertex(y) && bad_edges.defined(q, y)) {
-      	    tr << " # deletion"; 
-      	  } else if (p == graph->get_obverse_vertex(q) && bad_edges.defined(p, q)) { 
-      	    tr << " # insertion"; 
-          } else if (x == graph->get_obverse_vertex(y) && bad_edges.defined(x, y)) {
-      	    tr << " # insertion"; 
-      	  } 
-      	}
-      	tr << std::endl;  
-      }
-      tr.close(); 
-    } */
+    }    
   }
 
   INFO("Save ancestor genomes in files.")

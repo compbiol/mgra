@@ -62,7 +62,7 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
         bridges_t irregular_edges; // irreg. edges of color *vtc
         equiv_t connected_components = this->graph->split_on_components_with_color(*vtc);
         get_specific_edges(regular_edges, irregular_edges, connected_components, *vtc); 
-	
+
         std::unordered_set<vertex_t> processed;
         // reg. edges between diff. connected components of color *vtc
         for (auto const & bridges : regular_edges) {
@@ -71,6 +71,7 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 		  		}	
 
           if (bridges.second.size() == 4 && irregular_edges[bridges.first].size() == 0) {
+            TRACE("Case 1: four bridges.")
             edge_t const & p = *(bridges.second.begin());
             edge_t const & q = *(++bridges.second.begin());
 
@@ -127,6 +128,8 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
           }
 
 		  		if (bridges.second.size() == 2 && irregular_edges[bridges.first].size() == 0) {
+            TRACE("Case 2: two bridges.")
+            
 		    		edge_t const & p = *(bridges.second.begin());
 		    		edge_t const & q = *(bridges.second.rbegin());
 
@@ -143,6 +146,8 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 
 		  		// connected component with a single external edge and look for irregular edges
 		  		if (bridges.second.size() == 1 && !repeat) {
+            TRACE("Case 2: one bridge and start to find irregular edge.")
+
 		  			bool found = false;
 		    		edge_t const & p = *(bridges.second.begin());
 		    		edge_t q;
@@ -197,7 +202,8 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 		  isChanged = true;
     } 
   } while (number_rear > 0); 
- 
+
+  INFO("Finish stage for increasing number of components.")
   return isChanged; 
 } 
 

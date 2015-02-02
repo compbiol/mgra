@@ -1,37 +1,38 @@
-#ifndef BREAKPOINT_GRAPH_HPP
-#define BREAKPOINT_GRAPH_HPP
+#ifndef GRAPH_PACK_HPP
+#define GRAPH_PACK_HPP
 
 #include "structures/config_struct.hpp"
+
 #include "graph/multigraph.hpp"
-#include "graph/graph_colors.hpp"
-#include "graph/graph_history.hpp"
+#include "graph/multicolors.hpp"
+#include "graph/history.hpp"
 
 template<class mcolor_t>
-struct BreakpointGraph {
+struct GraphPack {
   typedef mcolor_t mcolor_type; 
-  typedef typename structure::Mularcs<mcolor_t> mularcs_t; 
-  
-  typedef std::pair<vertex_t, vertex_t> edge_t;
-  typedef std::pair<vertex_t, mcolor_t> arc_t; 
 
-  typedef typename MultiGraph::partgraph_t partgraph_t; 
+  using mularcs_t = typename structure::Mularcs<mcolor_t>; 
   
-  typedef typename HistoryGraph<mcolor_t>::twobreak_t twobreak_t; 
-  typedef typename HistoryGraph<mcolor_t>::clone_t clone_t;            
-  typedef typename HistoryGraph<mcolor_t>::insdel_t insdel_t;
-  typedef typename HistoryGraph<mcolor_t>::tandem_duplication_t tandem_duplication_t;
-  typedef typename HistoryGraph<mcolor_t>::transform_t transform_t;
+  using edge_t = std::pair<vertex_t, vertex_t>;
+  using arc_t = std::pair<vertex_t, mcolor_t>; 
+
+  using partgraph_t = typename MultiGraph::partgraph_t; 
+  using twobreak_t = typename History<mcolor_t>::twobreak_t; 
+  using clone_t =  typename History<mcolor_t>::clone_t;            
+  using insdel_t = typename History<mcolor_t>::insdel_t;
+  using tandem_duplication_t = typename History<mcolor_t>::tandem_duplication_t;
+  using transform_t = typename History<mcolor_t>::transform_t;
   
-  BreakpointGraph(std::vector<MultiGraph::genome_t> const & genomes)
+  GraphPack(std::vector<MultiGraph::genome_t> const & genomes)
   : graph(genomes)
-  , multicolors()
+  , pseudo_infinity_vertex(0)
   , number_of_splits(1)
   , canformQoo(true)
   { 
   } 
 
   /*
-   * We can change graph use event operations only (about events see in event folder). 
+   * We recomended change graph uses event operations only (about events see in event folder). 
    * If record false, your actions didn't save in history, but changed graph. BE CAREFUL! (default : true)
    * Implementation see in "apply_func_impl.hpp" file. 
    */
@@ -73,6 +74,14 @@ struct BreakpointGraph {
   bool is_mobility_edge(vertex_t const & x, vertex_t const & y) const;
   bool is_mobility_edge(vertex_t const & x, mcolor_t const & color, vertex_t const & y) const;
 
+   /*
+   * If you get identity multi breakpoint graph after your algorithm you can check some properties on graph. 
+   * Remove all verteces corresponding cloning 
+   * and all edges corresponding postponed deletion have complete color 
+   * Implementation see in "property_func_impl.hpp" file.   
+   */
+  bool is_consistency_graph() const; 
+
   /* 
    * Method calculates a mobilty score for VIEWED edge with multicolor COLOR according REMOVED edge. 
    * Mobility score is number of verteces where algorithm can form multicolor COLOR. 
@@ -92,6 +101,13 @@ struct BreakpointGraph {
    * Implementation see in "property_func_impl.hpp" file.   
    */
   std::pair<size_t, size_t> is_decrease_verteces_score(twobreak_t const & twobreak) const; 
+
+  /*
+   * Method is return a series of two-breaks, which needs for create edge (x, y)
+   * with multicolor = COLOR 
+   * If method cannot create edge, who don't know, what returned
+   */
+  transform_t take_edge_on_color(vertex_t const & x, mcolor_t const & color, vertex_t const & y) const;
 
   /*
    * get_all_multicolor_edge_[with_info]
@@ -123,16 +139,25 @@ struct BreakpointGraph {
   utility::equivalence<vertex_t> split_on_components_with_color(mcolor_t const & color) const;
 
   /*
+   * Split color on T-consistent colors.
+   * Detailed see function split_color_on_tc_color in multicolors.hpp file.  
+   */
+  std::set<mcolor_t> split_color(mcolor_t const & color) const { 
+    return multicolors.split_color_on_tc_color(color, graph.count_local_graphs() + 1);
+  }
+
+  /*
+   * Recalculate values which contains in statistics structure.
+   * Detailed see function calculate in statistics.hpp file.  
+   */
+  void update_graph_statistics() {
+    stats.calculate(*this);
+  }
+
+  /*
    * Method return all edges corresponding insertion and deletion events in graph
    */
   partgraph_t get_bad_edges() const;
-
-  /*
-   * If you get identity multi breakpoint graph after your algorithm you can check some properties on graph. 
-   * Remove all verteces corresponding cloning 
-   * and all edges corresponding postponed deletion have complete color 
-   */
-  bool check_consistency_graph() const; 
 
   /* 
    *
@@ -146,7 +171,11 @@ struct BreakpointGraph {
       number_of_splits = round;  
     } 
   } 
-  
+
+  inline vertex_t request_pseudo_infinity_vertex() {
+    return ("o" + std::to_string(pseudo_infinity_vertex++) + "o");
+  }
+
   DECLARE_GETTER(bool, canformQoo, canformQoo) 
   DECLARE_SETTER(bool, canformQoo, canformQoo)
   
@@ -154,60 +183,15 @@ struct BreakpointGraph {
   inline bool is_postponed_deletion(vertex_t const & u, vertex_t const & v) const { 
     return this->postponed_deletions.defined(u, v);
   }
-
-  /*
-   * Delegators for work with multigraph without color. 
-   * Detailed see in file multigraph.hpp
-   */
-  DECLARE_DELEGATE_PARAM_CONST_METHOD(size_t, graph, degree_vertex, vertex_t const &, degree_vertex)  
-  DECLARE_DELEGATE_PARAM_CONST_METHOD(partgraph_t const &, graph, get_partgraph, size_t, get_partgraph)  
-  DECLARE_DELEGATE_PARAM_CONST_METHOD(vertex_t, graph, get_obverse_vertex, vertex_t const &, get_obverse_vertex) 
-  DECLARE_DELEGATE_CONST_METHOD( bool, graph, is_identity, is_identity )
-  DECLARE_DELEGATE_CONST_METHOD( size_t, graph, size, size )
- 
-  typedef MultiGraph::citer verteces_citer;
-  DECLARE_CONST_ITERATOR( verteces_citer, graph, begin, cbegin )  
-  DECLARE_CONST_ITERATOR( verteces_citer, graph, end, cend )
-  DECLARE_CONST_ITERATOR( verteces_citer, graph, cbegin, cbegin )  
-  DECLARE_CONST_ITERATOR( verteces_citer, graph, cend, cend )
-
-  /*
-   * Delegators for work with multicolors. 
-   * Detailed see in graph_colors.hpp file.  
-   */
-  std::set<mcolor_t> split_color(mcolor_t const & color) const { 
-    return multicolors.split_color_on_tc_color(color, graph.count_local_graphs() + 1);
-  }
-  DECLARE_DELEGATE_CONST_METHOD(std::vector<std::set<mcolor_t> >, multicolors, get_medians_colors, get_medians_colors)  
   
-  DECLARE_DELEGATE_PARAM_METHOD(mcolor_t const&, multicolors, get_complement_color, mcolor_t const &, get_complement_color)
-  DECLARE_DELEGATE_PARAM_CONST_METHOD(bool, multicolors, is_T_consistent_color, mcolor_t const &, is_T_consistent_color)
-  DECLARE_DELEGATE_PARAM_CONST_METHOD(bool, multicolors, is_vec_T_consistent_color, mcolor_t const &, is_vec_T_consistent_color)
-  DECLARE_DELEGATE_CONST_METHOD(mcolor_t const &, multicolors, get_complete_color, get_complete_color)
-  DECLARE_DELEGATE_CONST_METHOD(mcolor_t const &, multicolors, get_root_color, get_root_color)
-  DECLARE_DELEGATE_CONST_METHOD( size_t, multicolors, count_vec_T_consitent_color, count_vec_T_consitent_color )
+public: 
+  MultiGraph graph; 
+  Multicolors<mcolor_t> multicolors;
+  History<mcolor_t> history;
 
-  typedef typename ColorsGraph<mcolor_t>::citer citer_colors; 
-  DECLARE_CONST_ITERATOR( citer_colors, multicolors, cbegin_T_consistent_color, cbegin_T_consistent_color )  
-  DECLARE_CONST_ITERATOR( citer_colors, multicolors, cend_T_consistent_color, cend_T_consistent_color )
-  DECLARE_CONST_ITERATOR( citer_colors, multicolors, cbegin_vec_T_consistent_color, cbegin_vec_T_consistent_color )  
-  DECLARE_CONST_ITERATOR( citer_colors, multicolors, cend_vec_T_consistent_color, cend_vec_T_consistent_color )
+  struct Statistics;
+  Statistics stats;
 
-  /*
-  * Delegators for work with action history. 
-  * Detailed see in file graph_history.hpp
-  */
-  typedef typename HistoryGraph<mcolor_t>::twobreak_citer twobreak_citer;
-  typedef typename HistoryGraph<mcolor_t>::twobreak_criter twobreak_criter;
-  DECLARE_DELEGATE_VOID_METHOD( history, change_history, change_history )
-  DECLARE_CONST_ITERATOR( twobreak_citer, history, cbegin_2break_history, cbegin_2break_history ) 
-  DECLARE_CONST_ITERATOR( twobreak_citer, history, cend_2break_history, cend_2break_history ) 
-  DECLARE_CONST_ITERATOR( twobreak_criter, history, crbegin_2break_history, crbegin_2break_history ) 
-  DECLARE_CONST_ITERATOR( twobreak_criter, history, crend_2break_history, crend_2break_history ) 
-
-  bool canformQ(vertex_t const & vertex, mcolor_t const & color) const;
-
-  bool supercanformQ(vertex_t const & vertex, mcolor_t const & color) const;
 private:
   mularcs_t get_all_adjacent_tc_multiedges(vertex_t const & u) const; 
   mularcs_t get_all_adjacent_vtc_multiedges(vertex_t const & u) const; 
@@ -217,22 +201,20 @@ private:
    * if return false, then COLOR cannot be formed
    * if true - who knows... 
    */
+  bool canformQ(vertex_t const & vertex, mcolor_t const & color) const;
+  bool supercanformQ(vertex_t const & vertex, mcolor_t const & color) const;
   std::set<std::tuple<vertex_t, vertex_t, mcolor_t> > canformQ2(vertex_t const & vertex, mcolor_t const & required_color) const;
-
   void check_changed_vertex(vertex_t const & vertex);
-  
+
   size_t mobility_score_relative_vertex(vertex_t const & x, mcolor_t const & color, vertex_t const & y, vertex_t const & about) const;
 
 private:
-  MultiGraph graph; 
-  ColorsGraph<mcolor_t> multicolors;
-  HistoryGraph<mcolor_t> history;
-
+  size_t pseudo_infinity_vertex;
   size_t number_of_splits; 
   bool canformQoo;  // safe choice, at later stages may change to false
 
   partgraph_t insertions;
-  partgraph_t postponed_deletions;   
+  partgraph_t postponed_deletions; //remove and never use
 
   std::unordered_map<vertex_t, std::list<size_t> > mother_verteces;
 };
@@ -240,9 +222,10 @@ private:
 #include "graph/apply_func_impl.hpp"
 #include "graph/property_func_impl.hpp"
 #include "graph/getter_func_impl.hpp"
+#include "graph/statistics.hpp"
 
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::supercanformQ(vertex_t const & vertex, mcolor_t const & required_color) const { 
+bool GraphPack<mcolor_t>::supercanformQ(vertex_t const & vertex, mcolor_t const & required_color) const { 
   assert(multicolors.is_vec_T_consistent_color(required_color));
   
   if (vertex == Infty) {
@@ -330,7 +313,7 @@ bool BreakpointGraph<mcolor_t>::supercanformQ(vertex_t const & vertex, mcolor_t 
 }
 
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::canformQ(vertex_t const & vertex, mcolor_t const & color) const {
+bool GraphPack<mcolor_t>::canformQ(vertex_t const & vertex, mcolor_t const & color) const {
   assert(multicolors.is_vec_T_consistent_color(color));
   
   if (vertex == Infty) {
@@ -351,7 +334,7 @@ bool BreakpointGraph<mcolor_t>::canformQ(vertex_t const & vertex, mcolor_t const
 }
 
 /*template<class mcolor_t>
-std::set<std::tuple<vertex_t, vertex_t, mcolor_t> > BreakpointGraph<mcolor_t>::canformQ2(vertex_t const & vertex, mcolor_t const & required_color) const { 
+std::set<std::tuple<vertex_t, vertex_t, mcolor_t> > GraphPack<mcolor_t>::canformQ2(vertex_t const & vertex, mcolor_t const & required_color) const { 
   assert(multicolors.is_vec_T_consistent_color(required_color)); 
 
   if (vertex == Infty) {
@@ -379,8 +362,9 @@ std::set<std::tuple<vertex_t, vertex_t, mcolor_t> > BreakpointGraph<mcolor_t>::c
   return edges;
 }
 */
+
 template<class mcolor_t>
-void BreakpointGraph<mcolor_t>::check_changed_vertex(vertex_t const & vertex) {
+void GraphPack<mcolor_t>::check_changed_vertex(vertex_t const & vertex) {
   std::queue<vertex_t> queue; 
   
   if (this->mother_verteces.count(vertex) != 0) { 
@@ -445,7 +429,7 @@ void BreakpointGraph<mcolor_t>::check_changed_vertex(vertex_t const & vertex) {
 }
 
 template<class mcolor_t>
-typename MultiGraph::partgraph_t BreakpointGraph<mcolor_t>::get_bad_edges() const { 
+typename MultiGraph::partgraph_t GraphPack<mcolor_t>::get_bad_edges() const { 
   partgraph_t answer; 
 
   for (auto const & edge: insertions) { 
@@ -458,26 +442,6 @@ typename MultiGraph::partgraph_t BreakpointGraph<mcolor_t>::get_bad_edges() cons
 
   return answer;
 } 
-
-template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::check_consistency_graph() const {
-  if (mother_verteces.size() != 0) {
-    return false;
-  }
-
-  size_t bad_postponed_deletion = 0;
-  for (auto const & edge : this->postponed_deletions) {
-    vertex_t const & a1 = edge.first; 
-    vertex_t const & a2 = edge.second;
-
-    mcolor_t const & color = get_all_multicolor_edge(a1, a2);
-    if (color != multicolors.get_complete_color()) {    
-      ++bad_postponed_deletion; 
-    } 
-  }
-
-  return (bad_postponed_deletion == 0);
-}
 
 /*
 

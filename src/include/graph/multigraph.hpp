@@ -4,9 +4,9 @@
 #include "defined.h" 
 
 struct MultiGraph {
-  typedef std::string orf_t;
-  typedef structure::Genome genome_t;
-  typedef utility::sym_multihashmap<vertex_t> partgraph_t;
+  using orf_t = std::string;
+  using genome_t = structure::Genome;
+  using partgraph_t = utility::sym_multihashmap<vertex_t>;
 
   explicit MultiGraph(size_t number_colors) 
   : m_local_graphs(number_colors)
@@ -100,7 +100,7 @@ struct MultiGraph {
   DECLARE_DELEGATE_CONST_METHOD( size_t, vertex_set, size, size )
   DECLARE_DELEGATE_CONST_METHOD( size_t, m_local_graphs, count_local_graphs, size )
 
-  typedef std::set<vertex_t>::const_iterator citer;
+  using citer = std::set<vertex_t>::const_iterator;
   DECLARE_CONST_ITERATOR( citer, vertex_set, begin, cbegin )  
   DECLARE_CONST_ITERATOR( citer, vertex_set, end, cend )
   DECLARE_CONST_ITERATOR( citer, vertex_set, cbegin, cbegin )  

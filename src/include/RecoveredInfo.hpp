@@ -5,23 +5,20 @@
 
 template<class graph_t>
 struct RecoveredInfo {
-  
-  typedef typename graph_t::mcolor_type mcolor_t;
-  
-  typedef typename graph_t::partgraph_t partgraph_t;
-  typedef typename graph_t::twobreak_t twobreak_t; 
-  typedef typename graph_t::transform_t transform_t;
+  using mcolor_t = typename graph_t::mcolor_type;
+  using twobreak_t = typename graph_t::twobreak_t; 
+  using transform_t = typename graph_t::transform_t;
+  using partgraph_t = typename graph_t::partgraph_t; 
 
-  typedef structure::Genome genome_t;
-  typedef structure::Chromosome chromosome_t; 
-  typedef std::tuple<transform_t, transform_t, transform_t> history_t;
+  using genome_t = structure::Genome;
+  using chromosome_t = structure::Chromosome; 
+  using history_t = std::tuple<transform_t, transform_t, transform_t>;
 
   RecoveredInfo(graph_t const & graph);
 
   DECLARE_GETTER(std::vector<genome_t>, genomes, genomes);
-  //DECLARE_GETTER(std::vector<transform_t>, transformations, history);
   
-  typedef std::map<std::pair<mcolor_t,mcolor_t>,transform_t> transform_to_color_t;
+  using transform_to_color_t = std::map<std::pair<mcolor_t, mcolor_t>, transform_t>;
   DECLARE_GETTER(transform_to_color_t, transformations, history);
 
 private: 
@@ -48,15 +45,15 @@ void RecoveredInfo<graph_t>::get_ugly_history(
     std::map<mcolor_t, partgraph_t> & local_graphs,
     std::map<mcolor_t, transform_t> & transformations) const { 
 
-  for(auto im = m_graph.cbegin_vec_T_consistent_color(); im != m_graph.cend_vec_T_consistent_color(); ++im) {
-    local_graphs.insert(std::make_pair(*im, m_graph.get_partgraph(0)));
+  for(auto im = m_graph.multicolors.cbegin_vec_T_consistent_color(); im != m_graph.multicolors.cend_vec_T_consistent_color(); ++im) {
+    local_graphs.insert(std::make_pair(*im, m_graph.graph.get_partgraph(0)));
     transformations.insert(std::make_pair(*im, transform_t())); 
   } 
-  local_graphs.insert(std::make_pair(m_graph.get_root_color(), m_graph.get_partgraph(0)));
-  transformations.insert(std::make_pair(m_graph.get_root_color(), transform_t())); 
+  local_graphs.insert(std::make_pair(m_graph.multicolors.get_root_color(), m_graph.graph.get_partgraph(0)));
+  transformations.insert(std::make_pair(m_graph.multicolors.get_root_color(), transform_t())); 
 
-  for(auto it = m_graph.crbegin_2break_history(); it != m_graph.crend_2break_history(); ++it) {
-    for(auto im = m_graph.cbegin_vec_T_consistent_color(); im != m_graph.cend_vec_T_consistent_color(); ++im) {
+  for(auto it = m_graph.history.rbegin(); it != m_graph.history.rend(); ++it) {
+    for(auto im = m_graph.multicolors.cbegin_vec_T_consistent_color(); im != m_graph.multicolors.cend_vec_T_consistent_color(); ++im) {
       if (it->get_mcolor().includes(*im)) { 
         it->inverse().apply_single(local_graphs[*im]);
       }
@@ -111,7 +108,7 @@ structure::Genome RecoveredInfo<graph_t>::get_genome(std::string const & name, p
   std::string name_chr("chr");
   size_t count = 1; 
 
-  for(vertex_t const & x : m_graph) { 
+  for(vertex_t const & x : m_graph.graph) { 
     if (processed.find(x) == processed.end()) { 
       std::unordered_set<vertex_t> chromosome_set;
       chromosome_t chromosome = get_chromosome(recovered_graph, x, chromosome_set);
@@ -139,7 +136,7 @@ structure::Chromosome RecoveredInfo<graph_t>::get_chromosome(partgraph_t const &
     }  
   };
 
-  vertex_t current = m_graph.get_obverse_vertex(x); 
+  vertex_t current = m_graph.graph.get_obverse_vertex(x); 
   vertex_t previous = x;
   chromosome_set.insert(x);
   
@@ -167,7 +164,7 @@ structure::Chromosome RecoveredInfo<graph_t>::get_chromosome(partgraph_t const &
         chromosome_set.insert(current);
         if (current != Infty) { 
           previous = current;
-          current = m_graph.get_obverse_vertex(previous); 
+          current = m_graph.graph.get_obverse_vertex(previous); 
         } 
       } 
     }
@@ -180,7 +177,7 @@ structure::Chromosome RecoveredInfo<graph_t>::get_chromosome(partgraph_t const &
       chromosome_set.insert(y);
 
       if (y != Infty) {
-        y = m_graph.get_obverse_vertex(y);
+        y = m_graph.graph.get_obverse_vertex(y);
         chromosome_set.insert(y);
         changer_lambda(y, false);
       }

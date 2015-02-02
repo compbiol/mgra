@@ -4,10 +4,10 @@
 template<class graph_t> 
 struct MoverHistory {
 
-  typedef typename graph_t::edge_t edge_t;
-  typedef typename graph_t::twobreak_t twobreak_t; 
-  typedef typename graph_t::partgraph_t partgraph_t; 
-  
+  using edge_t = typename graph_t::edge_t;
+  using twobreak_t = typename graph_t::twobreak_t; 
+  using partgraph_t = typename graph_t::partgraph_t; 
+
   MoverHistory(graph_t const & graph, partgraph_t const & b_edges) 
   : m_graph(graph)
   , bad_edges(b_edges) 
@@ -22,10 +22,10 @@ struct MoverHistory {
   template<class ClassIterator>
   bool move_insertion_to_begin(ClassIterator first, ClassIterator second) const {          
     if ((second->get_vertex(0) != Infty && second->get_vertex(1) != Infty 
-      && second->get_vertex(0) == this->m_graph.get_obverse_vertex(second->get_vertex(1)) 
+      && second->get_vertex(0) == this->m_graph.graph.get_obverse_vertex(second->get_vertex(1)) 
       && bad_edges.defined(second->get_vertex(0), second->get_vertex(1))) 
       || (second->get_vertex(2) != Infty && second->get_vertex(3) != Infty 
-      && second->get_vertex(2) == this->m_graph.get_obverse_vertex(second->get_vertex(3)) 
+      && second->get_vertex(2) == this->m_graph.graph.get_obverse_vertex(second->get_vertex(3)) 
       && bad_edges.defined(second->get_vertex(2), second->get_vertex(3)))) {
       return first_type_swap_twobreak(first, second);
     } else { 
@@ -37,13 +37,13 @@ struct MoverHistory {
   template<class ClassIterator>
   bool move_insertion_to_end(ClassIterator first, ClassIterator second) const { 
     if (first->get_vertex(0) != Infty && first->get_vertex(1) != Infty 
-      && first->get_vertex(0) == this->m_graph.get_obverse_vertex(first->get_vertex(1)) 
+      && first->get_vertex(0) == this->m_graph.graph.get_obverse_vertex(first->get_vertex(1)) 
       && bad_edges.defined(first->get_vertex(0), first->get_vertex(1))) { 
 
       return second_type_swap_twobreak(first, second); 
 
     } else if (first->get_vertex(2) != Infty && first->get_vertex(3) != Infty 
-      && first->get_vertex(2) == this->m_graph.get_obverse_vertex(first->get_vertex(3)) 
+      && first->get_vertex(2) == this->m_graph.graph.get_obverse_vertex(first->get_vertex(3)) 
       && bad_edges.defined(first->get_vertex(2), first->get_vertex(3))) {
 
       return first_type_swap_twobreak(first, second);
@@ -58,7 +58,7 @@ struct MoverHistory {
   template<class ClassIterator>
   bool move_deletion_to_begin(ClassIterator first, ClassIterator second) const { 
     if (second->get_vertex(0) != Infty && second->get_vertex(2) != Infty 
-      && second->get_vertex(0) == this->m_graph.get_obverse_vertex(second->get_vertex(2)) 
+      && second->get_vertex(0) == this->m_graph.graph.get_obverse_vertex(second->get_vertex(2)) 
       && bad_edges.defined(second->get_vertex(0), second->get_vertex(2))) { 
 
       if ((second->get_arc(0) == std::make_pair(first->get_vertex(0), first->get_vertex(2)))
@@ -71,7 +71,7 @@ struct MoverHistory {
       }
 
     } else if (second->get_vertex(1) != Infty && second->get_vertex(3) != Infty 
-      && second->get_vertex(1) == this->m_graph.get_obverse_vertex(second->get_vertex(3)) 
+      && second->get_vertex(1) == this->m_graph.graph.get_obverse_vertex(second->get_vertex(3)) 
       && bad_edges.defined(second->get_vertex(1), second->get_vertex(3))) { 
 
       if ((second->get_arc(0) == std::make_pair(first->get_vertex(0), first->get_vertex(2)))
@@ -93,10 +93,10 @@ struct MoverHistory {
   template<class ClassIterator>
   bool move_deletion_to_end(ClassIterator first, ClassIterator second) const { 
     if ((first->get_vertex(0) != Infty && first->get_vertex(2) != Infty 
-      && first->get_vertex(0) == this->m_graph.get_obverse_vertex(first->get_vertex(2)) 
+      && first->get_vertex(0) == this->m_graph.graph.get_obverse_vertex(first->get_vertex(2)) 
       && bad_edges.defined(first->get_vertex(0), first->get_vertex(2)))
       || (first->get_vertex(1) != Infty && first->get_vertex(3) != Infty 
-      && first->get_vertex(1) == this->m_graph.get_obverse_vertex(first->get_vertex(3)) 
+      && first->get_vertex(1) == this->m_graph.graph.get_obverse_vertex(first->get_vertex(3)) 
       && bad_edges.defined(first->get_vertex(1), first->get_vertex(3)))) { 
       return first_type_swap_twobreak(first, second);
     } else { 

@@ -5,13 +5,13 @@
  * Implementation of the function to get all incident edges from vertex u. 
  */
 template<class mcolor_t>
-structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_multiedges(vertex_t const & u) const {  
+structure::Mularcs<mcolor_t> GraphPack<mcolor_t>::get_all_adjacent_multiedges(vertex_t const & u) const {  
   mularcs_t current = graph.get_all_adjacent_multiedges<mularcs_t>(u);  
   return current;
 }  
 
 template<class mcolor_t>
-structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_multiedges_with_info(vertex_t const & u, bool with_bad_edge) const { 
+structure::Mularcs<mcolor_t> GraphPack<mcolor_t>::get_all_adjacent_multiedges_with_info(vertex_t const & u, bool with_bad_edge) const { 
   mularcs_t output = get_all_adjacent_multiedges(u);
   
   if (this->number_of_splits != 1) { 
@@ -34,7 +34,7 @@ structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_multied
 } 
 
 template<class mcolor_t>
-structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_tc_multiedges(vertex_t const & u) const { 
+structure::Mularcs<mcolor_t> GraphPack<mcolor_t>::get_all_adjacent_tc_multiedges(vertex_t const & u) const { 
   mularcs_t current = graph.get_all_adjacent_multiedges<mularcs_t>(u);
   
   mularcs_t split;
@@ -52,7 +52,7 @@ structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_tc_mult
 }
 
 template<class mcolor_t>
-structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_vtc_multiedges(vertex_t const & u) const { 
+structure::Mularcs<mcolor_t> GraphPack<mcolor_t>::get_all_adjacent_vtc_multiedges(vertex_t const & u) const { 
   mularcs_t current = graph.get_all_adjacent_multiedges<mularcs_t>(u);
   
   mularcs_t split;
@@ -74,12 +74,12 @@ structure::Mularcs<mcolor_t> BreakpointGraph<mcolor_t>::get_all_adjacent_vtc_mul
  * Implementation of the function to get multiocolor for edge (u, v). 
  */
 template<class mcolor_t>
-mcolor_t BreakpointGraph<mcolor_t>::get_all_multicolor_edge(vertex_t const & u, vertex_t const & v) const { 
+mcolor_t GraphPack<mcolor_t>::get_all_multicolor_edge(vertex_t const & u, vertex_t const & v) const { 
   return graph.get_all_multicolor_edge<mcolor_t>(u, v);
 }
 
 template<class mcolor_t>
-std::set<mcolor_t> BreakpointGraph<mcolor_t>::get_all_multicolor_edge_with_info(vertex_t const & u, vertex_t const & v, bool with_bad_edge) const { 
+std::set<mcolor_t> GraphPack<mcolor_t>::get_all_multicolor_edge_with_info(vertex_t const & u, vertex_t const & v, bool with_bad_edge) const { 
   assert(u != Infty || v != Infty);
 
   mcolor_t current = get_all_multicolor_edge(u, v);
@@ -107,7 +107,7 @@ std::set<mcolor_t> BreakpointGraph<mcolor_t>::get_all_multicolor_edge_with_info(
  * Implementation of the function for split graph on components
  */
 template<class mcolor_t>
-utility::equivalence<vertex_t> BreakpointGraph<mcolor_t>::split_on_components(bool not_drop_complete_edge) const { 
+utility::equivalence<vertex_t> GraphPack<mcolor_t>::split_on_components(bool not_drop_complete_edge) const { 
   utility::equivalence<vertex_t> connected_components; // connected components
 
   for(vertex_t const & x : graph) {
@@ -133,7 +133,7 @@ utility::equivalence<vertex_t> BreakpointGraph<mcolor_t>::split_on_components(bo
 }
 
 template<class mcolor_t>
-utility::equivalence<vertex_t> BreakpointGraph<mcolor_t>::split_on_components_with_color(mcolor_t const & color) const { 
+utility::equivalence<vertex_t> GraphPack<mcolor_t>::split_on_components_with_color(mcolor_t const & color) const { 
   utility::equivalence<vertex_t> connected_components; // connected components
 
   for(vertex_t const & x : graph) {

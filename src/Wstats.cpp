@@ -1,10 +1,10 @@
 #include "writer/Wstats.h"
 
-void writer::Wstats::print_all_statistics(size_t stage, Statistics<BreakpointGraph<mcolor_t> >& info, const BreakpointGraph<mcolor_t>& graph) { 
+/*void writer::Wstats::print_all_statistics(size_t stage, Statistics<GraphPack<mcolor_t> >& info, const GraphPack<mcolor_t>& graph) { 
   if (stage == 0) { 
     ofstat << "Initial graph:" << std::endl;
-    ofstat << "... Unique blocks: " << std::to_string(graph.size() / 2) << std::endl;
-    ofstat << "... Vertex: " << std::to_string(graph.size()) << std::endl;
+    ofstat << "... Unique blocks: " << std::to_string(graph.graph.size() / 2) << std::endl;
+    ofstat << "... Vertex: " << std::to_string(graph.graph.size()) << std::endl;
   }  else { 
     ofstat << "After Stage " << std::to_string(stage) << " graph:" << std::endl;
   } 
@@ -19,7 +19,7 @@ void writer::Wstats::print_all_statistics(size_t stage, Statistics<BreakpointGra
 	
   //print_fair_edges(graph, info);
   //print_estimated_dist(stage, cfg, graph);
-} 
+} */
 
 void writer::Wstats::print_complete_edges(std::vector<edge_t> const & edges) { 
   ofstat << "... complete multiedges:";
@@ -29,7 +29,7 @@ void writer::Wstats::print_complete_edges(std::vector<edge_t> const & edges) {
   ofstat << "\t(total: " << edges.size() << ")" << std::endl;
 } 
 
-void writer::Wstats::print_connected_components(const BreakpointGraph<mcolor_t>& graph) {
+void writer::Wstats::print_connected_components(const GraphPack<mcolor_t>& graph) {
   auto components = graph.split_on_components(false); 
   std::map<vertex_t, std::set<vertex_t> > const & classes = components.get_eclasses<std::set<vertex_t> >();
   std::map<size_t, size_t> stx;
@@ -74,7 +74,7 @@ void writer::Wstats::print_indel_statistics(const std::vector<std::pair<std::pai
   print_close_table();
 } 
 
-void writer::Wstats::print_history_statistics(BreakpointGraph<mcolor_t> const & graph) {
+void writer::Wstats::print_history_statistics(GraphPack<mcolor_t> const & graph) {
   auto const & bad_edges = graph.get_bad_edges();
   std::map<mcolor_t, size_t> n2br;
   std::map<mcolor_t, size_t> nins;
@@ -83,7 +83,7 @@ void writer::Wstats::print_history_statistics(BreakpointGraph<mcolor_t> const & 
   size_t ins = 0; 
   size_t del = 0;
 
-  for(auto il = graph.crbegin_2break_history(); il != graph.crend_2break_history(); ++il) {
+  for(auto il = graph.history.rbegin(); il != graph.history.rend(); ++il) {
     vertex_t const & p = il->get_vertex(0);
     vertex_t const & q = il->get_vertex(1);
     vertex_t const & x = il->get_vertex(2);
@@ -93,16 +93,16 @@ void writer::Wstats::print_history_statistics(BreakpointGraph<mcolor_t> const & 
       ++n2br[il->get_mcolor()];
       ++tbr;
     } else { 
-      if (p == graph.get_obverse_vertex(x) && bad_edges.defined(p, x)) { 
+      if (p == graph.graph.get_obverse_vertex(x) && bad_edges.defined(p, x)) { 
         ++ndel[il->get_mcolor()];
         ++del;
-      } else if (q == graph.get_obverse_vertex(y) && bad_edges.defined(q, y)) {  
+      } else if (q == graph.graph.get_obverse_vertex(y) && bad_edges.defined(q, y)) {  
         ++ndel[il->get_mcolor()];
         ++del;
-      } else if (p == graph.get_obverse_vertex(q) && bad_edges.defined(p, q)) {  
+      } else if (p == graph.graph.get_obverse_vertex(q) && bad_edges.defined(p, q)) {  
         ++nins[il->get_mcolor()];
         ++ins;
-      } else if (x == graph.get_obverse_vertex(y) && bad_edges.defined(y, x)) { 
+      } else if (x == graph.graph.get_obverse_vertex(y) && bad_edges.defined(y, x)) { 
         ++nins[il->get_mcolor()];
         ++ins;
       } else { 

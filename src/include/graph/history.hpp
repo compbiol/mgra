@@ -1,5 +1,5 @@
-#ifndef GRAPHS_HISTORY_HPP
-#define GRAPHS_HISTORY_HPP
+#ifndef HISTORY_HPP
+#define HISTORY_HPP
 
 #include "event/InsDel.hpp"
 #include "event/TwoBreak.hpp"
@@ -7,13 +7,13 @@
 #include "event/TandemDuplication.h"
 
 template<class mcolor_t>
-struct HistoryGraph { 
-  typedef event::TwoBreak<mcolor_t> twobreak_t; 
-  typedef event::Clone<mcolor_t> clone_t;            
-  typedef event::InsDel<mcolor_t> insdel_t;
-  typedef event::TandemDuplication<mcolor_t> tandem_duplication_t;
-  typedef std::list<twobreak_t> transform_t;
-
+struct History { 
+  using twobreak_t = event::TwoBreak<mcolor_t>; 
+  using clone_t =  event::Clone<mcolor_t>;            
+  using insdel_t = event::InsDel<mcolor_t>;
+  using tandem_duplication_t = event::TandemDuplication<mcolor_t>;
+  using transform_t = std::list<twobreak_t>;
+ 
   inline void save_twobreak(twobreak_t const & twobreak) {
     twobreak_history.push_back(twobreak);
     complete_history.push_back(std::make_pair(twobreak_action, twobreak_history.size() - 1)); 
@@ -47,12 +47,12 @@ struct HistoryGraph {
 
   void change_history(); 
   
-  typedef typename transform_t::const_iterator twobreak_citer;
-  typedef typename transform_t::const_reverse_iterator twobreak_criter;
-  DECLARE_CONST_ITERATOR( twobreak_citer, break2_history, cbegin_2break_history, cbegin ) 
-  DECLARE_CONST_ITERATOR( twobreak_citer, break2_history, cend_2break_history, cend ) 
-  DECLARE_CONST_ITERATOR( twobreak_criter, break2_history, crbegin_2break_history, crbegin ) 
-  DECLARE_CONST_ITERATOR( twobreak_criter, break2_history, crend_2break_history, crend ) 
+  using twobreak_citer = typename transform_t::const_iterator;
+  using twobreak_criter = typename transform_t::const_reverse_iterator;
+  DECLARE_CONST_ITERATOR( twobreak_citer, break2_history, begin, cbegin ) 
+  DECLARE_CONST_ITERATOR( twobreak_citer, break2_history, end, cend ) 
+  DECLARE_CONST_ITERATOR( twobreak_criter, break2_history, rbegin, crbegin ) 
+  DECLARE_CONST_ITERATOR( twobreak_criter, break2_history, rend, crend ) 
 
 private:
   enum type_action {insertion_action, twobreak_action, clone_action, stop_clone_action, tandem_duplication_action};
@@ -72,7 +72,7 @@ private:
 }; 
 
 /*template<class mcolor_t>
-void HistoryGraph<mcolor_t>::change_history() { 
+void History<mcolor_t>::change_history() { 
   bool isChanged = true; 
   std::vector<std::pair<type_action, size_t> > new_complete_history;
 
@@ -156,7 +156,7 @@ void HistoryGraph<mcolor_t>::change_history() {
 
 
 template<class mcolor_t>
-void HistoryGraph<mcolor_t>::change_history() {  
+void History<mcolor_t>::change_history() {  
   for (auto action = complete_history.rbegin(); action != complete_history.rend(); ++action) { 
     if (action->first == twobreak_action) {
       break2_history.push_front(twobreak_history[action->second]); 

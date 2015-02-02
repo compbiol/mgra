@@ -5,17 +5,17 @@
  * Implementation of the function about property for vertex
  */
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::is_simple_vertex(vertex_t const & v) const {
-  return (!is_duplication_vertex(v) && !is_indel_vertex(v) && (this->degree_vertex(v) == 2)); 
+bool GraphPack<mcolor_t>::is_simple_vertex(vertex_t const & v) const {
+  return (!is_duplication_vertex(v) && !is_indel_vertex(v) && (this->graph.degree_vertex(v) == 2)); 
 }  
 
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::is_have_self_loop(vertex_t const & v) const {
+bool GraphPack<mcolor_t>::is_have_self_loop(vertex_t const & v) const {
   return !(this->get_all_multicolor_edge(v, v).empty()); 
 } 
  
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::is_indel_vertex(vertex_t const & v) const {
+bool GraphPack<mcolor_t>::is_indel_vertex(vertex_t const & v) const {
   if (v == Infty) { 
     return false;
   }
@@ -27,7 +27,7 @@ bool BreakpointGraph<mcolor_t>::is_indel_vertex(vertex_t const & v) const {
 }
 
 template<class mcolor_t>  
-bool BreakpointGraph<mcolor_t>::is_duplication_vertex(vertex_t const & v) const {  
+bool GraphPack<mcolor_t>::is_duplication_vertex(vertex_t const & v) const {  
   if (v == Infty) { 
     return false;
   }
@@ -44,7 +44,7 @@ bool BreakpointGraph<mcolor_t>::is_duplication_vertex(vertex_t const & v) const 
  * Detailed about this scores see in journal paper corresponding MGRA 2.0.
  */
 template<class mcolor_t>
-size_t BreakpointGraph<mcolor_t>::mobility_score(edge_t const & viewed, mcolor_t const & color, edge_t const & removed) const {
+size_t GraphPack<mcolor_t>::mobility_score(edge_t const & viewed, mcolor_t const & color, edge_t const & removed) const {
   auto calculate_lambda = [&] (vertex_t const & target, vertex_t const & other) -> size_t {
     mularcs_t mularcs; 
     
@@ -69,7 +69,7 @@ size_t BreakpointGraph<mcolor_t>::mobility_score(edge_t const & viewed, mcolor_t
 }
 
 template<class mcolor_t>
-std::pair<size_t, size_t> BreakpointGraph<mcolor_t>::is_decrease_verteces_score(twobreak_t const & twobreak) const { 
+std::pair<size_t, size_t> GraphPack<mcolor_t>::is_decrease_verteces_score(twobreak_t const & twobreak) const { 
   auto calc_score_lambda = [&] (mularcs_t & mularcs) -> size_t { 
     vertex_t target_vertex; 
     size_t score_max = 0; 
@@ -148,7 +148,7 @@ std::pair<size_t, size_t> BreakpointGraph<mcolor_t>::is_decrease_verteces_score(
 }
 
 template<class mcolor_t>
-int BreakpointGraph<mcolor_t>::calculate_cost(vertex_t const & u, vertex_t const & v) const {
+int GraphPack<mcolor_t>::calculate_cost(vertex_t const & u, vertex_t const & v) const {
   if (u == Infty) {
     mularcs_t mularcs_v = this->get_all_adjacent_vtc_multiedges(v);
     mularcs_v.erase(u);
@@ -166,7 +166,7 @@ int BreakpointGraph<mcolor_t>::calculate_cost(vertex_t const & u, vertex_t const
   mularcs_t mularcs_u = this->get_all_adjacent_vtc_multiedges(u);
   mularcs_u.erase(v);
     
-  typedef std::tuple<vertex_t, mcolor_t, size_t> ind_acr_t; 
+  using ind_acr_t = std::tuple<vertex_t, mcolor_t, size_t>; 
   utility::equivalence<ind_acr_t> equiv; 
 
   for (auto const & arc_u : mularcs_u) { 
@@ -190,7 +190,7 @@ int BreakpointGraph<mcolor_t>::calculate_cost(vertex_t const & u, vertex_t const
 }
 
 template<class mcolor_t>
-size_t BreakpointGraph<mcolor_t>::mobility_score_relative_vertex(vertex_t const & x, mcolor_t const & color, vertex_t const & y, vertex_t const & about) const { 
+size_t GraphPack<mcolor_t>::mobility_score_relative_vertex(vertex_t const & x, mcolor_t const & color, vertex_t const & y, vertex_t const & about) const { 
   size_t answer = 0;
 
   if (this->postponed_deletions.defined(x, y) || !multicolors.is_vec_T_consistent_color(color)) {
@@ -231,7 +231,7 @@ size_t BreakpointGraph<mcolor_t>::mobility_score_relative_vertex(vertex_t const 
  * Implementation of the function for different edges property. 
  */
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::is_contain_T_consistent_color(vertex_t const & u, vertex_t const & v) const { 
+bool GraphPack<mcolor_t>::is_contain_T_consistent_color(vertex_t const & u, vertex_t const & v) const { 
   auto edge_colors = multicolors.split_color_on_tc_color(this->get_all_multicolor_edge(u, v), graph.count_local_graphs() + 1); 
   for (auto const & color : edge_colors) { 
     if (multicolors.is_T_consistent_color(color) && !multicolors.is_vec_T_consistent_color(color)) { 
@@ -242,13 +242,13 @@ bool BreakpointGraph<mcolor_t>::is_contain_T_consistent_color(vertex_t const & u
 } 
 
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::is_mobility_edge(vertex_t const & x, mcolor_t const & color, vertex_t const & y) const {
+bool GraphPack<mcolor_t>::is_mobility_edge(vertex_t const & x, mcolor_t const & color, vertex_t const & y) const {
   size_t answer = mobility_score_relative_vertex(x, color, y, x) + mobility_score_relative_vertex(x, color, y, y);
   return (answer != 0);    
 }
 
 template<class mcolor_t>
-bool BreakpointGraph<mcolor_t>::is_mobility_edge(vertex_t const & x, vertex_t const & y) const {
+bool GraphPack<mcolor_t>::is_mobility_edge(vertex_t const & x, vertex_t const & y) const {
   if (x == Infty || y == Infty) { 
     return !is_contain_T_consistent_color(x, y);
   }
@@ -274,5 +274,175 @@ bool BreakpointGraph<mcolor_t>::is_mobility_edge(vertex_t const & x, vertex_t co
 
   return (answer != 0);
 } 
+
+template<class mcolor_t>
+bool GraphPack<mcolor_t>::is_consistency_graph() const {
+  if (mother_verteces.size() != 0) {
+    return false;
+  }
+
+  size_t bad_postponed_deletion = 0;
+  for (auto const & edge : this->postponed_deletions) {
+    vertex_t const & a1 = edge.first; 
+    vertex_t const & a2 = edge.second;
+
+    mcolor_t const & color = get_all_multicolor_edge(a1, a2);
+    if (color != multicolors.get_complete_color()) {    
+      ++bad_postponed_deletion; 
+    } 
+  }
+
+  return (bad_postponed_deletion == 0);
+}
+
+/*
+ * Implementation of the function for say canform or not. 
+ * "canform" definition see in journal paper corresponding MGRA 2.0.
+ */
+
+/*
+ * Method is return a series of two-breaks, which needs for create edge (x, y)
+ * with multicolor = COLOR 
+ */
+template<class mcolor_t>
+typename GraphPack<mcolor_t>::transform_t GraphPack<mcolor_t>::take_edge_on_color(
+              vertex_t const & x, mcolor_t const & color, vertex_t const & y) const { 
+  std::list<twobreak_t> result;
+
+  if (y == Infty) {
+    mcolor_t need_color(color, get_all_multicolor_edge(x, y), mcolor_t::Difference);    
+    mularcs_t mularcs_x = get_all_adjacent_multiedges_with_info(x, false);
+    mularcs_x.erase(y);
+  
+    for (arc_t const & arc : mularcs_x) {
+      if (need_color.includes(arc.second) && multicolors.is_vec_T_consistent_color(arc.second)) {
+        twobreak_t twobreak(x, arc.first, Infty, Infty, arc.second);
+        result.push_back(twobreak);
+      } 
+    }
+  } else { 
+    mcolor_t need_color(color, get_all_multicolor_edge(x, y), mcolor_t::Difference);
+    
+    mularcs_t mularcs_x = get_all_adjacent_multiedges_with_info(x, false);
+    mularcs_x.erase(y);
+  
+    mularcs_t mularcs_y = get_all_adjacent_multiedges_with_info(y, false);
+    mularcs_y.erase(x);
+
+    using colacr_t = std::pair<std::pair<vertex_t, structure::Mcolor>, size_t>;
+
+    utility::equivalence<colacr_t> equiv; 
+    for (arc_t const & arc_x : mularcs_x) { 
+      for (arc_t const & arc_y : mularcs_y) {
+        if (need_color.includes(arc_x.second) && need_color.includes(arc_y.second)) {  
+          mcolor_t color(arc_x.second, arc_y.second, mcolor_t::Intersection);
+          if (color.size() > 0) {   
+            equiv.addrel(std::make_pair(arc_x, 0), std::make_pair(arc_y, 1));
+          }
+        }
+      } 
+    }      
+    equiv.update();
+    
+    std::map<colacr_t, std::set<colacr_t> > const & classes = equiv.get_eclasses<std::set<colacr_t> >();   
+   
+    mcolor_t temp_need_color = need_color;
+    for (auto const & color_set : classes) {
+      mularcs_t left; 
+      mularcs_t right; 
+
+      for (auto const & color : color_set.second) { 
+        if (color.second == 0) {
+          left.insert(color.first.first, color.first.second);
+        } else {
+          right.insert(color.first.first, color.first.second);
+        }
+      }
+
+      if (left.size() == 1) {
+        temp_need_color = mcolor_t(temp_need_color, left.begin()->second, mcolor_t::Difference); 
+      } else if (right.size() == 1) { 
+        temp_need_color = mcolor_t(temp_need_color, right.begin()->second, mcolor_t::Difference); 
+      } 
+    } 
+
+    if (!temp_need_color.empty()) { 
+      return result; 
+    }
+
+    temp_need_color = need_color;
+    for (auto const & color_set : classes) { 
+      std::multimap<mcolor_t, vertex_t> left; 
+      std::multimap<mcolor_t, vertex_t> right; 
+
+      for (auto const & color : color_set.second) { 
+        if (color.second == 0) {
+          left.insert(std::make_pair(color.first.second, color.first.first));
+        } else {
+          right.insert(std::make_pair(color.first.second, color.first.first));
+        } 
+      }
+    
+      if (left.size() == 1 && right.size() == 1 && left.begin()->first == right.begin()->first) {
+        assert(multicolors.is_vec_T_consistent_color(left.begin()->first)); 
+        assert(multicolors.is_vec_T_consistent_color(right.begin()->first)); 
+        if (need_color.includes(left.begin()->first)) {
+          twobreak_t twobreak(x, left.begin()->second, y, right.begin()->second, left.begin()->first);
+          temp_need_color = mcolor_t(temp_need_color, left.begin()->first, mcolor_t::Difference);
+          result.push_back(twobreak);
+        } 
+      } else if (left.size() == 1 || right.size() == 1) {  
+        if (left.size() == 1 && need_color.includes(left.begin()->first)) {
+          assert(multicolors.is_vec_T_consistent_color(left.begin()->first)); 
+          
+          std::list<twobreak_t> local_twobreaks; 
+
+          auto iter_right = right.begin();
+          while ((local_twobreaks.empty()) && (iter_right != right.end())) { 
+            local_twobreaks = take_edge_on_color(y, left.begin()->first, iter_right->second);
+            if (local_twobreaks.empty()) { 
+              ++iter_right;
+            } 
+          } 
+          
+          if (iter_right != right.end()) {
+            result.insert(result.end(), local_twobreaks.begin(), local_twobreaks.end());
+            twobreak_t twobreak(x, left.begin()->second, y, iter_right->second, left.begin()->first);
+            temp_need_color = mcolor_t(temp_need_color, left.begin()->first, mcolor_t::Difference);
+            result.push_back(twobreak);
+          }          
+        } else if (right.size() == 1 && need_color.includes(right.begin()->first)) {
+          assert(multicolors.is_vec_T_consistent_color(right.begin()->first));  
+          
+          std::list<twobreak_t> local_twobreaks;
+          auto iter_left = left.begin();
+          while ((local_twobreaks.empty()) && (iter_left != left.end())) {
+            local_twobreaks = take_edge_on_color(x, right.begin()->first, iter_left->second);
+            if (local_twobreaks.empty()) { 
+              ++iter_left;
+            } 
+          }
+
+          if (iter_left != left.end()) {
+            result.insert(result.end(), local_twobreaks.begin(), local_twobreaks.end());
+            twobreak_t twobreak(x, iter_left->second, y, right.begin()->second, right.begin()->first);
+            temp_need_color = mcolor_t(temp_need_color, right.begin()->first, mcolor_t::Difference);
+            result.push_back(twobreak);
+          }             
+        } else { 
+          ;
+        }   
+      } else { 
+        assert(left.size() == 1 || right.size() == 1); 
+      } 
+    }
+
+    if (!temp_need_color.empty()) { 
+      result.clear(); 
+    } 
+  } 
+
+  return result; 
+}
 
 #endif

@@ -49,13 +49,13 @@ private:
     	out << "(" << p << ", " << q << ") x (" << x << ", " << y << ") " << cfg::get().mcolor_to_name(event.get_mcolor()); 
 
     	if (p != Infty && q != Infty && x != Infty && y != Infty) { 
-    	  if (p == m_graph.get_obverse_vertex(x) && bad_edges.defined(p, x)) { 
+    	  if (p == m_graph.graph.get_obverse_vertex(x) && bad_edges.defined(p, x)) { 
     	    out << " # deletion"; 
-        } else if (q == m_graph.get_obverse_vertex(y) && bad_edges.defined(q, y)) {
+        } else if (q == m_graph.graph.get_obverse_vertex(y) && bad_edges.defined(q, y)) {
     	    out << " # deletion"; 
-    	  } else if (p == m_graph.get_obverse_vertex(q) && bad_edges.defined(p, q)) { 
+    	  } else if (p == m_graph.graph.get_obverse_vertex(q) && bad_edges.defined(p, q)) { 
     	    out << " # insertion"; 
-        } else if (x == m_graph.get_obverse_vertex(y) && bad_edges.defined(x, y)) {
+        } else if (x == m_graph.graph.get_obverse_vertex(y) && bad_edges.defined(x, y)) {
     	    out << " # insertion"; 
     	  } 
     	}

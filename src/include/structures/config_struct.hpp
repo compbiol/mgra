@@ -8,7 +8,7 @@
 /*This structures containes information from *.cfg file */
 template<class mcolor_t>
 struct main_config {
-  typedef event::TwoBreak<mcolor_t> twobreak_t; 
+  using twobreak_t = event::TwoBreak<mcolor_t>; 
 
   mcolor_t name_to_mcolor(std::string const & temp) const;
   std::string mcolor_to_name(mcolor_t const & temp) const;
@@ -42,23 +42,46 @@ struct main_config {
   void parse_completion(std::vector<std::string> const & input);
 
 public:  
-  size_t stages;
-  size_t rounds; 
+  /*
+   * Different strategy for build. 
+   */
+  bool is_target_build;
+  bool is_assembly_build; 
 
+  /*
+   * Switch on/off stage fo reconstruction trees
+   */
+  bool is_reconstructed_trees;
+  
+  /*
+   * Number of stage and rounds 
+   */
+  size_t rounds; 
+  size_t stages;
+
+  /*
+   * Switch on/off bruteforce stage for small components
+   */
   bool is_bruteforce;
   size_t size_component_in_bruteforce;
-  
-  bool is_reconstructed_trees;
-  typedef structure::BinaryTree<mcolor_t> phylogeny_tree_t;
-  std::vector<phylogeny_tree_t> phylotrees;
 
+  /*
+   * Switch on/off run blossom V stage
+   */
+  bool is_blossom; 
+
+  /*
+   * Switch on/off linearization algorithm
+   */
   bool is_linearization_algo;
 
-  bool is_target_build;
-  mcolor_t target_mcolor;    
-  
   std::list<twobreak_t> completion;
 
+  using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
+  std::vector<phylogeny_tree_t> phylotrees;
+
+  mcolor_t target_mcolor;    
+  
   std::string colorscheme;
 
 private: 
@@ -75,6 +98,6 @@ private:
 
 #include "structures/config_struct_impl.hpp"
 
-typedef config_common::config<main_config<structure::Mcolor> > cfg;
+using cfg = config_common::config<main_config<structure::Mcolor> >;
 
 #endif

@@ -2,7 +2,7 @@
 #define WSTATS_H_
 
 
-#include "graph/breakpoint_graph.hpp"
+#include "graph/graph_pack.hpp"
 #include "graph/estimate.h"
 #include "io/path_helper.hpp"
 #include "structures/config_struct.hpp"
@@ -33,8 +33,8 @@ struct Wstats {
     ofstat.open(path::append_path(path_to_file, name_file));
   }
 
-  void print_all_statistics(size_t stage, Statistics<BreakpointGraph<mcolor_t> >& info, BreakpointGraph<mcolor_t> const & graph); 
-  void print_history_statistics(BreakpointGraph<mcolor_t> const & graph);
+  //void print_all_statistics(size_t stage, Statistics<GraphPack<mcolor_t> >& info, GraphPack<mcolor_t> const & graph); 
+  void print_history_statistics(GraphPack<mcolor_t> const & graph);
 
   //void print_postponed_deletion_statistics(const std::map<edge_t, Mcolor>& postponed_deletions);
   //void print_bad_complete_edges(const mbgraph_with_history<Mcolor>& graph, const std::multimap<edge_t, Mcolor>& insertions);
@@ -47,7 +47,7 @@ private:
   } 
 
   void print_complete_edges(std::vector<edge_t> const & edges); 
-  void print_connected_components(const BreakpointGraph<mcolor_t>& graph);
+  void print_connected_components(const GraphPack<mcolor_t>& graph);
   void print_rear_characters(const std::vector<std::string>& info);
   void print_indel_statistics(const std::vector<std::pair<std::pair<mcolor_t, mcolor_t>, std::array<size_t, 3> > >& indel); 
 

@@ -5,33 +5,67 @@ namespace structure {
 
 template<class mcolor_t>
 struct BinaryTree { 
-  typedef std::set<mcolor_t> colors_median_t; 
+
+  struct Node { 
+    Node() 
+    : parent(nullptr) 
+    , left_child (nullptr)
+    , right_child (nullptr) 
+    { 
+    }
+
+    Node(Node* const par, std::string const & tree, 
+      std::unordered_map<std::string, size_t> const & genome_number, 
+      std::vector<std::string> const & priority_name);     
+
+    mcolor_t const & get_data() const { 
+      return data;
+    }
+
+    std::string const & get_name() const {
+      return name;
+    }
+
+    std::vector<std::string> const & get_childs() const { 
+      return childs;
+    }
+
+    Node const * get_parent() const {
+      return parent;
+    }
+
+    std::unique_ptr<Node> const & get_left_child() const { 
+      return left_child;
+    }
+
+    std::unique_ptr<Node> const & get_right_child() const { 
+      return right_child;
+    }
+
+    template<class linearizator_t>
+    void walk_and_linearizeate(
+      linearizator_t const & linearizator, 
+      std::map<mcolor_t, mcolor_t> & parent_colors,
+      std::map<mcolor_t, typename linearizator_t::partgraph_t> & graphs, 
+      std::map<mcolor_t, typename linearizator_t::transform_t> & transformations) const;
+
+    mcolor_t data;    
+  private: 
+    std::string name;   
+    std::vector<std::string> childs;
+
+    Node* const parent;    
+    std::unique_ptr<Node> left_child;    
+    std::unique_ptr<Node> right_child; 
+  };
 
   BinaryTree(std::string const & st, std::unordered_map<std::string, size_t> const & genome_number, std::vector<std::string> const & priority_name) 
   : root(new Node(nullptr, st, genome_number, priority_name))
   {
   } 
 
-  void get_nodes(std::vector<std::string>& info) const {
-    root->get_nodes(info);	
-  }
-
-  std::set<mcolor_t> build_vec_T_consistent_colors() const {
-    std::set<mcolor_t> dicolor;
-    root->get_dicolors(dicolor);
-    return dicolor;	
-  }
-
-  std::map<mcolor_t, std::string> get_name_for_colors() const {
-    std::map<mcolor_t, std::string> colors;
-    root->get_name_for_colors(colors);
-    return colors;	
-  }
-
-  std::vector<colors_median_t> get_median_colors() const { 
-    std::vector<colors_median_t> medians; 
-    root->get_median_colors(root->data, medians);
-    return medians;
+  std::unique_ptr<Node> const & get_root() const { 
+    return root;
   }
 
   template<class linearizator_t>
@@ -43,8 +77,8 @@ struct BinaryTree {
   {
     root->walk_and_linearizeate(linearizator, parent_colors, graphs, transformations);
 
-    mcolor_t left = parent_colors[root->left_child->data];
-    mcolor_t right = parent_colors[root->right_child->data];
+    mcolor_t left = parent_colors[root->get_left_child()->data];
+    mcolor_t right = parent_colors[root->get_right_child()->data];
 
     if (transformations[left].size() < transformations[right].size()) { 
       parent_colors.erase(left); 
@@ -62,49 +96,14 @@ struct BinaryTree {
   }
 
 private: 
-  struct Node { 
-    std::string name;   
-    std::vector<std::string> childs;
-    
-    mcolor_t data;
-
-    Node * const parent;    
-    std::unique_ptr<Node> left_child;    
-    std::unique_ptr<Node> right_child; 
-
-    Node() 
-    : parent(nullptr) 
-    , left_child (nullptr)
-    , right_child (nullptr) 
-    { 
-    }
-
-    Node(Node * const par, std::string const & tree, 
-      std::unordered_map<std::string, size_t> const & genome_number, 
-      std::vector<std::string> const & priority_name);     
-
-    std::string get_nodes(std::vector<std::string>& info) const;
-
-    void get_median_colors(mcolor_t const & complete_color, std::vector<colors_median_t>& medians) const; 
-    void get_dicolors(std::set<mcolor_t>& dicolor) const; 
-    void get_name_for_colors(std::map<mcolor_t, std::string>& colors) const;
-
-    template<class linearizator_t>
-    void walk_and_linearizeate(
-      linearizator_t const & linearizator, 
-      std::map<mcolor_t, mcolor_t> & parent_colors,
-      std::map<mcolor_t, typename linearizator_t::partgraph_t> & graphs, 
-      std::map<mcolor_t, typename linearizator_t::transform_t> & transformations) const;
-  };
+  std::unique_ptr<Node> root; 
 
 private: 
-  std::shared_ptr<Node> root; 
+  DECL_LOGGER("BinaryTree") 
 };
 
-}
-
 template<class mcolor_t>
-structure::BinaryTree<mcolor_t>::Node::Node(Node * const par, std::string const & tree, 
+BinaryTree<mcolor_t>::Node::Node(Node * const par, std::string const & tree, 
     std::unordered_map<std::string, size_t> const & genome_number, 
     std::vector<std::string> const & priority_name) 
 : parent(par) 
@@ -129,7 +128,7 @@ structure::BinaryTree<mcolor_t>::Node::Node(Node * const par, std::string const 
   if (new_tree[0] == '(') {
     //non-trivial tree
     if (new_tree[new_tree.size() - 1] != ')') {
-      std::cerr << "ERROR: Bad format input (sub)tree. Check count \')\'" << std::endl;
+      ERROR("Bad format input (sub)tree. Check count \')\'")
       exit(3);
     }
 
@@ -146,13 +145,13 @@ structure::BinaryTree<mcolor_t>::Node::Node(Node * const par, std::string const 
       	} 
       } 
       if (p < 0) {
-      	std::cerr << "ERROR: Bad format input (sub)tree. Check count \'(\' and \')\'" << std::endl;
+      	ERROR("Bad format input (sub)tree. Check count \'(\' and \')\'")
       	exit(3);
       }
     }
 
     if (p != 0) {
-      std::cerr << "ERROR: Bad format input (sub)tree. Check count \'(\' and \')\'" << std::endl;
+      ERROR("Bad format input (sub)tree. Check count \'(\' and \')\'")
       exit(3);
     }
 
@@ -168,7 +167,7 @@ structure::BinaryTree<mcolor_t>::Node::Node(Node * const par, std::string const 
         if (new_tree[j] == ',' || new_tree[j] == '}') {
           std::string const & str = new_tree.substr(start, j - start);
           if (genome_number.count(str) == 0) {
-          	std::cerr << "ERROR: Unknown genome in (sub)tree: " << str << std::endl;
+          	ERROR("Unknown genome in (sub)tree: " << str)
       	    exit(3);
           }
           data.insert(genome_number.find(str)->second);
@@ -183,7 +182,7 @@ structure::BinaryTree<mcolor_t>::Node::Node(Node * const par, std::string const 
       } 
     } else {
       if (genome_number.count(new_tree) == 0) {
-        std::cerr << "ERROR: Unknown genome in (sub)tree: " << new_tree << std::endl;
+        ERROR("Unknown genome in (sub)tree: " << new_tree)
       	exit(3);
       }
       data.insert(genome_number.find(new_tree)->second);
@@ -192,78 +191,6 @@ structure::BinaryTree<mcolor_t>::Node::Node(Node * const par, std::string const 
   }
 }
 
-template<class mcolor_t>
-std::string structure::BinaryTree<mcolor_t>::Node::get_nodes(std::vector<std::string>& info) const  {
-  if (!left_child && !right_child) { 
-    if (!childs.empty()) { 
-      for(auto const & lc : childs) {
-        info.push_back("\t\"" + name + "\" -> \"" + lc + "\";");
-      }
-    } 
-    return name; 
-  } 
-
-  if (left_child) {
-    std::string const & first = left_child->get_nodes(info); 
-    info.push_back("\t\"" + name + "\" -> \"" + first + "\";");
-  }
-  
-  if (right_child) {
-    std::string const & second = right_child->get_nodes(info); 
-    info.push_back("\t\"" + name + "\" -> \"" + second + "\";");
-  } 
-
-  return name;
-}
-
-template<class mcolor_t>
-void structure::BinaryTree<mcolor_t>::Node::get_dicolors(std::set<mcolor_t>& dicolor) const {
-  if (left_child) {
-    left_child->get_dicolors(dicolor);
-  }
-
-  dicolor.insert(data);
-
-  if (right_child) {
-    right_child->get_dicolors(dicolor);
-  }
-} 
-
-template<class mcolor_t>
-void structure::BinaryTree<mcolor_t>::Node::get_median_colors(mcolor_t const & complete_color, std::vector<colors_median_t>& medians) const {
-  if (left_child) { 
-    left_child->get_median_colors(complete_color, medians); 
-  }
-
-  if (right_child) { 
-    right_child->get_median_colors(complete_color, medians); 
-  }
-
-  if (left_child && right_child && this->parent != nullptr) { 
-    std::array<mcolor_t, 6> colors;  
-    colors[0] = left_child->data;
-    colors[1] = right_child->data;
-    colors[3] = this->data;
-    colors[2] = mcolor_t(complete_color, colors[3], mcolor_t::Difference);
-    colors[4] = mcolor_t(colors[2], colors[0], mcolor_t::Union);
-    colors[5] = mcolor_t(colors[2], colors[1], mcolor_t::Union);
-    medians.push_back(std::set<mcolor_t>(colors.begin(), colors.end()));
-  }
-  
-}
-    
-
-template<class mcolor_t>
-void structure::BinaryTree<mcolor_t>::Node::get_name_for_colors(std::map<mcolor_t, std::string>& colors) const {
-  if (left_child) {
-    left_child->get_name_for_colors(colors);
-  }
-
-  colors.insert(std::make_pair(data, name));
-  
-  if (right_child) {
-    right_child->get_name_for_colors(colors);
-  }
 }
 
 /*ERROR, FIXME, think about edge from root in this function*/

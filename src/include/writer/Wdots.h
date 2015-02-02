@@ -6,11 +6,12 @@
  *
  */
 namespace writer {
-  template<class graph_t, class conf_t>
-  struct Wdots { 
-    typedef typename graph_t::edge_t edge_t;
-    typedef typename graph_t::mcolor_type mcolor_t;
-    typedef typename graph_t::mularcs_t mularcs_t;
+
+template<class graph_t, class conf_t>
+struct Wdots { 
+  using mcolor_t = typename graph_t::mcolor_type;
+  using edge_t = typename graph_t::edge_t;
+  using mularcs_t = typename graph_t::mularcs_t;
 
     Wdots() 
     : m_debug(false)
@@ -40,15 +41,21 @@ namespace writer {
 
     void save_median(std::string const & name, std::vector<std::pair<edge_t, mcolor_t> > const & edges);
 
-  private: 
-    void save_dot(graph_t const & graph, std::string const & path, std::string const & dotname);
+private: 
+  using tree_t = typename structure::BinaryTree<mcolor_t>; 
+  using node_t = typename tree_t::Node; 
 
-  private: 
-    std::string m_path;
-    std::string m_colorscheme;
-    std::string m_graphname;
-    bool m_debug;
-  }; 
+  void save_dot(graph_t const & graph, std::string const & path, std::string const & dotname);
+
+  std::string get_branches_from_tree(std::unique_ptr<node_t> const & current, std::vector<std::string>& info) const; 
+
+private: 
+  std::string m_path;
+  std::string m_colorscheme;
+  std::string m_graphname;
+  bool m_debug;
+}; 
+
 } 
 
 template<class graph_t, class conf_t>
@@ -100,10 +107,10 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, std::string
 
   int infv = 0;
   std::unordered_set<vertex_t> mark; // vertex set
-  for(auto const & x : graph) { 
+  for(auto const & x : graph.graph) { 
     mularcs_t const & Mx = graph.get_all_adjacent_multiedges(x);
 
-    if (Mx.size() == 1 && Mx.union_multicolors() == graph.get_complete_color()) { 
+    if (Mx.size() == 1 && Mx.union_multicolors() == graph.multicolors.get_complete_color()) { 
       continue; // trivial cycle
     } 
 
@@ -115,7 +122,7 @@ void writer::Wdots<graph_t, conf_t>::save_dot(graph_t const & graph, std::string
 
       //std::cerr << x << " " << is_pseudo << " " << y << std::endl;
 
-      if (graph.is_vec_T_consistent_color(im->second)) { 
+      if (graph.multicolors.is_vec_T_consistent_color(im->second)) { 
         mcolor_t const & C = im->second;
         for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
           for (size_t i = 0; i < ic->second; ++i) { 
@@ -245,7 +252,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, size
 
       mularcs_t const & Mx = graph.get_all_adjacent_multiedges(x);
 
-      if (Mx.union_multicolors() == graph.get_complete_color()) { 
+      if (Mx.union_multicolors() == graph.multicolors.get_complete_color()) { 
         continue; // trivial cycle
       } 
       
@@ -257,7 +264,7 @@ void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, size
 	} 
 
 	mcolor_t const & C = im->second;
-	bool vec_T_color = graph.is_vec_T_consistent_color(C);
+	bool vec_T_color = graph.multicolors.is_vec_T_consistent_color(C);
 	for(auto ic = C.cbegin(); ic != C.cend(); ++ic) {
 	  for (size_t i = 0; i < ic->second; ++i) { 
 	    dot << "\t\"" << x << "\"\t--\t\"";
@@ -290,6 +297,33 @@ void writer::Wdots<graph_t, conf_t>::save_components(graph_t const & graph, size
 } 
 
 template<class graph_t, class conf_t>
+std::string writer::Wdots<graph_t, conf_t>::get_branches_from_tree(std::unique_ptr<node_t> const & current, std::vector<std::string>& info) const { 
+  auto const & left = current->get_left_child(); 
+  auto const & right = current->get_right_child(); 
+
+  if (!left && !right) { 
+    if (!current->get_childs().empty()) { 
+      for(auto const & lc : current->get_childs()) {
+        info.push_back("\t\"" + current->get_name() + "\" -> \"" + lc + "\";");
+      }
+    } 
+    return current->get_name(); 
+  } 
+
+  if (left) {
+    std::string const & first = get_branches_from_tree(left, info); 
+    info.push_back("\t\"" + current->get_name() + "\" -> \"" + first + "\";");
+  }
+  
+  if (right) {
+    std::string const & second = get_branches_from_tree(right, info); 
+    info.push_back("\t\"" + current->get_name() + "\" -> \"" + second + "\";");
+  } 
+
+  return current->get_name();
+}
+
+template<class graph_t, class conf_t>
 void writer::Wdots<graph_t, conf_t>::write_legend_dot() { 
   std::ofstream output(path::append_path(m_path, "legend.dot"));
 
@@ -307,7 +341,7 @@ void writer::Wdots<graph_t, conf_t>::write_legend_dot() {
 
   std::vector<std::string> info;
   for(auto const & tree : cfg::get().phylotrees) {
-    tree.get_nodes(info);
+    get_branches_from_tree(tree.get_root(), info);
   }
  
   for(auto const & str : info) {

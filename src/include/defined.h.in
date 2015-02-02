@@ -32,7 +32,7 @@
 #define MGRA_VERSION_PATCH @MGRA_VERSION_PATCH@
 
 #include <boost/algorithm/string.hpp>
-typedef std::string vertex_t;
+using vertex_t = std::string;
 vertex_t const Infty = "oo"; 
 
 #include "utility/config_singl.hpp"
@@ -45,7 +45,7 @@ vertex_t const Infty = "oo";
 #include "structures/mcolor.hpp"
 #include "structures/mularcs.hpp"
 #include "structures/genome.hpp"
-#include "structures/Tree.h"
+#include "structures/Tree.hpp"
 
 
 #endif

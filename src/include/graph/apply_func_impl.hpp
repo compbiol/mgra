@@ -6,7 +6,7 @@
  */
 
 template<class mcolor_t>
-void BreakpointGraph<mcolor_t>::apply(twobreak_t const & twobreak, bool record) { 
+void GraphPack<mcolor_t>::apply(twobreak_t const & twobreak, bool record) { 
   assert(multicolors.is_vec_T_consistent_color(twobreak.get_mcolor()));
 
   if (record) {
@@ -36,7 +36,7 @@ void BreakpointGraph<mcolor_t>::apply(twobreak_t const & twobreak, bool record) 
 } 
 
 template<class mcolor_t>
-void BreakpointGraph<mcolor_t>::apply(clone_t const & clone, bool record) { 
+void GraphPack<mcolor_t>::apply(clone_t const & clone, bool record) { 
   size_t number; 
 
   if (record) { 
@@ -55,7 +55,7 @@ void BreakpointGraph<mcolor_t>::apply(clone_t const & clone, bool record) {
       graph.add_edge(color.first, central_edge.second, mother_edge.first);
     }  
 
-    mcolor_t const & compl_color = this->get_complement_color(mother_edge.second);
+    mcolor_t const & compl_color = this->multicolors.get_complement_color(mother_edge.second);
     for (auto const & color : compl_color) {
       graph.add_edge(color.first, mother_edge.first, Infty);
     }
@@ -85,7 +85,7 @@ void BreakpointGraph<mcolor_t>::apply(clone_t const & clone, bool record) {
 } 
 
 template<class mcolor_t>
-void BreakpointGraph<mcolor_t>::apply(insdel_t const & insdel, bool record) { 
+void GraphPack<mcolor_t>::apply(insdel_t const & insdel, bool record) { 
   if (record) { 
     ;
   }
@@ -102,7 +102,7 @@ void BreakpointGraph<mcolor_t>::apply(insdel_t const & insdel, bool record) {
 }
 
 template<class mcolor_t>
-void BreakpointGraph<mcolor_t>::apply(tandem_duplication_t const & duplication, bool record) {
+void GraphPack<mcolor_t>::apply(tandem_duplication_t const & duplication, bool record) {
   if (record) {
     history.save_tandem_duplication(duplication);
   }

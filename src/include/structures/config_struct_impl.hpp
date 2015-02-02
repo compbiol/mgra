@@ -37,15 +37,22 @@ std::string main_config<mcolor_t>::mcolor_to_name(mcolor_t const & color) const 
   if (mcolor_name.find(color) != mcolor_name.end()) { 
     return mcolor_name.find(color)->second;
   } else { 
-    std::string answer = "";
-  
-    std::for_each(color.cbegin(), color.cend(), [&] (std::pair<size_t, size_t> const & col) -> void {
-      std::string const & sym = priority_name[col.first]; 
-      for(size_t i = 0; i < col.second; ++i) { 
-        answer += (sym + ",");
+    std::string answer = "{";
+    
+    if (!color.empty()) {
+      std::string const & main_sym = priority_name[color.cbegin()->first]; 
+      answer += main_sym;
+      for(size_t i = 1; i < color.cbegin()->second; ++i) { 
+        answer += ("," + main_sym);
+      } 
+
+      for (auto col = (++color.cbegin()); col != color.cend(); ++col) { 
+        std::string const & sym = priority_name[col->first]; 
+        for(size_t i = 0; i < col->second; ++i) { 
+          answer += ("," + sym);
+        } 
       }
-    });  
- 
+    } 
     answer += '}';
     return answer; 
   } 
@@ -156,10 +163,24 @@ void main_config<mcolor_t>::parse_genomes(std::vector<std::string> const & genom
 
 template<class mcolor_t>
 void main_config<mcolor_t>::parse_trees(std::vector<std::string> const & input) { 
+  using tree_t = typename structure::BinaryTree<mcolor_t>; 
+  using node_t = typename tree_t::Node; 
+  
+  std::function<void(std::unique_ptr<node_t> const &)> get_names_lambda = [&] (std::unique_ptr<node_t> const & current) -> void { 
+    if (current->get_left_child()) {
+      get_names_lambda(current->get_left_child());
+    }
+
+    mcolor_name.insert(std::make_pair(current->get_data(), current->get_name()));
+  
+    if (current->get_right_child()) {
+      get_names_lambda(current->get_right_child());
+    }
+  }; 
+
   for (auto const & str : input) {
     phylotrees.push_back(phylogeny_tree_t(str, genome_number, priority_name)); 
-    auto const & locals = phylotrees.crbegin()->get_name_for_colors();
-    mcolor_name.insert(locals.cbegin(), locals.cend());
+    get_names_lambda(phylotrees.crbegin()->get_root());
   }
 }
 

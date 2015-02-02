@@ -6,15 +6,14 @@
 template<class graph_t>
 struct Linearizator {
 
-  typedef typename graph_t::mcolor_type mcolor_t;
-  typedef typename graph_t::edge_t edge_t;
-  typedef typename graph_t::twobreak_t twobreak_t; 
-  typedef typename graph_t::transform_t transform_t;
-  typedef typename graph_t::partgraph_t partgraph_t; 
+  using mcolor_t = typename graph_t::mcolor_type;
+  using edge_t = typename graph_t::edge_t;
+  using twobreak_t = typename graph_t::twobreak_t; 
+  using transform_t = typename graph_t::transform_t;
+  using partgraph_t = typename graph_t::partgraph_t; 
   
-  typedef std::tuple<transform_t, transform_t, transform_t> history_t;
-  typedef std::pair<transform_t, transform_t> change_history_t;
-
+  using history_t = std::tuple<transform_t, transform_t, transform_t>;
+  using change_history_t = std::pair<transform_t, transform_t>;
 
   Linearizator(graph_t const & graph) 
   : m_graph(graph)
@@ -296,8 +295,8 @@ typename Linearizator<graph_t>::history_t Linearizator<graph_t>::split_history(t
     vertex_t const & x = twobreak->get_vertex(2);
     vertex_t const & y = twobreak->get_vertex(3);
 
-    if ((p != Infty && x != Infty && p == this->m_graph.get_obverse_vertex(x) && bad_edges.defined(p, x)) || 
-        (q != Infty && y != Infty && q == this->m_graph.get_obverse_vertex(y) && bad_edges.defined(q, y))) { 
+    if ((p != Infty && x != Infty && p == this->m_graph.graph.get_obverse_vertex(x) && bad_edges.defined(p, x)) || 
+        (q != Infty && y != Infty && q == this->m_graph.graph.get_obverse_vertex(y) && bad_edges.defined(q, y))) { 
       bool is_changed = true; 
       auto second_j = twobreak; 
 
@@ -343,8 +342,8 @@ typename Linearizator<graph_t>::history_t Linearizator<graph_t>::split_history(t
     vertex_t const & x = twobreak->get_vertex(2);
     vertex_t const & y = twobreak->get_vertex(3);
 
-    if ((p != Infty && q != Infty && p == this->m_graph.get_obverse_vertex(q) && bad_edges.defined(p, q)) || 
-        (x != Infty && y != Infty && x == this->m_graph.get_obverse_vertex(y) && bad_edges.defined(x, y))) {     
+    if ((p != Infty && q != Infty && p == this->m_graph.graph.get_obverse_vertex(q) && bad_edges.defined(p, q)) || 
+        (x != Infty && y != Infty && x == this->m_graph.graph.get_obverse_vertex(y) && bad_edges.defined(x, y))) {     
       bool is_changed = true; 
       auto first_j = twobreak; 
 
@@ -384,7 +383,7 @@ bool Linearizator<graph_t>::is_circular_chromosome(partgraph_t const & local_gra
 
   do { 
     previous = current; 
-    current = m_graph.get_obverse_vertex(previous);
+    current = m_graph.graph.get_obverse_vertex(previous);
     if (processed.count(current) == 0) {
       processed.insert(current);
       if (local_graph.defined(current)) {
@@ -407,7 +406,7 @@ bool Linearizator<graph_t>::is_circular_chromosome(partgraph_t const & local_gra
     for (vertex_t y = local_graph[x]; local_graph.defined(y) && (y != Infty); y = local_graph[y]) {
       processed.insert(y);
       if (y != Infty) {
-        y = m_graph.get_obverse_vertex(y);
+        y = m_graph.graph.get_obverse_vertex(y);
         processed.insert(y);
       }
     }
@@ -425,7 +424,7 @@ size_t Linearizator<graph_t>::count_circular_chromosome(partgraph_t const & loca
   std::unordered_set<vertex_t> processed;
   size_t count_chr = 0;
   
-  for (vertex_t const & x : m_graph) { 
+  for (vertex_t const & x : m_graph.graph) { 
     if (processed.count(x) == 0) { 
       std::unordered_set<vertex_t> chr_set;
       bool circular = is_circular_chromosome(local_graph, x, chr_set); 

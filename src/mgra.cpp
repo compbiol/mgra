@@ -11,7 +11,7 @@
 
 #include "reader.h"
 
-#include "algo/Algorithm.h"
+#include "algo/Algorithms.hpp"
 
 #include "io/path_helper.hpp"
 #include "logger/logger.hpp"
@@ -44,7 +44,7 @@ bool organize_output_directory(std::string const & path, bool is_debug) {
   return res;
 }
 
-void create_console_logger(std::string const & file_path, std::string const & log_filename) {
+void create_logger(std::string const & file_path, std::string const & log_filename) {
   using namespace logging;
   /*
    * Need to create proporties file for logger and use it in build. 
@@ -133,12 +133,12 @@ int main(int argc, char* argv[]) {
     return 1; 
   }  
 
-  create_console_logger(out_path_directory, LOGGER_FILENAME);
+  create_logger(out_path_directory, LOGGER_FILENAME);
 
   /*Reading problem configuration and genomes*/
-  typedef structure::Genome genome_t;
-  typedef structure::Mcolor mcolor_t;
-  typedef BreakpointGraph<mcolor_t> graph_t;
+  using genome_t = structure::Genome;
+  using mcolor_t = structure::Mcolor;
+  using graph_pack_t = GraphPack<mcolor_t>;
 
   INFO("Parse configure file")
   cfg::create_instance(path_to_cfg_file_arg.getValue());
@@ -157,68 +157,52 @@ int main(int argc, char* argv[]) {
   } 
 
   /*Do job*/
-  for(size_t i = 0; i < genomes.size(); ++i) { 
+  for (size_t i = 0; i < genomes.size(); ++i) { 
     std::ostringstream out; 
     out << "Download genome " << cfg::get().get_priority_name(i) << " with " << genomes[i].size() << " blocks.";
     INFO(out.str())
   } 
 
   INFO("Start build graph")
-  std::shared_ptr<graph_t> graph(new graph_t(genomes)); 
+  graph_pack_t graph_pack(genomes); 
   INFO("End build graph")
 
   { 
     std::ostringstream out; 
-    out << "Determine " << graph->count_vec_T_consitent_color() << " \\vec{T}-consistent colors in tree:\n"; 
-    for (auto id = graph->cbegin_vec_T_consistent_color(); id != graph->cend_vec_T_consistent_color(); ++id) {
+    out << "Determine " << graph_pack.multicolors.count_vec_T_consitent_color() << " \\vec{T}-consistent colors in tree:\n"; 
+    for (auto id = graph_pack.multicolors.cbegin_vec_T_consistent_color(); id != graph_pack.multicolors.cend_vec_T_consistent_color(); ++id) {
       out << cfg::get().mcolor_to_name(*id) << " ";  
     }
     INFO(out.str());
   } 
 
   INFO("Start algorithm for convert from breakpoint graph to identity breakpoint graph");
-  Algorithm<graph_t> main_algo(graph);
-  main_algo.init_writers(out_path_directory, "stage", debug_arg.getValue());
-  main_algo.convert_to_identity_bgraph(); 
 
-  if (!cfg::get().is_target_build && !graph->is_identity()) {
-    INFO("T-transformation is not complete. Cannot reconstruct genomes.")
-    return 1;
-  } 
-  
-  bool consist = graph->check_consistency_graph();
-  if (!cfg::get().is_target_build && !consist) {
-    INFO("We have problem with edges, corresponding postponed deletions.")
-    INFO("If you have indentity breakpoint graph after stages, please contact us.")
-    return 1;
-  } 
+  //if () { 
+  // assembly build
+  //} else 
+  if (cfg::get().is_target_build) { 
+    ; //target build - to be continue
+  } else { 
+    bool result = main_algorithm(graph_pack);
 
-  //FIXME: go from mgra cpp
-  INFO("Start to replace cloning to 2-breaks")
-  graph->change_history();
-  INFO("Finish to replace cloning to 2-breaks")
+    if (!result) { 
+      return 1;
+    }
 
-  writer::Wstats write_stats;
-  write_stats.open(out_path_directory, "history_stats.txt");
-  write_stats.print_history_statistics(*graph);
-
-  std::shared_ptr<graph_t> new_graph(new graph_t(genomes)); 
-  Algorithm<graph_t> alg(new_graph);  
-  Algorithm<graph_t>::Balance balance(new_graph);
-  balance.do_action();
-  
-  INFO("Check that history is correct");
-  for (auto br = graph->cbegin_2break_history(); br != graph->cend_2break_history(); ++br) {
-    new_graph->apply(*br);
+    //main_algo.init_writers(out_path_directory, "stage", debug_arg.getValue());
+    //writer::Wstats write_stats;
+    ///write_stats.open(out_path_directory, "history_stats.txt");
+    //write_stats.print_history_statistics(*graph);
   }
-
+    
   INFO("Start linearization genomes.")
-  RecoveredInfo<graph_t> reductant(*graph); 
+  RecoveredInfo<graph_pack_t> reductant(graph_pack); 
   INFO("Finish linearization genomes.")
 
   INFO("Save transformations in files.")
   if (!cfg::get().is_target_build) {
-    writer::Wtransformation<graph_t> writer_transform(out_path_directory, *graph); 
+    writer::Wtransformation<graph_pack_t> writer_transform(out_path_directory, graph_pack); 
     auto recover_transformations = reductant.get_history();
     for (auto const & transformation : recover_transformations) { 
       writer_transform.save_transformation(transformation.first, transformation.second);

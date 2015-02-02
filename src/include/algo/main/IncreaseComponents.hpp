@@ -1,33 +1,33 @@
 #ifndef INCREASE_NUMBER_COMPONENTS_HPP
 #define INCREASE_NUMBER_COMPONENTS_HPP
 
-template<class graph_t>
-struct Algorithm<graph_t>::IncreaseNumberComponents : public Algorithm<graph_t>::Stage {
+namespace algo { 
+
+template<class graph_pack_t>
+struct IncreaseNumberComponents : public algo::AbsStage<graph_pack_t> {
 	
-  typedef typename graph_t::mcolor_type mcolor_t;
-  typedef typename graph_t::mularcs_t mularcs_t; 
-  typedef typename graph_t::edge_t edge_t; 
+  using mcolor_t = typename graph_pack_t::mcolor_type;
+  using mularcs_t = typename graph_pack_t::mularcs_t; 
+  using edge_t = typename graph_pack_t::edge_t; 
 
-	typedef typename graph_t::twobreak_t twobreak_t;
-	typedef typename utility::equivalence<vertex_t> equiv_t;
-	typedef typename std::map<vertex_t, std::set<edge_t> > bridges_t;
+  using twobreak_t = typename graph_pack_t::twobreak_t;
+	using equiv_t = typename utility::equivalence<vertex_t>;
+	using bridges_t = typename std::map<vertex_t, std::set<edge_t> >;
 
-	explicit IncreaseNumberComponents(std::shared_ptr<graph_t> const & graph)
-	: Stage(graph) 
+	explicit IncreaseNumberComponents(size_t max_rounds = 1)
+	: AbsStage<graph_pack_t>("Increase number of components", "increase_components", max_rounds) 
 	{
 	}
 
-	bool do_action() override;
+	bool run(graph_pack_t & graph_pack) override;
 	
-	std::string get_name() override { 
-		return "Increase number of components.";
-	}
-
 private:
-	void get_specific_edges(bridges_t & regular_edges, bridges_t & irregular_edges, 
+	void get_specific_edges(graph_pack_t const & graph_pack, 
+    bridges_t & regular_edges, 
+    bridges_t & irregular_edges, 
     equiv_t & connected_components, mcolor_t const & color) const {
-    for(vertex_t const &x : *this->graph) {
-      mularcs_t const & mularcs = this->graph->get_all_adjacent_multiedges(x); 
+    for(vertex_t const & x : graph_pack.graph) {
+      mularcs_t const & mularcs = graph_pack.get_all_adjacent_multiedges(x); 
       for(auto const & arc : mularcs) {    
         if (arc.second == color) { 
           if (arc.first == Infty) { 
@@ -42,26 +42,23 @@ private:
 
 private:
   DECL_LOGGER("IncreaseNumberComponents");
-
 };
 
-template<class graph_t>
-bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() { 
-  INFO("Start stage for increasing number of components.")
-  
+template<class graph_pack_t>
+bool IncreaseNumberComponents<graph_pack_t>::run(graph_pack_t & graph_pack) {   
 	bool isChanged = false;
 	size_t number_rear = 0; // number of rearrangements 
 
 	do {
     number_rear = 0;
-    for(auto vtc = this->graph->cbegin_vec_T_consistent_color(); vtc != this->graph->cend_vec_T_consistent_color(); ++vtc) {
+    for(auto vtc = graph_pack.multicolors.cbegin_vec_T_consistent_color(); vtc != graph_pack.multicolors.cend_vec_T_consistent_color(); ++vtc) {
       bool repeat = true;
       while(repeat) {
         repeat = false;
         bridges_t regular_edges; // reg. edges between diff. connected components of color Q
         bridges_t irregular_edges; // irreg. edges of color *vtc
-        equiv_t connected_components = this->graph->split_on_components_with_color(*vtc);
-        get_specific_edges(regular_edges, irregular_edges, connected_components, *vtc); 
+        equiv_t connected_components = graph_pack.split_on_components_with_color(*vtc);
+        get_specific_edges(graph_pack, regular_edges, irregular_edges, connected_components, *vtc); 
 
         std::unordered_set<vertex_t> processed;
         // reg. edges between diff. connected components of color *vtc
@@ -80,15 +77,15 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 
             if (processed.count(connected_components[p.second]) == 0 && processed.count(connected_components[q.second]) == 0
                 && processed.count(connected_components[r.second]) == 0 && processed.count(connected_components[t.second]) == 0) { 
-              typedef std::pair<twobreak_t, twobreak_t> twobreaks_t;
+              using twobreaks_t = std::pair<twobreak_t, twobreak_t>;
 
               twobreaks_t possible_twobreaks1(twobreak_t(p, q, *vtc), twobreak_t(r, t, *vtc));              
               twobreaks_t possible_twobreaks2(twobreak_t(p, r, *vtc), twobreak_t(q, t, *vtc));
               twobreaks_t possible_twobreaks3(twobreak_t(p, t, *vtc), twobreak_t(q, r, *vtc));
               
               auto const & calc_score_lambda = [&] (twobreaks_t const & possible_twobreaks) -> int {
-                auto first_scores = this->graph->is_decrease_verteces_score(possible_twobreaks.first);
-                auto second_scores = this->graph->is_decrease_verteces_score(possible_twobreaks.second);
+                auto first_scores = graph_pack.is_decrease_verteces_score(possible_twobreaks.first);
+                auto second_scores = graph_pack.is_decrease_verteces_score(possible_twobreaks.second);
                 return ((int)(first_scores.first + second_scores.first) - (int)(first_scores.second + second_scores.second));
               };   
                
@@ -107,8 +104,8 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 
               if (flag) {
                 auto const & apply_lambda = [&] (twobreaks_t const & possible_twobreaks) -> void {
-                  this->graph->apply(possible_twobreaks.first);
-                  this->graph->apply(possible_twobreaks.second);
+                  graph_pack.apply(possible_twobreaks.first);
+                  graph_pack.apply(possible_twobreaks.second);
                   number_rear += 2;
                   repeat = true;      
                 };
@@ -138,7 +135,7 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
         			processed.insert(connected_components[p.first]); processed.insert(connected_components[p.second]);
               processed.insert(connected_components[q.second]);
               //std::cerr << p.first << " " << p.second << " " << q.first << " " << q.second << " " << genome_match::mcolor_to_name(*vtc) << std::endl;
-		    			this->graph->apply(twobreak_t(p, q, *vtc));
+		    			graph_pack.apply(twobreak_t(p, q, *vtc));
 		    			++number_rear;
 		    			repeat = true;      
         		} 
@@ -154,9 +151,9 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
 	    
 		    		for(auto ii = irregular_edges[bridges.first].cbegin(); (ii != irregular_edges[bridges.first].cend()) && !found;) {
 	      			edge_t const & ireg_edge = *ii; // edge
-	      			mcolor_t color(*vtc, this->graph->get_all_multicolor_edge(p.first, ireg_edge.first), mcolor_t::Union);
+	      			mcolor_t color(*vtc, graph_pack.get_all_multicolor_edge(p.first, ireg_edge.first), mcolor_t::Union);
 					
-  						if (color.size() > vtc->size() && this->graph->is_T_consistent_color(color)) {
+  						if (color.size() > vtc->size() && graph_pack.multicolors.is_T_consistent_color(color)) {
   							// let check what would happen with (be-)edge e=(p.first, irreg.first)
   							// if e is enriched to T-consistent color, great!
   							//std::cerr << "perfect edge is found" << std::endl;
@@ -189,7 +186,7 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
                 processed.insert(connected_components[q.first]);
 		      		} 
 		      		 
-		      		this->graph->apply(twobreak_t(p, q, *vtc));
+		      		graph_pack.apply(twobreak_t(p, q, *vtc));
 		      		++number_rear;			   
 		      		repeat = true;
 		        }
@@ -203,8 +200,9 @@ bool Algorithm<graph_t>::IncreaseNumberComponents::do_action() {
     } 
   } while (number_rear > 0); 
 
-  INFO("Finish stage for increasing number of components.")
   return isChanged; 
+} 
+
 } 
 
 #endif

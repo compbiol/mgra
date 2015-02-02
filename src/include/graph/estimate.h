@@ -1,7 +1,7 @@
 #ifndef ESTIMATE_H_
 #define ESTIMATE_H_
 
-template<class graph_t>
+/*template<class graph_t>
 struct Statistics { 
   typedef typename graph_t::mcolor_type mcolor_t;
   typedef typename graph_t::mularcs_t mularcs_t;
@@ -15,7 +15,6 @@ struct Statistics {
     count_complete_multiedges();
     count_cycles();
     count_indel_statistics();
-    build_complete_stat();
   }	      	
  
   std::array<size_t, 4> get_vertex_statistics() const {
@@ -35,10 +34,10 @@ struct Statistics {
   std::vector<edge_t> get_complete_edge() const {
     std::vector<edge_t> edges; 
     std::unordered_set<vertex_t> processed; 
-    for(vertex_t const & x : *graph) {
+    for(vertex_t const & x : graph->graph) {
       if (processed.count(x) == 0) {
         mularcs_t const & mularcs = graph->get_all_adjacent_multiedges(x);
-        if (mularcs.size() == 1 && mularcs.union_multicolors() == graph->get_complete_color()) { 
+        if (mularcs.size() == 1 && mularcs.union_multicolors() == graph->multicolors.get_complete_color()) { 
 	        edges.push_back(edge_t(x, mularcs.cbegin()->first));
           processed.insert(x); processed.insert(mularcs.cbegin()->first);
         } 
@@ -83,22 +82,22 @@ template<class graph_t>
 void Statistics<graph_t>::count_vertex_statistics() {
   vertex_statistics.fill(0);
 
-  for(auto const &x : *graph) {
+  for(auto const &x : graph->graph) {
     if (graph->is_duplication_vertex(x)) {
-	++vertex_statistics[0];
+      ++vertex_statistics[0];
     } else if (graph->is_indel_vertex(x)) {
-	++vertex_statistics[1];
+      ++vertex_statistics[1];
     } 
 
     if (graph->is_have_self_loop(x)) {
-	++vertex_statistics[2];
+      ++vertex_statistics[2];
     } 
 
     mularcs_t const & current = graph->get_all_adjacent_multiedges(x); //current is list with adjacent multiedge&
     for (auto it = current.cbegin(); it != current.cend(); ++it) {
-	if (!it->second.is_one_to_one_match()) {
-	  ++vertex_statistics[3];
-	}
+      if (!it->second.is_one_to_one_match()) {
+        ++vertex_statistics[3];
+      }
     } 
   } 
 } 
@@ -107,7 +106,7 @@ template<class graph_t>
 void Statistics<graph_t>::count_complete_multiedges() {
   std::unordered_set<std::string> processed;
 
-  for(auto const &x : *graph) {
+  for(auto const &x : graph->graph) {
     mularcs_t const & current = graph->get_all_adjacent_multiedges(x); //current is list with adjacent multiedges
 
     ++multidegree_count[current.size()]; //current.size - is degree vertex *it
@@ -152,14 +151,14 @@ template<class graph_t>
 void Statistics<graph_t>::count_cycles() { 
   std::unordered_set<vertex_t> processed;
 
-  for(auto const & x : *graph) { 
+  for(auto const & x : graph->graph) { 
     if (processed.count(x) != 0) { 
       continue; 
     } 
 
     mularcs_t const & mularcs_x = graph->get_all_adjacent_multiedges(x); 
 
-    if (!(graph->is_simple_vertex(x) && graph->get_complement_color(mularcs_x.cbegin()->second) == mularcs_x.crbegin()->second)) { 
+    if (!(graph->is_simple_vertex(x) && graph->multicolors.get_complement_color(mularcs_x.cbegin()->second) == mularcs_x.crbegin()->second)) { 
       continue;
     } 
 
@@ -215,7 +214,7 @@ void Statistics<graph_t>::build_complete_stat() {
   }; 
 
   for(auto im = compl_multiedges_count.cbegin(); im != compl_multiedges_count.cend(); ++im) {
-    mcolor_t const & current = graph->get_complement_color(im->first);  // complementary multicolor.
+    mcolor_t const & current = graph->multicolors.get_complement_color(im->first);  // complementary multicolor.
 
     if (im->first < current) {
       continue;
@@ -233,7 +232,7 @@ void Statistics<graph_t>::build_complete_stat() {
     answer[8] = calc_value(good_irrer_multiedges_count, current); 
     answer[9] = calc_value(good_irrer_multiedges_count, im->first);
 
-    mcolor_t const & complement = graph->get_complement_color(current);
+    mcolor_t const & complement = graph->multicolors.get_complement_color(current);
 
     mcolor_t first; 
     mcolor_t second;
@@ -258,15 +257,15 @@ void Statistics<graph_t>::count_indel_statistics() {
   std::map<std::pair<mcolor_t, mcolor_t>, size_t> temp;
   std::unordered_set<vertex_t > processed; 
 
-  for (auto const & a1 : *graph) {  
-    vertex_t const & a2 = graph->get_obverse_vertex(a1);
+  for (auto const & a1 : graph->graph) {  
+    vertex_t const & a2 = graph->graph.get_obverse_vertex(a1);
     mularcs_t const & mularcs = graph->get_all_adjacent_multiedges(a1);
 
     if (graph->is_indel_vertex(a1) && (processed.count(a1) == 0) && graph->is_indel_vertex(a2))  {
       processed.insert(a1); processed.insert(a2);
 
       mcolor_t const & indel_color = mularcs.union_multicolors(); 
-      mcolor_t const & bar_indel_color = graph->get_complement_color(indel_color);
+      mcolor_t const & bar_indel_color = graph->multicolors.get_complement_color(indel_color);
       assert(indel_color == graph->get_all_adjacent_multiedges(a2).union_multicolors());
 
       if (temp.count(std::make_pair(bar_indel_color, indel_color)) == 0) {
@@ -304,7 +303,7 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() {
   std::multimap<size_t, std::string> answer;
 
   for(auto im = compl_multiedges_count.cbegin(); im != compl_multiedges_count.cend(); ++im) {
-    mcolor_t const & current = graph->get_complement_color(im->first);  // complementary multicolor.
+    mcolor_t const & current = graph->multicolors.get_complement_color(im->first);  // complementary multicolor.
 
     if (im->first < current) {
       continue;
@@ -318,11 +317,11 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() {
     std::ostringstream os;
  
     os << "{";		    
-    if (graph->is_T_consistent_color(im->first)) { 
+    if (graph->multicolors.is_T_consistent_color(im->first)) { 
       os << "\\bf ";
     } 
 
-    mcolor_t const & complement = graph->get_complement_color(current);
+    mcolor_t const & complement = graph->multicolors.get_complement_color(current);
 
     mcolor_t first; 
     mcolor_t second;
@@ -355,5 +354,5 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() {
   }  	
   return output;
 } 
-
+*/
 #endif

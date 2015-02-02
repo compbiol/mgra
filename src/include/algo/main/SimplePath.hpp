@@ -1,41 +1,38 @@
 #ifndef SIMPLE_PATH_STAGE_HPP
 #define SIMPLE_PATH_STAGE_HPP
 
-template<class graph_t>
-struct Algorithm<graph_t>::ProcessSimplePath : public Algorithm<graph_t>::Stage { 
-  typedef std::list<vertex_t> path_t;
-  typedef typename graph_t::mcolor_type mcolor_t;
-  typedef typename graph_t::mularcs_t mularcs_t; 
-  typedef typename graph_t::twobreak_t twobreak_t;
+namespace algo { 
+
+template<class graph_pack_t>
+struct ProcessSimplePath : public algo::AbsStage<graph_pack_t> { 
+  using path_t = std::list<vertex_t>;
+  using mcolor_t = typename graph_pack_t::mcolor_type;
+  using mularcs_t = typename graph_pack_t::mularcs_t; 
+  using twobreak_t = typename graph_pack_t::twobreak_t;
   
-  explicit ProcessSimplePath(std::shared_ptr<graph_t> const & graph)
-  : Stage(graph) 
+  explicit ProcessSimplePath(size_t max_round)
+  : AbsStage<graph_pack_t>("Start process good and simple paths", "simple_path", max_round) 
   {
   }
 
-  bool do_action() override;
+  bool run(graph_pack_t& graph_pack) override;
   
-  std::string get_name() override { 
-    return "Process good and simple paths.";
-  }
-
 private:
-  size_t process_simple_path(path_t& path); 
+  size_t process_simple_path(graph_pack_t& graph_pack, path_t& path); 
 
 private:
   DECL_LOGGER("SimplePathStage");
 };
 
-template<class graph_t>
-bool Algorithm<graph_t>::ProcessSimplePath::do_action() { 
-  INFO("Start process good and simple paths.")
+template<class graph_pack_t>
+bool ProcessSimplePath<graph_pack_t>::run(graph_pack_t& graph_pack) { 
   bool isChanged = false; 
   size_t number_rear = 0; // number of rearrangements 
 
   do {
     number_rear = 0; 
-    for (vertex_t const & v: *(this->graph)) {  
-      if (this->graph->is_simple_vertex(v)) { 
+    for (vertex_t const & v: graph_pack.graph) {  
+      if (graph_pack.is_simple_vertex(v)) { 
         path_t path; path.push_back(v);
         std::unordered_set<vertex_t> processed;
         processed.insert(v); processed.insert(Infty); // we count oo as already processed
@@ -54,21 +51,21 @@ bool Algorithm<graph_t>::ProcessSimplePath::do_action() {
               path.push_back(current);
             } 
 
-            if (processed.find(current) == processed.end() && !this->graph->is_duplication_vertex(current)) {     
+            if (processed.find(current) == processed.end() && !graph_pack.is_duplication_vertex(current)) {     
               processed.insert(current);
-              mcolor_t previous_color = this->graph->get_all_multicolor_edge(current, previous); 
-              mularcs_t&& new_edges = this->graph->get_all_adjacent_multiedges(current);
+              mcolor_t previous_color = graph_pack.get_all_multicolor_edge(current, previous); 
+              mularcs_t&& new_edges = graph_pack.get_all_adjacent_multiedges(current);
               new_edges.erase(previous);
               mcolor_t next_color = new_edges.union_multicolors();
       
-              if ((this->graph->degree_vertex(current) == 2) && this->graph->get_complement_color(previous_color) == next_color
-                  && !this->graph->is_postponed_deletion(current, new_edges.cbegin()->first)) {
+              if ((graph_pack.graph.degree_vertex(current) == 2) && graph_pack.multicolors.get_complement_color(previous_color) == next_color
+                  && !graph_pack.is_postponed_deletion(current, new_edges.cbegin()->first)) {
 
                 auto const check_lambda = [&] (vertex_t const & v) -> bool {
                   bool flag = true; 
-                  std::set<mcolor_t> const & colors = this->graph->get_all_multicolor_edge_with_info(current, v, false); 
+                  std::set<mcolor_t> const & colors = graph_pack.get_all_multicolor_edge_with_info(current, v, false); 
                   for (auto color = colors.cbegin(); color != colors.cend() && flag; ++color) {
-                    flag = this->graph->is_vec_T_consistent_color(*color);
+                    flag = graph_pack.multicolors.is_vec_T_consistent_color(*color);
                   }     
                   return flag;
                 };
@@ -86,13 +83,13 @@ bool Algorithm<graph_t>::ProcessSimplePath::do_action() {
           return current;
         };
 
-        mularcs_t const & current = this->graph->get_all_adjacent_multiedges(v);
+        mularcs_t const & current = graph_pack.get_all_adjacent_multiedges(v);
         vertex_t const & last = find_simple_path_lambda(v, current.cbegin()->first, true);
         if (last != v) { 
           find_simple_path_lambda(v, current.crbegin()->first, false);
         }         
 
-        number_rear += process_simple_path(path);
+        number_rear += process_simple_path(graph_pack, path);
       }
     } 
 
@@ -104,8 +101,9 @@ bool Algorithm<graph_t>::ProcessSimplePath::do_action() {
   return isChanged;
 } 
 
-template<class graph_t>
-size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) {
+template<class graph_pack_t>
+size_t ProcessSimplePath<graph_pack_t>::process_simple_path(graph_pack_t& graph_pack, 
+      path_t& path) {
   size_t number_rear = 0;
 
   if (path.size() >= 4 || (path.size() == 3 && *path.begin() == *path.rbegin())) {
@@ -113,15 +111,16 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
       std::stringstream ss; 
       ss << "\nProcessing a path of length " << path.size() - 1 << "\npath:\t" << *path.begin();
       for(auto ip = ++path.cbegin(); ip != path.cend(); ++ip) ss << " -- " << *ip;
-      TRACE(ss.str()) 
+      std::string temp = ss.str();
+      TRACE(temp) 
     } 
 
     auto const count_lambda = [&] (vertex_t const & v) -> std::pair<size_t, bool> {
       size_t vtc = 0;
       bool tc = false;
-      std::set<mcolor_t> const & colors = this->graph->get_all_multicolor_edge_with_info(*(++path.begin()), v, false); 
+      std::set<mcolor_t> const & colors = graph_pack.get_all_multicolor_edge_with_info(*(++path.begin()), v, false); 
       for (mcolor_t const & color : colors) {
-        if (this->graph->is_vec_T_consistent_color(color)) { 
+        if (graph_pack.multicolors.is_vec_T_consistent_color(color)) { 
           ++vtc;
         } else { 
           tc = true;
@@ -137,18 +136,18 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
 
     if ((!first_edge.second && second_edge.second) 
       || (!first_edge.second && first_edge.first == std::min(first_edge.first, second_edge.first))) { 
-      process_color = this->graph->get_all_multicolor_edge(*(++path.begin()), *path.begin());
-      process_colors = this->graph->get_all_multicolor_edge_with_info(*(++path.begin()), *path.begin(), false);
+      process_color = graph_pack.get_all_multicolor_edge(*(++path.begin()), *path.begin());
+      process_colors = graph_pack.get_all_multicolor_edge_with_info(*(++path.begin()), *path.begin(), false);
     } else if ((first_edge.second && !second_edge.second)
       || (!second_edge.second && second_edge.first== std::min(first_edge.first, second_edge.first))) { 
-      process_color = this->graph->get_all_multicolor_edge(*(++path.begin()), *(++++path.begin()));
-      process_colors = this->graph->get_all_multicolor_edge_with_info(*(++path.begin()), *(++++path.begin()), false);
+      process_color = graph_pack.get_all_multicolor_edge(*(++path.begin()), *(++++path.begin()));
+      process_colors = graph_pack.get_all_multicolor_edge_with_info(*(++path.begin()), *(++++path.begin()), false);
     } 
     
     //std::cerr << "Process color " << genome_match::mcolor_to_name(process_color) << std::endl;
 
     if ((path.size() % 2 != 0) && (*path.begin() != *path.rbegin())) {
-      if (process_color != this->graph->get_all_multicolor_edge(*(++path.begin()), *path.begin())) { 
+      if (process_color != graph_pack.get_all_multicolor_edge(*(++path.begin()), *path.begin())) { 
         TRACE("Erase first")
         path.erase(path.begin());
       } else {
@@ -159,15 +158,15 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
 
     if (*path.begin() == *path.rbegin()) {
       if (path.size() % 2 == 0) {
-        if (process_color == this->graph->get_all_multicolor_edge(*(++path.begin()), *path.begin())) {
+        if (process_color == graph_pack.get_all_multicolor_edge(*(++path.begin()), *path.begin())) {
           TRACE("... semi-cycle, fusion applied");
           vertex_t const & self_v = *(path.begin());
           vertex_t const & x0 = *(++path.begin());
           vertex_t const & y0 = *(++path.rbegin());
 
-          std::set<mcolor_t> const & colors = this->graph->get_all_multicolor_edge_with_info(x0, self_v, false);
+          std::set<mcolor_t> const & colors = graph_pack.get_all_multicolor_edge_with_info(x0, self_v, false);
           for (mcolor_t const & color : colors) {
-            this->graph->apply(twobreak_t(self_v, x0, self_v, y0, color));
+            graph_pack.apply(twobreak_t(self_v, x0, self_v, y0, color));
             ++number_rear;
           }
 
@@ -179,9 +178,9 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
           vertex_t const & y0 = *(++path.rbegin());
           vertex_t const & y1 = *(++++path.rbegin());
 
-          std::set<mcolor_t> const & colors = this->graph->get_all_multicolor_edge_with_info(y0, y1, false);
+          std::set<mcolor_t> const & colors = graph_pack.get_all_multicolor_edge_with_info(y0, y1, false);
           for (mcolor_t const & color : colors) {
-            this->graph->apply(twobreak_t(y0, y1, self_v, self_v, color));
+            graph_pack.apply(twobreak_t(y0, y1, self_v, self_v, color));
             ++number_rear;
           }
 
@@ -197,7 +196,7 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
       }
     }
   
-    mcolor_t current_color = this->graph->get_all_multicolor_edge(*(++path.begin()), *path.begin());
+    mcolor_t current_color = graph_pack.get_all_multicolor_edge(*(++path.begin()), *path.begin());
     while (process_color != current_color) {
       // multicolor of (z1,z2). N.B.: x2 is NOT oo
       TRACE("... multicolors of first and second multiedges: ");
@@ -227,7 +226,7 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
           }
         }
       }
-      current_color = this->graph->get_all_multicolor_edge(*(++path.begin()), *path.begin());
+      current_color = graph_pack.get_all_multicolor_edge(*(++path.begin()), *path.begin());
     }
 
     // x1 -- x2 -- x3 -- ... -- x2k
@@ -241,7 +240,7 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
     
     while (z3 != path.end()) {
       for (mcolor_t const & color : process_colors) {
-      	this->graph->apply(twobreak_t(*z0, *z1, *z3, *z2, color));
+      	graph_pack.apply(twobreak_t(*z0, *z1, *z3, *z2, color));
       	++number_rear;     
       } 
       z1 = z3++;
@@ -255,4 +254,5 @@ size_t Algorithm<graph_t>::ProcessSimplePath::process_simple_path(path_t& path) 
   return number_rear;
 }
 
+} 
 #endif

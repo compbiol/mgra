@@ -333,7 +333,7 @@ std::vector<std::string> Statistics<graph_t>::get_compl_stat() {
       second = current;
     }
 
-    os <<  cfg::get().mcolor_to_name(first) << " + "  <<  cfg::get().mcolor_to_name(second) << "} & " 
+1    os <<  cfg::get().mcolor_to_name(first) << " + "  <<  cfg::get().mcolor_to_name(second) << "} & " 
       // multiedges
        << m1 << " + " << m2 << " = " << m1 + m2 << " & " 
       // simple vertices

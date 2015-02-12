@@ -42,6 +42,9 @@ struct main_config {
   void parse_completion(std::vector<std::string> const & input);
 
 public:  
+  bool is_debug; 
+  std::string out_path_to_debug_dir; 
+
   /*
    * Different strategy for build. 
    */
@@ -60,15 +63,15 @@ public:
   size_t stages;
 
   /*
+   * Switch on/off run blossom V stage
+   */
+  bool is_blossom; 
+
+  /*
    * Switch on/off bruteforce stage for small components
    */
   bool is_bruteforce;
   size_t size_component_in_bruteforce;
-
-  /*
-   * Switch on/off run blossom V stage
-   */
-  bool is_blossom; 
 
   /*
    * Switch on/off linearization algorithm

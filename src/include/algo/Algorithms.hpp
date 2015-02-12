@@ -20,8 +20,7 @@
 
 //#include "algo/linearization/Linearization.hpp"
 
-#include "writer/Wstats.h"
-#include "writer/Wdots.h"
+#include "writer/txt_stat.hpp"
 
 /*
  * This pipeline uses in main converter, when avaliable
@@ -30,7 +29,7 @@
 template<class graph_pack_t>
 bool main_algorithm(graph_pack_t & graph_pack) { 
   using namespace algo; 
-  StageManager<graph_pack_t> algorithm(cfg::get().rounds, {true, ""});
+  StageManager<graph_pack_t> algorithm(cfg::get().rounds, {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
 
   //add in constructor number of rounds for help to run
   algorithm.add_stage(new Balance<graph_pack_t>(1));
@@ -38,20 +37,20 @@ bool main_algorithm(graph_pack_t & graph_pack) {
   algorithm.add_stage(new ProcessFourCycles<graph_pack_t>(1)); 
   algorithm.add_stage(new ProcessFairEdge<graph_pack_t>(3));
   algorithm.add_stage(new ProcessClone<graph_pack_t>(3));
-  //algorithm.add_stage(new ProcessTwoBreakAndClone<graph_pack_t>(3));
+  algorithm.add_stage(new ProcessTwoBreakAndClone<graph_pack_t>(3));
   algorithm.add_stage(new IncreaseNumberComponents<graph_pack_t>(1));
 
   algorithm.add_poststage(new ChangeCanformInfinity<graph_pack_t>());
-
-  if (!cfg::get().completion.empty()) { 
-    algorithm.add_poststage(new ProcessComplection<graph_pack_t>(cfg::get().completion));
-  } 
 
   //FIXME
   if (cfg::get().is_bruteforce) { 
     algorithm.add_poststage(new ProcessWithBlossomV<graph_pack_t>());
     //algorithm.add_poststage(new BruteForce<graph_pack_t>(25));
   }
+
+  if (!cfg::get().completion.empty()) { 
+    algorithm.add_poststage(new ProcessComplection<graph_pack_t>(cfg::get().completion));
+  } 
 
   algorithm.run(graph_pack);
 
@@ -71,7 +70,7 @@ bool main_algorithm(graph_pack_t & graph_pack) {
   INFO("Start to replace cloning to 2-breaks")
   graph_pack.history.change_history();
   INFO("Finish to replace cloning to 2-breaks")
-
+   
   return true;
 }
 
@@ -116,12 +115,12 @@ bool Algorithm<graph_pack_t>::main_algorithm(graph_pack_t & graph_pack) {
     if (isChanged) {
       //Statistics<graph_t> stat(graph);
       //write_stats.print_all_statistics(st, stat, *graph);
-      write_dots.save_dot(graph_pack, st);
+      write_dots.save_bp_graph(graph_pack, st);
     } 
   };
 
   saveInfoLambda(stage++);
-  write_dots.write_legend_dot();
+  write_dots.save_subtrees();
   
   if (cfg::get().stages >= 1) { 
     graph_pack.update_number_of_splits(3);  

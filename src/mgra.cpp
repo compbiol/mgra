@@ -142,7 +142,9 @@ int main(int argc, char* argv[]) {
 
   INFO("Parse configure file")
   cfg::create_instance(path_to_cfg_file_arg.getValue());
-  
+  cfg::get_writable().is_debug = debug_arg.getValue();
+  cfg::get_writable().out_path_to_debug_dir = path::append_path(out_path_directory, "debug");
+
   if (cfg::get().get_count_genomes() < 2) {
     ERROR("At least two input genomes required")
     return 1;
@@ -191,9 +193,6 @@ int main(int argc, char* argv[]) {
     }
 
     //main_algo.init_writers(out_path_directory, "stage", debug_arg.getValue());
-    //writer::Wstats write_stats;
-    ///write_stats.open(out_path_directory, "history_stats.txt");
-    //write_stats.print_history_statistics(*graph);
   }
     
   INFO("Start linearization genomes.")

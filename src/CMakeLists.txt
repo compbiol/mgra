@@ -10,10 +10,10 @@ set (MGRA_VERSION_MAJOR 2)
 set (MGRA_VERSION_MINOR 2)
 set (MGRA_VERSION_PATCH 1)
 
-set(MGRA_SOURCE mgra.cpp
-	reader.cpp
-	Wstats.cpp
-   )
+set(MGRA_SOURCE mgra.cpp reader.cpp)
+
+#	Wstats.cpp
+
 
 configure_file (
   ${PROJECT_SOURCE_DIR}/include/defined.h.in

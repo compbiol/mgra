@@ -1,6 +1,9 @@
 #ifndef STAGE_MANAGER_HPP
 #define STAGE_MANAGER_HPP
 
+#include "writer/txt_stat.hpp" 
+#include "writer/GraphDot.hpp" 
+
 namespace algo { 
 
 template<class graph_pack_t> 
@@ -75,49 +78,64 @@ private:
   std::vector<std::unique_ptr<AbsStage<graph_pack_t> > > poststages;
 
   DebugPolicy debug_policy;
-  DECL_LOGGER("StageManager");
   size_t number_of_rounds; 
+
+private: 
+  DECL_LOGGER("StageManager");
 };
 
 template<class graph_pack_t> 
 void StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
-	if (debug_policy.is_save_debug) { 
-		;//save stage 0 
+  writer::TXT_statistics<typename graph_pack_t::Statistics> debug_stat; 
+  writer::GraphDot<graph_pack_t> debug_dots; 
+
+  size_t num_stage = 0;
+  bool isChanged = true; 
+  auto update_lambda = [&] () -> void { 
+    if (isChanged && debug_policy.is_save_debug) { 
+      graph_pack.update_graph_statistics();
+      debug_stat.print_all_statistics(num_stage++, graph_pack.stats);
+      debug_dots.save_bp_graph(graph_pack, num_stage - 1);
+    }
+  };
+	
+  if (debug_policy.is_save_debug) { 
+    debug_stat.open(debug_policy.path_to_save);
+    debug_dots.open(debug_policy.path_to_save);
+    debug_dots.save_subtrees();
+    update_lambda();
 	}
 
-  bool isChanged = true; 
   while (isChanged) {
     isChanged = false; 
 
     for (size_t rounds = 1; rounds <= number_of_rounds && !isChanged; ++rounds) {  
       INFO("Start work in rounds " << rounds);
       graph_pack.update_number_of_splits(rounds);
+      
       for (auto it_stage = main_stages.begin(); it_stage != main_stages.end() && !isChanged; ++it_stage) {        
         AbsStage<graph_pack_t> * stage = it_stage->get();
         if (rounds <= stage->get_max_round()) {        
           INFO("STAGE == " << stage->name());  
-          isChanged = stage->run(graph_pack);
- 
-          if (isChanged && debug_policy.is_save_debug) { 
-            ;//stage->save(g, saves_policy_.save_to_);
-          }
+          isChanged = stage->run(graph_pack); 
+          update_lambda();
         }
       }
+
     } 
 
     if (!isChanged) {
       graph_pack.update_number_of_splits(3);
+
       for (auto it_stage = poststages.begin(); it_stage != poststages.end() && !isChanged; ++it_stage) {        
         AbsStage<graph_pack_t> * stage = it_stage->get();
         INFO("POSTSTAGE == " << stage->name());    
         isChanged = stage->run(graph_pack);
+        update_lambda();
       }
     }
-  } 
 
-  if (debug_policy.is_save_debug) { 
-		;//save last graph and statistics  
-	}
+  } 
 }
 
 }

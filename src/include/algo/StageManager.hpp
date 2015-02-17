@@ -8,7 +8,6 @@ namespace algo {
 
 template<class graph_pack_t> 
 struct StageManager {  
-
   struct DebugPolicy {
     bool is_save_debug;
     std::string path_to_save;
@@ -33,36 +32,24 @@ struct StageManager {
     assert(rounds > 0 && rounds <= 3);
   }
 
-	void add_prestage(algo::AbsStage<graph_pack_t>* stage) { 
-		prestages.push_back(std::unique_ptr<algo::AbsStage<graph_pack_t> >(stage));
-    prestages.back()->m_parent = this;
-	}
+  void add_stage(kind_stage stage);
 
-  void add_stage(algo::AbsStage<graph_pack_t>* stage) {
-    main_stages.push_back(std::unique_ptr<algo::AbsStage<graph_pack_t> >(stage));
-    main_stages.back()->m_parent = this;
-  }
-
-  void add_poststage(algo::AbsStage<graph_pack_t>* stage) { 
-		poststages.push_back(std::unique_ptr<algo::AbsStage<graph_pack_t> >(stage));
-    poststages.back()->m_parent = this;
-	}
-
-	void add_prestage(std::initializer_list<AbsStage<graph_pack_t>* > stages) {
-    for (auto it = stages.begin(); it = stages.end(); ++it) {
-    	add_prestage(*it);
-    }
+  void add_stage(AbsStage<graph_pack_t>* stage) {
+    if (stage->get_stage_type() == pre_stage_t) { 
+      prestages.push_back(std::unique_ptr<algo::AbsStage<graph_pack_t> >(stage));
+      prestages.back()->m_parent = this;
+    } else if (stage->get_stage_type() == round_stage_t) {
+      main_stages.push_back(std::unique_ptr<algo::AbsStage<graph_pack_t> >(stage));
+      main_stages.back()->m_parent = this;
+    } else if (stage->get_stage_type() == post_stage_t) {
+      poststages.push_back(std::unique_ptr<algo::AbsStage<graph_pack_t> >(stage));
+      poststages.back()->m_parent = this;
+    } 
   }
 
   void add_stage(std::initializer_list<AbsStage<graph_pack_t>* > stages) {
     for (auto it = stages.begin(); it = stages.end(); ++it) {
     	add_stage(*it);
-    }
-  }
-
-	void add_poststage(std::initializer_list<AbsStage<graph_pack_t>* > stages) {
-    for (auto it = stages.begin(); it = stages.end(); ++it) {
-    	add_poststage(*it);
     }
   }
 
@@ -109,6 +96,16 @@ void StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
   while (isChanged) {
     isChanged = false; 
 
+    if (!isChanged) {
+      graph_pack.update_number_of_splits(1);
+      for (auto it_stage = prestages.begin(); it_stage != prestages.end() && !isChanged; ++it_stage) {        
+        AbsStage<graph_pack_t> * stage = it_stage->get();
+        INFO("PRESTAGE == " << stage->name());    
+        isChanged = stage->run(graph_pack);
+        update_lambda();
+      }
+    }
+
     for (size_t rounds = 1; rounds <= number_of_rounds && !isChanged; ++rounds) {  
       INFO("Start work in rounds " << rounds);
       graph_pack.update_number_of_splits(rounds);
@@ -121,12 +118,10 @@ void StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
           update_lambda();
         }
       }
-
     } 
 
     if (!isChanged) {
       graph_pack.update_number_of_splits(3);
-
       for (auto it_stage = poststages.begin(); it_stage != poststages.end() && !isChanged; ++it_stage) {        
         AbsStage<graph_pack_t> * stage = it_stage->get();
         INFO("POSTSTAGE == " << stage->name());    
@@ -139,5 +134,5 @@ void StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
 }
 
 }
-
+   
 #endif

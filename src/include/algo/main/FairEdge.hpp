@@ -14,7 +14,7 @@ struct ProcessFairEdge : public algo::AbsStage<graph_pack_t> {
   using twobreak_t = typename graph_pack_t::twobreak_t;
   
   explicit ProcessFairEdge(size_t max_round)
-  : algo::AbsStage<graph_pack_t>("Process fair edges", "fair_edge", max_round) 
+  : algo::AbsStage<graph_pack_t>("Process fair edges", "fair_edge", round_stage_t, max_round) 
   {
   }
   

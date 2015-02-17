@@ -10,7 +10,7 @@ struct Balance : public algo::AbsStage<graph_pack_t> {
   using insdel_t = typename graph_pack_t::insdel_t;
   
   explicit Balance(size_t max_round = 1)
-  : AbsStage<graph_pack_t>("Balance graph and remove insertions and deletions event.", "balance", max_round)
+  : AbsStage<graph_pack_t>("Balance graph and remove insertions and deletions event.", "balance", pre_stage_t, max_round)
   {
   }
 

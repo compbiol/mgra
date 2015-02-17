@@ -5,8 +5,8 @@ namespace event {
 
 template<class mcolor_t>
 struct InsDel {
-  typedef typename mcolor_t::citer citer; 
-	typedef std::pair<vertex_t, vertex_t> edge_t;
+  using citer = typename mcolor_t::citer; 
+	using edge_t = std::pair<vertex_t, vertex_t>;
   
   InsDel(edge_t const & edge, mcolor_t const & multicolor, bool is_insertion = true)
   : m_edge(edge) 

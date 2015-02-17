@@ -65,8 +65,14 @@ int main(int argc, char* argv[]) {
   /*Reading flags*/
   try {  
 
-  TCLAP::CmdLine cmd("MGRA (Multiple Genome Rearrangements & Ancestors) (c) 2008-2014 by Pavel Avdeyev, Shuai Jiang, Max Alekseyev. Distributed under GNU GENERAL PUBLIC LICENSE license.", ' ', VERSION);
+  TCLAP::CmdLine cmd("MGRA (Multiple Genome Rearrangements & Ancestors) (c) 2008-2015 by Pavel Avdeyev, Shuai Jiang, Max Alekseyev. Distributed under GNU GENERAL PUBLIC LICENSE license.", ' ', VERSION);
 
+  TCLAP::SwitchArg target_arg("t",
+    "target",
+    "Switch on target reconstruction algorithm",
+    cmd,
+    false);
+  
   TCLAP::ValueArg<std::string> path_to_cfg_file_arg("c",
     "config",
     "Input configure file",
@@ -141,9 +147,15 @@ int main(int argc, char* argv[]) {
   using graph_pack_t = GraphPack<mcolor_t>;
 
   INFO("Parse configure file")
-  cfg::create_instance(path_to_cfg_file_arg.getValue());
   cfg::get_writable().is_debug = debug_arg.getValue();
   cfg::get_writable().out_path_to_debug_dir = path::append_path(out_path_directory, "debug");
+  if (target_arg.getValue()) { 
+    cfg::get_writable().how_build = target_algo;
+  } else { 
+    cfg::get_writable().how_build = default_algo;
+  }
+  
+  cfg::create_instance(path_to_cfg_file_arg.getValue());
 
   if (cfg::get().get_count_genomes() < 2) {
     ERROR("At least two input genomes required")
@@ -158,13 +170,13 @@ int main(int argc, char* argv[]) {
     genomes = reader::read_grimm(path_to_blocks_grimm_file_arg.getValue());
   } 
 
-  /*Do job*/
   for (size_t i = 0; i < genomes.size(); ++i) { 
     std::ostringstream out; 
     out << "Download genome " << cfg::get().get_priority_name(i) << " with " << genomes[i].size() << " blocks.";
     INFO(out.str())
   } 
 
+  /*Do job*/
   INFO("Start build graph")
   graph_pack_t graph_pack(genomes); 
   INFO("End build graph")
@@ -178,21 +190,15 @@ int main(int argc, char* argv[]) {
     INFO(out.str());
   } 
 
-  INFO("Start algorithm for convert from breakpoint graph to identity breakpoint graph");
+  bool result = false;
+  if (cfg::get().how_build == default_algo) { 
+    result = main_algorithm(graph_pack);
+  } else if (cfg::get().how_build == target_algo) { 
+    ;
+  } 
 
-  //if () { 
-  // assembly build
-  //} else 
-  if (cfg::get().is_target_build) { 
-    ; //target build - to be continue
-  } else { 
-    bool result = main_algorithm(graph_pack);
-
-    if (!result) { 
-      return 1;
-    }
-
-    //main_algo.init_writers(out_path_directory, "stage", debug_arg.getValue());
+  if (!result) { 
+    return 1;
   }
     
   INFO("Start linearization genomes.")
@@ -200,7 +206,7 @@ int main(int argc, char* argv[]) {
   INFO("Finish linearization genomes.")
 
   INFO("Save transformations in files.")
-  if (!cfg::get().is_target_build) {
+  if (cfg::get().how_build == default_algo) {
     writer::Wtransformation<graph_pack_t> writer_transform(out_path_directory, graph_pack); 
     auto recover_transformations = reductant.get_history();
     for (auto const & transformation : recover_transformations) { 
@@ -211,7 +217,7 @@ int main(int argc, char* argv[]) {
 
   INFO("Save ancestor genomes in files.")
   writer::Wgenome<genome_t> writer_genome(path::append_path(out_path_directory, "genomes"));
-  writer_genome.save_genomes(reductant.get_genomes(), !cfg::get().is_target_build); 
+  writer_genome.save_genomes(reductant.get_genomes(), (cfg::get().how_build == default_algo)); 
 
   std::string path_to_logfile = path::append_path(out_path_directory, LOGGER_FILENAME);
   INFO("MGRA log can be found here " << path_to_logfile)

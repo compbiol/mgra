@@ -5,9 +5,9 @@ namespace event {
 
 template<class mcolor_t>
 struct Clone {
-  typedef structure::Mularcs<mcolor_t> mularcs_t; 
-  typedef std::pair<vertex_t, mcolor_t> arc_t;
-  typedef std::pair<vertex_t, vertex_t> edge_t;
+  using mularcs_t = structure::Mularcs<mcolor_t>; 
+  using arc_t = std::pair<vertex_t, mcolor_t>;
+  using edge_t = std::pair<vertex_t, vertex_t>;
 
   Clone() 
   : m_with_pseudo_vertex(false)

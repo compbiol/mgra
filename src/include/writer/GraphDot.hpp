@@ -74,7 +74,7 @@ void GraphDot<graph_pack_t>::save_bp_graph(graph_pack_t const & graph_pack, size
           draw_multiedge(dot, x, *(++split_colors.cbegin()), edge.first, "");           
         } else { 
           size_t number_splits = graph_pack.split_color(edge.second).size();
-          draw_multiedge(dot, x, *(++split_colors.cbegin()), edge.first, "label=" + std::to_string(number_splits), true);            
+          draw_multiedge(dot, x, edge.second, edge.first, "label=" + std::to_string(number_splits), true);            
         }
       } 
     }
@@ -93,6 +93,7 @@ template<class graph_pack_t>
 void GraphDot<graph_pack_t>::draw_multiedge(std::ofstream & dot, vertex_t const & x, mcolor_t const & color, vertex_t const & y, 
         std::string const & proporties, bool is_label_proporties) { 
   bool is_write_proporties = false; 
+
   for (auto const & match : color) {
     for (size_t i = 0; i < match.second; ++i) { 
       dot << "\t\"" << x << "\"\t--\t\"";

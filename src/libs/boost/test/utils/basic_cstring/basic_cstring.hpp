@@ -136,7 +136,7 @@ public:
     self_type       substr( size_type beg_index, size_type end_index = npos ) const;
 
 private:
-    static self_type default_trim_ex();
+    static self_type default_algorim_ex();
 
     // Data members
     iterator        m_begin;
@@ -302,7 +302,7 @@ inline basic_cstring<CharT>&
 basic_cstring<CharT>::trim_left( basic_cstring exclusions )
 {
     if( exclusions.is_empty() )
-        exclusions = default_trim_ex();
+        exclusions = default_algorim_ex();
 
     iterator it;
     for( it = begin(); it != end(); ++it ) {
@@ -346,7 +346,7 @@ inline basic_cstring<CharT>&
 basic_cstring<CharT>::trim_right( basic_cstring exclusions )
 {
     if( exclusions.is_empty() )
-        exclusions = default_trim_ex();
+        exclusions = default_algorim_ex();
 
     iterator it;
 
@@ -568,7 +568,7 @@ basic_cstring<CharT>::substr( size_type beg_index, size_type end_index ) const
 
 template<typename CharT>
 inline basic_cstring<CharT>
-basic_cstring<CharT>::default_trim_ex()
+basic_cstring<CharT>::default_algorim_ex()
 {
     static CharT ws[3] = { CharT(' '), CharT('\t'), CharT('\n') }; // !! wide case
 

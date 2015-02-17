@@ -5,8 +5,8 @@ namespace utility {
 
 template<class item_class, class Hash = std::hash<item_class> >
 struct sym_multihashmap: public std::unordered_multimap<item_class, item_class, Hash> {
-  typedef std::unordered_multimap<item_class, item_class, Hash> multi_hashmap;
-  typedef typename multi_hashmap::const_iterator const_iterator;
+  using multi_hashmap = std::unordered_multimap<item_class, item_class, Hash>;
+  using const_iterator = typename multi_hashmap::const_iterator;
 
   using multi_hashmap::begin;
   using multi_hashmap::end;

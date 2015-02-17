@@ -33,56 +33,39 @@ struct main_config {
 
   DECLARE_DELEGATE_CONST_METHOD(size_t, priority_name, get_count_genomes, size)
 
-  /*Different parse function*/
-  void parse(std::unordered_map<std::string, std::vector<std::string> > const & input); 
-  void parse_genomes(std::vector<std::string> const & input);
-  void parse_trees(std::vector<std::string> const & input);
-  void parse_algorithm(std::vector<std::string> const & input);
-  void parse_target(std::vector<std::string> const & input);
-  void parse_completion(std::vector<std::string> const & input);
+  /*fuction which can init all config*/
+  void parse(std::unordered_map<std::string, std::vector<std::string> > const & input);  
 
 public:  
   bool is_debug; 
   std::string out_path_to_debug_dir; 
 
-  /*
+  /**
    * Different strategy for build. 
    */
-  bool is_target_build;
-  bool is_assembly_build; 
+  build_type how_build;  
 
-  /*
+  /**
    * Switch on/off stage fo reconstruction trees
    */
   bool is_reconstructed_trees;
-  
-  /*
-   * Number of stage and rounds 
-   */
-  size_t rounds; 
-  size_t stages;
-
-  /*
-   * Switch on/off run blossom V stage
-   */
-  bool is_blossom; 
-
-  /*
-   * Switch on/off bruteforce stage for small components
-   */
-  bool is_bruteforce;
-  size_t size_component_in_bruteforce;
-
-  /*
-   * Switch on/off linearization algorithm
-   */
-  bool is_linearization_algo;
-
-  std::list<twobreak_t> completion;
 
   using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
   std::vector<phylogeny_tree_t> phylotrees;
+  
+  /**
+   * Number of stage and rounds 
+   */
+  size_t rounds; 
+  std::vector<algo::kind_stage> pipeline;
 
+  /**
+   * Switch on/off bruteforce stage for small components
+   */
+  size_t size_component_in_bruteforce;
+
+  std::list<twobreak_t> completion;
+  
   mcolor_t target_mcolor;    
   
   std::string colorscheme;
@@ -96,7 +79,18 @@ private:
   std::map<mcolor_t, std::string> mcolor_name;
   
 private: 
-  void init_basic_rgb_colors(); 
+  void default_rgb_colors(); 
+  void default_algorithm(); 
+  void default_target_algorithm();
+  
+  /**
+   * Different parse function
+   */
+  void parse_genomes(std::vector<std::string> const & input);
+  void parse_trees(std::vector<std::string> const & input);
+  void parse_algorithm(std::vector<std::string> const & input);
+  void parse_target(std::vector<std::string> const & input);
+  void parse_completion(std::vector<std::string> const & input);
 };
 
 #include "structures/config_struct_impl.hpp"

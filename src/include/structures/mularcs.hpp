@@ -5,10 +5,10 @@ namespace structure {
 
 template<class mcolor_t>
 struct Mularcs { 
-  typedef std::multimap<vertex_t, mcolor_t> map_t; 
-  typedef typename map_t::const_iterator citer; 
-  typedef typename map_t::const_reverse_iterator criter;
-  typedef typename map_t::iterator iter;    
+  using map_t = std::multimap<vertex_t, mcolor_t>; 
+  using citer = typename map_t::const_iterator; 
+  using criter = typename map_t::const_reverse_iterator;
+  using iter = typename map_t::iterator;    
 
   inline void insert(vertex_t const & v, mcolor_t const & mc) { 
     m_mularcs.insert(std::make_pair(v, mc));	

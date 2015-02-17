@@ -3,8 +3,8 @@
 
 template<mcolor_t>
 struct RecoveredTree { 
-  typedef std::tuple<mcolor_t, mcolor_t, size_t> branch_t;
-  typedef typename structure::BinaryTree<mcolor_t> tree_t;
+  using  branch_t = std::tuple<mcolor_t, mcolor_t, size_t>;
+  using tree_t = typename structure::BinaryTree<mcolor_t>;
 
   RecoveredTree(std::vector<branch_t> const & colors_information, std::vector<tree_t> const & input_subtrees) 
   : m_colors_information(colors_information)

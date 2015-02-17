@@ -9,7 +9,7 @@ namespace utility {
 
 template <class Item, class Cmp = std::less<Item> >
 struct equivalence {
-  typedef std::map<Item, Item, Cmp> map_t;
+  using map_t = std::map<Item, Item, Cmp>;
 
   inline void addrel(Item const & x, Item const & y) {
     Item z = operator[](x);

@@ -95,6 +95,7 @@ void load(main_config<mcolor_t>& cfg, std::string const & filename) {
  */
 template<class mcolor_t>
 void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<std::string> > const & input) {  
+  // Required section
   if (input.find("[Genomes]") != input.cend()) {  
     TRACE("Parse genomes section")
     parse_genomes(input.find("[Genomes]")->second);
@@ -103,6 +104,7 @@ void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<st
     exit(1);
   }
 
+  // Required section
   if (input.find("[Trees]") != input.cend()) {  
     TRACE("Parse trees section")
     parse_trees(input.find("[Trees]")->second);
@@ -111,23 +113,37 @@ void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<st
     exit(1);
   }
 
+  // Optional section
   if (input.find("[Algorithm]") != input.cend()) {  
     TRACE("Parse algorithm section")
     parse_algorithm(input.find("[Algorithm]")->second);
-  } else { 
-    ERROR("Cann't find algorithm section");
-    exit(1);
-  }
+  } else if (how_build == default_algo) { 
+    TRACE("Default initialization algorithm")
+    default_algorithm();
+  } else if (how_build == target_algo) { 
+    TRACE("Default initialization target algorithm")
+    default_target_algorithm();
+  } 
 
+  // Required setion for target build
   if (input.find("[Target]") != input.cend()) {  
-    parse_target(input.find("[Target]")->second);
-  }
+    if (how_build == target_algo) { 
+      parse_target(input.find("[Target]")->second);
+    } else { 
+      ERROR("Put target section, but run default reconstarction");
+      exit(1);
+    }
+  } else if (how_build == target_algo) {
+    ERROR("Cann't find target section for target build");
+    exit(1);
+  } 
 
+  // Optional section
   if (input.find("[Completion]") != input.cend()) {  
     parse_completion(input.find("[Completion]")->second);
   }
 
-  init_basic_rgb_colors();
+  default_rgb_colors();
 }
 
 template<class mcolor_t>
@@ -178,7 +194,9 @@ void main_config<mcolor_t>::parse_trees(std::vector<std::string> const & input) 
     }
   }; 
 
-  for (auto const & str : input) {
+  for (auto const & line : input) {
+    std::string str = line; 
+    str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end()); 
     phylotrees.push_back(phylogeny_tree_t(str, genome_number, priority_name)); 
     get_names_lambda(phylotrees.crbegin()->get_root());
   }
@@ -186,31 +204,58 @@ void main_config<mcolor_t>::parse_trees(std::vector<std::string> const & input) 
 
 template<class mcolor_t>
 void main_config<mcolor_t>::parse_algorithm(std::vector<std::string> const & input) { 
-  for(auto const & str : input) {
+  rounds = 3;  
+  size_component_in_bruteforce = 0; 
+
+  for (auto const & str : input) {
     std::istringstream is(str);
     std::string name;
     is >> name;
 
-    if (name == "stages") { 
-      is >> stages;
-    } else if (name == "rounds") {
+    if (name == "rounds") {
       is >> rounds;
-      if (rounds > 3) {
+      if (rounds > 3 || rounds <= 0) {
         ERROR("Large number of rounds") 
         exit(1);
       } 
-    } else if (name == "bruteforce") {
+    } else if (name == "balance") { 
+      pipeline.push_back(algo::kind_stage::balance_k);
+    } else if (name == "simple_path") { 
+      pipeline.push_back(algo::kind_stage::simple_path_k);
+    } else if (name == "four_cycles") { 
+      pipeline.push_back(algo::kind_stage::four_cycles_k);
+    } else if (name == "fair_edge") { 
+      pipeline.push_back(algo::kind_stage::fair_edge_k);
+    } else if (name == "clone") {
+      pipeline.push_back(algo::kind_stage::clone_k);
+    } else if (name == "fair_clone_edge") { 
+      pipeline.push_back(algo::kind_stage::fair_clone_edge_k);
+    } else if (name == "components") { 
+      pipeline.push_back(algo::kind_stage::components_k);
+    } else if (name == "bruteforce") { 
+      if (how_build == target_algo) {
+        ERROR("Don't use bruteforce stage in target reconstruction") 
+        exit(1);
+      }
+      pipeline.push_back(algo::kind_stage::bruteforce_k);
       is >> size_component_in_bruteforce;
-      is_bruteforce = (size_component_in_bruteforce > 0); 
-    } else if (name == "recostructed_tree") {
-      is_reconstructed_trees = true; 
+    } else if (name == "blossomv") {
+      if (how_build == target_algo) {
+        ERROR("Don't use blossom V stage in target reconstruction") 
+        exit(1);
+      }
+      pipeline.push_back(algo::kind_stage::blossomv_k);
+    } else if (name == "linearization_t") {
+      if (how_build == target_algo) {
+        ERROR("Don't use lineartztion stage in target reconstruction") 
+        exit(1);
+      }
+      pipeline.push_back(algo::kind_stage::linearization_k);
     } else { 
       ERROR("Unknown option " << name)
       exit(1);
     }
   }
-
-  is_linearization_algo = true;
 }
 
 template<class mcolor_t>
@@ -218,26 +263,59 @@ void main_config<mcolor_t>::parse_target(std::vector<std::string> const & input)
   std::istringstream is(*input.cbegin());
   std::string temp; 
   is >> temp; 
-  std::remove_if(temp.begin(), temp.end(), (int(*)(int)) isspace); //FIXME NOT WORKED
-  is_target_build = true;
+  temp.erase(std::remove_if(temp.begin(), temp.end(), ::isspace), temp.end());
   target_mcolor = name_to_mcolor(temp);
 }
 
 template<class mcolor_t>
 void main_config<mcolor_t>::parse_completion(std::vector<std::string> const & input) { 
-  for(auto const & event: input) {
+  for (auto const & event: input) {
     std::vector<std::string> mc(5);
     std::istringstream is(event);
     is >> mc[0] >> mc[1] >> mc[2] >> mc[3] >> mc[4];
-    std::remove_if(mc[4].begin(), mc[4].end(), (int(*)(int)) isspace); //FIXME NOT WORKED   
+    mc[4].erase(std::remove_if(mc[4].begin(), mc[4].end(), ::isspace), mc[4].end()); 
     mcolor_t color = name_to_mcolor(mc[4]);
     completion.push_back(twobreak_t(mc[0], mc[1], mc[2], mc[3], color));
   }
+
+  if (!completion.empty()) { 
+    pipeline.push_back(algo::kind_stage::completion_k);
+  }
+}
+
+/**
+ * Function which initilisation structure on default parameters 
+ */
+template<class mcolor_t>
+void main_config<mcolor_t>::default_algorithm() { 
+  size_component_in_bruteforce = 0;
+  rounds = 3; 
+  pipeline.push_back(algo::kind_stage::balance_k);
+  pipeline.push_back(algo::kind_stage::simple_path_k);
+  pipeline.push_back(algo::kind_stage::four_cycles_k);
+  pipeline.push_back(algo::kind_stage::fair_edge_k);
+  pipeline.push_back(algo::kind_stage::clone_k);
+  pipeline.push_back(algo::kind_stage::components_k);
+  pipeline.push_back(algo::kind_stage::change_canform_k);
+  pipeline.push_back(algo::kind_stage::blossomv_k);
+  //pipeline.push_back(algo::kind_stage::linearization_t);
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::init_basic_rgb_colors() { 
+void main_config<mcolor_t>::default_target_algorithm() { 
+  size_component_in_bruteforce = 0;
+  rounds = 3; 
+  pipeline.push_back(algo::kind_stage::balance_k);
+  pipeline.push_back(algo::kind_stage::simple_path_k);
+  pipeline.push_back(algo::kind_stage::four_cycles_k);
+  pipeline.push_back(algo::kind_stage::fair_edge_k);
+  pipeline.push_back(algo::kind_stage::clone_k);
+  pipeline.push_back(algo::kind_stage::components_k);
+  pipeline.push_back(algo::kind_stage::change_canform_k);
+} 
 
+template<class mcolor_t>
+void main_config<mcolor_t>::default_rgb_colors() { 
   if (priority_name.size() < 10) {
     colorscheme = "set19";
     for(size_t i = 1; i < priority_name.size() + 1; ++i) {
@@ -280,7 +358,7 @@ void main_config<mcolor_t>::init_basic_rgb_colors() {
       "#C2224A","#C50A2A","#C50B21","#C5121B","#C4121A","#C4232B","#C3332B","#C2452A"
     };
   
-    for(size_t i = 0; i < number_colors; ++i) { 
+    for (size_t i = 0; i < number_colors; ++i) { 
       RGBcolors.push_back("\"" + cols[i] + "\"");       
     }   
 

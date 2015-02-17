@@ -19,7 +19,7 @@ struct ProcessWithBlossomV : public algo::AbsStage<graph_pack_t> {
   using transform_t = typename graph_pack_t::transform_t;
 
   ProcessWithBlossomV()
-  : AbsStage<graph_pack_t>("Total resolve component with score function and blossomV", "wrap_blossom", 3) 
+  : AbsStage<graph_pack_t>("Total resolve component with score function and blossomV", "wrap_blossom", post_stage_t, 3) 
   , max_number(0)
   , super_infinity("ooo")
   { 

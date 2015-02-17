@@ -109,7 +109,7 @@ Multicolors<mcolor_t>::Multicolors() {
   
   //If target is empty we put root in nearest node. Work fine only complete tree.
   //Need tested on subtrees. 
-  if (!cfg::get().is_target_build) { 
+  if (cfg::get().how_build != target_algo) { 
     for (auto const & color : nodes_color) {
       auto const & compl_color = compute_complement_color(color);
       if (nodes_color.find(compl_color) != nodes_color.end()) {
@@ -122,14 +122,11 @@ Multicolors<mcolor_t>::Multicolors() {
         break; 
       } 
     } 
+  } else { 
+    remove_color = cfg::get().target_mcolor;
+    nodes_color.erase(cfg::get().target_mcolor);
   }
   vec_T_consistent_colors = nodes_color;
-
-  //If target not empty do this color rooted color. 
-  if (cfg::get().is_target_build) { 
-    remove_color = cfg::get().target_mcolor;
-    vec_T_consistent_colors.erase(cfg::get().target_mcolor);
-  } 
 
   //check consistency for multicolors
   for (auto id = vec_T_consistent_colors.cbegin(); id != vec_T_consistent_colors.cend(); ++id) {

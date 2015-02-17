@@ -5,9 +5,9 @@ namespace event {
 
 template<class mcolor_t>
 struct TwoBreak {
-  typedef typename mcolor_t::citer citer; 
-  typedef std::pair<vertex_t, vertex_t> edge_t;
-  typedef utility::sym_multihashmap<vertex_t> partgraph_t;
+  using citer = typename mcolor_t::citer; 
+  using edge_t = std::pair<vertex_t, vertex_t>;
+  using partgraph_t = utility::sym_multihashmap<vertex_t>;
   
   TwoBreak() { 
   } 

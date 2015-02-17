@@ -11,7 +11,7 @@ struct ProcessSimplePath : public algo::AbsStage<graph_pack_t> {
   using twobreak_t = typename graph_pack_t::twobreak_t;
   
   explicit ProcessSimplePath(size_t max_round)
-  : AbsStage<graph_pack_t>("Start process good and simple paths", "simple_path", max_round) 
+  : AbsStage<graph_pack_t>("Start process good and simple paths", "simple_path", round_stage_t, max_round) 
   {
   }
 

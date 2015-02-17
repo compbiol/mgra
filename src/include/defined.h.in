@@ -32,6 +32,7 @@
 #define MGRA_VERSION_PATCH @MGRA_VERSION_PATCH@
 
 #include <boost/algorithm/string.hpp>
+
 using vertex_t = std::string;
 vertex_t const Infty = "oo"; 
 
@@ -47,7 +48,14 @@ vertex_t const Infty = "oo";
 #include "structures/genome.hpp"
 #include "structures/Tree.hpp"
 
+enum build_type { default_algo, target_algo, assembly_algo };  
 
+namespace algo { 
+
+enum kind_stage {balance_k, simple_path_k, four_cycles_k, fair_edge_k,
+                 clone_k, fair_clone_edge_k, components_k, change_canform_k, bruteforce_k, blossomv_k, completion_k, linearization_k}; 
+
+} 
 #endif
 
 

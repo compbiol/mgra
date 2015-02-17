@@ -5,17 +5,26 @@
 
 namespace algo { 
 
+/**
+ *
+ */
+enum stage_type {pre_stage_t, round_stage_t, post_stage_t};  
+
+/**
+ *
+ */
 template<class graph_pack_t> 
 struct StageManager; 
 
-/*
+/**
  *
  */
 template<class graph_pack_t> 
 struct AbsStage {  
-	AbsStage(std::string const & name, std::string const & id, size_t max_round = 0)
+	AbsStage(std::string const & name, std::string const & id, stage_type type, size_t max_round = 0)
 	: m_parent(nullptr) 
 	, max_avaliable_round(max_round) 
+	, m_type(type)
 	, m_name(name)
 	, m_id(id)
 	{
@@ -38,14 +47,19 @@ struct AbsStage {
   	return max_avaliable_round;
   }
 
+  stage_type get_stage_type() const { 
+  	return m_type;
+  }
+
   virtual bool run(graph_pack_t & graph) = 0;
 
 protected:
-  StageManager<graph_pack_t>* m_parent;
+	StageManager<graph_pack_t>* m_parent;
 	friend struct StageManager<graph_pack_t>;
 
 private:
-	size_t max_avaliable_round; 
+	size_t const max_avaliable_round; 
+	stage_type const m_type;
   std::string m_name;
   std::string m_id;
 };
@@ -57,7 +71,7 @@ template<class graph_pack_t>
 struct ChangeCanformInfinity : public AbsStage<graph_pack_t> {
 
 	ChangeCanformInfinity(size_t max_round = 3) 
-	: AbsStage<graph_pack_t>("Change canformQoo", "ChangeCanformInf", max_round)
+	: AbsStage<graph_pack_t>("Change canformQoo", "ChangeCanformInf", post_stage_t, max_round)
 	{
 	}
 
@@ -82,7 +96,7 @@ struct ProcessComplection : public AbsStage<graph_pack_t> {
   using transform_t = typename graph_pack_t::transform_t;
 
 	ProcessComplection(transform_t const & complection, size_t max_round = 3) 
-	: AbsStage<graph_pack_t>("Change canformQoo", "ProcessComplection", max_round)
+	: AbsStage<graph_pack_t>("Change canformQoo", "ProcessComplection", post_stage_t, max_round)
 	, is_process(false)
 	, m_complection(complection)
 	{

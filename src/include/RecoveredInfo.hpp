@@ -70,7 +70,7 @@ RecoveredInfo<graph_t>::RecoveredInfo(graph_t const & graph)
 : m_graph(graph)
 , bad_edges(graph.get_bad_edges())
 { 
-  assert(!cfg::get().is_target_build);
+  assert(cfg::get().how_build == default_algo);
 
   /*Get transformation and graphs for linearization*/
   std::map<mcolor_t, mcolor_t> parent_mcolor;

@@ -14,7 +14,7 @@ struct ProcessFourCycles : public algo::AbsStage<graph_pack_t> {
   
 
 	explicit ProcessFourCycles(size_t max_round = 1)
-	: AbsStage<graph_pack_t>("Process four cycles", "adequate_four_cycles", max_round) 
+	: AbsStage<graph_pack_t>("Process four cycles", "adequate_four_cycles", round_stage_t, max_round) 
 	{
 	}
 

@@ -15,7 +15,7 @@ struct IncreaseNumberComponents : public algo::AbsStage<graph_pack_t> {
 	using bridges_t = typename std::map<vertex_t, std::set<edge_t> >;
 
 	explicit IncreaseNumberComponents(size_t max_rounds = 1)
-	: AbsStage<graph_pack_t>("Increase number of components", "increase_components", max_rounds) 
+	: AbsStage<graph_pack_t>("Increase number of components", "increase_components", round_stage_t, max_rounds) 
 	{
 	}
 

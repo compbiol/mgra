@@ -13,7 +13,7 @@ struct BruteForce : public algo::AbsStage<graph_pack_t> {
   using twobreak_t = typename graph_pack_t::twobreak_t;
 
   BruteForce(size_t size_component)
-  : AbsStage<graph_pack_t>("Resolve component with score function", "brute_force", 3) 
+  : AbsStage<graph_pack_t>("Resolve component with score function", "brute_force", post_stage_t, 3) 
   , max_size_component(size_component)
   {
   }

@@ -16,7 +16,7 @@ struct ProcessTwoBreakAndClone : public algo::AbsStage<graph_pack_t> {
   using ind_arcs_t = typename std::pair<std::pair<vertex_t, mcolor_t>, size_t>;
 
   explicit ProcessTwoBreakAndClone(size_t max_round)
-  : AbsStage<graph_pack_t>("Process twobreak and clone situation", "fair_edge_clone", max_round) 
+  : AbsStage<graph_pack_t>("Process twobreak and clone situation", "fair_edge_clone", round_stage_t, max_round) 
   {
   }
   

@@ -6,9 +6,9 @@ namespace structure {
 struct Mcolor {
   enum Construct {Difference, Union, Intersection};
 
-  typedef std::map<size_t, size_t> map_t;
-  typedef map_t::const_iterator citer;
-  typedef map_t::iterator iter; 
+  using map_t = std::map<size_t, size_t>;
+  using citer = map_t::const_iterator;
+  using iter = map_t::iterator; 
 
   Mcolor() { 
   } 

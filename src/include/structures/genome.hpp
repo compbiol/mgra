@@ -4,8 +4,8 @@
 namespace structure { 
 
 struct Chromosome { 
-  typedef std::string orf_t;
-  typedef std::pair<orf_t, int> gene_t;
+  using orf_t = std::string;
+  using gene_t = std::pair<orf_t, int>;
 
   Chromosome () 
   : m_is_circular(false) 
@@ -36,8 +36,8 @@ struct Chromosome {
   
   DECLARE_DELEGATE_CONST_METHOD(size_t, main_chromosome, size, size)
   
-  typedef std::map<size_t, gene_t>::const_iterator citer; 
-  typedef std::map<size_t, gene_t>::const_reverse_iterator criter;
+  using citer = std::map<size_t, gene_t>::const_iterator; 
+  using criter = std::map<size_t, gene_t>::const_reverse_iterator;
 
   DECLARE_CONST_ITERATOR( citer, main_chromosome, begin, cbegin ) 
   DECLARE_CONST_ITERATOR( citer, main_chromosome, end, cend ) 
@@ -50,10 +50,10 @@ private:
 }; 
 
 struct Genome {
-  typedef std::string orf_t;
-  typedef std::pair<std::string, size_t> coord_t; // (contig, offset)
-  typedef std::pair<orf_t, int> gene_t;
-  typedef structure::Chromosome chromosome_t; 
+  using orf_t = std::string;
+  using coord_t = std::pair<std::string, size_t>; // (contig, offset)
+  using gene_t = std::pair<orf_t, int>;
+  using chromosome_t = structure::Chromosome; 
   
   Genome() {
   } 
@@ -89,7 +89,7 @@ struct Genome {
   DECLARE_GETTER(std::string const &, m_name, name)
   DECLARE_DELEGATE_CONST_METHOD(size_t, main_genome, count_chromosome, size)
   
-  typedef std::map<std::string, chromosome_t>::const_iterator citer; 
+  using citer = std::map<std::string, chromosome_t>::const_iterator; 
   DECLARE_CONST_ITERATOR( citer, main_genome, begin, cbegin ) 
   DECLARE_CONST_ITERATOR( citer, main_genome, end, cend ) 
   

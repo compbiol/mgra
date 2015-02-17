@@ -5,9 +5,9 @@ namespace writer {
 
 template <class graph_t>
 struct Wtransformation {
-	typedef typename graph_t::mcolor_type mcolor_t;
-	typedef typename graph_t::transform_t transform_t;
-	typedef typename graph_t::partgraph_t partgraph_t;
+	using mcolor_t = typename graph_t::mcolor_type;
+	using transform_t = typename graph_t::transform_t;
+	using partgraph_t = typename graph_t::partgraph_t;
 
   Wtransformation(std::string const & path, graph_t const & graph) 
   : m_path(path)

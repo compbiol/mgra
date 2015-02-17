@@ -5,9 +5,9 @@ namespace event {
 
 template <class mcolor_t>
 struct TandemDuplication {
-  typedef typename mcolor_t::citer citer;
-  typedef std::pair<vertex_t, vertex_t> edge_t;
-  typedef std::vector<edge_t>::const_iterator citer_vect;  
+  using citer = typename mcolor_t::citer;
+  using edge_t = std::pair<vertex_t, vertex_t>;
+  using citer_vect = std::vector<edge_t>::const_iterator;  
 	
   TandemDuplication(const std::vector<edge_t>& es, const mcolor_t& Q, bool is_del, bool is_revs)
   : edges(es) 

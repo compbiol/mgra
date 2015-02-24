@@ -190,7 +190,7 @@ int main(int argc, char* argv[]) {
     INFO(out.str());
   } 
 
-  bool result = false;
+  bool result = false; //wgd_algorithm(graph_pack);
   if (cfg::get().how_build == default_algo) { 
     result = main_algorithm(graph_pack);
   } else if (cfg::get().how_build == target_algo) { 

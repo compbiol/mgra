@@ -29,13 +29,17 @@ private:
 
 private: 
   graph_t const & m_graph;
-  
+  Linearizator<graph_t> linearizator;
+
   partgraph_t bad_edges;
 
   std::vector<genome_t> genomes;
   std::map<std::pair<mcolor_t, mcolor_t>, transform_t> transformations;
   //std::vector<transform_t> transformations;
 
+  //std::map<mcolor_t, mcolor_t> & parent_colors;
+  //std::map<mcolor_t, typename linearizator_t::partgraph_t> & graphs;
+  //std::map<mcolor_t, typename linearizator_t::transform_t> & transfomations;
 private:
   DECL_LOGGER("RecoveredInfo");
 }; 
@@ -68,6 +72,7 @@ void RecoveredInfo<graph_t>::get_ugly_history(
 template<class graph_t>
 RecoveredInfo<graph_t>::RecoveredInfo(graph_t const & graph) 
 : m_graph(graph)
+, linearizator(graph)
 , bad_edges(graph.get_bad_edges())
 { 
   assert(cfg::get().how_build == default_algo);
@@ -81,22 +86,21 @@ RecoveredInfo<graph_t>::RecoveredInfo(graph_t const & graph)
   get_ugly_history(recovered_graphs, recovered_transformations);
   
   /*Algorithm for linearization*/
-  Linearizator<graph_t> linearizator(graph);
   INFO("Start walk on tree and run algorithm for linearizeate")
-  for (auto const & tree : cfg::get().phylotrees) {
-    tree.walk_and_linearizeate(linearizator, parent_mcolor, recovered_graphs, recovered_transformations); 
-  }
+  /*for (auto const & tree : cfg::get().phylotrees) {
+    walk_and_linearizeate(parent_mcolor, recovered_graphs, recovered_transformations); 
+  }*/
   INFO("End walk on tree and run algorithm for linearizeate")
   
   /*Recover genomes and transformation*/
   INFO("Recover genomes")
-  for (auto const & local_graph : recovered_graphs) {
+  /*for (auto const & local_graph : recovered_graphs) {
     genomes.push_back(get_genome(cfg::get().mcolor_to_name(local_graph.first), local_graph.second)); 
     auto iter = parent_mcolor.find(local_graph.first);
     if (iter != parent_mcolor.end()) {
       transformations.insert(std::make_pair(*iter, recovered_transformations[local_graph.first]));
     }
-  }
+  }*/
   INFO("End genomes")
 }
 
@@ -189,6 +193,116 @@ structure::Chromosome RecoveredInfo<graph_t>::get_chromosome(partgraph_t const &
   }
 
   return chromosome_t(path, circular);
+}
+
+template<class linearizator_t>
+void walk_and_linearizeate() const {
+  root->walk_and_linearizeate(linearizator, parent_colors, graphs, transformations);
+
+  mcolor_t left = parent_colors[root->get_left_child()->data];
+  mcolor_t right = parent_colors[root->get_right_child()->data];
+
+  if (transformations[left].size() < transformations[right].size()) { 
+    parent_colors.erase(left); 
+    for (auto const & twobreak : transformations[left]) { 
+      transformations[right].push_front(twobreak.inverse());
+    }
+    transformations.erase(left);
+  } else { 
+    parent_colors.erase(right); 
+    for (auto const & twobreak : transformations[right]) { 
+      transformations[left].push_front(twobreak.inverse());
+    }
+    transformations.erase(right);
+  }
+}
+
+//ERROR, FIXME, think about edge from root in this function
+template<class graph_t>
+void RecoveredInfo<graph_t>::walk_and_linearizeate() const { 
+  if (this->parent != nullptr) {  
+    if (this->parent->parent != nullptr) { 
+      parent_colors.insert(std::make_pair(this->data, this->parent->data));
+    } else { 
+      if (this->parent->left_child.get() == this) { 
+        parent_colors.insert(std::make_pair(this->data, this->parent->right_child->data));
+      } else if (this->parent->right_child.get() == this) { 
+        parent_colors.insert(std::make_pair(this->data, this->parent->left_child->data));
+      }
+    }
+  } 
+
+  if (left_child) { 
+    left_child->walk_and_linearizeate(linearizator, parent_colors, graphs, transformations); 
+  }
+
+  if (right_child) { 
+    right_child->walk_and_linearizeate(linearizator, parent_colors, graphs, transformations); 
+  }
+
+  if (left_child && right_child && graphs.find(this->data) != graphs.end()) { 
+    size_t count_left = linearizator.count_circular_chromosome(graphs[left_child->data]); 
+    size_t central = linearizator.count_circular_chromosome(graphs[this->data]); 
+    size_t count_right = linearizator.count_circular_chromosome(graphs[right_child->data]); 
+    //std::cerr << "Left have " << count_left << std::endl 
+    //      << " Central have " << central << std::endl << "Right have " << count_right << std::endl;
+
+    if (count_left == 0 && count_right == 0 && central != 0) { 
+      typedef typename linearizator_t::twobreak_t twobreak_t;
+      typedef typename linearizator_t::transform_t transform_t;
+      typedef typename linearizator_t::partgraph_t partgraph_t;
+
+      //std::cerr << "Start linearizator " << genome_match::mcolor_to_name(this->data) 
+      //  << " -> " << genome_match::mcolor_to_name(left_child->data) << std::endl;
+      std::pair<transform_t, transform_t> new_history = linearizator.linearizate(graphs[this->data], transformations[left_child->data], graphs[left_child->data]); 
+
+      /*Apply linearization twobreaks*/      
+      for (twobreak_t const & twobreak : new_history.first) {
+        //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) 
+        //<< " " << twobreak.get_vertex(3) << p" " << std::endl;    
+        twobreak.apply_single(graphs[this->data]); 
+        //std::cerr << linearizator.count_circular_chromosome(graphs[this->data]) << std::endl;
+      }
+      
+      /*Check that all is good*/
+      //std::cerr << "Result genome have " << linearizator.count_circular_chromosome(graphs[this->data]) << std::endl;
+      assert(linearizator.count_circular_chromosome(graphs[this->data]) == 0);
+
+      //std::cerr << "Start to check linearizator " << std::endl;
+      partgraph_t current = graphs[this->data]; 
+      for (twobreak_t const & twobreak : new_history.second) { 
+        //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) 
+        //<< " " << twobreak.get_vertex(3) << " " << std::endl;    
+        
+        twobreak.apply_single(current);
+      } 
+      //std::cerr << "Check that we get good history " << std::endl;
+      assert(current == graphs[left_child->data]);
+
+      /*Modify transformation*/
+      //std::cerr << "modify transformation" << std::endl;
+      for (twobreak_t const & twobreak : new_history.first) { 
+        transformations[this->data].push_back(twobreak);
+        transformations[right_child->data].push_front(twobreak.inverse());  
+      } 
+      transformations[left_child->data] = new_history.second;
+
+      //std::cerr << "apply on right child" << std::endl;
+      current = graphs[this->data]; 
+      for (twobreak_t const & twobreak : transformations[right_child->data]) { 
+        twobreak.apply_single(current);
+      } 
+      assert(current == graphs[right_child->data]);
+
+      if (this->parent->parent != nullptr) {  
+        current = graphs[this->parent->data]; 
+        for (twobreak_t const & twobreak : transformations[this->data]) { 
+          twobreak.apply_single(current);
+        } 
+        assert(current == graphs[this->data]);
+      } 
+    }
+  } 
 }
 
 #endif

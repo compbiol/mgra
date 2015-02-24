@@ -43,10 +43,10 @@ vertex_t const Infty = "oo";
 
 #include "logger/logger.hpp"
 
+#include "structures/tree.hpp"
 #include "structures/mcolor.hpp"
 #include "structures/mularcs.hpp"
 #include "structures/genome.hpp"
-#include "structures/Tree.hpp"
 
 enum build_type { default_algo, target_algo, assembly_algo };  
 

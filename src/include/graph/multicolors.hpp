@@ -1,8 +1,6 @@
 #ifndef MULTICOLORS_HPP
 #define MULTICOLORS_HPP
 
-#include "structures/Tree.hpp"
-
 template<class mcolor_t>
 struct Multicolors { 
   
@@ -176,8 +174,8 @@ void Multicolors<mcolor_t>::get_median_colors_from_tree(std::unique_ptr<node_t> 
   }
 
   if (left && right && current->get_parent() != nullptr) { 
-    mcolor_t parent = mcolor_t(complete_color, mcolor_t(left->data, right->data, mcolor_t::Union), mcolor_t::Difference);
-    median_colors.push_back(std::make_tuple(left->data, right->data, parent));
+    mcolor_t parent = mcolor_t(complete_color, mcolor_t(left->get_data(), right->get_data(), mcolor_t::Union), mcolor_t::Difference);
+    median_colors.push_back(std::make_tuple(left->get_data(), right->get_data(), parent));
   }
 }
 

@@ -81,8 +81,9 @@ void StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
   auto update_lambda = [&] () -> void { 
     if (isChanged && debug_policy.is_save_debug) { 
       graph_pack.update_graph_statistics();
-      debug_stat.print_all_statistics(num_stage++, graph_pack.stats);
-      debug_dots.save_bp_graph(graph_pack, num_stage - 1);
+      debug_stat.print_all_statistics(num_stage, graph_pack.stats);
+      debug_dots.save_bp_graph(graph_pack, num_stage);
+      ++num_stage;
     }
   };
 	

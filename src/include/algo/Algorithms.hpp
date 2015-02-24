@@ -89,6 +89,36 @@ bool main_algorithm(graph_pack_t & graph_pack) {
   return true;
 }
 
+template<class graph_pack_t> 
+bool wgd_algorithm(graph_pack_t & graph_pack) {
+  assert(cfg::get().how_build == default_algo); 
+
+  INFO("Start wgd algorithm for convert from breakpoint graph to identity breakpoint graph");
+
+  using namespace algo; 
+  StageManager<graph_pack_t> algorithm(cfg::get().rounds, {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
+
+  INFO("Run algorithms stages")
+  algorithm.run(graph_pack);
+    
+  if (!graph_pack.graph.is_identity()) { 
+    INFO("T-transformation is not complete. Cannot reconstruct genomes.")
+    return false; 
+  } 
+  
+  if (!graph_pack.is_consistency_graph()) {
+    INFO("We have problem with edges, corresponding postponed deletions.")
+    INFO("If you have indentity breakpoint graph after stages, please contact us.")
+    return false;
+  } 
+
+  INFO("Start to replace cloning to 2-breaks")
+  graph_pack.history.change_history();
+  INFO("Finish to replace cloning to 2-breaks")
+   
+  return true;
+}
+
 /*
 template<class graph_pack_t>
 struct Algorithm { 

@@ -48,7 +48,7 @@ vertex_t const Infty = "oo";
 #include "structures/mularcs.hpp"
 #include "structures/genome.hpp"
 
-enum build_type { default_algo, target_algo, assembly_algo };  
+enum build_type { default_algo, target_algo, wgd_algo, assembly_algo };  
 
 namespace algo { 
 

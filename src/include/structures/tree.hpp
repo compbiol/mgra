@@ -44,8 +44,8 @@ struct BinaryTree {
 
   private: 
     mcolor_t data;    
-    
-    std::string name;   
+    std::string name; 
+    bool is_whole_duplication;  
     std::vector<std::string> childs;
 
     Node* const parent;    
@@ -55,15 +55,24 @@ struct BinaryTree {
 
   BinaryTree(std::string const & st, std::unordered_map<std::string, size_t> const & genome_number, std::vector<std::string> const & priority_name) 
   : root(new Node(nullptr, st, genome_number, priority_name))
+  , phylogentic_root_tree(false)
   {
+    if (mcolor_t(root->get_left_child()->get_data(), root->get_right_child()->get_data(), mcolor_t::Union).size() == priority_name.size()) { 
+      phylogentic_root_tree = true; 
+    }
   } 
 
   std::unique_ptr<Node> const & get_root() const { 
     return root;
   }
 
+  bool is_phylogenetic_root() const { 
+    return phylogentic_root_tree;
+  }
+
 private: 
   std::unique_ptr<Node> root; 
+  bool phylogentic_root_tree;
 
 private: 
   DECL_LOGGER("BinaryTree") 

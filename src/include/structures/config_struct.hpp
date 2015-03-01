@@ -35,6 +35,7 @@ struct main_config {
 
   /*fuction which can init all config*/
   void parse(std::unordered_map<std::string, std::vector<std::string> > const & input);  
+  //void save();
 
 public:  
   bool is_debug; 

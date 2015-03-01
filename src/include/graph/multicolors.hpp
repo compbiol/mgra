@@ -107,20 +107,17 @@ Multicolors<mcolor_t>::Multicolors() {
   
   //If target is empty we put root in nearest node. Work fine only complete tree.
   //Need tested on subtrees. 
-  if (cfg::get().how_build != target_algo) { 
-    for (auto const & color : nodes_color) {
-      auto const & compl_color = compute_complement_color(color);
-      if (nodes_color.find(compl_color) != nodes_color.end()) {
-        if (color.size() > compl_color.size()) { 
-          remove_color = color;
-        } else { 
-          remove_color = compl_color; 
-        } 
-        nodes_color.erase(remove_color);
-        break; 
+  if (cfg::get().how_build == default_algo) { 
+    for (auto const & tree : cfg::get().phylotrees) {
+      if (tree.is_phylogenetic_root()) { 
+        mcolor_t const & left_color = tree.get_root()->get_left_child()->get_data();
+        mcolor_t const & right_color = tree.get_root()->get_right_child()->get_data();
+        remove_color = (left_color.size() > right_color.size()) ? left_color : right_color;  
+        break;
       } 
     } 
-  } else { 
+    nodes_color.erase(remove_color);
+  } else if (cfg::get().how_build == target_algo) { 
     remove_color = cfg::get().target_mcolor;
     nodes_color.erase(cfg::get().target_mcolor);
   }

@@ -10,6 +10,12 @@ set (MGRA_VERSION_MAJOR 2)
 set (MGRA_VERSION_MINOR 2)
 set (MGRA_VERSION_PATCH 1)
 
+# The 4 following lines are for CLion and do nothing (as far as I, nkartashov know) for compilation
+FILE(GLOB_RECURSE ALL_HEADERS ${CMAKE_SOURCE_DIR}/*.h)
+ADD_CUSTOM_TARGET(ADD_HEADERS SOURCES ${ALL_HEADERS})
+FILE(GLOB_RECURSE ALL_NEW_HEADERS ${CMAKE_SOURCE_DIR}/*.hpp)
+ADD_CUSTOM_TARGET(ADD_NEW_HEADERS SOURCES ${ALL_NEW_HEADERS})
+
 set(MGRA_SOURCE mgra.cpp reader.cpp)
 
 #	Wstats.cpp
@@ -22,16 +28,16 @@ configure_file (
   )
 
 set(ROOT_DIR "${CMAKE_SOURCE_DIR}/..")
-set (OPTIMIZE_FLAG " -std=c++11 -O2 -pipe -finline-functions -finline-limit=1000") # -DPSEUDO_EDGE  
+set (OPTIMIZE_FLAG " -std=c++11 -O2 -pipe -finline-functions -finline-limit=1000") # -DPSEUDO_EDGE
 set (WARNS "-Wall -Werror -Wextra -pedantic-errors")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${WARNS}") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${WARNS}")
 
-include_directories(${CMAKE_BINARY_DIR} 
+include_directories(${CMAKE_BINARY_DIR}
 			${PROJECT_SOURCE_DIR}/include
-			${PROJECT_SOURCE_DIR}/utils 
-			${PROJECT_SOURCE_DIR}/libs 
-		  ) 
+			${PROJECT_SOURCE_DIR}/utils
+			${PROJECT_SOURCE_DIR}/libs
+		  )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7")
@@ -85,4 +91,3 @@ set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSIO
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "MGRA")
 set(CMAKE_SOURCE_DIR ${ROOT_DIR})
 include(CPack)
-

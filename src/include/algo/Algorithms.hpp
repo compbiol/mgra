@@ -1,11 +1,10 @@
 #ifndef ALGORITHM_HPP
 #define ALGORITHM_HPP
 
+#include "boost/optional.hpp"
+
 #include "graph/graph_pack.hpp"
-
 #include "algo/Stage.hpp"
-
-//#include "algo/recover_tree/RecoveredTree.hpp"
 
 #include "algo/main/Balance.hpp"
 #include "algo/main/SimplePath.hpp"
@@ -18,7 +17,7 @@
 #include "algo/main/BlossomVWrapper.hpp"
 #include "algo/main/BruteForce.hpp"
 
-//#include "algo/linearization/Linearization.hpp"
+#include "RecoveredInfo.hpp"
 
 namespace algo { 
 
@@ -56,11 +55,12 @@ void StageManager<graph_pack_t>::add_stage(kind_stage stage) {
  * full phylogenetic tree and genomes doesn't need to scaffold
  */
 template<class graph_pack_t> 
-bool main_algorithm(graph_pack_t & graph_pack) {
+boost::optional<typename RecoveredInfo<graph_pack_t>::AncestorInformation> main_algorithm(graph_pack_t & graph_pack) {
   assert(cfg::get().how_build == default_algo); 
 
   INFO("Start algorithm for convert from breakpoint graph to identity breakpoint graph");
 
+  INFO("Init pipeline") 
   using namespace algo; 
   StageManager<graph_pack_t> algorithm(cfg::get().rounds, {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
 
@@ -68,29 +68,29 @@ bool main_algorithm(graph_pack_t & graph_pack) {
     algorithm.add_stage(name_stage); 
   }
 
-  INFO("Run algorithms stages")
-  algorithm.run(graph_pack);
-    
-  if (!graph_pack.graph.is_identity()) { 
-    INFO("T-transformation is not complete. Cannot reconstruct genomes.")
-    return false; 
-  } 
+  INFO("Run pipeline") 
+  bool is_can_reconstruct = algorithm.run(graph_pack);
   
-  if (!graph_pack.is_consistency_graph()) {
-    INFO("We have problem with edges, corresponding postponed deletions.")
-    INFO("If you have indentity breakpoint graph after stages, please contact us.")
-    return false;
-  } 
-
-  INFO("Start to replace cloning to 2-breaks")
-  graph_pack.history.change_history();
-  INFO("Finish to replace cloning to 2-breaks")
-   
-  return true;
+  if (is_can_reconstruct) { 
+    INFO("Get results from graphs.")
+    RecoveredInfo<graph_pack_t> recover_info(graph_pack);
+    if (!cfg::get().target_mcolor.empty()) { 
+      recover_info.init_target_results();
+    } else if (cfg::get().is_linearization_ancestors) { 
+      recover_info.init_linearizate_results();
+    } else { 
+      recover_info.init_raw_results();
+    }
+    INFO("Finish get results from graphs.")
+    
+    return recover_info.get_results();
+  } else { 
+    return boost::none;
+  }
 }
 
 template<class graph_pack_t> 
-bool wgd_algorithm(graph_pack_t & graph_pack) {
+boost::optional<typename RecoveredInfo<graph_pack_t>::AncestorInformation> wgd_algorithm(graph_pack_t & graph_pack) {
   assert(cfg::get().how_build == default_algo); 
 
   INFO("Start wgd algorithm for convert from breakpoint graph to identity breakpoint graph");
@@ -100,23 +100,8 @@ bool wgd_algorithm(graph_pack_t & graph_pack) {
 
   INFO("Run algorithms stages")
   algorithm.run(graph_pack);
-    
-  if (!graph_pack.graph.is_identity()) { 
-    INFO("T-transformation is not complete. Cannot reconstruct genomes.")
-    return false; 
-  } 
-  
-  if (!graph_pack.is_consistency_graph()) {
-    INFO("We have problem with edges, corresponding postponed deletions.")
-    INFO("If you have indentity breakpoint graph after stages, please contact us.")
-    return false;
-  } 
-
-  INFO("Start to replace cloning to 2-breaks")
-  graph_pack.history.change_history();
-  INFO("Finish to replace cloning to 2-breaks")
-   
-  return true;
+     
+  return boost::none;
 }
 
 /*

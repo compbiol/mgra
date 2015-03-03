@@ -58,9 +58,7 @@ bool ProcessSimplePath<graph_pack_t>::run(graph_pack_t& graph_pack) {
               new_edges.erase(previous);
               mcolor_t next_color = new_edges.union_multicolors();
       
-              if ((graph_pack.graph.degree_vertex(current) == 2) && graph_pack.multicolors.get_complement_color(previous_color) == next_color
-                  && !graph_pack.is_postponed_deletion(current, new_edges.cbegin()->first)) {
-
+              if ((graph_pack.graph.degree_vertex(current) == 2) && graph_pack.multicolors.get_complement_color(previous_color) == next_color) {
                 auto const check_lambda = [&] (vertex_t const & v) -> bool {
                   bool flag = true; 
                   std::set<mcolor_t> const & colors = graph_pack.get_all_multicolor_edge_with_info(current, v, false); 

@@ -1,24 +1,24 @@
-#ifndef WGENOME_H_
-#define WGENOME_H_
+#ifndef TXT_GENOME_HPP
+#define TXT_GENOME_HPP
 
 namespace writer {
 
 template <class genome_t>
-struct Wgenome {
+struct TXT_genome {
 
-  explicit Wgenome(std::string const & path) 
+  explicit TXT_genome(std::string const & path) 
   : m_path(path)
   { 
   }
 
-  void save_genomes(std::vector<genome_t> const & genomes, bool isEmptyTarget) const { 
+  void save_genomes(std::vector<genome_t> const & genomes) const { 
     for (auto const & genome: genomes) {
-      save_genome_in_text_format(genome, isEmptyTarget);
+      save_genome_in_text_format(genome);
     } 
   } 
 
 private: 
-  void save_genome_in_text_format(genome_t const & genome, bool isEmptyTarget) const;
+  void save_genome_in_text_format(genome_t const & genome) const;
 
 private: 
   std::string m_path;
@@ -30,7 +30,7 @@ private:
 } 
 
 template <class genome_t>
-void writer::Wgenome<genome_t>::save_genome_in_text_format(genome_t const & genome, bool isEmptyTarget) const { 
+void writer::TXT_genome<genome_t>::save_genome_in_text_format(genome_t const & genome) const { 
   std::string const & outname = genome.get_name();  
   std::ofstream out(path::append_path(m_path, (outname + ".gen")));
 
@@ -38,16 +38,12 @@ void writer::Wgenome<genome_t>::save_genome_in_text_format(genome_t const & geno
 
   std::string chr_title;
 
-  if (isEmptyTarget) { 
-    chr_title = "chromosome"; 
-  } else { 
-    chr_title = "CAR";
-  } 
-
+  chr_title = "CAR";
+  
   size_t number_circular = 0; 
   size_t length_circular = 0;
 
-  for(auto const & chromosome : genome) {
+  for (auto const & chromosome : genome) {
     out << std::endl;
 
     if (chromosome.second.is_circular()) {

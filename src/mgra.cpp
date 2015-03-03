@@ -17,10 +17,8 @@
 #include "logger/logger.hpp"
 #include "logger/log_writers.hpp"
 
-#include "RecoveredInfo.hpp"
-
-#include "writer/Wgenome.h"
-#include "writer/Wtransform.hpp"
+#include "writer/txt_genome.hpp"
+#include "writer/txt_transform.hpp"
 
 bool organize_output_directory(std::string const & path, bool is_debug) { 
   auto creater_lambda = [](std::string const & directory) -> bool {
@@ -66,12 +64,6 @@ int main(int argc, char* argv[]) {
   try {  
 
   TCLAP::CmdLine cmd("MGRA (Multiple Genome Rearrangements & Ancestors) (c) 2008-2015 by Pavel Avdeyev, Shuai Jiang, Max Alekseyev. Distributed under GNU GENERAL PUBLIC LICENSE license.", ' ', VERSION);
-
-  TCLAP::SwitchArg target_arg("t",
-    "target",
-    "Switch on target reconstruction algorithm",
-    cmd,
-    false);
   
   TCLAP::ValueArg<std::string> path_to_cfg_file_arg("c",
     "config",
@@ -149,14 +141,8 @@ int main(int argc, char* argv[]) {
   INFO("Parse configure file")
   cfg::get_writable().is_debug = debug_arg.getValue();
   cfg::get_writable().out_path_to_debug_dir = path::append_path(out_path_directory, "debug");
-  if (target_arg.getValue()) { 
-    cfg::get_writable().how_build = target_algo;
-  } else { 
-    cfg::get_writable().how_build = default_algo;
-  }
-  
+  cfg::get_writable().how_build = default_algo;
   cfg::create_instance(path_to_cfg_file_arg.getValue());
-
   if (cfg::get().get_count_genomes() < 2) {
     ERROR("At least two input genomes required")
     return 1;
@@ -190,38 +176,42 @@ int main(int argc, char* argv[]) {
     INFO(out.str());
   } 
 
-  bool result = false; //wgd_algorithm(graph_pack);
+  boost::optional<RecoveredInfo<graph_pack_t>::AncestorInformation> result; 
   if (cfg::get().how_build == default_algo) { 
     result = main_algorithm(graph_pack);
-  } else if (cfg::get().how_build == target_algo) { 
-    ;
+  } else if (cfg::get().how_build == wgd_algo) { 
+    result = wgd_algorithm(graph_pack);
   } 
 
-  if (!result) { 
-    return 1;
-  }
-    
-  INFO("Start linearization genomes.")
-  RecoveredInfo<graph_pack_t> reductant(graph_pack); 
-  INFO("Finish linearization genomes.")
+  /*Save different output information in files*/
+  if (result) { 
+    using ancestor_information_t = RecoveredInfo<graph_pack_t>::AncestorInformation;
+    ancestor_information_t info = *result; 
 
-  INFO("Save transformations in files.")
-  if (cfg::get().how_build == default_algo) {
-    writer::Wtransformation<graph_pack_t> writer_transform(out_path_directory, graph_pack); 
-    auto recover_transformations = reductant.get_history();
-    for (auto const & transformation : recover_transformations) { 
-      writer_transform.save_transformation(transformation.first, transformation.second);
-      writer_transform.save_reverse_transformation(transformation.first, transformation.second);
-    }    
-  }
+    if (!info.transformations.empty()) {
+      INFO("Save transformations in files.")
 
-  INFO("Save ancestor genomes in files.")
-  writer::Wgenome<genome_t> writer_genome(path::append_path(out_path_directory, "genomes"));
-  writer_genome.save_genomes(reductant.get_genomes(), (cfg::get().how_build == default_algo)); 
+      writer::TXT_transformation<graph_pack_t> writer_transform(out_path_directory, graph_pack); 
 
+      for (auto const & transformation : info.transformations) { 
+        writer_transform.save_transformation(transformation.first, transformation.second);
+        writer_transform.save_reverse_transformation(transformation.first, transformation.second);
+      }    
+    } 
+
+    if (!info.genomes.empty()) {
+      INFO("Save ancestor genomes in files.")
+      writer::TXT_genome<genome_t> writer_genome(path::append_path(out_path_directory, "genomes"));
+      writer_genome.save_genomes(info.genomes); 
+    } 
+  } 
+  
   std::string path_to_logfile = path::append_path(out_path_directory, LOGGER_FILENAME);
   INFO("MGRA log can be found here " << path_to_logfile)
   INFO("Thank you for using MGRA!")
+  if (!result) { 
+    return 1;
+  }
 
   } catch (TCLAP::ArgException &e) { 
     std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; 

@@ -1,24 +1,23 @@
 #ifndef LINEARIZATOR_HPP
 #define LINEARIZATOR_HPP
 
-#include "MoverHistory.hpp"
+#include "algo/linearization/MoverHistory.hpp"
 
-template<class graph_t>
+template<class graph_pack_t>
 struct Linearizator {
 
-  using mcolor_t = typename graph_t::mcolor_type;
-  using edge_t = typename graph_t::edge_t;
-  using twobreak_t = typename graph_t::twobreak_t; 
-  using transform_t = typename graph_t::transform_t;
-  using partgraph_t = typename graph_t::partgraph_t; 
+  using mcolor_t = typename graph_pack_t::mcolor_type;
+  using edge_t = typename graph_pack_t::edge_t;
+  using twobreak_t = typename graph_pack_t::twobreak_t; 
+  using transform_t = typename graph_pack_t::transform_t;
+  using partgraph_t = typename graph_pack_t::partgraph_t; 
   
   using history_t = std::tuple<transform_t, transform_t, transform_t>;
   using change_history_t = std::pair<transform_t, transform_t>;
 
-  Linearizator(graph_t const & graph) 
-  : m_graph(graph)
-  , bad_edges(m_graph.get_bad_edges())
-  , mover_history(m_graph, bad_edges)
+  Linearizator(graph_pack_t const & gp) 
+  : graph_pack(gp)
+  , mover_history(gp)
   {
   }
 
@@ -37,13 +36,12 @@ private:
   bool is_circular_chromosome(partgraph_t const & local_graph, vertex_t const & x, std::unordered_set<vertex_t>& processed) const;
 
 private:
-  graph_t const & m_graph;
-  partgraph_t bad_edges;
-  MoverHistory<graph_t> mover_history;
+  graph_pack_t const & graph_pack;
+  MoverHistory<graph_pack_t> mover_history;
 };
 
-template<class graph_t>
-typename Linearizator<graph_t>::change_history_t Linearizator<graph_t>::linearizate(partgraph_t const & P, transform_t const & history, partgraph_t const & Q) const { 
+template<class graph_pack_t>
+typename Linearizator<graph_pack_t>::change_history_t Linearizator<graph_pack_t>::linearizate(partgraph_t const & P, transform_t const & history, partgraph_t const & Q) const { 
   transform_t del_transform; 
   transform_t basic_transform;
   transform_t ins_transform; 
@@ -135,8 +133,8 @@ typename Linearizator<graph_t>::change_history_t Linearizator<graph_t>::lineariz
   return std::make_pair(del_replace_transform, del_transform);
 }
 
-template<class graph_t>
-typename Linearizator<graph_t>::transform_t Linearizator<graph_t>::classical_linearization(partgraph_t P, transform_t & transformation, partgraph_t const & Q) const {
+template<class graph_pack_t>
+typename Linearizator<graph_pack_t>::transform_t Linearizator<graph_pack_t>::classical_linearization(partgraph_t P, transform_t & transformation, partgraph_t const & Q) const {
   transform_t replace_transformation; 
 
   size_t c_P = count_circular_chromosome(P); 
@@ -198,8 +196,8 @@ typename Linearizator<graph_t>::transform_t Linearizator<graph_t>::classical_lin
   return replace_transformation; 
 }
 
-template<class graph_t>
-typename Linearizator<graph_t>::transform_t Linearizator<graph_t>::deletion_linearization(partgraph_t P, transform_t & transformation, partgraph_t const & Q) const { 
+template<class graph_pack_t>
+typename Linearizator<graph_pack_t>::transform_t Linearizator<graph_pack_t>::deletion_linearization(partgraph_t P, transform_t & transformation, partgraph_t const & Q) const { 
   transform_t replace_transformation; 
   
   size_t c_P = count_circular_chromosome(P); 
@@ -282,8 +280,8 @@ typename Linearizator<graph_t>::transform_t Linearizator<graph_t>::deletion_line
   return replace_transformation;
 }
 
-template<class graph_t>
-typename Linearizator<graph_t>::history_t Linearizator<graph_t>::split_history(transform_t transformation) const {  
+template<class graph_pack_t>
+typename Linearizator<graph_pack_t>::history_t Linearizator<graph_pack_t>::split_history(transform_t transformation) const {  
   transform_t deletions; 
   transform_t twobreaks; 
   transform_t insertions;
@@ -295,8 +293,8 @@ typename Linearizator<graph_t>::history_t Linearizator<graph_t>::split_history(t
     vertex_t const & x = twobreak->get_vertex(2);
     vertex_t const & y = twobreak->get_vertex(3);
 
-    if ((p != Infty && x != Infty && p == this->m_graph.graph.get_obverse_vertex(x) && bad_edges.defined(p, x)) || 
-        (q != Infty && y != Infty && q == this->m_graph.graph.get_obverse_vertex(y) && bad_edges.defined(q, y))) { 
+    if ((p != Infty && x != Infty && p == this->graph_pack.graph.get_obverse_vertex(x) && graph_pack.is_prosthetic_chromosome(p, x)) || 
+        (q != Infty && y != Infty && q == this->graph_pack.graph.get_obverse_vertex(y) && graph_pack.is_prosthetic_chromosome(q, y))) { 
       bool is_changed = true; 
       auto second_j = twobreak; 
 
@@ -342,8 +340,8 @@ typename Linearizator<graph_t>::history_t Linearizator<graph_t>::split_history(t
     vertex_t const & x = twobreak->get_vertex(2);
     vertex_t const & y = twobreak->get_vertex(3);
 
-    if ((p != Infty && q != Infty && p == this->m_graph.graph.get_obverse_vertex(q) && bad_edges.defined(p, q)) || 
-        (x != Infty && y != Infty && x == this->m_graph.graph.get_obverse_vertex(y) && bad_edges.defined(x, y))) {     
+    if ((p != Infty && q != Infty && p == this->graph_pack.graph.get_obverse_vertex(q) && graph_pack.is_prosthetic_chromosome(p, q)) || 
+        (x != Infty && y != Infty && x == this->graph_pack.graph.get_obverse_vertex(y) && graph_pack.is_prosthetic_chromosome(x, y))) {     
       bool is_changed = true; 
       auto first_j = twobreak; 
 
@@ -373,8 +371,8 @@ typename Linearizator<graph_t>::history_t Linearizator<graph_t>::split_history(t
   return history_t(deletions, transformation, insertions);
 }
 
-template<class graph_t>
-bool Linearizator<graph_t>::is_circular_chromosome(partgraph_t const & local_graph, vertex_t const & x, std::unordered_set<vertex_t>& processed) const {
+template<class graph_pack_t>
+bool Linearizator<graph_pack_t>::is_circular_chromosome(partgraph_t const & local_graph, vertex_t const & x, std::unordered_set<vertex_t>& processed) const {
   bool circular = false;
   bool have_deletion = false;
   vertex_t previous = x;
@@ -383,13 +381,13 @@ bool Linearizator<graph_t>::is_circular_chromosome(partgraph_t const & local_gra
 
   do { 
     previous = current; 
-    current = m_graph.graph.get_obverse_vertex(previous);
+    current = graph_pack.graph.get_obverse_vertex(previous);
     if (processed.count(current) == 0) {
       processed.insert(current);
       if (local_graph.defined(current)) {
         previous = current; 
         current = local_graph[previous];
-        if (bad_edges.defined(previous, current)) {
+        if (graph_pack.is_prosthetic_chromosome(previous, current)) {
           have_deletion = true;
         }
         if (processed.count(current) != 0) {
@@ -406,7 +404,7 @@ bool Linearizator<graph_t>::is_circular_chromosome(partgraph_t const & local_gra
     for (vertex_t y = local_graph[x]; local_graph.defined(y) && (y != Infty); y = local_graph[y]) {
       processed.insert(y);
       if (y != Infty) {
-        y = m_graph.graph.get_obverse_vertex(y);
+        y = graph_pack.graph.get_obverse_vertex(y);
         processed.insert(y);
       }
     }
@@ -419,12 +417,12 @@ bool Linearizator<graph_t>::is_circular_chromosome(partgraph_t const & local_gra
   return circular;
 }
 
-template<class graph_t>
-size_t Linearizator<graph_t>::count_circular_chromosome(partgraph_t const & local_graph) const {
+template<class graph_pack_t>
+size_t Linearizator<graph_pack_t>::count_circular_chromosome(partgraph_t const & local_graph) const {
   std::unordered_set<vertex_t> processed;
   size_t count_chr = 0;
   
-  for (vertex_t const & x : m_graph.graph) { 
+  for (vertex_t const & x : graph_pack.graph) { 
     if (processed.count(x) == 0) { 
       std::unordered_set<vertex_t> chr_set;
       bool circular = is_circular_chromosome(local_graph, x, chr_set); 

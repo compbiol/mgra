@@ -154,13 +154,7 @@ struct GraphPack {
     stats.calculate(*this);
   }
 
-  /*
-   * Method return all edges corresponding insertion and deletion events in graph
-   */
-  partgraph_t get_bad_edges() const;
-
   /* 
-   *
    *
    */  
   inline void update_number_of_splits(size_t round) {
@@ -176,14 +170,13 @@ struct GraphPack {
     return ("o" + std::to_string(pseudo_infinity_vertex++) + "o");
   }
 
+  bool is_prosthetic_chromosome(vertex_t const & x, vertex_t const & y) const { 
+    return prosthetic_chromosomes.defined(x, y);
+  }
+
   DECLARE_GETTER(bool, canformQoo, canformQoo) 
   DECLARE_SETTER(bool, canformQoo, canformQoo)
-  
-  // Fixme need to think
-  inline bool is_postponed_deletion(vertex_t const & u, vertex_t const & v) const { 
-    return this->postponed_deletions.defined(u, v);
-  }
-  
+    
 public: 
   MultiGraph graph; 
   Multicolors<mcolor_t> multicolors;
@@ -213,9 +206,8 @@ private:
   size_t number_of_splits; 
   bool canformQoo;  // safe choice, at later stages may change to false
 
-  partgraph_t insertions;
-  partgraph_t postponed_deletions; //remove and never use
-
+  partgraph_t prosthetic_chromosomes; 
+  partgraph_t postponed_deletions;
   std::unordered_map<vertex_t, std::list<size_t> > mother_verteces;
 };
 
@@ -427,21 +419,6 @@ void GraphPack<mcolor_t>::check_changed_vertex(vertex_t const & vertex) {
   }
 
 }
-
-template<class mcolor_t>
-typename MultiGraph::partgraph_t GraphPack<mcolor_t>::get_bad_edges() const { 
-  partgraph_t answer; 
-
-  for (auto const & edge: insertions) { 
-    answer.insert(edge.first, edge.second);
-  } 
-
-  for (auto const & edge: postponed_deletions) {
-    answer.insert(edge.first, edge.second);
-  }
-
-  return answer;
-} 
 
 /*
 

@@ -83,7 +83,7 @@ std::multimap<size_t, typename graph_pack_t::edge_t>
       }
     }
 
-    if (graph_pack.is_postponed_deletion(edge.first.first, edge.first.second) || is_have_tc) { 
+    if (is_have_tc) { 
       current.insert(edge.first); 
       processed.insert(edge.first.first); processed.insert(edge.first.second);
       processed.erase(Infty);

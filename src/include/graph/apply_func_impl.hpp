@@ -4,7 +4,6 @@
 /*
  * Implementation of the function for operation on graph, which we do. 
  */
-
 template<class mcolor_t>
 void GraphPack<mcolor_t>::apply(twobreak_t const & twobreak, bool record) { 
   assert(multicolors.is_vec_T_consistent_color(twobreak.get_mcolor()));
@@ -95,9 +94,10 @@ void GraphPack<mcolor_t>::apply(insdel_t const & insdel, bool record) {
   }
 
   if (insdel.is_insertion()) {
-    this->insertions.insert(insdel.get_edge().first, insdel.get_edge().second);
+    prosthetic_chromosomes.insert(insdel.get_edge().first, insdel.get_edge().second);
   } else { 
-    this->postponed_deletions.insert(insdel.get_edge().first, insdel.get_edge().second);
+    prosthetic_chromosomes.insert(insdel.get_edge().first, insdel.get_edge().second);
+    postponed_deletions.insert(insdel.get_edge().first, insdel.get_edge().second);
   }   
 }
 

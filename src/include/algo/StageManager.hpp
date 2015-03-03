@@ -2,7 +2,7 @@
 #define STAGE_MANAGER_HPP
 
 #include "writer/txt_stat.hpp" 
-#include "writer/GraphDot.hpp" 
+#include "writer/dot_graph.hpp" 
 
 namespace algo { 
 
@@ -53,7 +53,7 @@ struct StageManager {
     }
   }
 
-  void run(graph_pack_t & graph_pack);
+  bool run(graph_pack_t & graph_pack);
 
   DebugPolicy const & get_debug_policy() const {
     return debug_policy;
@@ -72,7 +72,7 @@ private:
 };
 
 template<class graph_pack_t> 
-void StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
+bool StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
   writer::TXT_statistics<typename graph_pack_t::Statistics> debug_stat; 
   writer::GraphDot<graph_pack_t> debug_dots; 
 
@@ -130,8 +130,23 @@ void StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
         update_lambda();
       }
     }
-
   } 
+
+  if (!graph_pack.graph.is_identity()) { 
+    INFO("T-transformation is not complete. Cannot reconstruct genomes.")
+    return false; 
+  } 
+  
+  if (!graph_pack.is_consistency_graph()) {
+    INFO("We have problem with edges, corresponding postponed deletions.")
+    INFO("If you have indentity breakpoint graph after stages, please contact us.")
+    return false;
+  } 
+
+  INFO("Start to replace cloning to 2-breaks")
+  graph_pack.history.change_history();
+  INFO("Finish to replace cloning to 2-breaks")
+  return true;
 }
 
 }

@@ -10,8 +10,7 @@ struct Mcolor {
   using citer = map_t::const_iterator;
   using iter = map_t::iterator; 
 
-  Mcolor() { 
-  } 
+  Mcolor() = default; 
 
   explicit Mcolor(size_t i) {
     main_color.insert(std::make_pair(i, 1));

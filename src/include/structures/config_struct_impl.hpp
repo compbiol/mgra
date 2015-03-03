@@ -95,6 +95,19 @@ void load(main_config<mcolor_t>& cfg, std::string const & filename) {
  */
 template<class mcolor_t>
 void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<std::string> > const & input) {  
+  // Required setion for target build
+  if (input.find("[Target]") != input.cend()) {  
+    if (how_build == target_algo) { 
+      parse_target(input.find("[Target]")->second);
+    } else { 
+      ERROR("Put target section, but run default reconstarction");
+      exit(1);
+    }
+  } else if (how_build == target_algo) {
+    ERROR("Cann't find target section for target build");
+    exit(1);
+  } 
+
   // Required section
   if (input.find("[Genomes]") != input.cend()) {  
     TRACE("Parse genomes section")
@@ -124,20 +137,6 @@ void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<st
     TRACE("Default initialization target algorithm")
     default_target_algorithm();
   } 
-
-  // Required setion for target build
-  if (input.find("[Target]") != input.cend()) {  
-    if (how_build == target_algo) { 
-      parse_target(input.find("[Target]")->second);
-    } else { 
-      ERROR("Put target section, but run default reconstarction");
-      exit(1);
-    }
-  } else if (how_build == target_algo) {
-    ERROR("Cann't find target section for target build");
-    exit(1);
-  } 
-
   // Optional section
   if (input.find("[Completion]") != input.cend()) {  
     parse_completion(input.find("[Completion]")->second);
@@ -204,7 +203,8 @@ void main_config<mcolor_t>::parse_trees(std::vector<std::string> const & input) 
 
 template<class mcolor_t>
 void main_config<mcolor_t>::parse_algorithm(std::vector<std::string> const & input) { 
-  rounds = 3;  
+  rounds = 1;  
+  is_linearization_ancestors = false; 
   size_component_in_bruteforce = 0; 
 
   for (auto const & str : input) {
@@ -245,12 +245,12 @@ void main_config<mcolor_t>::parse_algorithm(std::vector<std::string> const & inp
         exit(1);
       }
       pipeline.push_back(algo::kind_stage::blossomv_k);
-    } else if (name == "linearization_t") {
+    } else if (name == "linearization") {
       if (how_build == target_algo) {
         ERROR("Don't use lineartztion stage in target reconstruction") 
         exit(1);
       }
-      pipeline.push_back(algo::kind_stage::linearization_k);
+      is_linearization_ancestors = true;
     } else { 
       ERROR("Unknown option " << name)
       exit(1);
@@ -298,7 +298,8 @@ void main_config<mcolor_t>::default_algorithm() {
   pipeline.push_back(algo::kind_stage::components_k);
   pipeline.push_back(algo::kind_stage::change_canform_k);
   pipeline.push_back(algo::kind_stage::blossomv_k);
-  //pipeline.push_back(algo::kind_stage::linearization_t);
+
+  is_linearization_ancestors = true;
 }
 
 template<class mcolor_t>
@@ -312,6 +313,8 @@ void main_config<mcolor_t>::default_target_algorithm() {
   pipeline.push_back(algo::kind_stage::clone_k);
   pipeline.push_back(algo::kind_stage::components_k);
   pipeline.push_back(algo::kind_stage::change_canform_k);
+
+  is_linearization_ancestors = false;
 } 
 
 template<class mcolor_t>

@@ -1,5 +1,5 @@
-#ifndef GRAPHDOTS_HPP
-#define GRAPHDOTS_HPP
+#ifndef DOT_GRAPH_HPP
+#define DOT_GRAPH_HPP
 
 namespace writer {
 

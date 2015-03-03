@@ -46,19 +46,18 @@ public:
    */
   build_type how_build;  
 
-  /**
-   * Switch on/off stage fo reconstruction trees
-   */
-  bool is_reconstructed_trees;
-
   using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
   std::vector<phylogeny_tree_t> phylotrees;
   
   /**
    * Number of stage and rounds 
    */
+  bool is_reconstructed_trees; //Switch on/off stage for reconstruction trees
+
   size_t rounds; 
   std::vector<algo::kind_stage> pipeline;
+
+  bool is_linearization_ancestors; //Switch on/off stage for linearization procedure
 
   /**
    * Switch on/off bruteforce stage for small components

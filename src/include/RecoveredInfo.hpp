@@ -1,7 +1,7 @@
 #ifndef RECOVERED_INFO_HPP
 #define RECOVERED_INFO_HPP
 
-#include "Linearizator.hpp"
+#include "algo/linearization/Linearizator.hpp"
 
 template<class graph_pack_t>
 struct RecoveredInfo {
@@ -14,34 +14,60 @@ struct RecoveredInfo {
   using chromosome_t = structure::Chromosome; 
   using history_t = std::tuple<transform_t, transform_t, transform_t>;
 
-  RecoveredInfo(graph_pack_t const & graph_pack);
+  struct AncestorInformation { 
+    AncestorInformation() = default;
 
-  std::vector<genome_t> get_genomes() const { 
     std::vector<genome_t> genomes;
-     for (auto const & local_graph : graphs) {
-      genomes.push_back(get_genome(cfg::get().mcolor_to_name(local_graph.first), local_graph.second)); 
-    }
-    return genomes;   
+    std::map<std::pair<mcolor_t, mcolor_t>, transform_t> transformations;
+  };
+
+  RecoveredInfo(graph_pack_t const & gp)
+  : graph_pack(gp)
+  , linearizator(gp)
+  {
   }
+
+  /**
+   *
+   */
+  void init_raw_results();
+
+  /**
+   *
+   */
+  void init_linearizate_results();
+
+  /**
+   *
+   */
+  void init_target_results();
   
-  std::map<std::pair<mcolor_t, mcolor_t>, transform_t> get_history() const { 
-    std::map<std::pair<mcolor_t, mcolor_t>, transform_t> result_transformations;
+  /**
+   *
+   */
+  AncestorInformation get_results() const { 
+    AncestorInformation ret; 
+
+    for (auto const & local_graph : graphs) {
+      ret.genomes.push_back(get_genome(cfg::get().mcolor_to_name(local_graph.first), local_graph.second)); 
+    }
+    
     for (auto const & elem : transformations) { 
       assert(parent_colors.find(elem.first) != parent_colors.cend());
-      result_transformations.insert(std::make_pair(std::make_pair(elem.first, parent_colors.find(elem.first)->second), elem.second));  
+      ret.transformations.insert(std::make_pair(std::make_pair(elem.first, parent_colors.find(elem.first)->second), elem.second));  
     }
-    return result_transformations;
+    
+    return ret;
   }
 
 private: 
   using tree_t = typename structure::BinaryTree<mcolor_t>; 
   using node_t = typename tree_t::Node; 
-  void get_ugly_history();
   void walk_and_linearizeate(std::unique_ptr<node_t> const & current);
   
   genome_t get_genome(std::string const & name, partgraph_t const & recovered_graph) const;
   chromosome_t get_chromosome(partgraph_t const & recovered_graph, vertex_t const & x, std::unordered_set<vertex_t>& chromosome_set) const;
-
+  
 private: 
   graph_pack_t const & graph_pack;
   Linearizator<graph_pack_t> linearizator;
@@ -49,15 +75,13 @@ private:
   std::map<mcolor_t, partgraph_t> graphs;
   std::map<mcolor_t, mcolor_t> parent_colors; 
   std::map<mcolor_t, transform_t> transformations;
-
   
-  partgraph_t bad_edges; //FIXME REMOVE
 private:
   DECL_LOGGER("RecoveredInfo");
 }; 
 
 template<class graph_pack_t>
-void RecoveredInfo<graph_pack_t>::get_ugly_history() { 
+void RecoveredInfo<graph_pack_t>::init_raw_results() { 
   for (auto im = graph_pack.multicolors.cbegin_vec_T_consistent_color(); im != graph_pack.multicolors.cend_vec_T_consistent_color(); ++im) {
     graphs.insert(std::make_pair(*im, graph_pack.graph.get_partgraph(0)));
     transformations.insert(std::make_pair(*im, transform_t())); 
@@ -79,15 +103,9 @@ void RecoveredInfo<graph_pack_t>::get_ugly_history() {
 }
 
 template<class graph_pack_t>
-RecoveredInfo<graph_pack_t>::RecoveredInfo(graph_pack_t const & gp) 
-: graph_pack(gp)
-, linearizator(gp)
-, bad_edges(gp.get_bad_edges())
-{ 
-  assert(cfg::get().how_build == default_algo);
-
+void RecoveredInfo<graph_pack_t>::init_linearizate_results() { 
   INFO("Get history from process graph")
-  get_ugly_history();
+  init_raw_results();
   
   INFO("Start walk on tree and run algorithm for linearizeate")
   for (auto const & tree : cfg::get().phylotrees) {
@@ -107,6 +125,11 @@ RecoveredInfo<graph_pack_t>::RecoveredInfo(graph_pack_t const & gp)
       break;
     }
   }
+}
+
+template<class graph_pack_t>
+void RecoveredInfo<graph_pack_t>::init_target_results() { 
+  ;
 }
 
 template<class graph_pack_t>
@@ -180,7 +203,7 @@ structure::Genome RecoveredInfo<graph_pack_t>::get_genome(std::string const & na
   std::string name_chr("chr");
   size_t count = 1; 
 
-  for(vertex_t const & x : graph_pack.graph) { 
+  for (vertex_t const & x : graph_pack.graph) { 
     if (processed.find(x) == processed.end()) { 
       std::unordered_set<vertex_t> chromosome_set;
       chromosome_t chromosome = get_chromosome(recovered_graph, x, chromosome_set);
@@ -226,7 +249,7 @@ structure::Chromosome RecoveredInfo<graph_pack_t>::get_chromosome(partgraph_t co
       previous = current;
       current = recovered_graph.find(previous)->second; 
 
-      if (bad_edges.defined(previous, current)) {
+      if (graph_pack.is_prosthetic_chromosome(previous, current)) {
         have_deletion = true;
       }
 

@@ -12,9 +12,6 @@ set (MGRA_VERSION_PATCH 1)
 
 set(MGRA_SOURCE mgra.cpp reader.cpp)
 
-#	Wstats.cpp
-
-
 configure_file (
   ${PROJECT_SOURCE_DIR}/include/defined.h.in
   ${PROJECT_BINARY_DIR}/defined.h

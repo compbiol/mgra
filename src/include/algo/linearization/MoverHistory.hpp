@@ -1,6 +1,8 @@
 #ifndef MOVER_HISTORY_HPP
 #define MOVER_HISTORY_HPP
 
+namespace algo { 
+
 template<class graph_pack_t> 
 struct MoverHistory {
   using edge_t = typename graph_pack_t::edge_t;
@@ -210,6 +212,8 @@ bool MoverHistory<graph_pack_t>::swap_iter(ClassIterator first, ClassIterator se
 
   return result;  
 }
+
+} 
 
 /*
 for (size_t i = 0; i < 2; ++i) { 

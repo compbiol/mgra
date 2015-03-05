@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
     INFO(out.str());
   } 
 
-  boost::optional<RecoveredInfo<graph_pack_t>::AncestorInformation> result; 
+  boost::optional<algo::RecoveredInformation<graph_pack_t>::AncestorInformation> result; 
   if (cfg::get().how_build == default_algo) { 
     result = main_algorithm(graph_pack);
   } else if (cfg::get().how_build == wgd_algo) { 
@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
 
   /*Save different output information in files*/
   if (result) { 
-    using ancestor_information_t = RecoveredInfo<graph_pack_t>::AncestorInformation;
+    using ancestor_information_t = algo::RecoveredInformation<graph_pack_t>::AncestorInformation;
     ancestor_information_t info = *result; 
 
     if (!info.transformations.empty()) {

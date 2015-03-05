@@ -3,6 +3,8 @@
 
 #include "algo/linearization/MoverHistory.hpp"
 
+namespace algo { 
+
 template<class graph_pack_t>
 struct Linearizator {
 
@@ -12,7 +14,9 @@ struct Linearizator {
   using transform_t = typename graph_pack_t::transform_t;
   using partgraph_t = typename graph_pack_t::partgraph_t; 
   
-  using history_t = std::tuple<transform_t, transform_t, transform_t>;
+  using genome_t = structure::Genome;
+  using chromosome_t = structure::Chromosome; 
+  
   using change_history_t = std::pair<transform_t, transform_t>;
 
   Linearizator(graph_pack_t const & gp) 
@@ -21,35 +25,54 @@ struct Linearizator {
   {
   }
 
-  change_history_t linearizate(partgraph_t const & P, transform_t const & history, partgraph_t const & Q) const; 
+  /**
+   * create genome from local graph with specified color and name. 
+   * return genome in structure::Genome class. 
+   */
+  genome_t get_genome(std::string const & name, partgraph_t const & local_graph) const;  
 
+  /**
+   * count number of circular chromosomes from genome by graph with specified color. 
+   * in paper about linearization algorithm this functon corresponding c(.)
+   * return number of cicular chromosomes in local graph (genome). 
+   */
   size_t count_circular_chromosome(partgraph_t const & local_graph) const;
 
+  /**
+   * main procedure for linearization algorithm. See paper for detailed information. 
+   * get transformation HISTORY between genome P and genome Q, where c(P) > c(Q). 
+   * return pair of transformations T_1, and T_2. 
+   * where genome after T_1 have c(P') == c(Q) and length of T_1 is equal c(P) - c(Q). 
+   * T_2 is transformation between genome P' -> Q
+   */
+  change_history_t linearizate(partgraph_t const & P, transform_t const & history, partgraph_t const & Q) const; 
+
 private:
+  using history_t = std::tuple<transform_t, transform_t, transform_t>;
+
   transform_t classical_linearization(partgraph_t P, transform_t & transformation, partgraph_t const & Q) const; 
-
   transform_t deletion_linearization(partgraph_t P, transform_t & transformation, partgraph_t const & Q) const; 
-
   history_t split_history(transform_t transformation) const;
-  
-  //GO TO LAMBDA
-  bool is_circular_chromosome(partgraph_t const & local_graph, vertex_t const & x, std::unordered_set<vertex_t>& processed) const;
 
+  /**
+  * function get one chromosome from LOCAL_GRAPH, where X - is vertex which belong our chromosome.
+  */
+  chromosome_t get_chromosome(partgraph_t const & local_graph, vertex_t const & x, std::unordered_set<vertex_t>& processed) const;
+  
 private:
   graph_pack_t const & graph_pack;
   MoverHistory<graph_pack_t> mover_history;
+
+private: 
+  DECL_LOGGER("LinearizationAlgorithm");
 };
 
 template<class graph_pack_t>
 typename Linearizator<graph_pack_t>::change_history_t Linearizator<graph_pack_t>::linearizate(partgraph_t const & P, transform_t const & history, partgraph_t const & Q) const { 
-  transform_t del_transform; 
-  transform_t basic_transform;
-  transform_t ins_transform; 
-
-  //std::cerr << "Start split history " << std::endl; 
+  transform_t del_transform; transform_t ins_transform; transform_t basic_transform; 
   std::tie(del_transform, basic_transform, ins_transform) = split_history(history);
 
-  /* calculate P' */
+  //calculate P'
   //std::cerr << "Apply deletion history" << std::endl;
   partgraph_t PP = P; 
   for (twobreak_t const & twobreak : del_transform) { 
@@ -58,7 +81,7 @@ typename Linearizator<graph_pack_t>::change_history_t Linearizator<graph_pack_t>
     twobreak.apply_single(PP);
   }
 
-  /* calculate Q' */
+  //calculate Q'
   //std::cerr << "Apply basic history" << std::endl;
   partgraph_t QQ = PP;
   for (twobreak_t const & twobreak : basic_transform) { 
@@ -67,17 +90,14 @@ typename Linearizator<graph_pack_t>::change_history_t Linearizator<graph_pack_t>
     twobreak.apply_single(QQ);
   }
 
-  /* Test thar split history is good */
-  //std::cerr << "Apply insertion history" << std::endl;
+  //Test that split history is good 
   partgraph_t tested = QQ;
   for (twobreak_t const & twobreak : ins_transform) { 
-    //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) 
-    //   << " " << twobreak.get_vertex(3) << " " << genome_match::mcolor_to_name(twobreak.get_mcolor()) << std::endl;
     twobreak.apply_single(tested);
   }
   assert(tested == Q);
   
-  /*Go to algorithm*/
+  //Go to algorithm
   size_t c_P = count_circular_chromosome(P);
   size_t c_PP = count_circular_chromosome(PP);     
   size_t c_QQ = count_circular_chromosome(QQ); 
@@ -85,26 +105,22 @@ typename Linearizator<graph_pack_t>::change_history_t Linearizator<graph_pack_t>
 
   assert(c_P > c_Q); 
 
-  //std::cerr << c_P << " " << c_PP << " " << c_QQ << " " << c_Q << std::endl;
+  TRACE("Number of circular chromosomes" << c_P << " " << c_PP << " " << c_QQ << " " << c_Q)
 
-  /* Run deletion linearization */
+  //Run deletion linearization
   transform_t del_replace_transform; 
   if (c_P > c_PP) {
-    //std::cerr << "Start replace deletion history" << std::endl; 
+    INFO("Start linearization algortihm on deletion history")
     del_replace_transform = deletion_linearization(P, del_transform, PP);
-    /*for (twobreak_t const & twobreak : del_replace_transform) { 
-      std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) 
-         << " " << twobreak.get_vertex(3) << " " << genome_match::mcolor_to_name(twobreak.get_mcolor()) << std::endl;
-    }*/
-    //std::cerr << "End replace deletion history" << std::endl;
+    INFO("Finish linearization algortihm on deletion history")
   }
 
-  /* Run classical linearization.*/
+  //Run classical linearization.
   transform_t basic_replace_transform; 
   if (c_PP > c_QQ) {
-    //std::cerr << "Start replace basic history" << std::endl;
+    INFO("Start linearization algortihm on classic history")
     basic_replace_transform = classical_linearization(PP, basic_transform, QQ);
-    //std::cerr << "End replace basic history" << std::endl;
+    INFO("Finish linearization algortihm on classic history")
   } 
   
   while (!basic_replace_transform.empty()) { 
@@ -127,8 +143,6 @@ typename Linearizator<graph_pack_t>::change_history_t Linearizator<graph_pack_t>
 
   basic_transform.splice(basic_transform.end(), ins_transform);
   del_transform.splice(del_transform.end(), basic_transform);  
-
-  //std::cerr << "End work linearization. We have " << std::endl; 
 
   return std::make_pair(del_replace_transform, del_transform);
 }
@@ -209,7 +223,7 @@ typename Linearizator<graph_pack_t>::transform_t Linearizator<graph_pack_t>::del
     bool changed = false; 
     transform_t removed_chromosome; 
 
-    /*Find first twobreak is decrease number of circular chromosomes*/
+    //Find first twobreak is decrease number of circular chromosomes
     for (auto first_j = transformation.begin(); !changed && first_j != transformation.end();) {     
       //std::cerr << "See on twobreak: " << first_j->get_vertex(0) << " " << first_j->get_vertex(1) << " " << first_j->get_vertex(2) 
       //      << " " << first_j->get_vertex(3) << " " << std::endl;
@@ -286,7 +300,7 @@ typename Linearizator<graph_pack_t>::history_t Linearizator<graph_pack_t>::split
   transform_t twobreaks; 
   transform_t insertions;
   
-  //std::cerr << "move deletion to the end " << std::endl;
+  // Move deletion in the begin 
   for (auto twobreak = transformation.begin(); twobreak != transformation.end();) { 
     vertex_t const & p = twobreak->get_vertex(0);
     vertex_t const & q = twobreak->get_vertex(1);
@@ -314,7 +328,6 @@ typename Linearizator<graph_pack_t>::history_t Linearizator<graph_pack_t>::split
         if (is_changed) { 
           is_changed = mover_history.move_deletion_to_begin(transformation.begin(), second_j);
           if (!is_changed) { 
-            //std::cerr << "is strong deletion" <<std::endl;
             transformation.pop_front();
             transformation.pop_front();
           }
@@ -332,13 +345,10 @@ typename Linearizator<graph_pack_t>::history_t Linearizator<graph_pack_t>::split
     }
   } 
 
-  /*Move transformation on end*/
-  //std::cerr << "move insertion to the end " << std::endl;
+  //Move insertions in the end
   for (auto twobreak = transformation.begin(); twobreak != transformation.end();) { 
-    vertex_t const & p = twobreak->get_vertex(0);
-    vertex_t const & q = twobreak->get_vertex(1);
-    vertex_t const & x = twobreak->get_vertex(2);
-    vertex_t const & y = twobreak->get_vertex(3);
+    vertex_t const & p = twobreak->get_vertex(0); vertex_t const & q = twobreak->get_vertex(1);
+    vertex_t const & x = twobreak->get_vertex(2); vertex_t const & y = twobreak->get_vertex(3);
 
     if ((p != Infty && q != Infty && p == this->graph_pack.graph.get_obverse_vertex(q) && graph_pack.is_prosthetic_chromosome(p, q)) || 
         (x != Infty && y != Infty && x == this->graph_pack.graph.get_obverse_vertex(y) && graph_pack.is_prosthetic_chromosome(x, y))) {     
@@ -349,7 +359,6 @@ typename Linearizator<graph_pack_t>::history_t Linearizator<graph_pack_t>::split
         for (++twobreak; is_changed && twobreak != transformation.end(); ++twobreak) {
           is_changed = mover_history.move_insertion_to_end(first_j, twobreak);
           if (!is_changed) { 
-            //std::cerr << "Strong in insertion" << std::endl;
             transformation.erase(first_j++); 
             transformation.erase(twobreak++); 
           }
@@ -372,71 +381,104 @@ typename Linearizator<graph_pack_t>::history_t Linearizator<graph_pack_t>::split
 }
 
 template<class graph_pack_t>
-bool Linearizator<graph_pack_t>::is_circular_chromosome(partgraph_t const & local_graph, vertex_t const & x, std::unordered_set<vertex_t>& processed) const {
+structure::Genome Linearizator<graph_pack_t>::get_genome(std::string const & name, partgraph_t const & local_graph) const { 
+  std::string const name_chr("chr");
+  std::unordered_set<vertex_t> processed;
+  genome_t genome(name); 
+  size_t count = 1; 
+
+  for (vertex_t const & x : graph_pack.graph) { 
+    if (processed.find(x) == processed.end()) { 
+      chromosome_t chromosome = get_chromosome(local_graph, x, processed);
+      if (chromosome.size() != 0) {
+        genome.insert(name_chr + std::to_string(count++), chromosome);
+      } 
+    }
+  } 
+
+  return genome;
+}
+
+template<class graph_pack_t>
+size_t Linearizator<graph_pack_t>::count_circular_chromosome(partgraph_t const & local_graph) const {
+  std::unordered_set<vertex_t> processed;
+  size_t count_circular_chr = 0;
+  
+  for (vertex_t const & x : graph_pack.graph) { 
+    if (processed.count(x) == 0) { 
+      chromosome_t chromosome = get_chromosome(local_graph, x, processed); 
+      if (chromosome.is_circular()) {
+        ++count_circular_chr; 
+      }
+    } 
+  }
+  
+  return count_circular_chr;
+}
+
+template<class graph_pack_t>
+structure::Chromosome Linearizator<graph_pack_t>::get_chromosome(partgraph_t const & local_graph, vertex_t const & x, std::unordered_set<vertex_t>& processed) const { 
+  std::list<std::pair<vertex_t, int> > path;
   bool circular = false;
   bool have_deletion = false;
   vertex_t previous = x;
   vertex_t current = x; 
   processed.insert(x);
 
+  auto const changer_lambda = [&] (vertex_t const & t, bool flag) -> void {
+    if (flag) { 
+      (*t.rbegin() == 't')?path.push_back(std::make_pair(t.substr(0, t.size() - 1), -1)):path.push_back(std::make_pair(t.substr(0, t.size() - 1), 1));
+    } else { 
+      (*t.rbegin() == 't')?path.push_front(std::make_pair(t.substr(0, t.size() - 1), 1)):path.push_front(std::make_pair(t.substr(0, t.size() - 1), -1));  
+    }  
+  };
+
   do { 
     previous = current; 
-    current = graph_pack.graph.get_obverse_vertex(previous);
-    if (processed.count(current) == 0) {
+    current = graph_pack.graph.get_obverse_vertex(previous); 
+  
+    if (processed.count(current) == 0) { 
       processed.insert(current);
-      if (local_graph.defined(current)) {
+      changer_lambda(current, true);
+
+      if (local_graph.defined(current)) { 
         previous = current; 
-        current = local_graph[previous];
+        current = local_graph.find(previous)->second; 
+
         if (graph_pack.is_prosthetic_chromosome(previous, current)) {
           have_deletion = true;
         }
+
         if (processed.count(current) != 0) {
           circular = true;
-        } 
-        processed.insert(current); 
-      }
+        } else if (current != Infty) { 
+          processed.insert(current);  
+        }
+      } 
     } else { 
       circular = true;
     } 
   } while ((current != Infty) && local_graph.defined(current) && !circular);
 
   if (!circular && local_graph.defined(x)) {  
-    for (vertex_t y = local_graph[x]; local_graph.defined(y) && (y != Infty); y = local_graph[y]) {
+    for (vertex_t y = local_graph.find(x)->second; local_graph.defined(y) && (y != Infty); y = local_graph.find(y)->second) {
       processed.insert(y);
       if (y != Infty) {
         y = graph_pack.graph.get_obverse_vertex(y);
         processed.insert(y);
-      }
-    }
-  } 
-
-  if (have_deletion) { 
-    return false;
-  } 
-
-  return circular;
-}
-
-template<class graph_pack_t>
-size_t Linearizator<graph_pack_t>::count_circular_chromosome(partgraph_t const & local_graph) const {
-  std::unordered_set<vertex_t> processed;
-  size_t count_chr = 0;
-  
-  for (vertex_t const & x : graph_pack.graph) { 
-    if (processed.count(x) == 0) { 
-      std::unordered_set<vertex_t> chr_set;
-      bool circular = is_circular_chromosome(local_graph, x, chr_set); 
-      std::copy(chr_set.begin(), chr_set.end(), std::inserter(processed, processed.end()));
-      if (circular) {
-        ++count_chr; 
+        changer_lambda(y, false);
       }
     } 
+  } 
+    
+  if (have_deletion) {
+    return chromosome_t();
   }
-  
-  return count_chr;
+
+  return chromosome_t(path, circular);
 }
 
-
+} 
 /*
 for (auto q = transformation.begin(); q != transformation.end(); ++q) { 
     q->apply_single(P);
@@ -489,5 +531,5 @@ for (auto q = transformation.begin(); q != transformation.end(); ++q) {
           std::cerr << "Second: " << second_j->get_vertex(0) << " " << second_j->get_vertex(1) << " " << second_j->get_vertex(2) 
             << " " << second_j->get_vertex(3) << " " << std::endl;
           */
-  
+
 #endif

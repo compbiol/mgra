@@ -17,7 +17,7 @@
 #include "algo/main/BlossomVWrapper.hpp"
 #include "algo/main/BruteForce.hpp"
 
-#include "RecoveredInfo.hpp"
+#include "algo/linearization/RecoveredInformation.hpp"
 
 namespace algo { 
 
@@ -55,7 +55,7 @@ void StageManager<graph_pack_t>::add_stage(kind_stage stage) {
  * full phylogenetic tree and genomes doesn't need to scaffold
  */
 template<class graph_pack_t> 
-boost::optional<typename RecoveredInfo<graph_pack_t>::AncestorInformation> main_algorithm(graph_pack_t & graph_pack) {
+boost::optional<typename algo::RecoveredInformation<graph_pack_t>::AncestorInformation> main_algorithm(graph_pack_t & graph_pack) {
   assert(cfg::get().how_build == default_algo); 
 
   INFO("Start algorithm for convert from breakpoint graph to identity breakpoint graph");
@@ -73,7 +73,7 @@ boost::optional<typename RecoveredInfo<graph_pack_t>::AncestorInformation> main_
   
   if (is_can_reconstruct) { 
     INFO("Get results from graphs.")
-    RecoveredInfo<graph_pack_t> recover_info(graph_pack);
+    RecoveredInformation<graph_pack_t> recover_info(graph_pack);
     if (!cfg::get().target_mcolor.empty()) { 
       recover_info.init_target_results();
     } else if (cfg::get().is_linearization_ancestors) { 
@@ -90,7 +90,7 @@ boost::optional<typename RecoveredInfo<graph_pack_t>::AncestorInformation> main_
 }
 
 template<class graph_pack_t> 
-boost::optional<typename RecoveredInfo<graph_pack_t>::AncestorInformation> wgd_algorithm(graph_pack_t & graph_pack) {
+boost::optional<typename algo::RecoveredInformation<graph_pack_t>::AncestorInformation> wgd_algorithm(graph_pack_t & graph_pack) {
   assert(cfg::get().how_build == default_algo); 
 
   INFO("Start wgd algorithm for convert from breakpoint graph to identity breakpoint graph");

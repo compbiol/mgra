@@ -100,17 +100,16 @@ void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<st
     TRACE("Parse genomes section")
     parse_genomes(input.find("[Genomes]")->second);
   } else { 
-    ERROR("Cann't find genomes section");
+    ERROR("Can't find genomes section");
     exit(1);
   }
 
-  // Required section
+  // Required section for anything but recover tree mode
   if (input.find("[Trees]") != input.cend()) {  
     TRACE("Parse trees section")
     parse_trees(input.find("[Trees]")->second);
-  } else { 
-    ERROR("Cann't find trees section");
-    exit(1);
+  } else {
+    TRACE("No trees section detected, should be in recover tree mode")
   }
 
   // Optional section
@@ -134,7 +133,7 @@ void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<st
       exit(1);
     }
   } else if (how_build == target_algo) {
-    ERROR("Cann't find target section for target build");
+    ERROR("Can't find target section for target build");
     exit(1);
   } 
 

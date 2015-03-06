@@ -79,3 +79,9 @@ atlassian-ide-plugin.xml
 com_crashlytics_export_strings.xml
 
 
+### https://raw.github.com/github/gitignore/298588469ac0cb08a00eebf7b00efb5ab726daca/Global/vagrant.gitignore
+
+.vagrant/
+
+
+src/CMakeLists.txt.user

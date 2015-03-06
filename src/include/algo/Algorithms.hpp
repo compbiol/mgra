@@ -5,8 +5,6 @@
 
 #include "algo/Stage.hpp"
 
-//#include "algo/recover_tree/RecoveredTree.hpp"
-
 #include "algo/main/Balance.hpp"
 #include "algo/main/SimplePath.hpp"
 #include "algo/main/FourCycles.hpp"
@@ -20,102 +18,101 @@
 
 //#include "algo/linearization/Linearization.hpp"
 
-namespace algo { 
+namespace algo {
 
-template<class graph_pack_t> 
-void StageManager<graph_pack_t>::add_stage(kind_stage stage) { 
-  if (stage == balance_k) { 
-    add_stage(new Balance<graph_pack_t>(1));
-  } else if (stage == simple_path_k) {
-    add_stage(new ProcessSimplePath<graph_pack_t>(3));
-  } else if (stage == four_cycles_k) {
-    add_stage(new ProcessFourCycles<graph_pack_t>(1));
-  } else if (stage == fair_edge_k) {
-    add_stage(new ProcessFairEdge<graph_pack_t>(3));
-  } else if (stage == clone_k) {
-    add_stage(new ProcessClone<graph_pack_t>(3));
-  } else if (stage == fair_clone_edge_k) {
-    add_stage(new ProcessTwoBreakAndClone<graph_pack_t>(3));
-  } else if (stage == components_k) {
-    add_stage(new IncreaseNumberComponents<graph_pack_t>(1));
-  } else if (stage == change_canform_k) {
-    add_stage(new ChangeCanformInfinity<graph_pack_t>());
-  } else if (stage == bruteforce_k) { 
-    add_stage(new BruteForce<graph_pack_t>(cfg::get().size_component_in_bruteforce));
-  } else if (stage == blossomv_k) {
-    add_stage(new ProcessWithBlossomV<graph_pack_t>());
-  } else if (stage == completion_k) {
-    add_stage(new ProcessComplection<graph_pack_t>(cfg::get().completion));
-  } 
-}
-
+  template<class graph_pack_t>
+  void StageManager<graph_pack_t>::add_stage(kind_stage stage) {
+    if (stage == balance_k) {
+      add_stage(new Balance<graph_pack_t>(1));
+    } else if (stage == simple_path_k) {
+      add_stage(new ProcessSimplePath<graph_pack_t>(3));
+    } else if (stage == four_cycles_k) {
+      add_stage(new ProcessFourCycles<graph_pack_t>(1));
+    } else if (stage == fair_edge_k) {
+      add_stage(new ProcessFairEdge<graph_pack_t>(3));
+    } else if (stage == clone_k) {
+      add_stage(new ProcessClone<graph_pack_t>(3));
+    } else if (stage == fair_clone_edge_k) {
+      add_stage(new ProcessTwoBreakAndClone<graph_pack_t>(3));
+    } else if (stage == components_k) {
+      add_stage(new IncreaseNumberComponents<graph_pack_t>(1));
+    } else if (stage == change_canform_k) {
+      add_stage(new ChangeCanformInfinity<graph_pack_t>());
+    } else if (stage == bruteforce_k) {
+      add_stage(new BruteForce<graph_pack_t>(cfg::get().size_component_in_bruteforce));
+    } else if (stage == blossomv_k) {
+      add_stage(new ProcessWithBlossomV<graph_pack_t>());
+    } else if (stage == completion_k) {
+      add_stage(new ProcessComplection<graph_pack_t>(cfg::get().completion));
+    }
+  }
 }
 
 /**
- * This pipeline uses in main converter, when avaliable
- * full phylogenetic tree and genomes doesn't need to scaffold
- */
-template<class graph_pack_t> 
-bool main_algorithm(graph_pack_t & graph_pack) {
-  assert(cfg::get().how_build == default_algo); 
+* This pipeline uses in main converter, when avaliable
+* full phylogenetic tree and genomes doesn't need to scaffold
+*/
+template<class graph_pack_t>
+bool main_algorithm(graph_pack_t &graph_pack) {
+  assert(cfg::get().how_build == default_algo);
 
   INFO("Start algorithm for convert from breakpoint graph to identity breakpoint graph");
 
-  using namespace algo; 
+  using namespace algo;
   StageManager<graph_pack_t> algorithm(cfg::get().rounds, {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
 
-  for (auto const & name_stage : cfg::get().pipeline) { 
-    algorithm.add_stage(name_stage); 
+  for (auto const &name_stage : cfg::get().pipeline) {
+    algorithm.add_stage(name_stage);
   }
 
   INFO("Run algorithms stages")
   algorithm.run(graph_pack);
-    
-  if (!graph_pack.graph.is_identity()) { 
+
+  if (!graph_pack.graph.is_identity()) {
     INFO("T-transformation is not complete. Cannot reconstruct genomes.")
-    return false; 
-  } 
-  
+    return false;
+  }
+
   if (!graph_pack.is_consistency_graph()) {
     INFO("We have problem with edges, corresponding postponed deletions.")
     INFO("If you have indentity breakpoint graph after stages, please contact us.")
     return false;
-  } 
+  }
 
   INFO("Start to replace cloning to 2-breaks")
   graph_pack.history.change_history();
   INFO("Finish to replace cloning to 2-breaks")
-   
+
   return true;
 }
 
-template<class graph_pack_t> 
-bool wgd_algorithm(graph_pack_t & graph_pack) {
-  assert(cfg::get().how_build == default_algo); 
+template<class graph_pack_t>
+bool wgd_algorithm(graph_pack_t &graph_pack) {
+  assert(cfg::get().how_build == default_algo);
 
   INFO("Start wgd algorithm for convert from breakpoint graph to identity breakpoint graph");
 
-  using namespace algo; 
+  using namespace algo;
   StageManager<graph_pack_t> algorithm(cfg::get().rounds, {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
 
   INFO("Run algorithms stages")
   algorithm.run(graph_pack);
-    
-  if (!graph_pack.graph.is_identity()) { 
+
+  if (!graph_pack.graph.is_identity()) {
     INFO("T-transformation is not complete. Cannot reconstruct genomes.")
-    return false; 
-  } 
-  
+    return false;
+  }
+
   if (!graph_pack.is_consistency_graph()) {
     INFO("We have problem with edges, corresponding postponed deletions.")
     INFO("If you have indentity breakpoint graph after stages, please contact us.")
     return false;
-  } 
+  }
 
   INFO("Start to replace cloning to 2-breaks")
   graph_pack.history.change_history();
   INFO("Finish to replace cloning to 2-breaks")
-   
+
   return true;
 }
 

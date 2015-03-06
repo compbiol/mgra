@@ -47,9 +47,9 @@ public:
   build_type how_build;  
 
   /**
-   * Switch on/off stage fo reconstruction trees
+   * Switch on/off tree recovery mode
    */
-  bool is_reconstructed_trees;
+  bool is_recover_tree;
 
   using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
   std::vector<phylogeny_tree_t> phylotrees;
@@ -72,7 +72,7 @@ public:
   std::string colorscheme;
 
 private: 
-  int RGBcoeff; 
+  size_t RGBcoeff;
   std::vector<std::string> RGBcolors;
 
   std::vector<std::string> priority_name;  

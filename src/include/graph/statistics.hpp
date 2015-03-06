@@ -76,7 +76,7 @@ public:
  */
 template<class mcolor_t>
 void GraphPack<mcolor_t>::Statistics::count_vertex_statistics(GraphPack<mcolor_t> const & graph_pack) {
-  vertex_statistics[0] = graph_pack.graph.size(); 
+  vertex_statistics[0] = graph_pack.graph.size();
 
   for (vertex_t const & x : graph_pack.graph) {
     if (graph_pack.is_duplication_vertex(x)) {

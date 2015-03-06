@@ -132,8 +132,8 @@ std::string GraphDot<graph_pack_t>::get_branches_from_tree(std::unique_ptr<node_
   auto const & right = current->get_right_child(); 
 
   if (!left && !right) { 
-    if (!current->get_childs().empty()) { 
-      for(auto const & lc : current->get_childs()) {
+    if (!current->get_children().empty()) {
+      for(auto const & lc : current->get_children()) {
         info.push_back("\t\"" + current->get_name() + "\" -> \"" + lc + "\";");
       }
     } 

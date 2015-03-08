@@ -48,7 +48,7 @@ namespace structure {
       std::unique_ptr<Node> right_child;
     };
 
-    BinaryTree(Node* root_node): root(root_node), phylogentic_root_tree(true) {}
+    BinaryTree(std::unique_ptr<Node> root_node): root(std::move(root_node)), phylogentic_root_tree(true) {}
 
     BinaryTree(
         std::string const& st,

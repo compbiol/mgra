@@ -9,12 +9,14 @@ namespace algo {
   template <class graph_pack_t>
   struct BruteforceRecoverTreeAlgorithm : RecoverTreeAlgorithm<graph_pack_t> {
     using mcolor_t = typename RecoverTreeAlgorithm<graph_pack_t>::mcolor_t;
+    using tree_t = typename RecoverTreeAlgorithm<graph_pack_t>::tree_t;
+    using tree_ptr = typename RecoverTreeAlgorithm<graph_pack_t>::tree_ptr;
 
     BruteforceRecoverTreeAlgorithm(graph_pack_t& graph_pack) : m_graph(graph_pack) {
     }
 
-    typename RecoverTreeAlgorithm<graph_pack_t>::tree_ptr recover_tree() {
-      return std::make_shared<typename structure::BinaryTree<mcolor_t> >(nullptr);
+    tree_ptr recover_tree() {
+      return std::make_shared<tree_t>(std::unique_ptr<typename tree_t::Node>(nullptr));
     }
 
   private:

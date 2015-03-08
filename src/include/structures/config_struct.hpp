@@ -5,7 +5,7 @@
 
 #include "event/TwoBreak.hpp"
 
-/*This structures containes information from *.cfg file */
+// This structure contains information from *.cfg file
 template<class mcolor_t>
 struct main_config {
   using twobreak_t = event::TwoBreak<mcolor_t>; 

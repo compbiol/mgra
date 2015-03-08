@@ -205,8 +205,15 @@ int main(int argc, char **argv) {
       INFO("Starting tree reovery")
       //Recover tree here
       graph_pack.update_graph_statistics();
+
+      for(auto&& edges_count: graph_pack.stats.multiedges_count) {
+        std::cout << edges_count.second << std::endl;
+      }
+
       typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr recover_tree_algoritm(
           new algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>(graph_pack));
+
+      //TODO: preform dumping
     } else {
       {
         std::ostringstream out;

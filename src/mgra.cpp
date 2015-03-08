@@ -205,8 +205,8 @@ int main(int argc, char **argv) {
       INFO("Starting tree reovery")
       //Recover tree here
       graph_pack.update_graph_statistics();
-      typename algo::RecoverTreeAlgorithm<mcolor_t>::algo_ptr recover_tree_algoritm(
-          new algo::BruteforceRecoverTreeAlgorithm<mcolor_t>(graph_pack));
+      typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr recover_tree_algoritm(
+          new algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>(graph_pack));
     } else {
       {
         std::ostringstream out;

@@ -6,14 +6,14 @@
 
 namespace algo {
 
-  template<class mcolor_t>
-  class BruteforceRecoverTreeAlgorithm : public RecoverTreeAlgorithm<mcolor_t> {
-  public:
-    using graph_pack_t = GraphPack<mcolor_t>;
+  template <class graph_pack_t>
+  struct BruteforceRecoverTreeAlgorithm : RecoverTreeAlgorithm<graph_pack_t> {
+    using mcolor_t = typename RecoverTreeAlgorithm<graph_pack_t>::mcolor_t;
 
-    BruteforceRecoverTreeAlgorithm(graph_pack_t &breakpoint_graph) : m_graph(breakpoint_graph) {}
+    BruteforceRecoverTreeAlgorithm(graph_pack_t& graph_pack) : m_graph(graph_pack) {
+    }
 
-    typename RecoverTreeAlgorithm<mcolor_t>::tree_ptr recover_tree() {
+    typename RecoverTreeAlgorithm<graph_pack_t>::tree_ptr recover_tree() {
       return std::make_shared<typename structure::BinaryTree<mcolor_t> >(nullptr);
     }
 

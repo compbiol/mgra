@@ -27,7 +27,7 @@ struct GraphDot {
 
 private: 
   using tree_t = typename structure::BinaryTree<mcolor_t>; 
-  using node_t = typename tree_t::Node; 
+  using node_t = typename tree_t::colored_node_t;
   std::string get_branches_from_tree(std::unique_ptr<node_t> const & current, std::vector<std::string>& info) const; 
 
   // Save multiedge in dot file 

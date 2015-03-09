@@ -35,7 +35,7 @@ struct RecoveredInfo {
 
 private: 
   using tree_t = typename structure::BinaryTree<mcolor_t>; 
-  using node_t = typename tree_t::Node; 
+  using node_t = typename tree_t::colored_node_t;
   void get_ugly_history();
   void walk_and_linearizeate(std::unique_ptr<node_t> const & current);
   

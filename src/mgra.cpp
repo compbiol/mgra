@@ -88,6 +88,8 @@ int main(int argc, char **argv) {
 
 //  Reading flags
   try {
+    //TODO: Move all TCLAP parsing into separate fucntion + write all data straight to config && validate it
+
     TCLAP::CmdLine cmd("MGRA (Multiple Genome Rearrangements & Ancestors) (c) 2008-2015 by Pavel Avdeyev, Shuai Jiang, Max Alekseyev. Distributed under GNU GENERAL PUBLIC LICENSE license.", ' ', VERSION);
 
     TCLAP::SwitchArg target_arg("t",
@@ -206,12 +208,10 @@ int main(int argc, char **argv) {
       //Recover tree here
       graph_pack.update_graph_statistics();
 
-      for(auto&& edges_count: graph_pack.stats.multiedges_count) {
-        std::cout << edges_count.second << std::endl;
-      }
-
       typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr recover_tree_algoritm(
           new algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>(graph_pack));
+
+      recover_tree_algoritm->recover_tree();
 
       //TODO: preform dumping
     } else {

@@ -55,7 +55,7 @@ struct Multicolors {
   
 private: 
   using tree_t = typename structure::BinaryTree<mcolor_t>; 
-  using node_t = typename tree_t::Node; 
+  using node_t = typename tree_t::colored_node_t;
   using colors_median_t = std::tuple<mcolor_t, mcolor_t, mcolor_t>; 
 
   /*

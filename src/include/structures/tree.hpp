@@ -12,7 +12,7 @@ namespace structure {
     using node_ptr = typename colored_node_t::node_ptr;
     using node_const_ptr = typename colored_node_t::node_const_ptr;
 
-    BinaryTree(node_unique_ptr root_node): root(std::move(root_node)), phylogentic_root_tree(true) {}
+    BinaryTree(node_ptr root_node): root(root_node), phylogentic_root_tree(true) {}
 
     BinaryTree(
         std::string const& st,

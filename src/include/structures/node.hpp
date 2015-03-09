@@ -8,6 +8,7 @@ namespace structure {
     using multicolor_t = mcolor_t;
     using node_t = Node<mcolor_t>;
     using node_ptr = std::shared_ptr<node_t>;
+    using node_ptr_ref = node_ptr&;
     using node_unique_ptr = std::unique_ptr<node_t>;
     using node_const_ptr = node_ptr const&;
 
@@ -42,6 +43,18 @@ namespace structure {
       return right_child;
     }
 
+    node_ptr_ref get_left_child() {
+      return left_child;
+    }
+
+    node_ptr_ref get_right_child() {
+      return right_child;
+    }
+
+    void set_parent(Node* new_parent) {
+      parent = new_parent;
+    }
+
     void set_left_child(node_ptr node) {
       left_child = std::move(node);
     }
@@ -50,13 +63,21 @@ namespace structure {
       right_child = std::move(node);
     }
 
+    bool has_left_child() const {
+      return static_cast<bool>(left_child);
+    }
+
+    bool has_right_child() const {
+      return static_cast<bool>(right_child);
+    }
+
   private:
     mcolor_t data;
     std::string name;
     bool is_whole_duplication;
     std::vector<std::string> children;
 
-    Node* const parent;
+    Node* parent;
     node_ptr left_child;
     node_ptr right_child;
   };

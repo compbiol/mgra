@@ -64,6 +64,9 @@ namespace structure {
       return answer;
     }
 
+    /**
+    * Tells if this color is a superset if second one
+    */
     inline bool includes(Mcolor const& second) const {
       auto first1 = main_color.cbegin();
       auto first2 = second.cbegin();

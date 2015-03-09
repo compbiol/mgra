@@ -2,8 +2,9 @@
 #define BRUTEFORCE_RECOVER_TREE_ALGORITHM_HPP__
 
 #include "recover_tree_algorithm.hpp"
-#include "../../graph/graph_pack.hpp"
-#include "tree_builder.hpp"
+#include "graph/graph_pack.hpp"
+#include "greedy_tree_builder.hpp"
+#include "structures/print_node_visitor.hpp"
 
 namespace algo {
 
@@ -11,6 +12,7 @@ namespace algo {
   struct BruteforceRecoverTreeAlgorithm : RecoverTreeAlgorithm<graph_pack_t> {
     using mcolor_t = typename RecoverTreeAlgorithm<graph_pack_t>::mcolor_t;
     using tree_t = typename RecoverTreeAlgorithm<graph_pack_t>::tree_t;
+    using node_t = typename tree_t::colored_node_t;
     using tree_ptr = typename RecoverTreeAlgorithm<graph_pack_t>::tree_ptr;
     using branch_t = std::pair<mcolor_t, mcolor_t>;
     using statistic_t = std::pair<branch_t, size_t>;
@@ -27,7 +29,10 @@ namespace algo {
             return left.second > right.second;
           });
 
-      TreeBuilder<tree_t> builder(color_edges_pairs);
+      GreedyTreeBuilder<tree_t> builder(color_edges_pairs);
+      structure::PrintNodeVisitor<node_t> visitor(std::cout);
+      visitor.visit(builder.get_result());
+
       return tree_ptr(new tree_t(builder.get_result()));
     }
 

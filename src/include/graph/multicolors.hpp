@@ -61,9 +61,9 @@ private:
   /*
    *
    */
-  void get_vector_colors_from_tree(std::shared_ptr<const node_t> current,
+  void get_vector_colors_from_tree(std::shared_ptr<const node_t> const& current,
                                           std::set<mcolor_t>& vec_colors) const; 
-  void get_median_colors_from_tree(std::shared_ptr<const node_t> current);
+  void get_median_colors_from_tree(std::shared_ptr<const node_t> const& current);
 
   /*
    *
@@ -145,7 +145,7 @@ Multicolors<mcolor_t>::Multicolors() {
  *
  */
 template<class mcolor_t>
-void Multicolors<mcolor_t>::get_vector_colors_from_tree(std::shared_ptr<const node_t> current,
+void Multicolors<mcolor_t>::get_vector_colors_from_tree(std::shared_ptr<const node_t> const& current,
                                      std::set<mcolor_t>& vec_colors) const { 
   if (current->get_left_child()) {
     get_vector_colors_from_tree(current->get_left_child(), vec_colors); 
@@ -159,7 +159,7 @@ void Multicolors<mcolor_t>::get_vector_colors_from_tree(std::shared_ptr<const no
 }
 
 template<class mcolor_t>
-void Multicolors<mcolor_t>::get_median_colors_from_tree(std::shared_ptr<const node_t> current) {
+void Multicolors<mcolor_t>::get_median_colors_from_tree(std::shared_ptr<const node_t> const& current) {
   auto const & left = current->get_left_child();
   if (left) { 
     get_median_colors_from_tree(left); 

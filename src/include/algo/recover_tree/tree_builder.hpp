@@ -41,7 +41,7 @@ namespace algo {
     void validate_statistics() {
       // Maximum size_t value
       size_t previous_value = static_cast<size_t>(-1);
-      for (auto&& statistic: m_branch_statistics) {
+      for (auto& statistic: m_branch_statistics) {
         assert(previous_value >= statistic.second &&
             "Works only on sorted statistics");
         previous_value = statistic.second;

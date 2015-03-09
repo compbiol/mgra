@@ -8,8 +8,8 @@ namespace structure {
     using multicolor_t = mcolor_t;
     using node_t = Node<mcolor_t>;
     using node_ptr = std::shared_ptr<node_t>;
-    using node_const_ptr = std::shared_ptr<const node_t>;
     using node_unique_ptr = std::unique_ptr<node_t>;
+    using node_const_ptr = node_ptr const&;
 
     Node(mcolor_t color) : data(color), parent(nullptr), left_child(nullptr), right_child(nullptr) {
     }

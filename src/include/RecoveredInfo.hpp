@@ -37,7 +37,7 @@ private:
   using tree_t = typename structure::BinaryTree<mcolor_t>; 
   using node_t = typename tree_t::colored_node_t;
   void get_ugly_history();
-  void walk_and_linearize(std::shared_ptr<const node_t> current);
+  void walk_and_linearize(std::shared_ptr<const node_t> const& current);
   
   genome_t get_genome(std::string const & name, partgraph_t const & recovered_graph) const;
   chromosome_t get_chromosome(partgraph_t const & recovered_graph, vertex_t const & x, std::unordered_set<vertex_t>& chromosome_set) const;
@@ -89,11 +89,11 @@ RecoveredInfo<graph_pack_t>::RecoveredInfo(graph_pack_t const & gp)
   INFO("Get history from process graph")
   get_ugly_history();
   
-  INFO("Start walk on tree and run algorithm for linearizeate")
+  INFO("Start walk on tree and run algorithm for linearize")
   for (auto const & tree : cfg::get().phylotrees) {
     walk_and_linearize(tree.get_root());
   }
-  INFO("End walk on tree and run algorithm for linearizeate")
+  INFO("End walk on tree and run algorithm for linearize")
   
   for (auto const & tree : cfg::get().phylotrees) {
     if (tree.is_phylogenetic_root()) { 
@@ -110,7 +110,7 @@ RecoveredInfo<graph_pack_t>::RecoveredInfo(graph_pack_t const & gp)
 }
 
 template<class graph_pack_t>
-void RecoveredInfo<graph_pack_t>::walk_and_linearize(std::shared_ptr<const node_t> current) {
+void RecoveredInfo<graph_pack_t>::walk_and_linearize(std::shared_ptr<const node_t> const& current) {
   auto left = current->get_left_child();
   auto right = current->get_right_child();
 

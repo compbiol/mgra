@@ -28,7 +28,7 @@ struct GraphDot {
 private: 
   using tree_t = typename structure::BinaryTree<mcolor_t>; 
   using node_t = typename tree_t::colored_node_t;
-  std::string get_branches_from_tree(std::shared_ptr<const node_t> current, std::vector<std::string>& info) const;
+  std::string get_branches_from_tree(std::shared_ptr<const node_t> const& current, std::vector<std::string>& info) const;
 
   // Save multiedge in dot file 
   void draw_multiedge(std::ofstream & dot, vertex_t const & x, mcolor_t const & color, vertex_t const & y, 
@@ -127,7 +127,7 @@ void GraphDot<graph_pack_t>::draw_multiedge(std::ofstream & dot, vertex_t const 
  * Functions for output tree in legend.dot file
  */
 template<class graph_pack_t>
-std::string GraphDot<graph_pack_t>::get_branches_from_tree(std::shared_ptr<const node_t> current, std::vector<std::string>& info) const {
+std::string GraphDot<graph_pack_t>::get_branches_from_tree(std::shared_ptr<const node_t> const& current, std::vector<std::string>& info) const {
   auto const & left = current->get_left_child(); 
   auto const & right = current->get_right_child(); 
 

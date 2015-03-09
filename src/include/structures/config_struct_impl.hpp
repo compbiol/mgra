@@ -181,7 +181,7 @@ void main_config<mcolor_t>::parse_trees(std::vector<std::string> const & input) 
   using tree_t = typename structure::BinaryTree<mcolor_t>; 
   using node_t = typename tree_t::colored_node_t;
   
-  std::function<void(std::unique_ptr<node_t> const &)> get_names_lambda = [&] (std::unique_ptr<node_t> const & current) -> void { 
+  std::function<void(std::shared_ptr<const node_t>)> get_names_lambda = [&] (std::shared_ptr<const node_t> current) -> void {
     if (current->get_left_child()) {
       get_names_lambda(current->get_left_child());
     }

@@ -9,7 +9,8 @@ namespace structure {
   struct BinaryTree {
     using colored_node_t = node_t<mcolor_t>;
     using node_unique_ptr = typename colored_node_t::node_unique_ptr;
-
+    using node_ptr = typename colored_node_t::node_ptr;
+    using node_const_ptr = typename colored_node_t::node_const_ptr;
 
     BinaryTree(node_unique_ptr root_node): root(std::move(root_node)), phylogentic_root_tree(true) {}
 
@@ -24,7 +25,7 @@ namespace structure {
       }
     }
 
-    node_unique_ptr const& get_root() const {
+    node_const_ptr get_root() const {
       return root;
     }
 
@@ -33,7 +34,7 @@ namespace structure {
     }
 
   private:
-    node_unique_ptr root;
+    node_ptr root;
     bool phylogentic_root_tree;
 
     DECL_LOGGER("BinaryTree")

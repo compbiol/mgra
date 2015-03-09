@@ -11,7 +11,7 @@ namespace algo {
     using algo_ptr = std::shared_ptr<RecoverTreeAlgorithm>;
     using mcolor_t = typename graph_pack_t::mcolor_type;
     using tree_t = structure::BinaryTree<mcolor_t>;
-    using tree_ptr = std::shared_ptr<tree_t>;
+    using tree_ptr = std::unique_ptr<tree_t>;
 
     virtual tree_ptr recover_tree() = 0;
 

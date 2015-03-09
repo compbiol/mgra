@@ -211,9 +211,10 @@ int main(int argc, char **argv) {
       typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr recover_tree_algoritm(
           new algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>(graph_pack));
 
-      recover_tree_algoritm->recover_tree();
+      auto result_tree = recover_tree_algoritm->recover_tree();
+      std::cout << result_tree->get_root()->get_data() << std::endl;
 
-      //TODO: preform dumping
+      //TODO: perform dumping
     } else {
       {
         std::ostringstream out;

@@ -3,6 +3,7 @@
 
 #include "recover_tree_algorithm.hpp"
 #include "../../graph/graph_pack.hpp"
+#include "tree_builder.hpp"
 
 namespace algo {
 
@@ -14,23 +15,20 @@ namespace algo {
     using branch_t = std::pair<mcolor_t, mcolor_t>;
     using statistic_t = std::pair<branch_t, size_t>;
 
-    BruteforceRecoverTreeAlgorithm(graph_pack_t& graph_pack) : m_graph_pack(graph_pack) {
-    }
+    BruteforceRecoverTreeAlgorithm(graph_pack_t& graph_pack) : m_graph_pack(graph_pack) {}
 
     tree_ptr recover_tree() {
       std::map<branch_t, size_t> edges_statistics = m_graph_pack.stats.multiedges_count;
       std::vector<statistic_t> color_edges_pairs(edges_statistics.begin(), edges_statistics.end());
 
       std::sort(color_edges_pairs.begin(), color_edges_pairs.end(),
-          // Descending sort
+          // Descending by number of edges sort
           [](statistic_t left, statistic_t right) {
             return left.second > right.second;
           });
-      for(auto&& e: color_edges_pairs) {
-        std::cout << e.first.first << ", " << e.first.second << ": " << e.second << std::endl;
-      }
 
-      return std::make_shared<tree_t>(typename tree_t::node_unique_ptr(nullptr));
+      TreeBuilder<tree_t> builder(color_edges_pairs);
+      return tree_ptr(new tree_t(builder.get_result()));
     }
 
   private:

@@ -8,6 +8,8 @@ namespace structure {
   template <class mcolor_t, template <typename> class node_t = Node>
   struct BinaryTree {
     using colored_node_t = node_t<mcolor_t>;
+    using tree_t = BinaryTree<mcolor_t, node_t>;
+    using tree_ptr = std::shared_ptr<tree_t>;
     using node_unique_ptr = typename colored_node_t::node_unique_ptr;
     using node_ptr = typename colored_node_t::node_ptr;
     using node_const_ptr = typename colored_node_t::node_const_ptr;
@@ -31,6 +33,11 @@ namespace structure {
 
     bool is_phylogenetic_root() const {
       return phylogentic_root_tree;
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, tree_ptr const& tree) {
+      out << tree->get_root();
+      return out;
     }
 
   private:

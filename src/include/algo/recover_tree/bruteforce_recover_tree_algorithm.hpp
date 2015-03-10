@@ -30,8 +30,6 @@ namespace algo {
           });
 
       GreedyTreeBuilder<tree_t> builder(color_edges_pairs);
-      structure::PrintNodeVisitor<node_t> visitor(std::cout);
-      visitor.visit(builder.get_result());
 
       return tree_ptr(new tree_t(builder.get_result()));
     }

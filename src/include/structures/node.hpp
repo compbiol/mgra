@@ -1,6 +1,9 @@
 #ifndef NODE_HPP__
 #define NODE_HPP__
 
+#include <iostream>
+#include "print_node_visitor.hpp"
+
 namespace structure {
 
   template <class mcolor_t>
@@ -12,7 +15,11 @@ namespace structure {
     using node_unique_ptr = std::unique_ptr<node_t>;
     using node_const_ptr = node_ptr const&;
 
-    Node(mcolor_t color) : data(color), parent(nullptr), left_child(nullptr), right_child(nullptr) {
+    Node(mcolor_t color) : data(color),
+                           m_complete(color.size() == 1),
+                           parent(nullptr),
+                           left_child(nullptr),
+                           right_child(nullptr) {
     }
 
     Node(Node* const par, std::string const& tree,
@@ -71,12 +78,42 @@ namespace structure {
       return static_cast<bool>(right_child);
     }
 
+    bool is_complete() {
+      if (m_complete) {
+        return m_complete;
+      };
+      if (has_left_child()) {
+        m_complete = left_child->is_complete();
+      }
+      if (!m_complete) {
+        return m_complete;
+      }
+      if (has_right_child()) {
+        m_complete = m_complete && right_child->is_complete();
+      }
+      return m_complete;
+    }
+
+    void set_complete() {
+      m_complete = true;
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, node_ptr const& node) {
+      PrintNodeVisitor<node_t> printer(out);
+      printer.visit(node);
+      return printer.get_stream();
+    }
+
   private:
     mcolor_t data;
     std::string name;
     bool is_whole_duplication;
     std::vector<std::string> children;
 
+    /**
+    * If the tree downwards has all the leaf nodes with only one color
+    */
+    bool m_complete;
     Node* parent;
     node_ptr left_child;
     node_ptr right_child;

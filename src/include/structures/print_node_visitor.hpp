@@ -27,6 +27,10 @@ namespace structure {
       }
     }
 
+    std::ostream& get_stream() {
+      return m_out;
+    }
+
     const size_t indent_size = 2;
   private:
     void increase_indent() {
@@ -39,7 +43,7 @@ namespace structure {
 
     void indented_output() {
       for (size_t i = 0; i < indent_size; ++i) {
-        m_out << " ";
+        m_out << "\t";
       }
     }
 

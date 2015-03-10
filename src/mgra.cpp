@@ -146,7 +146,6 @@ int main(int argc, char **argv) {
 
 //    Check paths for cfg file, block file and output directory
     path::CheckFileExistenceFATAL(path_to_cfg_file_arg.getValue());
-//    The following code is commented because it breaks the execution
     if (path_to_blocks_grimm_file_arg.isSet()) {
       path::CheckFileExistenceFATAL(path_to_blocks_grimm_file_arg.getValue());
     } else if (path_to_blocks_infercars_file_arg.isSet()) {
@@ -212,8 +211,8 @@ int main(int argc, char **argv) {
           new algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>(graph_pack));
 
       auto result_tree = recover_tree_algoritm->recover_tree();
-      std::cout << result_tree->get_root()->get_data() << std::endl;
 
+      std::cout << result_tree;
       //TODO: perform dumping
     } else {
       {

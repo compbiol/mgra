@@ -27,13 +27,12 @@ namespace algo {
 
       // Take the best statistic as a root node
       auto iter = m_branch_statistics.begin();
-      construct_root_node(*iter);
+      construct_root_node(iter->first);
       iter++;
 
-      node_ptr current_node = m_root_node;
-
-      for (;iter != m_branch_statistics.end(); ++iter) {
-        bool need_to_recurse_further = true;
+      for (; iter != m_branch_statistics.end(); ++iter) {
+        node_ptr current_node = m_root_node;
+        bool need_to_recurse_further = !current_node->is_complete();
         ColorRelationship relationship = Leaf;
         while (need_to_recurse_further && relationship != Intersects) {
           relationship = evaluateRelationship(current_node, iter->first);
@@ -50,6 +49,7 @@ namespace algo {
               break;
             default: break;
           }
+          need_to_recurse_further = need_to_recurse_further && !current_node->is_complete();
         }
       }
     }
@@ -77,12 +77,15 @@ namespace algo {
       }
     }
 
-    void construct_root_node(statistic_t const& best_statistic) {
-      m_root_node = std::make_shared<node_t>(mcolor_t(best_statistic.first.first,
-          best_statistic.first.second, mcolor_t::Union));
-      fill_node_from_branch(m_root_node, best_statistic.first);
+    void construct_root_node(branch_t const& best_branch) {
+      m_root_node = std::make_shared<node_t>(mcolor_t(best_branch.first,
+          best_branch.second, mcolor_t::Union));
+      fill_node_from_branch(m_root_node, best_branch);
     }
 
+    /**
+    * Make node's children colored as the provided branch
+    */
     void fill_node_from_branch(node_ptr const& node, branch_t const& branch) {
       node->set_left_child(std::make_shared<node_t>(mcolor_t(node->get_data(), branch.first, mcolor_t::Intersection)));
       node->get_left_child()->set_parent(node.get());
@@ -91,7 +94,7 @@ namespace algo {
     }
 
     /**
-    * Evaluates the branch's left color's realtionship with the current node children's ones
+    * Evaluates the branch's left color's relationship with the current node children's ones
     */
     ColorRelationship evaluateRelationship(node_ptr const& node, branch_t const& branch) {
       // Check only left child, tree is binary

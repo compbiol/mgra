@@ -2,7 +2,11 @@
 #define NODE_HPP__
 
 #include <iostream>
-#include "print_node_visitor.hpp"
+#include <memory>
+#include <vector>
+#include <unordered_map>
+
+#include "logger/logger.hpp"
 
 namespace structure {
 
@@ -78,6 +82,14 @@ namespace structure {
       return static_cast<bool>(right_child);
     }
 
+    bool is_leaf() const {
+      return !has_left_child() &&  !has_right_child();
+    }
+
+    bool is_root() const {
+      return parent == nullptr;
+    }
+
     bool is_complete() {
       if (m_complete) {
         return m_complete;
@@ -96,12 +108,6 @@ namespace structure {
 
     void set_complete() {
       m_complete = true;
-    }
-
-    friend std::ostream& operator<<(std::ostream& out, node_ptr const& node) {
-      PrintNodeVisitor<node_t> printer(out);
-      printer.visit(node);
-      return printer.get_stream();
     }
 
   private:

@@ -22,6 +22,7 @@
 
 #include "writer/Wgenome.h"
 #include "writer/Wtransform.hpp"
+#include "writer/newick_tree_printer.hpp"
 
 bool organize_output_directory(std::string const &path, bool is_debug) {
   auto creater_lambda = [](std::string const &directory) -> bool {
@@ -176,6 +177,7 @@ int main(int argc, char **argv) {
     using genome_t = structure::Genome;
     using mcolor_t = structure::Mcolor;
     using graph_pack_t = GraphPack<mcolor_t>;
+    using tree_t = structure::BinaryTree<mcolor_t>;
 
     if (parse_configure_file(debug_arg, out_path_directory, target_arg, path_to_cfg_file_arg)) {
       return 1;
@@ -212,7 +214,9 @@ int main(int argc, char **argv) {
 
       auto result_tree = recover_tree_algoritm->recover_tree();
 
-      std::cout << result_tree;
+      writer::NewickTreePrinter<tree_t> newick_printer(std::cout);
+      newick_printer.print_tree(result_tree);
+
       //TODO: perform dumping
     } else {
       {

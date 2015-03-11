@@ -20,7 +20,7 @@ namespace structure {
         std::string const& st,
         std::unordered_map<std::string, size_t> const& genome_number,
         std::vector<std::string> const& priority_name)
-        : root(new colored_node_t(nullptr, st, genome_number, priority_name)), phylogentic_root_tree(false) {
+        : root(std::make_shared<colored_node_t>(nullptr, st, genome_number, priority_name)), phylogentic_root_tree(false) {
       if (mcolor_t(root->get_left_child()->get_data(), root->get_right_child()->get_data(), mcolor_t::Union).size() ==
           priority_name.size()) {
         phylogentic_root_tree = true;

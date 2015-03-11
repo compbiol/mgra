@@ -16,7 +16,7 @@ namespace algo {
     using statistic_t = std::pair<branch_t, size_t>;
     using statistic_vector = std::vector<statistic_t>;
 
-    // Vector should sorted in the descending format
+    // Vector should be sorted in descending format
     GreedyTreeBuilder(statistic_vector statistics): m_branch_statistics(statistics) {
       validate_statistics();
 
@@ -26,11 +26,11 @@ namespace algo {
       }
 
       // Take the best statistic as a root node
-      auto iter = m_branch_statistics.begin();
+      auto iter = std::begin(m_branch_statistics);
       construct_root_node(iter->first);
       iter++;
 
-      for (; iter != m_branch_statistics.end(); ++iter) {
+      for (; iter != std::end(m_branch_statistics); ++iter) {
         node_ptr current_node = m_root_node;
         bool need_to_recurse_further = !current_node->is_complete();
         ColorRelationship relationship = Leaf;
@@ -97,8 +97,7 @@ namespace algo {
     * Evaluates the branch's left color's relationship with the current node children's ones
     */
     ColorRelationship evaluateRelationship(node_ptr const& node, branch_t const& branch) {
-      // Check only left child, tree is binary
-      if (!node->has_left_child()) {
+      if (node->is_leaf()) {
         return Leaf;
       }
       if (node->get_left_child()->get_data().includes(branch.first)) {

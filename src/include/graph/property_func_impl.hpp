@@ -193,7 +193,7 @@ template<class mcolor_t>
 size_t GraphPack<mcolor_t>::mobility_score_relative_vertex(vertex_t const & x, mcolor_t const & color, vertex_t const & y, vertex_t const & about) const { 
   size_t answer = 0;
 
-  if (this->postponed_deletions.defined(x, y) || !multicolors.is_vec_T_consistent_color(color)) {
+  if (!multicolors.is_vec_T_consistent_color(color)) {
     return answer;
   }
 
@@ -275,24 +275,12 @@ bool GraphPack<mcolor_t>::is_mobility_edge(vertex_t const & x, vertex_t const & 
   return (answer != 0);
 } 
 
+/**
+ * Fixme need to think about it.
+ */
 template<class mcolor_t>
 bool GraphPack<mcolor_t>::is_consistency_graph() const {
-  if (mother_verteces.size() != 0) {
-    return false;
-  }
-
-  size_t bad_postponed_deletion = 0;
-  for (auto const & edge : this->postponed_deletions) {
-    vertex_t const & a1 = edge.first; 
-    vertex_t const & a2 = edge.second;
-
-    mcolor_t const & color = get_all_multicolor_edge(a1, a2);
-    if (color != multicolors.get_complete_color()) {    
-      ++bad_postponed_deletion; 
-    } 
-  }
-
-  return (bad_postponed_deletion == 0);
+  return (mother_verteces.size() == 0);
 }
 
 /*
@@ -311,7 +299,7 @@ typename GraphPack<mcolor_t>::transform_t GraphPack<mcolor_t>::take_edge_on_colo
 
   if (y == Infty) {
     mcolor_t need_color(color, get_all_multicolor_edge(x, y), mcolor_t::Difference);    
-    mularcs_t mularcs_x = get_all_adjacent_multiedges_with_info(x, false);
+    mularcs_t mularcs_x = get_all_adjacent_multiedges_with_info(x);
     mularcs_x.erase(y);
   
     for (arc_t const & arc : mularcs_x) {
@@ -323,10 +311,10 @@ typename GraphPack<mcolor_t>::transform_t GraphPack<mcolor_t>::take_edge_on_colo
   } else { 
     mcolor_t need_color(color, get_all_multicolor_edge(x, y), mcolor_t::Difference);
     
-    mularcs_t mularcs_x = get_all_adjacent_multiedges_with_info(x, false);
+    mularcs_t mularcs_x = get_all_adjacent_multiedges_with_info(x);
     mularcs_x.erase(y);
   
-    mularcs_t mularcs_y = get_all_adjacent_multiedges_with_info(y, false);
+    mularcs_t mularcs_y = get_all_adjacent_multiedges_with_info(y);
     mularcs_y.erase(x);
 
     using colacr_t = std::pair<std::pair<vertex_t, structure::Mcolor>, size_t>;

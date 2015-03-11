@@ -15,6 +15,14 @@ struct TXT_transformation {
   { 
   }
 
+  void save_full_colors_transformation(transform_t const & transform) { 
+    std::string namefile = "full_history.txt";
+    std::string new_path = path::append_path(m_path, namefile);
+    std::ofstream out(new_path);
+    ;//write_transformation(out, transform); 
+    out.close();  
+  } 
+  
   void save_transformation(std::pair<mcolor_t, mcolor_t> const & branch, transform_t const & transform) { 
   	std::string namefile = cfg::get().mcolor_to_name(branch.first) + "--" + cfg::get().mcolor_to_name(branch.second) + ".trs";
   	std::string new_path = path::append_path(m_path, path::append_path("transformations", namefile));

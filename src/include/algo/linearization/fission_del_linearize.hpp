@@ -1,0 +1,4 @@
+#ifndef FISSION_DEL_LINEARIZE_HPP
+#define FISSION_DEL_LINEARIZE_HPP
+
+#endif 

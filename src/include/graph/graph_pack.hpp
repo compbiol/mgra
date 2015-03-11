@@ -116,7 +116,7 @@ struct GraphPack {
    * Implementation see in getter_func_impl.hpp file
    */
   mcolor_t get_all_multicolor_edge(vertex_t const & x, vertex_t const & y) const;
-  std::set<mcolor_t> get_all_multicolor_edge_with_info(vertex_t const & u, vertex_t const & v, bool with_bad_edge = true) const;
+  std::set<mcolor_t> get_all_multicolor_edge_with_info(vertex_t const & u, vertex_t const & v) const;
 
   /* 
    * get_all_adjacent_multiedges_[with_info]
@@ -126,7 +126,7 @@ struct GraphPack {
    * Implementation see in getter_func_impl.hpp file.
    */
   mularcs_t get_all_adjacent_multiedges(vertex_t const & u) const; 
-  mularcs_t get_all_adjacent_multiedges_with_info(vertex_t const & u, bool with_bad_edge = true) const;
+  mularcs_t get_all_adjacent_multiedges_with_info(vertex_t const & u) const;
 
   /*
    * Methods split our multi breakpoint graph on components [with target COLOR]. 
@@ -207,7 +207,6 @@ private:
   bool canformQoo;  // safe choice, at later stages may change to false
 
   partgraph_t prosthetic_chromosomes; 
-  partgraph_t postponed_deletions;
   std::unordered_map<vertex_t, std::list<size_t> > mother_verteces;
 };
 

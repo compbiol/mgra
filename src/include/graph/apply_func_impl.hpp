@@ -97,7 +97,6 @@ void GraphPack<mcolor_t>::apply(insdel_t const & insdel, bool record) {
     prosthetic_chromosomes.insert(insdel.get_edge().first, insdel.get_edge().second);
   } else { 
     prosthetic_chromosomes.insert(insdel.get_edge().first, insdel.get_edge().second);
-    postponed_deletions.insert(insdel.get_edge().first, insdel.get_edge().second);
   }   
 }
 

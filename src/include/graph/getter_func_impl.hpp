@@ -11,14 +11,13 @@ structure::Mularcs<mcolor_t> GraphPack<mcolor_t>::get_all_adjacent_multiedges(ve
 }  
 
 template<class mcolor_t>
-structure::Mularcs<mcolor_t> GraphPack<mcolor_t>::get_all_adjacent_multiedges_with_info(vertex_t const & u, bool with_bad_edge) const { 
+structure::Mularcs<mcolor_t> GraphPack<mcolor_t>::get_all_adjacent_multiedges_with_info(vertex_t const & u) const { 
   mularcs_t output = get_all_adjacent_multiedges(u);
   
   if (this->number_of_splits != 1) { 
     mularcs_t split; 
     for(auto const & arc : output) {
-      if ((!with_bad_edge || (with_bad_edge && !this->postponed_deletions.defined(u, arc.first))) 
-        && !multicolors.is_T_consistent_color(arc.second) && arc.second.size() < graph.count_local_graphs()) {
+      if (!multicolors.is_T_consistent_color(arc.second) && arc.second.size() < graph.count_local_graphs()) {
         auto const & colors = multicolors.split_color_on_tc_color(arc.second, number_of_splits);
         for(auto const & color : colors) {  
           split.insert(arc.first, color); 
@@ -79,7 +78,7 @@ mcolor_t GraphPack<mcolor_t>::get_all_multicolor_edge(vertex_t const & u, vertex
 }
 
 template<class mcolor_t>
-std::set<mcolor_t> GraphPack<mcolor_t>::get_all_multicolor_edge_with_info(vertex_t const & u, vertex_t const & v, bool with_bad_edge) const { 
+std::set<mcolor_t> GraphPack<mcolor_t>::get_all_multicolor_edge_with_info(vertex_t const & u, vertex_t const & v) const { 
   assert(u != Infty || v != Infty);
 
   mcolor_t current = get_all_multicolor_edge(u, v);
@@ -89,8 +88,7 @@ std::set<mcolor_t> GraphPack<mcolor_t>::get_all_multicolor_edge_with_info(vertex
   if (this->number_of_splits != 1) { 
     std::set<mcolor_t> results;
 
-    if ((!with_bad_edge || (with_bad_edge && !this->postponed_deletions.defined(u, v))) 
-        && !multicolors.is_T_consistent_color(current) && current.size() < graph.count_local_graphs()) {
+    if (!multicolors.is_T_consistent_color(current) && current.size() < graph.count_local_graphs()) {
       auto temp = multicolors.split_color_on_tc_color(current, number_of_splits);
       results.insert(temp.begin(), temp.end());
     } else { 

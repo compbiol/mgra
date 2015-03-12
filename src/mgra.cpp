@@ -13,6 +13,7 @@
 
 #include "algo/Algorithms.hpp"
 #include "algo/recover_tree/greedy_recover_tree_algorithm.hpp"
+#include "algo/recover_tree/bruteforce_recover_tree_algorithm.hpp"
 
 #include "io/path_helper.hpp"
 #include "logger/logger.hpp"
@@ -209,15 +210,20 @@ int main(int argc, char **argv) {
       //Recover tree here
       graph_pack.update_graph_statistics();
 
-      typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr recover_tree_algoritm(
-          new algo::GreedyRecoverTreeAlgorithm<graph_pack_t>(graph_pack));
+      typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr recover_tree_algorithm(
+      std::make_shared<algo::GreedyRecoverTreeAlgorithm<graph_pack_t>>(graph_pack));
 
-      auto result_tree = recover_tree_algoritm->recover_trees();
+      typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr recover_tree_algorithm1(
+          std::make_shared<algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack));
+
+      auto result_trees = recover_tree_algorithm->recover_trees();
+      auto result_trees1 = recover_tree_algorithm1->recover_trees();
 
       writer::NewickTreePrinter<tree_t> newick_printer(std::cout);
-      newick_printer.print_tree(result_tree[0]);
+      newick_printer.print_tree(result_trees[0]);
+      newick_printer.print_tree(result_trees1[0]);
       writer::GraphDot<graph_pack_t> dot_writer;
-      dot_writer.save_subtrees(std::cout, {*result_tree[0]});
+      dot_writer.save_subtrees(std::cout, {*result_trees[0]});
 
       //TODO: perform dumping
     } else {

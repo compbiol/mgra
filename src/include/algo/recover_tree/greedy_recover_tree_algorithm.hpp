@@ -3,6 +3,7 @@
 
 #include "recover_tree_algorithm.hpp"
 #include "graph/graph_pack.hpp"
+#include "structures/branch.hpp"
 
 namespace algo {
 
@@ -18,6 +19,7 @@ namespace algo {
     using branch_t = std::pair<mcolor_t, mcolor_t>;
     using statistic_t = std::pair<branch_t, size_t>;
     using statistic_vector = std::vector<statistic_t>;
+    using BranchHelper = structure::Branch<mcolor_t>;
 
     GreedyRecoverTreeAlgorithm(graph_pack_t& graph_pack) : m_graph_pack(graph_pack) {
     }
@@ -46,46 +48,16 @@ namespace algo {
 
       // Take the best statistic as a root node
       auto iter = std::begin(branch_statistics);
-      auto root_node = construct_root_node(iter->first);
+      auto root_node = BranchHelper::node_from_branch(iter->first);
       iter++;
 
       for (; iter != std::end(branch_statistics); ++iter) {
-        node_ptr current_node = root_node;
-        bool need_to_recurse_further = !current_node->is_complete();
-        ColorRelationship relationship = Leaf;
-        while (need_to_recurse_further && relationship != Intersects) {
-          relationship = evaluateRelationship(current_node, iter->first);
-          switch (relationship) {
-            case SubsetOfLeft:
-              current_node = current_node->get_left_child();
-              break;
-            case SubsetOfRight:
-              current_node = current_node->get_right_child();
-              break;
-            case Leaf:
-              fill_node_from_branch(current_node, iter->first);
-              need_to_recurse_further = false;
-              break;
-            default:
-              break;
-          }
-          need_to_recurse_further = need_to_recurse_further && !current_node->is_complete();
-        }
+        BranchHelper::merge_branch_into_node(root_node, iter->first);
       }
       return {std::make_shared<tree_t>(root_node)};
     }
 
   private:
-    /**
-    * Describes how branch's colors relate to the current node's children
-    */
-    enum ColorRelationship {
-      Leaf,
-      Intersects,
-      SubsetOfLeft,
-      SubsetOfRight
-    };
-
     /**
     * Checks if statistics are in descending order
     */
@@ -97,41 +69,6 @@ namespace algo {
             "Works only on sorted statistics");
         previous_value = statistic.second;
       }
-    }
-
-    node_ptr construct_root_node(branch_t const& best_branch) {
-      node_ptr root_node = std::make_shared<node_t>(mcolor_t(best_branch.first,
-          best_branch.second, mcolor_t::Union));
-      fill_node_from_branch(root_node, best_branch);
-      return root_node;
-    }
-
-    /**
-    * Make node's children colored as the provided branch
-    */
-    void fill_node_from_branch(node_ptr const& node, branch_t const& branch) {
-      node->set_left_child(std::make_shared<node_t>(mcolor_t(node->get_data(), branch.first, mcolor_t::Intersection)));
-      node->get_left_child()->set_parent(node.get());
-      node->get_left_child()->set_name(cfg::get().mcolor_to_name(node->get_left_child()->get_data()));
-      node->set_right_child(std::make_shared<node_t>(mcolor_t(node->get_data(), branch.second, mcolor_t::Intersection)));
-      node->get_right_child()->set_parent(node.get());
-      node->get_right_child()->set_name(cfg::get().mcolor_to_name(node->get_right_child()->get_data()));
-    }
-
-    /**
-    * Evaluates the branch's left color's relationship with the current node children's ones
-    */
-    ColorRelationship evaluateRelationship(node_ptr const& node, branch_t const& branch) {
-      if (node->is_leaf()) {
-        return Leaf;
-      }
-      if (node->get_left_child()->get_data().includes(branch.first)) {
-        return SubsetOfLeft;
-      }
-      if (node->get_right_child()->get_data().includes(branch.first)) {
-        return SubsetOfRight;
-      }
-      return Intersects;
     }
 
     graph_pack_t& m_graph_pack;

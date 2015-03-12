@@ -12,7 +12,7 @@
 #include "reader.h"
 
 #include "algo/Algorithms.hpp"
-#include "algo/recover_tree/bruteforce_recover_tree_algorithm.hpp"
+#include "algo/recover_tree/greedy_recover_tree_algorithm.hpp"
 
 #include "io/path_helper.hpp"
 #include "logger/logger.hpp"
@@ -205,17 +205,19 @@ int main(int argc, char **argv) {
     cfg::get_writable().is_recover_tree = recover_tree_arg.getValue();
 
     if (cfg::get().is_recover_tree) {
-      INFO("Starting tree reovery")
+      INFO("Starting tree recovery")
       //Recover tree here
       graph_pack.update_graph_statistics();
 
       typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr recover_tree_algoritm(
-          new algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>(graph_pack));
+          new algo::GreedyRecoverTreeAlgorithm<graph_pack_t>(graph_pack));
 
-      auto result_tree = recover_tree_algoritm->recover_tree();
+      auto result_tree = recover_tree_algoritm->recover_trees();
 
       writer::NewickTreePrinter<tree_t> newick_printer(std::cout);
-      newick_printer.print_tree(result_tree);
+      newick_printer.print_tree(result_tree[0]);
+      writer::GraphDot<graph_pack_t> dot_writer;
+      dot_writer.save_subtrees(std::cout, {*result_tree[0]});
 
       //TODO: perform dumping
     } else {

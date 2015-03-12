@@ -2,6 +2,7 @@
 #define RECOVER_TREE_ALGORITHM_HPP__
 
 #include <memory>
+#include <vector>
 #include "structures/tree.hpp"
 
 namespace algo {
@@ -12,8 +13,9 @@ namespace algo {
     using mcolor_t = typename graph_pack_t::mcolor_type;
     using tree_t = structure::BinaryTree<mcolor_t>;
     using tree_ptr = std::shared_ptr<tree_t>;
+    using tree_vector = std::vector<tree_ptr>;
 
-    virtual tree_ptr recover_tree() = 0;
+    virtual tree_vector recover_trees() = 0;
 
     virtual ~RecoverTreeAlgorithm() {
     }

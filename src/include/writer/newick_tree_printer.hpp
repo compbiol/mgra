@@ -2,7 +2,7 @@
 #define NEWICK_TREE_PRINTER_HPP__
 
 #include <iostream>
-#include <bits/stl_bvector.h>
+#include <vector>
 
 namespace writer {
 
@@ -26,20 +26,7 @@ namespace writer {
 
     void print_node(node_ptr node) {
       if (node->is_leaf()) {
-        auto color_iter = node->get_data().cbegin();
-        if (node->is_complete()) {
-          // Get index of singleton color
-          m_out << get_name(color_iter->first);
-        } else {
-          start_unknown_subtree();
-          m_out << get_name(color_iter->first);
-          for (; color_iter != node->get_data().cend(); ++color_iter) {
-            comma();
-            space();
-            m_out << get_name(color_iter->first);
-          }
-          end_unknown_subtree();
-        }
+        m_out << node->get_name();
       } else {
         start_node();
         print_node(node->get_left_child());
@@ -51,12 +38,6 @@ namespace writer {
     }
 
   private:
-    std::string get_name(size_t color_index) {
-      if (m_names.size() > color_index) {
-        return m_names[color_index];
-      }
-      return std::to_string(color_index);
-    }
 
     void start_node() {
       m_out << "(";

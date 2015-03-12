@@ -66,6 +66,11 @@ namespace structure {
       parent = new_parent;
     }
 
+    void set_name(std::string new_name) {
+      name = new_name;
+    }
+
+
     void set_left_child(node_ptr node) {
       left_child = std::move(node);
     }

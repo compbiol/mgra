@@ -221,7 +221,8 @@ int main(int argc, char **argv) {
 
       writer::NewickTreePrinter<tree_t> newick_printer(std::cout);
       newick_printer.print_tree(result_trees[0]);
-      newick_printer.print_tree(result_trees1[0]);
+      newick_printer.print_tree(result_trees[1]);
+
       writer::GraphDot<graph_pack_t> dot_writer;
       dot_writer.save_subtrees(std::cout, {*result_trees[0]});
 

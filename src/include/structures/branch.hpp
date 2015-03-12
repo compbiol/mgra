@@ -21,8 +21,12 @@ namespace structure {
     */
     static bool merge_branch_into_node(node_ptr const& node, branch_t const& branch) {
       node_ptr current_node = node;
-      while (!current_node->is_complete()) {
+      while (true) {
         if (current_node->is_leaf()) {
+          if (current_node->get_data() == branch.first) {
+            // Analogous to completeness check
+            return false;
+          }
           fill_node_from_branch(current_node, branch);
           return true;
         }
@@ -40,9 +44,6 @@ namespace structure {
         // Neither includes left or right, found intersection
         return false;
       }
-      // Found a complete node, no need to go deeper
-      // have not merged the branch
-      return false;
     }
 
 

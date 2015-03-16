@@ -87,6 +87,14 @@ namespace structure {
       return static_cast<bool>(right_child);
     }
 
+    size_t get_size() const {
+      return data.size();
+    }
+
+    bool is_simple() const {
+      return get_size() == 1;
+    }
+
     bool is_leaf() const {
       return !has_left_child() &&  !has_right_child();
     }

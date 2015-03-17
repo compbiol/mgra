@@ -12,8 +12,8 @@
 #include "reader.h"
 
 #include "algo/Algorithms.hpp"
-#include "algo/recover_tree/greedy_recover_tree_algorithm.hpp"
 #include "algo/recover_tree/bruteforce_recover_tree_algorithm.hpp"
+#include "algo/recover_tree/dynamic_recover_tree_algorithm.hpp"
 
 #include "io/path_helper.hpp"
 #include "logger/logger.hpp"
@@ -214,8 +214,11 @@ int main(int argc, char** argv) {
 
       typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr bruteforce_algorithm(
           std::make_shared<algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack));
+      typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr dynamic_algorithm(
+          std::make_shared<algo::DynamicRecoverTreeAlgorithm<graph_pack_t>>(graph_pack));
 
       auto result_trees = bruteforce_algorithm->recover_trees();
+      auto result_trees1 = dynamic_algorithm->recover_trees();
 
       INFO("Recovered trees")
 

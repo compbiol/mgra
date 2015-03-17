@@ -7,6 +7,7 @@
 #include "structures/branch.hpp"
 #include "graph/graph_pack.hpp"
 #include "structures/mcolor_hash.hpp"
+#include "statistics_producer.hpp"
 
 namespace algo {
 
@@ -33,28 +34,11 @@ namespace algo {
     }
 
     tree_vector recover_trees() {
-      std::map<branch_t, size_t> edges_statistics = m_graph_pack.stats.multiedges_count;
-      // No statistics - no trees
-      assert(!edges_statistics.empty());
-      statistic_vector color_edges_pairs;
-
-      // Filter complete colors
-      std::copy_if(std::begin(edges_statistics),
-          std::end(edges_statistics),
-          std::back_inserter(color_edges_pairs),
-          [](statistic_t statistic) {
-            return !statistic.first.first.empty() && !statistic.first.second.empty();
-          });
-
-      std::sort(std::begin(color_edges_pairs), std::end(color_edges_pairs),
-          // Descending by number of edges sort
-          [](statistic_t left, statistic_t right) {
-            return left.second > right.second;
-          });
-
-      return build_trees(color_edges_pairs);
+      auto statistics = StatisticsProducer<graph_pack_t>::make_statistics(m_graph_pack);
+      return build_trees(statistics);
     }
 
+  private:
     /**
     * Checks if the branch conflicts the class of branches, adds it if not
     * @return true if the branch was added
@@ -73,7 +57,6 @@ namespace algo {
         cls.second += statistic.second;
         return true;
       }
-
       return false;
     }
 
@@ -129,7 +112,6 @@ namespace algo {
       return results;
     }
 
-  private:
     /**
     * Removes the unnecessary children from the node
     * @return true if the node needs to be pruned itself

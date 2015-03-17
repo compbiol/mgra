@@ -25,8 +25,8 @@
 #include "writer/Wtransform.hpp"
 #include "writer/newick_tree_printer.hpp"
 
-bool organize_output_directory(std::string const &path, bool is_debug) {
-  auto creater_lambda = [](std::string const &directory) -> bool {
+bool organize_output_directory(std::string const& path, bool is_debug) {
+  auto creater_lambda = [](std::string const& directory) -> bool {
     if (path::check_existence(directory)) {
       if (path::FileExists(directory)) return false;
     } else {
@@ -35,36 +35,39 @@ bool organize_output_directory(std::string const &path, bool is_debug) {
     return true;
   };
 
-  std::string genomes_dir = path::append_path(path, "genomes");
-  std::string transformation_dir = path::append_path(path, "transformations");
-  bool res = creater_lambda(genomes_dir) && creater_lambda(transformation_dir);
+  const std::string genomes_dir = path::append_path(path, "genomes");
+  const std::string transformation_dir = path::append_path(path, "transformations");
+  const std::string trees_dir = path::append_path(path, "trees");
+  bool result = creater_lambda(genomes_dir) &&
+      creater_lambda(transformation_dir) &&
+      creater_lambda(trees_dir);
 
   if (is_debug) {
     std::string debug_dir = path::append_path(path, "debug");
-    res = res && creater_lambda(debug_dir);
+    result = result && creater_lambda(debug_dir);
   }
 
-  return res;
+  return result;
 }
 
-void create_logger(std::string const &file_path, std::string const &log_filename) {
+void create_logger(std::string const& file_path, std::string const& log_filename) {
   using namespace logging;
   /*
    * Need to create proporties file for logger and use it in build. 
    */
   std::string log_file = path::append_path(file_path, log_filename);
 
-  logger *lg = create_logger();
+  logger* lg = create_logger();
   lg->add_writer(std::make_shared<file_writer>(log_file));
   lg->add_writer(std::make_shared<console_writer>());
   attach_logger(lg);
 }
 
 int parse_configure_file(
-    TCLAP::SwitchArg &debug_arg,
-    std::string const &out_path_directory,
-    TCLAP::SwitchArg &target_arg,
-    TCLAP::ValueArg<std::string> &path_to_cfg_file_arg) {
+    TCLAP::SwitchArg& debug_arg,
+    std::string const& out_path_directory,
+    TCLAP::SwitchArg& target_arg,
+    TCLAP::ValueArg<std::string>& path_to_cfg_file_arg) {
   INFO("Parse configure file");
   cfg::get_writable().is_debug = debug_arg.getValue();
   cfg::get_writable().out_path_to_debug_dir = path::append_path(out_path_directory, "debug");
@@ -83,7 +86,7 @@ int parse_configure_file(
   return 0;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   std::string const VERSION(std::to_string(MGRA_VERSION_MAJOR) + "." + std::to_string(MGRA_VERSION_MINOR) + "."
       + std::to_string(MGRA_VERSION_PATCH));
   std::string const LOGGER_FILENAME = "mgra.log";
@@ -144,7 +147,7 @@ int main(int argc, char **argv) {
         cmd,
         false);
 
-    cmd.parse(argc, const_cast<const char *const *>(argv));
+    cmd.parse(argc, const_cast<const char* const*>(argv));
 
 //    Check paths for cfg file, block file and output directory
     path::CheckFileExistenceFATAL(path_to_cfg_file_arg.getValue());
@@ -178,7 +181,6 @@ int main(int argc, char **argv) {
     using genome_t = structure::Genome;
     using mcolor_t = structure::Mcolor;
     using graph_pack_t = GraphPack<mcolor_t>;
-    using tree_t = structure::BinaryTree<mcolor_t>;
 
     if (parse_configure_file(debug_arg, out_path_directory, target_arg, path_to_cfg_file_arg)) {
       return 1;
@@ -210,23 +212,28 @@ int main(int argc, char **argv) {
       //Recover tree here
       graph_pack.update_graph_statistics();
 
-      typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr recover_tree_algorithm(
-      std::make_shared<algo::GreedyRecoverTreeAlgorithm<graph_pack_t>>(graph_pack));
-
-      typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr recover_tree_algorithm1(
+      typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr bruteforce_algorithm(
           std::make_shared<algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack));
 
-      auto result_trees = recover_tree_algorithm->recover_trees();
-      auto result_trees1 = recover_tree_algorithm1->recover_trees();
+      auto result_trees = bruteforce_algorithm->recover_trees();
 
-      writer::NewickTreePrinter<tree_t> newick_printer(std::cout);
-      newick_printer.print_tree(result_trees[0]);
-      newick_printer.print_tree(result_trees1[0]);
+      INFO("Recovered trees")
 
+      const size_t MAX_TREES_TO_DUMP = 3;
+      size_t dumped_so_far = 0;
       writer::GraphDot<graph_pack_t> dot_writer;
-      dot_writer.save_subtrees(std::cout, {*result_trees[0]});
+      auto trees_path = path::append_path(out_path_directory, "trees");
+      for (auto const& tree: result_trees) {
+        if (dumped_so_far == MAX_TREES_TO_DUMP) {
+          break;
+        }
 
-      //TODO: perform dumping
+        std::ofstream outfile(path::append_path(trees_path, std::to_string(dumped_so_far) + ".dot"));
+        dot_writer.save_subtrees(outfile, {*tree});
+        ++dumped_so_far;
+      }
+
+      INFO("Dumped trees")
     } else {
       {
         std::ostringstream out;
@@ -255,7 +262,7 @@ int main(int argc, char **argv) {
       if (cfg::get().how_build == default_algo) {
         writer::Wtransformation<graph_pack_t> writer_transform(out_path_directory, graph_pack);
         auto recover_transformations = reductant.get_history();
-        for (auto const &transformation : recover_transformations) {
+        for (auto const& transformation : recover_transformations) {
           writer_transform.save_transformation(transformation.first, transformation.second);
           writer_transform.save_reverse_transformation(transformation.first, transformation.second);
         }
@@ -269,7 +276,7 @@ int main(int argc, char **argv) {
     INFO("MGRA log can be found here " << path_to_logfile)
     INFO("Thank you for using MGRA!")
 
-  } catch (TCLAP::ArgException &e) {
+  } catch (TCLAP::ArgException& e) {
     std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
     return 1;
   }

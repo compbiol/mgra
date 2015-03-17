@@ -1,53 +1,11 @@
-#ifndef GRAPHDOTS_HPP
-#define GRAPHDOTS_HPP
+//
+// Created by Nikita Kartashov on 16/03/2015.
+//
+
+#ifndef _MGRA_GRAPH_DOT_IMPL_H_
+#define _MGRA_GRAPH_DOT_IMPL_H_
 
 namespace writer {
-
-  template <class graph_pack_t>
-  struct GraphDot {
-    using mcolor_t = typename graph_pack_t::mcolor_type;
-    using edge_t = typename graph_pack_t::edge_t;
-    using mularcs_t = typename graph_pack_t::mularcs_t;
-    using tree_t = typename structure::BinaryTree<mcolor_t>;
-    using node_t = typename tree_t::colored_node_t;
-
-    GraphDot()
-        : infinity_verteces(0) {
-    }
-
-    void open(std::string const& path, std::string const& graphname = "stage") {
-      m_path = path;
-      m_graphname = graphname;
-    }
-
-    /**
-    * Save multiply breakpoint graph in .dot file
-    */
-    void save_bp_graph(graph_pack_t const& graph, size_t stage);
-
-    /**
-    * Save subtrees in .dot file with legend colors.
-    */
-    void save_subtrees();
-
-    void save_subtrees(std::vector<tree_t> const& trees);
-
-    void save_subtrees(std::ostream& output,
-        std::vector<tree_t> const& trees);
-
-  private:
-    std::string get_branches_from_tree(std::shared_ptr<const node_t> const& current, std::vector<std::string>& info) const;
-
-    // Save multiedge in dot file
-    void draw_multiedge(std::ofstream& dot, vertex_t const& x, mcolor_t const& color, vertex_t const& y,
-        std::string const& proporties, bool is_label_proporties = false);
-
-  private:
-    std::string m_path;
-    std::string m_graphname;
-    int infinity_verteces;
-  };
-
   template <class graph_pack_t>
   void GraphDot<graph_pack_t>::save_bp_graph(graph_pack_t const& graph_pack, size_t stage) {
     std::string dotname = m_graphname + std::to_string(stage) + ".dot";
@@ -100,8 +58,8 @@ namespace writer {
 
   template <class graph_pack_t>
   void GraphDot<graph_pack_t>::draw_multiedge(std::ofstream& dot, vertex_t const& x, mcolor_t const& color, vertex_t const& y,
-      std::string const& proporties, bool is_label_proporties) {
-    bool is_write_proporties = false;
+      std::string const& properties, bool is_label_properties) {
+    bool is_write_properties = false;
 
     for (auto const& match : color) {
       for (size_t i = 0; i < match.second; ++i) {
@@ -116,17 +74,17 @@ namespace writer {
           dot << y << "\"\t[";
         }
 
-        if (is_label_proporties) {
-          if (is_write_proporties) {
+        if (is_label_properties) {
+          if (is_write_properties) {
             dot << "color=" << cfg::get().get_RGBcolor(match.first) << "];" << std::endl;
           } else {
-            is_write_proporties = true;
+            is_write_properties = true;
             dot << "color=" << cfg::get().get_RGBcolor(match.first)
-                << ", " << proporties << "];" << std::endl;
+                << ", " << properties << "];" << std::endl;
           }
         } else {
           dot << "color=" << cfg::get().get_RGBcolor(match.first)
-              << ", " << proporties << "];" << std::endl;
+              << ", " << properties << "];" << std::endl;
         }
       }
     }
@@ -136,7 +94,8 @@ namespace writer {
 * Functions for output tree in legend.dot file
 */
   template <class graph_pack_t>
-  std::string GraphDot<graph_pack_t>::get_branches_from_tree(std::shared_ptr<const node_t> const& current, std::vector<std::string>& info) const {
+  std::string GraphDot<graph_pack_t>::get_branches_from_tree(std::shared_ptr<const node_t> const& current,
+      std::vector<std::string>& info) const {
     auto const& left = current->get_left_child();
     auto const& right = current->get_right_child();
 
@@ -161,7 +120,6 @@ namespace writer {
 
     return current->get_name();
   }
-
 
 
   template <class graph_pack_t>
@@ -205,7 +163,6 @@ namespace writer {
 
     output << "}" << std::endl;
   }
-
 }
-#endif
 
+#endif //_MGRA_GRAPH_DOT_IMPL_H_

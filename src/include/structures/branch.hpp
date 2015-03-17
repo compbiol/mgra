@@ -51,7 +51,9 @@ namespace structure {
     * Checks if two branch multicolors intersect
     */
     static bool do_intersect(branch_t const& left, branch_t const& right) {
-      return !left.first.includes(right.first) && !left.second.includes(right.first);
+//      FIXME: fix the intersection logic
+      return !(left.first.includes(right.first) || left.second.includes(right.first) ||
+          right.first.includes(left.first) || right.second.includes(left.first));
     }
 
     /**

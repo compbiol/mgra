@@ -146,15 +146,6 @@ namespace structure {
 
     DECLARE_CONST_ITERATOR(citer, main_color, cend, cend)
 
-    friend std::ostream& operator<< (std::ostream &out, Mcolor const& multicolor) {
-      out << "{";
-      for (auto const& c: multicolor.main_color) {
-        out << " " << c.first << ": " << c.second << ",";
-      }
-      out << "}";
-      return out;
-    }
-
   private:
     void set_difference(Mcolor const& first, Mcolor const& second) {
       auto first1 = first.cbegin();

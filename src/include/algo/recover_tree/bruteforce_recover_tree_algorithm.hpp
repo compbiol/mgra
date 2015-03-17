@@ -5,8 +5,8 @@
 
 #include "recover_tree_algorithm.hpp"
 #include "structures/branch.hpp"
-#include "structures/color_pyramid.hpp"
 #include "graph/graph_pack.hpp"
+#include "structures/mcolor_hash.hpp"
 
 namespace algo {
 
@@ -36,7 +36,15 @@ namespace algo {
       std::map<branch_t, size_t> edges_statistics = m_graph_pack.stats.multiedges_count;
       // No statistics - no trees
       assert(!edges_statistics.empty());
-      statistic_vector color_edges_pairs(std::begin(edges_statistics), std::end(edges_statistics));
+      statistic_vector color_edges_pairs;
+
+      // Filter complete colors
+      std::copy_if(std::begin(edges_statistics),
+          std::end(edges_statistics),
+          std::back_inserter(color_edges_pairs),
+          [](statistic_t statistic) {
+            return !statistic.first.first.empty() && !statistic.first.second.empty();
+          });
 
       std::sort(std::begin(color_edges_pairs), std::end(color_edges_pairs),
           // Descending by number of edges sort
@@ -47,28 +55,46 @@ namespace algo {
       return build_trees(color_edges_pairs);
     }
 
+    /**
+    * Checks if the branch conflicts the class of branches, adds it if not
+    * @return true if the branch was added
+    */
+    bool screen_branch(class_t& cls, statistic_t const& statistic) {
+      auto const& new_branch = statistic.first;
+      bool new_branch_conflicts = false;
+      for (auto& branch: cls.first) {
+        if (BranchHelper::do_intersect(branch, new_branch)) {
+          new_branch_conflicts = true;
+          break;
+        }
+      }
+      if (!new_branch_conflicts) {
+        cls.first.push_back(new_branch);
+        cls.second += statistic.second;
+        return true;
+      }
+
+      return false;
+    }
+
     tree_vector build_trees(statistic_vector& branch_statistics) {
       class_vector tree_classes;
 
-      for (auto& statistic: branch_statistics) {
-        auto& new_branch = statistic.first;
+      for (size_t i = 0; i != branch_statistics.size(); ++i) {
+        auto& statistic = branch_statistics[i];
         bool has_been_added = false;
         for (auto& cls: tree_classes) {
-          bool new_branch_conflicts = false;
-          for (auto& branch: cls.first) {
-            if (BranchHelper::do_intersect(branch, new_branch)) {
-              new_branch_conflicts = true;
-              break;
-            }
-          }
-          if (!new_branch_conflicts) {
-            cls.first.push_back(new_branch);
-            cls.second += statistic.second;
-            has_been_added = true;
-          }
+          bool screening_result = screen_branch(cls, statistic);
+          has_been_added = has_been_added || screening_result;
         }
         if (!has_been_added) {
           tree_classes.push_back(class_t({statistic.first}, statistic.second));
+          class_t& new_class = tree_classes.back();
+
+          // So we won't forget to add the branches already screened, but consistent with new class
+          for (size_t j = 0; j != i; ++j) {
+            screen_branch(new_class, branch_statistics[j]);
+          }
         }
       }
 
@@ -92,6 +118,11 @@ namespace algo {
           [&appearing_colors](class_t& cls_to_fold) {
             auto root_node = fold_into_root_node(cls_to_fold.first);
             prune_node(root_node, appearing_colors);
+            root_node->set_name(
+                cfg::get().mcolor_to_name(
+                    mcolor_t(root_node->get_left_child()->get_data(),
+                        root_node->get_right_child()->get_data(),
+                        mcolor_t::Union)));
             return std::make_shared<tree_t>(root_node);
           });
 

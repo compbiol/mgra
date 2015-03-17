@@ -1,6 +1,7 @@
 #ifndef CONFIG_STRUCT_IMPL_HPP
 #define CONFIG_STRUCT_IMPL_HPP
 
+
 /*
  * Convert string to color. If string is bad, terminate program.
  */
@@ -37,8 +38,10 @@ std::string main_config<mcolor_t>::mcolor_to_name(mcolor_t const& color) const {
   if (mcolor_name.find(color) != mcolor_name.end()) {
     return mcolor_name.find(color)->second;
   } else {
+    if (color.size() == 1) {
+      return priority_name[color.cbegin()->first];
+    }
     std::string answer = "{";
-
     if (!color.empty()) {
       std::string const& main_sym = priority_name[color.cbegin()->first];
       answer += main_sym;

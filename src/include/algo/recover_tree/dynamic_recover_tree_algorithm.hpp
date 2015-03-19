@@ -13,6 +13,7 @@
 #include "structures/mcolor_hash.hpp"
 #include "structures/color_column.hpp"
 #include "structures/mcolor_info.hpp"
+#include "scoreboard.hpp"
 
 namespace algo {
 
@@ -38,7 +39,9 @@ namespace algo {
     using position_vector = typename pyramid_t::position_vector;
     using mcolor_info_t = typename pyramid_t::color_info_t;
 
-    DynamicRecoverTreeAlgorithm(graph_pack_t& graph_pack) : m_graph_pack(graph_pack) {
+    DynamicRecoverTreeAlgorithm(graph_pack_t& graph_pack, size_t returned_trees = 1) :
+        m_graph_pack(graph_pack),
+        m_returned_trees(returned_trees) {
     }
 
     tree_vector recover_trees() {
@@ -47,9 +50,10 @@ namespace algo {
       pyramid_t color_pyramid;
       for (statistic_t& statistic: statistics) {
         color_pyramid.insert(std::make_pair(statistic.first.first, statistic.second));
+        color_pyramid.insert(std::make_pair(statistic.first.second, statistic.second));
       }
 
-      Scoreboard scoreboard(3);
+      Scoreboard<position_t> scoreboard(m_returned_trees);
 
       // Bypass the level 1, because it's made of singleton colors
       for (size_t current_level_index = 2; current_level_index < color_pyramid.size(); ++current_level_index) {
@@ -100,54 +104,22 @@ namespace algo {
         }
       }
 
-      auto branches = recover_branches(scoreboard.top().second, color_pyramid);
-      return {std::make_shared<tree_t>(BranchHelper::fold_into_root_node(branches))};
+      std::vector<branch_vector> branches_to_fold;
+      branches_to_fold.reserve(m_returned_trees);
+      for (size_t i = 0; i < m_returned_trees; ++i) {
+        branches_to_fold.push_back(recover_branches(scoreboard[i].second, color_pyramid));
+      }
+
+      tree_vector results;
+
+      std::transform(std::begin(branches_to_fold), std::end(branches_to_fold), std::back_inserter(results),
+          [](branch_vector& branches) {
+            auto root_node = BranchHelper::fold_into_root_node(branches);
+            return std::make_shared<tree_t>(root_node);
+          });
+
+      return results;
     }
-
-    struct Scoreboard {
-      using scored_position_t = std::pair<size_t, position_t>;
-
-      Scoreboard(size_t max_scores) {
-        assert(max_scores != 0);
-        m_scores.resize(max_scores);
-      }
-
-      scored_position_t const& top() const {
-        return m_scores[0];
-      }
-
-      scored_position_t const& operator[](size_t index) const {
-        return m_scores[index];
-      }
-
-      size_t min_score() const {
-        return m_scores.back().first;
-      }
-
-      size_t max_score() const {
-        return m_scores.front().first;
-      }
-
-      bool update(scored_position_t scored_position) {
-        if (scored_position.first <= min_score()) {
-          return false;
-        }
-        if (scored_position.first > max_score()) {
-          std::rotate(std::begin(m_scores), std::begin(m_scores) + 1, std::end(m_scores));
-          m_scores[0] = scored_position;
-          return true;
-        }
-
-        // Lower bound cannot point to the last element, it would have been rejected by 1st if clause
-        auto lower_bound = std::lower_bound(m_scores.rbegin(), m_scores.rend(), scored_position).base();
-        std::rotate(lower_bound, lower_bound + 1, std::end(m_scores));
-
-        return true;
-      }
-
-    private:
-      std::vector<scored_position_t> m_scores;
-    };
 
   private:
     branch_vector recover_branches(position_t const& root_position, pyramid_t const& pyramid) {
@@ -173,6 +145,7 @@ namespace algo {
     }
 
     graph_pack_t& m_graph_pack;
+    const size_t m_returned_trees;
   };
 }
 

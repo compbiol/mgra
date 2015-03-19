@@ -22,12 +22,20 @@ namespace structure {
     McolorInfo() {
     }
 
-    McolorInfo(size_t separate_score,
-        size_t whole_tree_score = 0,
-        subtree_positions_t subtree_positions = subtree_positions_t()) {
+    McolorInfo(size_t separate_score) :
+        m_separate_score(separate_score),
+        m_whole_tree_score(m_separate_score),
+        m_subtree_positions(subtree_positions_t()) {
       m_separate_score = separate_score;
-      m_whole_tree_score = whole_tree_score;
-      m_subtree_positions = subtree_positions;
+    }
+
+    McolorInfo(
+        size_t separate_score,
+        size_t whole_tree_score,
+        subtree_positions_t positions) :
+        m_separate_score(separate_score),
+        m_whole_tree_score(whole_tree_score),
+        m_subtree_positions(positions) {
     }
 
     /**

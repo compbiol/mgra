@@ -11,6 +11,7 @@ namespace structure {
   template <class mcolor_t>
   struct Branch {
     using branch_t = std::pair<mcolor_t, mcolor_t>;
+    using branch_vector = std::vector<branch_t>;
     using tree_t = BinaryTree<mcolor_t>;
     using node_t = typename tree_t::colored_node_t;
     using node_ptr = typename tree_t::node_ptr;
@@ -51,7 +52,6 @@ namespace structure {
     * Checks if two branch multicolors intersect
     */
     static bool do_intersect(branch_t const& left, branch_t const& right) {
-//      FIXME: fix the intersection logic
       return !(left.first.includes(right.first) || left.second.includes(right.first) ||
           right.first.includes(left.first) || right.second.includes(left.first));
     }
@@ -63,6 +63,22 @@ namespace structure {
       node_ptr new_node = std::make_shared<node_t>(mcolor_t(branch.first, branch.second, mcolor_t::Union));
       fill_node_from_branch(new_node, branch);
       return new_node;
+    }
+
+    static node_ptr fold_into_root_node(branch_vector& branches) {
+      // No branches - no tree
+      assert(!branches.empty());
+      auto branch_iter = std::begin(branches);
+      auto root_node = node_from_branch(*branch_iter);
+      for (; branch_iter != std::end(branches); ++branch_iter) {
+        merge_branch_into_node(root_node, *branch_iter);
+      }
+      root_node->set_name(
+          cfg::get().mcolor_to_name(
+              mcolor_t(root_node->get_left_child()->get_data(),
+                  root_node->get_right_child()->get_data(),
+                  mcolor_t::Union)));
+      return root_node;
     }
 
     /**
@@ -91,9 +107,9 @@ namespace structure {
       return node->get_right_child()->get_data().includes(branch.first);
     }
 
-
-  private:
-
+    static branch_t flip(branch_t const& branch) {
+      return branch_t(branch.second, branch.first);
+    }
   };
 }
 

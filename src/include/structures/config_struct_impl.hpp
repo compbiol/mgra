@@ -93,6 +93,15 @@ void load(main_config<mcolor_t>& cfg, std::string const& filename) {
   cfg.parse(problem_config);
 }
 
+template <class mcolor_t>
+mcolor_t main_config<mcolor_t>::complete_color() const {
+  mcolor_t result;
+  for (size_t color = 0; color != priority_name.size(); ++color) {
+    result.insert(color);
+  }
+  return result;
+}
+
 /*
  * Different fucntion, which parse our input. 
  */

@@ -220,12 +220,16 @@ int main(int argc, char** argv) {
       auto result_trees = bruteforce_algorithm->recover_trees();
       auto result_trees1 = dynamic_algorithm->recover_trees();
 
+
+
       INFO("Recovered trees")
 
       const size_t MAX_TREES_TO_DUMP = 3;
       size_t dumped_so_far = 0;
       writer::GraphDot<graph_pack_t> dot_writer;
       auto trees_path = path::append_path(out_path_directory, "trees");
+      std::ofstream outfile(path::append_path(trees_path, "BANG.dot"));
+      dot_writer.save_subtrees(outfile, {*result_trees1[0]});
       for (auto const& tree: result_trees) {
         if (dumped_so_far == MAX_TREES_TO_DUMP) {
           break;

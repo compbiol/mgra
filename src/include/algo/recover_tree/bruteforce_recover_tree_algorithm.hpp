@@ -87,9 +87,6 @@ namespace algo {
             return left.second > right.second;
           });
 
-      tree_vector results;
-      results.reserve(tree_classes.size());
-
       // Collect the colors appearing in the tree to speed up the strictness checking
       color_set appearing_colors;
       for (auto const& statistic: branch_statistics) {
@@ -97,15 +94,12 @@ namespace algo {
         appearing_colors.insert(left_color);
       }
 
+      tree_vector results;
+      results.reserve(tree_classes.size());
       std::transform(std::begin(tree_classes), std::end(tree_classes), std::back_inserter(results),
           [&appearing_colors](class_t& cls_to_fold) {
-            auto root_node = fold_into_root_node(cls_to_fold.first);
+            auto root_node = BranchHelper::fold_into_root_node(cls_to_fold.first);
             prune_node(root_node, appearing_colors);
-            root_node->set_name(
-                cfg::get().mcolor_to_name(
-                    mcolor_t(root_node->get_left_child()->get_data(),
-                        root_node->get_right_child()->get_data(),
-                        mcolor_t::Union)));
             return std::make_shared<tree_t>(root_node);
           });
 
@@ -135,17 +129,6 @@ namespace algo {
               prune_node(node->get_left_child(), appearing_colors) &&
               prune_node(node->get_right_child(), appearing_colors);
       return needs_to_be_pruned;
-    }
-
-    static node_ptr fold_into_root_node(branch_vector& branches) {
-      // No branches - no tree
-      assert(!branches.empty());
-      auto branch_iter = std::begin(branches);
-      auto root_node = BranchHelper::node_from_branch(*branch_iter);
-      for (; branch_iter != std::end(branches); ++branch_iter) {
-        BranchHelper::merge_branch_into_node(root_node, *branch_iter);
-      }
-      return root_node;
     }
 
     graph_pack_t& m_graph_pack;

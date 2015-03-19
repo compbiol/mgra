@@ -7,7 +7,7 @@ namespace structure {
 
   struct Mcolor {
     enum Construct {
-      Difference, Union, Intersection, LeftUnion
+      Difference, Union, Intersection
     };
 
     using map_t = std::map<size_t, size_t>;
@@ -31,9 +31,6 @@ namespace structure {
           break;
         case Intersection:
           set_intersection(first, second);
-          break;
-        case LeftUnion:
-          left_set_union(first, second);
           break;
       }
     }
@@ -195,45 +192,6 @@ namespace structure {
 
         if (first1->first == first2->first) {
           *result = std::make_pair(first1->first, first1->second + first2->second);
-          ++first1;
-          ++first2;
-        } else if (*first1 < *first2) {
-          *result = *first1;
-          ++first1;
-        } else if (*first2 < *first1) {
-          *result = *first2;
-          ++first2;
-        }
-        ++result;
-      }
-    }
-
-    /**
-    * Behaves as the usual union, but discards color from righthand argument if they are present in the left
-    */
-    void left_set_union(Mcolor const& first, Mcolor const& second) {
-      auto first1 = first.cbegin();
-      auto first2 = second.cbegin();
-      auto result = std::inserter(main_color, main_color.begin());
-
-      while (true) {
-        if (first1 == first.cend()) {
-          for (; first2 != second.cend(); ++first2, ++result) {
-            *result = *first2;
-          }
-          break;
-        }
-
-        if (first2 == second.cend()) {
-          for (; first1 != first.cend(); ++first1, ++result) {
-            *result = *first1;
-          }
-          break;
-        }
-
-        if (first1->first == first2->first) {
-          *result = std::make_pair(first1->first, first1->second);
-
           ++first1;
           ++first2;
         } else if (*first1 < *first2) {

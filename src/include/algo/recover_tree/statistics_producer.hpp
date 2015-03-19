@@ -5,12 +5,15 @@
 #ifndef _MGRA_STATISTICS_PRODUCER_HPP_
 #define _MGRA_STATISTICS_PRODUCER_HPP_
 
+#include "structures/branch.hpp"
+
 namespace algo {
 
   template <class graph_pack_t>
   struct StatisticsProducer {
     using mcolor_t = typename graph_pack_t::mcolor_type;
-    using branch_t = std::pair<mcolor_t, mcolor_t>;
+    using BranchHelper = structure::Branch<mcolor_t>;
+    using branch_t = typename BranchHelper::branch_t;
     using statistic_t = std::pair<branch_t, size_t>;
     using statistic_vector = std::vector<statistic_t>;
 
@@ -33,6 +36,14 @@ namespace algo {
         statistic.second -= graph_pack.stats.irrer_multiedges_count[statistic.first.first];
         statistic.second -= graph_pack.stats.irrer_multiedges_count[statistic.first.second];
       }
+
+      // Flip edges, so the smaller color is on the left
+      std::for_each(std::begin(color_edges_pairs), std::end(color_edges_pairs), [](statistic_t& statistic) {
+        auto& branch = statistic.first;
+        if (statistic.first.first.size() > statistic.first.second.size()) {
+          statistic = statistic_t(BranchHelper::flip(branch), statistic.second);
+        }
+      });
 
       std::sort(std::begin(color_edges_pairs), std::end(color_edges_pairs),
           // Descending by number of edges sort

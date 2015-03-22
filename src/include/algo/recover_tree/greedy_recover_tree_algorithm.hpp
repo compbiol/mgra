@@ -1,5 +1,5 @@
-#ifndef GREEDY_RECOVER_TREE_ALGORITHM_HPP__
-#define GREEDY_RECOVER_TREE_ALGORITHM_HPP__
+#ifndef GREEDY_RECOVER_TREE_ALGORITHM_HPP_
+#define GREEDY_RECOVER_TREE_ALGORITHM_HPP_
 
 #include "recover_tree_algorithm.hpp"
 #include "graph/graph_pack.hpp"

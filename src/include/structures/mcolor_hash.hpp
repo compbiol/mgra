@@ -2,8 +2,8 @@
 // Created by Nikita Kartashov on 16/03/2015.
 //
 
-#ifndef _MGRA_MCOLOR_HASH_HPP_
-#define _MGRA_MCOLOR_HASH_HPP_
+#ifndef MGRA_MCOLOR_HASH_HPP_
+#define MGRA_MCOLOR_HASH_HPP_
 
 #include "mcolor.hpp"
 

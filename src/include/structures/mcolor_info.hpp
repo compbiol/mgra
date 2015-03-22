@@ -2,8 +2,8 @@
 // Created by Nikita Kartashov on 18/03/2015.
 //
 
-#ifndef _MGRA_MCOLOR_INFO_HPP_
-#define _MGRA_MCOLOR_INFO_HPP_
+#ifndef MGRA_MCOLOR_INFO_HPP_
+#define MGRA_MCOLOR_INFO_HPP_
 
 namespace structure {
   template <class mcolor_t>

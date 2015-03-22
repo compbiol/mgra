@@ -1,5 +1,5 @@
-#ifndef BRANCH_HPP__
-#define BRANCH_HPP__
+#ifndef BRANCH_HPP_
+#define BRANCH_HPP_
 
 #include <utility>
 #include <iostream>
@@ -65,9 +65,19 @@ namespace structure {
       return new_node;
     }
 
-    static node_ptr fold_into_root_node(branch_vector& branches) {
+    static node_ptr fold_into_root_node(branch_vector& branches, bool balance_sort = false) {
       // No branches - no tree
       assert(!branches.empty());
+
+      if (balance_sort) {
+        // Doubtful fix, sort the branches, so that the root node is most balanced
+        std::sort(std::begin(branches), std::end(branches), [](branch_t const& left, branch_t const& right) {
+          auto left_diff = std::abs(static_cast<long>(left.first.size()) - static_cast<long>(left.second.size()));
+          auto right_diff = std::abs(static_cast<long>(right.first.size()) - static_cast<long>(right.second.size()));
+          return left_diff < right_diff;
+        });
+      }
+
       auto branch_iter = std::begin(branches);
       auto root_node = node_from_branch(*branch_iter);
       for (; branch_iter != std::end(branches); ++branch_iter) {

@@ -2,8 +2,8 @@
 // Created by Nikita Kartashov on 19/03/2015.
 //
 
-#ifndef _MGRA_SCOREBOARD_HPP_
-#define _MGRA_SCOREBOARD_HPP_
+#ifndef MGRA_SCOREBOARD_HPP_
+#define MGRA_SCOREBOARD_HPP_
 
 namespace algo {
   template <class value_t>

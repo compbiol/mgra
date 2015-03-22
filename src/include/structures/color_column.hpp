@@ -2,8 +2,8 @@
 // Created by Nikita Kartashov on 17/03/2015.
 //
 
-#ifndef _MGRA_COLOR_PYRAMID_HPP_
-#define _MGRA_COLOR_PYRAMID_HPP_
+#ifndef MGRA_COLOR_PYRAMID_HPP_
+#define MGRA_COLOR_PYRAMID_HPP_
 
 #include <vector>
 #include <unordered_map>

@@ -1,5 +1,5 @@
-#ifndef NEWICK_TREE_PRINTER_HPP__
-#define NEWICK_TREE_PRINTER_HPP__
+#ifndef NEWICK_TREE_PRINTER_HPP_
+#define NEWICK_TREE_PRINTER_HPP_
 
 #include <iostream>
 #include <vector>
@@ -12,10 +12,7 @@ namespace writer {
     using node_ptr = typename tree_t::node_ptr;
     using name_vector = std::vector<std::string>;
 
-    NewickTreePrinter(std::ostream& out): m_out(out), m_names(name_vector()) {
-    }
-
-    NewickTreePrinter(std::ostream& out, name_vector& names): m_out(out), m_names(names) {
+    NewickTreePrinter(std::ostream& out): m_out(out) {
     }
 
     void print_tree(tree_ptr tree) {
@@ -72,7 +69,6 @@ namespace writer {
     }
 
     std::ostream& m_out;
-    name_vector m_names;
   };
 }
 

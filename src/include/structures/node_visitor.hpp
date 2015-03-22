@@ -1,5 +1,5 @@
-#ifndef NODE_VISITOR_HPP__
-#define NODE_VISITOR_HPP__
+#ifndef NODE_VISITOR_HPP_
+#define NODE_VISITOR_HPP_
 
 namespace structure {
 

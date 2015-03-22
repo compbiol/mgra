@@ -1,5 +1,5 @@
-#ifndef BRUTEFORCE_RECOVER_TREE_ALGORITHM_HPP__
-#define BRUTEFORCE_RECOVER_TREE_ALGORITHM_HPP__
+#ifndef BRUTEFORCE_RECOVER_TREE_ALGORITHM_HPP_
+#define BRUTEFORCE_RECOVER_TREE_ALGORITHM_HPP_
 
 #include <unordered_set>
 
@@ -83,7 +83,7 @@ namespace algo {
 
       std::sort(std::begin(tree_classes), std::end(tree_classes),
           // Descending by class score
-          [](class_t left, class_t right) {
+          [](class_t const& left, class_t const& right) {
             return left.second > right.second;
           });
 

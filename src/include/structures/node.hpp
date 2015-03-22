@@ -1,5 +1,5 @@
-#ifndef NODE_HPP__
-#define NODE_HPP__
+#ifndef NODE_HPP_
+#define NODE_HPP_
 
 #include <iostream>
 #include <memory>

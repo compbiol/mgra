@@ -181,6 +181,7 @@ int main(int argc, char** argv) {
     using genome_t = structure::Genome;
     using mcolor_t = structure::Mcolor;
     using graph_pack_t = GraphPack<mcolor_t>;
+    using tree_t = structure::BinaryTree<mcolor_t>;
 
     if (parse_configure_file(debug_arg, out_path_directory, target_arg, path_to_cfg_file_arg)) {
       return 1;
@@ -230,6 +231,8 @@ int main(int argc, char** argv) {
       auto trees_path = path::append_path(out_path_directory, "trees");
       std::ofstream outfile(path::append_path(trees_path, "BANG.dot"));
       dot_writer.save_subtrees(outfile, {*result_trees1[0]});
+      writer::NewickTreePrinter<tree_t> newick_printer(std::cout);
+
       for (auto const& tree: result_trees) {
         if (dumped_so_far == MAX_TREES_TO_DUMP) {
           break;
@@ -237,6 +240,7 @@ int main(int argc, char** argv) {
 
         std::ofstream outfile(path::append_path(trees_path, std::to_string(dumped_so_far) + ".dot"));
         dot_writer.save_subtrees(outfile, {*tree});
+        newick_printer.print_tree(tree);
         ++dumped_so_far;
       }
 

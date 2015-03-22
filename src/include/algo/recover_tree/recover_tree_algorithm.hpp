@@ -1,5 +1,5 @@
-#ifndef RECOVER_TREE_ALGORITHM_HPP__
-#define RECOVER_TREE_ALGORITHM_HPP__
+#ifndef RECOVER_TREE_ALGORITHM_HPP_
+#define RECOVER_TREE_ALGORITHM_HPP_
 
 #include <memory>
 #include <vector>

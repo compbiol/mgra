@@ -2,8 +2,8 @@
 // Created by Nikita Kartashov on 17/03/2015.
 //
 
-#ifndef _MGRA_STATISTICS_PRODUCER_HPP_
-#define _MGRA_STATISTICS_PRODUCER_HPP_
+#ifndef MGRA_STATISTICS_PRODUCER_HPP_
+#define MGRA_STATISTICS_PRODUCER_HPP_
 
 #include "structures/branch.hpp"
 

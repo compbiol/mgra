@@ -2,8 +2,8 @@
 // Created by Nikita Kartashov on 16/03/2015.
 //
 
-#ifndef HASH_HPP__
-#define HASH_HPP__
+#ifndef HASH_HPP_
+#define HASH_HPP_
 namespace util {
   template <class T>
   inline void hash_combine(std::size_t& seed, const T& v) {

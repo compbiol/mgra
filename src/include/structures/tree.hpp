@@ -1,5 +1,5 @@
-#ifndef TREE_HPP
-#define TREE_HPP
+#ifndef TREE_HPP_
+#define TREE_HPP_
 
 #include "node.hpp"
 

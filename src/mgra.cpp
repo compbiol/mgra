@@ -181,7 +181,8 @@ int main(int argc, char** argv) {
     using genome_t = structure::Genome;
     using mcolor_t = structure::Mcolor;
     using graph_pack_t = GraphPack<mcolor_t>;
-    using tree_t = structure::BinaryTree<mcolor_t>;
+    using algo_t = typename algo::RecoverTreeAlgorithm<graph_pack_t>;
+    using algo_ptr = typename algo_t::algo_ptr;
 
     if (parse_configure_file(debug_arg, out_path_directory, target_arg, path_to_cfg_file_arg)) {
       return 1;
@@ -213,15 +214,17 @@ int main(int argc, char** argv) {
       //Recover tree here
       graph_pack.update_graph_statistics();
 
-      typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr bruteforce_algorithm(
-          std::make_shared<algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack));
-      typename algo::RecoverTreeAlgorithm<graph_pack_t>::algo_ptr dynamic_algorithm(
-          std::make_shared<algo::DynamicRecoverTreeAlgorithm<graph_pack_t>>(graph_pack));
+      algo_ptr recover_tree_algorithm;
 
-      auto result_trees = bruteforce_algorithm->recover_trees();
-      auto result_trees1 = dynamic_algorithm->recover_trees();
+      const size_t MAX_GENOMES_FOR_BRUTEFORCE = 50;
 
+      if (cfg::get().get_count_genomes() < MAX_GENOMES_FOR_BRUTEFORCE) {
+        recover_tree_algorithm = std::make_shared<algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack);
+      } else {
+        recover_tree_algorithm = std::make_shared<algo::DynamicRecoverTreeAlgorithm<graph_pack_t>>(graph_pack);
+      }
 
+      auto result_trees = recover_tree_algorithm->recover_trees();
 
       INFO("Recovered trees")
 
@@ -229,18 +232,14 @@ int main(int argc, char** argv) {
       size_t dumped_so_far = 0;
       writer::GraphDot<graph_pack_t> dot_writer;
       auto trees_path = path::append_path(out_path_directory, "trees");
-      std::ofstream outfile(path::append_path(trees_path, "BANG.dot"));
-      dot_writer.save_subtrees(outfile, {*result_trees1[0]});
-      writer::NewickTreePrinter<tree_t> newick_printer(std::cout);
 
       for (auto const& tree: result_trees) {
-        if (dumped_so_far == MAX_TREES_TO_DUMP) {
+        if (dumped_so_far == MAX_TREES_TO_DUMP || dumped_so_far == result_trees.size()) {
           break;
         }
 
-        std::ofstream outfile(path::append_path(trees_path, std::to_string(dumped_so_far) + ".dot"));
-        dot_writer.save_subtrees(outfile, {*tree});
-        newick_printer.print_tree(tree);
+        std::ofstream numbered_outfile(path::append_path(trees_path, std::to_string(dumped_so_far) + ".dot"));
+        dot_writer.save_subtrees(numbered_outfile, {*tree});
         ++dumped_so_far;
       }
 

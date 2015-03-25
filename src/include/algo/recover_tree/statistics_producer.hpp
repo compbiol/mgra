@@ -18,7 +18,7 @@ namespace algo {
     using statistic_vector = std::vector<statistic_t>;
 
     static statistic_vector make_statistics(graph_pack_t& graph_pack) {
-      std::map<branch_t, size_t> edges_statistics = graph_pack.stats.multiedges_count;
+      std::map<branch_t, size_t> edges_statistics = graph_pack.stats.simple_paths_count;
       // No statistics - no trees
       assert(!edges_statistics.empty());
       statistic_vector color_edges_pairs;

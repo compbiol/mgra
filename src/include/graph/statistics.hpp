@@ -4,6 +4,7 @@
 template<class mcolor_t>
 struct GraphPack<mcolor_t>::Statistics {
   using mcolor_type = mcolor_t;
+  using branch_t = std::pair<mcolor_t, mcolor_t>;
   
   void calculate(GraphPack<mcolor_t> & graph_pack) { 
     clear();
@@ -50,10 +51,12 @@ public:
   std::map<mcolor_t, size_t> simple_vertices_alone_count; // simple_vertices_alone_count[min(S,!S)] = # simple vertices incident to S-colored, with no good neighbors
 
   //edges
-  std::map<std::pair<mcolor_t, mcolor_t>, size_t> multiedges_count; 	// multiedges_count[S] = # multiedges of multicolor S.
+  std::map<branch_t, size_t> multiedges_count; 	// multiedges_count[S] = # multiedges of multicolor S.
 	std::map<mcolor_t, size_t> irrer_multiedges_count;	// ME[S] = # irregular multiedges of multicolor S.
  	std::map<mcolor_t, size_t> simple_multiedges_count;	// ME[S] = # simple multiedges of multicolor S.
-	
+
+  std::map<branch_t, size_t> simple_paths_count; // multiedges_count[S] = simple paths' of multicolor S lengths sum
+
   //cycles
   std::map<mcolor_t, size_t> simple_cycle_count; // cycle of simple vertices
   std::map<mcolor_t, size_t> special_cycle_count; // cycle of simple vertices and oo, of even length
@@ -144,7 +147,10 @@ void GraphPack<mcolor_t>::Statistics::count_rearrangement_statistics(GraphPack<m
 
     for (arc_t const & arc : current) {
     	// count two times, because same underected edge (u, v) and (v, u)
-      ++multiedges_count[pack_mcolor_lambda(arc.second, graph_pack.multicolors.get_complement_color(arc.second))]; 
+      ++multiedges_count[pack_mcolor_lambda(arc.second, graph_pack.multicolors.get_complement_color(arc.second))];
+      if (graph_pack.is_simple_vertex(x)) {
+        ++simple_paths_count[pack_mcolor_lambda(arc.second, graph_pack.multicolors.get_complement_color(arc.second))];
+      }
 
       if ((processed.count(x) != 0) && (processed.count(arc.first) != 0)) {  
 				++simple_multiedges_count[arc.second]; //if two vertices have degree = 2 - is simple edges

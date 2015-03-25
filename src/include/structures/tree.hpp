@@ -10,17 +10,20 @@ namespace structure {
     using colored_node_t = node_t<mcolor_t>;
     using tree_t = BinaryTree<mcolor_t, node_t>;
     using tree_ptr = std::shared_ptr<tree_t>;
+    using branch_t = std::pair<mcolor_t, mcolor_t>;
     using node_unique_ptr = typename colored_node_t::node_unique_ptr;
     using node_ptr = typename colored_node_t::node_ptr;
     using node_const_ptr = typename colored_node_t::node_const_ptr;
 
-    BinaryTree(node_ptr root_node): root(root_node), phylogentic_root_tree(true) {}
+    BinaryTree(node_ptr root_node) : root(root_node), phylogentic_root_tree(true) {
+    }
 
     BinaryTree(
         std::string const& st,
         std::unordered_map<std::string, size_t> const& genome_number,
         std::vector<std::string> const& priority_name)
-        : root(std::make_shared<colored_node_t>(nullptr, st, genome_number, priority_name)), phylogentic_root_tree(false) {
+        : root(std::make_shared<colored_node_t>(nullptr, st, genome_number, priority_name)),
+          phylogentic_root_tree(false) {
       if (mcolor_t(root->get_left_child()->get_data(), root->get_right_child()->get_data(), mcolor_t::Union).size() ==
           priority_name.size()) {
         phylogentic_root_tree = true;

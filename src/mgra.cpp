@@ -32,7 +32,8 @@ bool organize_output_directory(std::string const & path, bool is_debug) {
 
   std::string genomes_dir = path::append_path(path, "genomes"); 
   std::string transformation_dir = path::append_path(path, "transformations");
-  bool res = creater_lambda(genomes_dir) && creater_lambda(transformation_dir);
+  std::string saves_dir = path::append_path(path, "saves");
+  bool res = creater_lambda(genomes_dir) && creater_lambda(transformation_dir) && creater_lambda(saves_dir);
 
   if (is_debug) {
     std::string debug_dir =  path::append_path(path, "debug"); 
@@ -141,6 +142,7 @@ int main(int argc, char* argv[]) {
   INFO("Parse configure file")
   cfg::get_writable().is_debug = debug_arg.getValue();
   cfg::get_writable().out_path_to_debug_dir = path::append_path(out_path_directory, "debug");
+  cfg::get_writable().out_path_to_saves_dir = path::append_path(out_path_directory, "saves");
   cfg::get_writable().how_build = default_algo;
   cfg::create_instance(path_to_cfg_file_arg.getValue());
   if (cfg::get().get_count_genomes() < 2) {

@@ -41,6 +41,8 @@ public:
   bool is_debug; 
   std::string out_path_to_debug_dir; 
 
+  std::string out_path_to_saves_dir;
+
   /**
    * Different strategy for build. 
    */

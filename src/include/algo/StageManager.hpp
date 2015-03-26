@@ -3,6 +3,7 @@
 
 #include "writer/txt_stat.hpp" 
 #include "writer/dot_graph.hpp" 
+#include "writer/json_graph.hpp"
 
 namespace algo { 
 
@@ -14,20 +15,21 @@ struct StageManager {
 
     DebugPolicy()
     : is_save_debug(false)
-    , path_to_save("") 
+    , path_to_save("")
     {
     }
 
     DebugPolicy(bool is_debug, std::string const & save_to)
     : is_save_debug(is_debug)
-    , path_to_save(save_to) 
+    , path_to_save(save_to)
     {
     }
   };
 
-  StageManager(size_t rounds = 1, DebugPolicy policy = DebugPolicy())
-  : debug_policy(policy) 
+  StageManager(size_t rounds = 1, std::string const & out_path_to_saves_dir = "", DebugPolicy policy = DebugPolicy())
+  : debug_policy(policy)
   , number_of_rounds(rounds)
+  , path_to_saves_dir(out_path_to_saves_dir)
   {
     assert(rounds > 0 && rounds <= 3);
   }
@@ -65,7 +67,8 @@ private:
   std::vector<std::unique_ptr<AbsStage<graph_pack_t> > > poststages;
 
   DebugPolicy debug_policy;
-  size_t number_of_rounds; 
+  size_t number_of_rounds;
+  std::string path_to_saves_dir;
 
 private: 
   DECL_LOGGER("StageManager");
@@ -75,14 +78,18 @@ template<class graph_pack_t>
 bool StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
   writer::TXT_statistics<typename graph_pack_t::Statistics> debug_stat; 
   writer::GraphDot<graph_pack_t> debug_dots; 
+  writer::GraphJson<graph_pack_t> json;
 
   size_t num_stage = 0;
   bool isChanged = true; 
   auto update_lambda = [&] () -> void { 
-    if (isChanged && debug_policy.is_save_debug) { 
-      graph_pack.update_graph_statistics();
-      debug_stat.print_all_statistics(num_stage, graph_pack.stats);
-      debug_dots.save_bp_graph(graph_pack, num_stage);
+    if (isChanged) {
+      json.save_json_graph(graph_pack, num_stage);
+      if (debug_policy.is_save_debug) {
+        graph_pack.update_graph_statistics();
+        debug_stat.print_all_statistics(num_stage, graph_pack.stats);
+        debug_dots.save_bp_graph(graph_pack, num_stage);
+      }
       ++num_stage;
     }
   };
@@ -93,6 +100,8 @@ bool StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
     debug_dots.save_subtrees();
     update_lambda();
 	}
+
+  json.open(path_to_saves_dir);
 
   while (isChanged) {
     isChanged = false; 

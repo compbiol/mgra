@@ -183,6 +183,7 @@ int main(int argc, char** argv) {
     using graph_pack_t = GraphPack<mcolor_t>;
     using algo_t = typename algo::RecoverTreeAlgorithm<graph_pack_t>;
     using algo_ptr = typename algo_t::algo_ptr;
+    using tree_t = structure::BinaryTree<mcolor_t>;
 
     if (parse_configure_file(debug_arg, out_path_directory, target_arg, path_to_cfg_file_arg)) {
       return 1;
@@ -232,6 +233,7 @@ int main(int argc, char** argv) {
       size_t dumped_so_far = 0;
       writer::GraphDot<graph_pack_t> dot_writer;
       auto trees_path = path::append_path(out_path_directory, "trees");
+      writer::NewickTreePrinter<tree_t> newick_tree_printer(std::clog);
 
       for (auto const& tree: result_trees) {
         if (dumped_so_far == MAX_TREES_TO_DUMP || dumped_so_far == result_trees.size()) {
@@ -240,6 +242,9 @@ int main(int argc, char** argv) {
 
         std::ofstream numbered_outfile(path::append_path(trees_path, std::to_string(dumped_so_far) + ".dot"));
         dot_writer.save_subtrees(numbered_outfile, {*tree});
+        if (cfg::get().is_debug) {
+          newick_tree_printer.print_tree(tree);
+        }
         ++dumped_so_far;
       }
 

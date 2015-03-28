@@ -109,6 +109,19 @@ namespace structure {
       return size;
     }
 
+    std::pair<Mcolor, Mcolor> pack(Mcolor const& right) const {
+      return std::make_pair(std::max(*this, right), std::min(*this, right));
+    };
+
+    /**
+    * Gets a compliment color, given a superset and then packs it so, the first pair color is larger
+    */
+    std::pair<Mcolor, Mcolor> packed_compliment(Mcolor const& supercolor) const {
+      assert(supercolor.includes(*this));
+      Mcolor complement(supercolor, *this, Difference);
+      return pack(complement);
+    }
+
     size_t make_hash() const {
       size_t seed = 0;
 

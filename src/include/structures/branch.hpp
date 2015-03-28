@@ -13,8 +13,10 @@ namespace structure {
     using branch_t = std::pair<mcolor_t, mcolor_t>;
     using branch_vector = std::vector<branch_t>;
     using tree_t = BinaryTree<mcolor_t>;
+    using tree_vector = std::vector<tree_t>;
     using node_t = typename tree_t::colored_node_t;
     using node_ptr = typename tree_t::node_ptr;
+    using node_queue = std::queue<node_ptr>;
 
     /**
     * Merges a given branch into tree
@@ -119,6 +121,31 @@ namespace structure {
 
     static branch_t flip(branch_t const& branch) {
       return branch_t(branch.second, branch.first);
+    }
+
+    static branch_vector break_trees_into_branches(
+        tree_vector const& trees,
+        mcolor_t complete_color = cfg::get().complete_color()) {
+      branch_vector result;
+
+      for (auto& tree: trees) {
+        node_queue nodes_to_process;
+        nodes_to_process.push(tree.get_root());
+        while (!nodes_to_process.empty()) {
+          auto node = nodes_to_process.front();
+          auto node_color = node->get_data();
+          nodes_to_process.pop();
+          result.push_back(node_color.packed_compliment(complete_color));
+          if (!node->is_leaf()) {
+            nodes_to_process.push(node->get_left_child());
+            nodes_to_process.push(node->get_right_child());
+          }
+        }
+      }
+
+      std::sort(result.begin(), result.end());
+      result.erase(std::unique(result.begin(), result.end()), result.end());
+      return result;
     }
   };
 }

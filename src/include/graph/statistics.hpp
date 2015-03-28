@@ -55,8 +55,6 @@ public:
 	std::map<mcolor_t, size_t> irrer_multiedges_count;	// ME[S] = # irregular multiedges of multicolor S.
  	std::map<mcolor_t, size_t> simple_multiedges_count;	// ME[S] = # simple multiedges of multicolor S.
 
-  std::map<branch_t, size_t> simple_paths_count; // multiedges_count[S] = simple paths' of multicolor S lengths sum
-
   //cycles
   std::map<mcolor_t, size_t> simple_cycle_count; // cycle of simple vertices
   std::map<mcolor_t, size_t> special_cycle_count; // cycle of simple vertices and oo, of even length
@@ -133,10 +131,6 @@ template<class mcolor_t>
 void GraphPack<mcolor_t>::Statistics::count_rearrangement_statistics(GraphPack<mcolor_t> & graph_pack) {
   std::unordered_set<vertex_t> processed;
 
-  auto pack_mcolor_lambda = [&] (mcolor_t const & f, mcolor_t const & s) -> std::pair<mcolor_t, mcolor_t> { 
-    return std::make_pair(std::max(f, s), std::min(f, s));
-  }; 
-
   for (vertex_t const & x : graph_pack.graph) {
     mularcs_t const & current = graph_pack.get_all_adjacent_multiedges(x); 
 
@@ -147,18 +141,15 @@ void GraphPack<mcolor_t>::Statistics::count_rearrangement_statistics(GraphPack<m
 
     for (arc_t const & arc : current) {
     	// count two times, because same underected edge (u, v) and (v, u)
-      ++multiedges_count[pack_mcolor_lambda(arc.second, graph_pack.multicolors.get_complement_color(arc.second))];
-      if (graph_pack.is_simple_vertex(x)) {
-        ++simple_paths_count[pack_mcolor_lambda(arc.second, graph_pack.multicolors.get_complement_color(arc.second))];
-      }
+      ++multiedges_count[arc.second.pack(graph_pack.multicolors.get_complement_color(arc.second))];
 
       if ((processed.count(x) != 0) && (processed.count(arc.first) != 0)) {  
 				++simple_multiedges_count[arc.second]; //if two vertices have degree = 2 - is simple edges
       } 
 
       if (arc.first == Infty) { 
-        ++multiedges_count[pack_mcolor_lambda(arc.second, graph_pack.multicolors.get_complement_color(arc.second))];
-				++multiedges_count[pack_mcolor_lambda(arc.second, graph_pack.multicolors.get_complement_color(arc.second))];
+        ++multiedges_count[arc.second.pack(graph_pack.multicolors.get_complement_color(arc.second))];
+				++multiedges_count[arc.second.pack(graph_pack.multicolors.get_complement_color(arc.second))];
 				++irrer_multiedges_count[arc.second];			
       } 
     }

@@ -82,10 +82,13 @@ typename Linearizator<graph_t>::change_history_t Linearizator<graph_t>::lineariz
   /*Go to algorithm*/
   size_t c_P = count_circular_chromosome(P);
   size_t c_PP = count_circular_chromosome(PP);     
-  size_t c_QQ = count_circular_chromosome(QQ); 
+  size_t c_QQ = count_circular_chromosome(QQ);
+//  TODO: fix unused c_Q
   size_t c_Q = count_circular_chromosome(Q);
 
-  assert(c_P > c_Q); 
+  assert(c_P > c_Q);
+  std::cout << c_Q;
+
 
   //std::cerr << c_P << " " << c_PP << " " << c_QQ << " " << c_Q << std::endl;
 

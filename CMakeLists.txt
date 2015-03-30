@@ -75,12 +75,12 @@ ADD_CUSTOM_TARGET(ADD_HEADERS SOURCES ${ALL_HEADERS})
 FILE(GLOB_RECURSE ALL_NEW_HEADERS ${CMAKE_SOURCE_DIR}/*.hpp)
 ADD_CUSTOM_TARGET(ADD_NEW_HEADERS SOURCES ${ALL_NEW_HEADERS})
 
-set(MGRA_SOURCE mgra.cpp reader.cpp)
+set(MGRA_SOURCE src/mgra.cpp src/reader.cpp)
 
 #	Wstats.cpp
 
 configure_file (
-  ${PROJECT_SOURCE_DIR}/include/defined.h.in
+  src/include/defined.h.in
   ${PROJECT_BINARY_DIR}/defined.h
   [@ONLY]
   )
@@ -98,9 +98,9 @@ else()
 endif()
 
 include_directories(${CMAKE_BINARY_DIR}
-			${PROJECT_SOURCE_DIR}/include
-			${PROJECT_SOURCE_DIR}/utils
-			${PROJECT_SOURCE_DIR}/libs
+			src/include
+			src/utils
+			src/libs
 		  )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -118,8 +118,8 @@ else()
     return()
 endif()
 
-add_subdirectory(utils/io)
-add_subdirectory(libs/blossom5)
+add_subdirectory(src/utils/io)
+add_subdirectory(src/libs/blossom5)
 set_property(TARGET BLOSSOM5 APPEND_STRING PROPERTY COMPILE_FLAGS " -w")
 
 add_executable(${PROJECT_NAME} ${MGRA_SOURCE})

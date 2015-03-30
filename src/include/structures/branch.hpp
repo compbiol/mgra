@@ -49,7 +49,6 @@ namespace structure {
       }
     }
 
-
     /**
     * Checks if two branch multicolors intersect
     */

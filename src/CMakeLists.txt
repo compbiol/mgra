@@ -13,6 +13,62 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# Google Test
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # We need thread support
+    find_package(Threads REQUIRED)
+
+    # Enable ExternalProject CMake module
+    include(ExternalProject)
+
+    # Download and install GoogleTest
+    ExternalProject_Add(
+        gtest
+        URL https://googletest.googlecode.com/files/gtest-1.7.0.zip
+        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gtest
+        # Disable install step
+        INSTALL_COMMAND ""
+    )
+
+    # Create a libgtest target to be used as a dependency by test programs
+    add_library(libgtest IMPORTED STATIC GLOBAL)
+    add_dependencies(libgtest gtest)
+
+    # Set gtest properties
+    ExternalProject_Get_Property(gtest source_dir binary_dir)
+    set_target_properties(libgtest PROPERTIES
+        "IMPORTED_LOCATION" "${binary_dir}/libgtest.a"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+    #    "INTERFACE_INCLUDE_DIRECTORIES" "${source_dir}/include"
+    )
+    # I couldn't make it work with INTERFACE_INCLUDE_DIRECTORIES
+    include_directories("${source_dir}/include")
+
+    # Download and install GoogleMock
+    ExternalProject_Add(
+        gmock
+        URL https://googlemock.googlecode.com/files/gmock-1.7.0.zip
+        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gmock
+        # Disable install step
+        INSTALL_COMMAND ""
+    )
+
+    # Create a libgmock target to be used as a dependency by test programs
+    add_library(libgmock IMPORTED STATIC GLOBAL)
+    add_dependencies(libgmock gmock)
+
+    # Set gmock properties
+    ExternalProject_Get_Property(gmock source_dir binary_dir)
+    set_target_properties(libgmock PROPERTIES
+        "IMPORTED_LOCATION" "${binary_dir}/libgmock.a"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+    #    "INTERFACE_INCLUDE_DIRECTORIES" "${source_dir}/include"
+    )
+    # I couldn't make it work with INTERFACE_INCLUDE_DIRECTORIES
+    include_directories("${source_dir}/include")
+endif()
+
 # The 4 following lines are for CLion and do nothing (as far as I, nkartashov know) for compilation
 FILE(GLOB_RECURSE ALL_HEADERS ${CMAKE_SOURCE_DIR}/*.h)
 ADD_CUSTOM_TARGET(ADD_HEADERS SOURCES ${ALL_HEADERS})
@@ -30,15 +86,15 @@ configure_file (
   )
 
 set(ROOT_DIR "${CMAKE_SOURCE_DIR}/..")
-set(COMPILE_FLAG "-std=c++11" )
+set(COMPILE_OPTION_FLAG "-std=c++11" )
 set(DEBUG_FLAG "-g3")
 set(OPTIMIZE_FLAG "-O2 -pipe -finline-functions -finline-limit=1000") # -DPSEUDO_EDGE
 set(WARNS "-Wall -Werror -Wextra -pedantic-errors")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${WARNS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILE_OPTION_FLAG} ${OPTIMIZE_FLAG} ${WARNS}")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${DEBUG_FLAG} ${WARNS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILE_OPTION_FLAG} ${DEBUG_FLAG} ${WARNS}")
 endif()
 
 include_directories(${CMAKE_BINARY_DIR}

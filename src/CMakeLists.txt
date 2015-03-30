@@ -4,11 +4,14 @@ project (mgra)
 
 set(PROJECT_NAME mgra)
 
-#set(CMAKE_BUILD_TYPE Release)
-
 set (MGRA_VERSION_MAJOR 2)
 set (MGRA_VERSION_MINOR 2)
 set (MGRA_VERSION_PATCH 1)
+
+# So we can check build type throughout the script
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
 
 # The 4 following lines are for CLion and do nothing (as far as I, nkartashov know) for compilation
 FILE(GLOB_RECURSE ALL_HEADERS ${CMAKE_SOURCE_DIR}/*.h)
@@ -20,7 +23,6 @@ set(MGRA_SOURCE mgra.cpp reader.cpp)
 
 #	Wstats.cpp
 
-
 configure_file (
   ${PROJECT_SOURCE_DIR}/include/defined.h.in
   ${PROJECT_BINARY_DIR}/defined.h
@@ -28,10 +30,16 @@ configure_file (
   )
 
 set(ROOT_DIR "${CMAKE_SOURCE_DIR}/..")
-set (OPTIMIZE_FLAG " -std=c++11 -O2 -pipe -finline-functions -finline-limit=1000") # -DPSEUDO_EDGE
-set (WARNS "-Wall -Werror -Wextra -pedantic-errors")
+set(COMPILE_FLAG "-std=c++11" )
+set(DEBUG_FLAG "-g3")
+set(OPTIMIZE_FLAG "-O2 -pipe -finline-functions -finline-limit=1000") # -DPSEUDO_EDGE
+set(WARNS "-Wall -Werror -Wextra -pedantic-errors")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${WARNS}")
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTIMIZE_FLAG} ${WARNS}")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${DEBUG_FLAG} ${WARNS}")
+endif()
 
 include_directories(${CMAKE_BINARY_DIR}
 			${PROJECT_SOURCE_DIR}/include

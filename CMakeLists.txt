@@ -81,6 +81,9 @@ target_link_libraries(${PROJECT_NAME} input)
 
 # Google Test & Mock
 if (TESTS_ON)
+
+    enable_testing()
+
     # We need thread support
     find_package(Threads REQUIRED)
 
@@ -126,18 +129,23 @@ if (TESTS_ON)
     set_target_properties(libgmock PROPERTIES
         "IMPORTED_LOCATION" "${binary_dir}/libgmock.a"
         "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-    #    "INTERFACE_INCLUDE_DIRECTORIES" "${source_dir}/include"
     )
     include_directories("${source_dir}/include")
 
     set(TEST_PROJECT_NAME ${PROJECT_NAME}_test)
-    set(TEST_SOURCE tests/main.cpp)
+    set(TESTS_DIRECTORY tests)
+    FILE(GLOB_RECURSE TEST_SOURCE ${TESTS_DIRECTORY}/*.cpp)
+
+    include_directories(${TESTS_DIRECTORY}/include
+    )
 
     add_executable(${TEST_PROJECT_NAME} ${TEST_SOURCE})
     target_link_libraries(${TEST_PROJECT_NAME}
             libgtest
             libgmock
         )
+
+    add_test(lol ${TEST_PROJECT_NAME})
 endif()
 
 if(WIN32)

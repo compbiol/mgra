@@ -3,7 +3,9 @@
 
 #include <utility>
 #include <iostream>
+#include <queue>
 
+#include "config_struct.hpp"
 #include "tree.hpp"
 
 namespace structure {

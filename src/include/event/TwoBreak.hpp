@@ -60,6 +60,10 @@ struct TwoBreak {
     assert(false);
   } 
 
+  inline mcolor_t get_multicolor() const {
+      return m_multicolor;
+  }
+
   /* 
    * Apply current two-break on local graph without color
    */

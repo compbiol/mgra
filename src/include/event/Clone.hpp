@@ -26,6 +26,18 @@ struct Clone {
     return m_with_pseudo_vertex;
   }
 
+  inline arc_t get_mother_arc() const {
+      return m_mother_arc;
+  }
+
+  inline edge_t get_central_edge() const {
+      return m_central_edge;
+  }
+
+  inline mularcs_t get_fathers() const {
+      return m_fathers;
+  }
+
   DECLARE_GETTER( vertex_t, central_arc.first, father_vertex )
   DECLARE_GETTER( edge_t, m_central_edge, central_arc )
   DECLARE_GETTER( mularcs_t, m_fathers, end_edges )

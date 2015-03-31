@@ -2,8 +2,8 @@
 #define STAGE_MANAGER_HPP
 
 #include "writer/txt_stat.hpp" 
-#include "writer/dot_graph.hpp" 
-#include "writer/json_graph.hpp"
+#include "writer/dot_graph.hpp"
+#include "writer/json_save.hpp"
 
 namespace algo { 
 
@@ -77,14 +77,14 @@ private:
 template<class graph_pack_t> 
 bool StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
   writer::TXT_statistics<typename graph_pack_t::Statistics> debug_stat; 
-  writer::GraphDot<graph_pack_t> debug_dots; 
-  writer::GraphJson<graph_pack_t> json;
+  writer::GraphDot<graph_pack_t> debug_dots;
+  writer::SaveJson<graph_pack_t> json;
 
   size_t num_stage = 0;
   bool isChanged = true; 
-  auto update_lambda = [&] () -> void { 
+  auto update_lambda = [&] (size_t round) -> void {
     if (isChanged) {
-      json.save_json_graph(graph_pack, num_stage);
+      json.save_jsons(graph_pack, num_stage, round);
       if (debug_policy.is_save_debug) {
         graph_pack.update_graph_statistics();
         debug_stat.print_all_statistics(num_stage, graph_pack.stats);
@@ -98,10 +98,10 @@ bool StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
     debug_stat.open(debug_policy.path_to_save);
     debug_dots.open(debug_policy.path_to_save);
     debug_dots.save_subtrees();
-    update_lambda();
 	}
 
   json.open(path_to_saves_dir);
+  update_lambda(0);
 
   while (isChanged) {
     isChanged = false; 
@@ -112,7 +112,7 @@ bool StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
         AbsStage<graph_pack_t> * stage = it_stage->get();
         INFO("PRESTAGE == " << stage->name());    
         isChanged = stage->run(graph_pack);
-        update_lambda();
+        update_lambda(0);
       }
     }
 
@@ -125,7 +125,7 @@ bool StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
         if (rounds <= stage->get_max_round()) {        
           INFO("STAGE == " << stage->name());  
           isChanged = stage->run(graph_pack); 
-          update_lambda();
+          update_lambda(rounds);
         }
       }
     } 
@@ -136,7 +136,7 @@ bool StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
         AbsStage<graph_pack_t> * stage = it_stage->get();
         INFO("POSTSTAGE == " << stage->name());    
         isChanged = stage->run(graph_pack);
-        update_lambda();
+        update_lambda(0);
       }
     }
   } 

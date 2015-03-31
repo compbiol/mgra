@@ -52,14 +52,27 @@ struct History {
   DECLARE_CONST_ITERATOR( twobreak_citer, break2_history, begin, cbegin ) 
   DECLARE_CONST_ITERATOR( twobreak_citer, break2_history, end, cend ) 
   DECLARE_CONST_ITERATOR( twobreak_criter, break2_history, rbegin, crbegin ) 
-  DECLARE_CONST_ITERATOR( twobreak_criter, break2_history, rend, crend ) 
+  DECLARE_CONST_ITERATOR( twobreak_criter, break2_history, rend, crend )
+  enum type_action {insertion_action, twobreak_action, clone_action, stop_clone_action, tandem_duplication_action};
+
+  const std::list<std::pair<type_action, size_t> > &get_complete_history() const {
+      return complete_history;
+  }
+
+  const std::vector<twobreak_t> &get_twobreak_history() const {
+      return twobreak_history;
+  }
+
+  const std::vector<clone_t>  &get_clone_history() const {
+      return clone_history;
+  }
 
 private:
-  enum type_action {insertion_action, twobreak_action, clone_action, stop_clone_action, tandem_duplication_action};
+  //enum type_action {insertion_action, twobreak_action, clone_action, stop_clone_action, tandem_duplication_action};
 
   std::list<std::pair<type_action, size_t> > complete_history;
   //std::vector<std::pair<type_action, size_t> > complete_history;
-  
+
   std::vector<insdel_t> insertion_history;
   std::vector<twobreak_t> twobreak_history;
   std::vector<clone_t> clone_history;
@@ -69,6 +82,7 @@ private:
   std::vector<tandem_duplication_t> tandem_duplication_history;   
 
   std::list<twobreak_t> break2_history;
+
 }; 
 
 /*template<class mcolor_t>
@@ -154,7 +168,6 @@ void History<mcolor_t>::change_history() {
   }
 }*/
 
-
 template<class mcolor_t>
 void History<mcolor_t>::change_history() {  
   for (auto action = complete_history.rbegin(); action != complete_history.rend(); ++action) { 
@@ -216,7 +229,7 @@ void History<mcolor_t>::change_history() {
         vertex_t where; 
         if (old_two_break.get_vertex(0) == mother_edge.first) { 
           where = old_two_break.get_vertex(2);
-        } else if (old_two_break.get_vertex(1) == mother_edge.first) { 
+        } else if (old_two_break.get_vertex(1) == mother_edge.first) {
           where = old_two_break.get_vertex(3);
         } else if (old_two_break.get_vertex(2) == mother_edge.first) { 
           where = old_two_break.get_vertex(0);

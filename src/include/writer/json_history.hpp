@@ -111,7 +111,7 @@ template<class graph_pack_t>
 void HistoryJson<graph_pack_t>::describe_clone(std::ofstream & json, std::unordered_map<vertex_t, int> const & vertex_to_id, clone_t const & action, size_t action_id) {
     json << "\t\t\t{" << std::endl;
     json << "\t\t\t\t\"operation_id\": " << action_id << "," << std::endl;
-    json << "\t\t\t\t\"moter_vertex_id\": " << vertex_to_id.at(action.get_mother_arc().first) << "," << std::endl;
+    json << "\t\t\t\t\"mother_vertex_id\": " << vertex_to_id.at(action.get_mother_arc().first) << "," << std::endl;
     json << "\t\t\t\t\"is_pseudo_mother_vertex\": " << action.is_have_pseudo_vertex() << "," << std::endl;
     json << "\t\t\t\t\"central_vertex1_id\": " << vertex_to_id.at(action.get_central_edge().first) << "," << std::endl;
     json << "\t\t\t\t\"central_vertex2_id\": " << vertex_to_id.at(action.get_central_edge().second) << "," << std::endl;

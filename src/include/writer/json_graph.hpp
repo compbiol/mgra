@@ -32,8 +32,9 @@ void GraphJson<graph_pack_t>::save_json_graph(std::string const & path_to_save, 
   std::ofstream json(path::append_path(path_to_save, "graph.json"));
 
   //describe edges
-  json << "\"breakpoint_graph\": {" << std::endl;
-  json << "\t\"edges\": [" << std::endl;
+  json << "{" << std::endl;
+  json << "\t\"breakpoint_graph\": {" << std::endl;
+  json << "\t\t\"edges\": [" << std::endl;
 
   std::unordered_set<vertex_t> processed;
   infinity = graph_pack.graph.size() + 1;
@@ -55,8 +56,8 @@ void GraphJson<graph_pack_t>::save_json_graph(std::string const & path_to_save, 
   }
 
   json << std::endl;
-  json << "\t]," << std::endl;
-  json << "\t\"vertices\": [" << std::endl;
+  json << "\t\t]," << std::endl;
+  json << "\t\t\"vertices\": [" << std::endl;
 
   //desribe vertices
   need_comma = false;
@@ -70,49 +71,50 @@ void GraphJson<graph_pack_t>::save_json_graph(std::string const & path_to_save, 
 
   //describe infinity vertex?
   json << "," << std::endl;
-  json << "\t\t{" << std::endl;
-  json << "\t\t\t\"name\": \"Infinity\"," << std::endl;
-  json << "\t\t\t\"v_id\": " << infinity << std::endl;
-  json << "\t\t}" << std::endl;
+  json << "\t\t\t{" << std::endl;
+  json << "\t\t\t\t\"name\": \"Infinity\"," << std::endl;
+  json << "\t\t\t\t\"v_id\": " << infinity << std::endl;
+  json << "\t\t\t}" << std::endl;
 
-  json << "\t]" << std::endl;
+  json << "\t\t]" << std::endl;
+  json << "\t}" << std::endl;
   json << "}" << std::endl;
   json.close();
 }
 
 template<class graph_pack_t>
 void GraphJson<graph_pack_t>::describe_multiedge(std::ofstream & json, std::unordered_map<vertex_t, int> const & vertex_to_id, vertex_t const & x, mcolor_t const & color, vertex_t const & y) {
-  json << "\t\t{" << std::endl;
+  json << "\t\t\t{" << std::endl;
 
-  json << "\t\t\t\"vertex1_id\": " << vertex_to_id.at(x) << "," << std::endl;
+  json << "\t\t\t\t\"vertex1_id\": " << vertex_to_id.at(x) << "," << std::endl;
   if (y == Infty) {
-    json << "\t\t\t\"vertex2_id\": " << infinity << "," << std::endl;
+    json << "\t\t\t\t\"vertex2_id\": " << infinity << "," << std::endl;
   } else {
-    json << "\t\t\t\"vertex2_id\": " << vertex_to_id.at(x) << "," << std::endl;
+    json << "\t\t\t\t\"vertex2_id\": " << vertex_to_id.at(x) << "," << std::endl;
   }
 
-  json << "\t\t\t\"multicolor\": [" << std::endl;
+  json << "\t\t\t\t\"multicolor\": [" << std::endl;
   bool need_comma = false;
   for (auto const & match : color) {
     for (size_t i = 0; i < match.second; ++i) {
       if (need_comma) {
           json << "," << std::endl;
       }
-      json << "\t\t\t\t" << match.first;
+      json << "\t\t\t\t\t" << match.first;
       need_comma = true;
     }
   }
   json << std::endl;
-  json << "\t\t\t]" << std::endl;
-  json << "\t\t}";
+  json << "\t\t\t\t]" << std::endl;
+  json << "\t\t\t}";
 }
 
 template<class graph_pack_t>
 void GraphJson<graph_pack_t>::describe_vertex(std::ofstream & json, std::unordered_map<vertex_t, int> const & vertex_to_id, vertex_t const & v) {
-    json << "\t\t{" << std::endl;
-    json << "\t\t\t\"name\": \"" << v << "\"," << std::endl;
-    json << "\t\t\t\"v_id\": " << vertex_to_id.at(v) << std::endl;
-    json << "\t\t}";
+    json << "\t\t\t{" << std::endl;
+    json << "\t\t\t\t\"name\": \"" << v << "\"," << std::endl;
+    json << "\t\t\t\t\"v_id\": " << vertex_to_id.at(v) << std::endl;
+    json << "\t\t\t}";
 }
 
 }

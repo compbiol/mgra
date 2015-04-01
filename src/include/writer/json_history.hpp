@@ -45,8 +45,9 @@ void HistoryJson<graph_pack_t>::save_json_history(std::string const & path_to_sa
   }
 
   //describe two breaks
-  json << "\"history\": {" << std::endl;
-  json << "\t\"two_breaks\": [" << std::endl;
+  json << "{" << std::endl;
+  json << "\t\"history\": {" << std::endl;
+  json << "\t\t\"two_breaks\": [" << std::endl;
   bool need_comma = false;
 
   for (size_t i = 0; i < twobreak_history.size(); ++i){
@@ -58,9 +59,9 @@ void HistoryJson<graph_pack_t>::save_json_history(std::string const & path_to_sa
   }
 
   json << std::endl;
-  json << "\t]," << std::endl;
+  json << "\t\t]," << std::endl;
 
-  json << "\t\"clone\": [" << std::endl;
+  json << "\t\t\"clone\": [" << std::endl;
 
   //desribe clone
   need_comma = false;
@@ -73,55 +74,56 @@ void HistoryJson<graph_pack_t>::save_json_history(std::string const & path_to_sa
   }
 
   json << std::endl;
-  json << "\t]" << std::endl;
+  json << "\t\t]" << std::endl;
+  json << "\t}" << std::endl;
   json << "}" << std::endl;
   json.close();
 }
 
 template<class graph_pack_t>
 void HistoryJson<graph_pack_t>::describe_two_break(std::ofstream & json, std::unordered_map<vertex_t, int> const & vertex_to_id, twobreak_t const & action, size_t action_id) {
-  json << "\t\t{" << std::endl;
+  json << "\t\t\t{" << std::endl;
 
-  json << "\t\t\t\"operation_id\": " << action_id << "," << std::endl;
+  json << "\t\t\t\t\"operation_id\": " << action_id << "," << std::endl;
 
-  json << "\t\t\t\"vertex1_id\": " << vertex_to_id.at(action.get_vertex(0)) << "," << std::endl;
-  json << "\t\t\t\"vertex2_id\": " << vertex_to_id.at(action.get_vertex(1)) << "," << std::endl;
-  json << "\t\t\t\"vertex3_id\": " << vertex_to_id.at(action.get_vertex(2)) << "," << std::endl;
-  json << "\t\t\t\"vertex4_id\": " << vertex_to_id.at(action.get_vertex(3)) << "," << std::endl;
+  json << "\t\t\t\t\"vertex1_id\": " << vertex_to_id.at(action.get_vertex(0)) << "," << std::endl;
+  json << "\t\t\t\t\"vertex2_id\": " << vertex_to_id.at(action.get_vertex(1)) << "," << std::endl;
+  json << "\t\t\t\t\"vertex3_id\": " << vertex_to_id.at(action.get_vertex(2)) << "," << std::endl;
+  json << "\t\t\t\t\"vertex4_id\": " << vertex_to_id.at(action.get_vertex(3)) << "," << std::endl;
 
-  json << "\t\t\t\"multicolor\": [" << std::endl;
+  json << "\t\t\t\t\"multicolor\": [" << std::endl;
   bool need_comma = false;
   for (auto const & match : action.get_multicolor()) {
     for (size_t i = 0; i < match.second; ++i) {
       if (need_comma) {
           json << "," << std::endl;
       }
-      json << "\t\t\t\t" << match.first;
+      json << "\t\t\t\t\t" << match.first;
       need_comma = true;
     }
   }
   json << std::endl;
-  json << "\t\t\t]" << std::endl;
-  json << "\t\t}";
+  json << "\t\t\t\t]" << std::endl;
+  json << "\t\t\t}";
 }
 
 template<class graph_pack_t>
 void HistoryJson<graph_pack_t>::describe_clone(std::ofstream & json, std::unordered_map<vertex_t, int> const & vertex_to_id, clone_t const & action, size_t action_id) {
-    json << "\t\t{" << std::endl;
-    json << "\t\t\t\"operation_id\": " << action_id << "," << std::endl;
-    json << "\t\t\t\"moter_vertex_id\": " << vertex_to_id.at(action.get_mother_arc().first) << "," << std::endl;
-    json << "\t\t\t\"is_pseudo_mother_vertex\": " << action.is_have_pseudo_vertex() << "," << std::endl;
-    json << "\t\t\t\"central_vertex1_id\": " << vertex_to_id.at(action.get_central_edge().first) << "," << std::endl;
-    json << "\t\t\t\"central_vertex2_id\": " << vertex_to_id.at(action.get_central_edge().second) << "," << std::endl;
-    json << "\t\t\t\"father_edges\": [" << std::endl;
+    json << "\t\t\t{" << std::endl;
+    json << "\t\t\t\t\"operation_id\": " << action_id << "," << std::endl;
+    json << "\t\t\t\t\"moter_vertex_id\": " << vertex_to_id.at(action.get_mother_arc().first) << "," << std::endl;
+    json << "\t\t\t\t\"is_pseudo_mother_vertex\": " << action.is_have_pseudo_vertex() << "," << std::endl;
+    json << "\t\t\t\t\"central_vertex1_id\": " << vertex_to_id.at(action.get_central_edge().first) << "," << std::endl;
+    json << "\t\t\t\t\"central_vertex2_id\": " << vertex_to_id.at(action.get_central_edge().second) << "," << std::endl;
+    json << "\t\t\t\t\"father_edges\": [" << std::endl;
     bool need_comma1 = false;
     for (auto const & edge : action.get_fathers()) {
         if (need_comma1) {
             json << "," << std::endl;
         }
-        json << "\t\t\t\t{" << std::endl;
-        json << "\t\t\t\t\t\"vertex_id\": " << vertex_to_id.at(edge.first) << "," << std::endl;
-        json << "\t\t\t\t\t\"multicolor\": [" << std::endl;
+        json << "\t\t\t\t\t{" << std::endl;
+        json << "\t\t\t\t\t\t\"vertex_id\": " << vertex_to_id.at(edge.first) << "," << std::endl;
+        json << "\t\t\t\t\t\t\"multicolor\": [" << std::endl;
         need_comma1 = true;
         bool need_comma2 = false;
         for (auto const & match : edge.second) {
@@ -129,31 +131,31 @@ void HistoryJson<graph_pack_t>::describe_clone(std::ofstream & json, std::unorde
                 if (need_comma2) {
                     json << "," << std::endl;
                 }
-                json << "\t\t\t\t\t\t" << match.first;
+                json << "\t\t\t\t\t\t\t" << match.first;
                 need_comma2 = true;
             }
         }
         json << std::endl;
-        json << "\t\t\t\t\t]" << std::endl;
-        json << "\t\t\t\t}";
+        json << "\t\t\t\t\t\t]" << std::endl;
+        json << "\t\t\t\t\t}";
     }
 
     json << std::endl;
-    json << "\t\t\t]," << std::endl;
-    json << "\t\t\t\"multicolor\": [" << std::endl;
+    json << "\t\t\t\t]," << std::endl;
+    json << "\t\t\t\t\"multicolor\": [" << std::endl;
     need_comma1 = false;
     for (auto const & match : action.get_mother_arc().second) {
         for (size_t i = 0; i < match.second; ++i) {
             if (need_comma1) {
                 json << "," << std::endl;
             }
-            json << "\t\t\t\t" << match.first;
+            json << "\t\t\t\t\t" << match.first;
             need_comma1 = true;
         }
     }
     json << std::endl;
-    json << "\t\t\t]" << std::endl;
-    json << "\t\t}";
+    json << "\t\t\t\t]" << std::endl;
+    json << "\t\t\t}";
 }
 
 }

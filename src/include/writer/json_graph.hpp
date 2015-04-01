@@ -90,7 +90,7 @@ void GraphJson<graph_pack_t>::describe_multiedge(std::ofstream & json, std::unor
   if (y == Infty) {
     json << "\t\t\t\t\"vertex2_id\": " << infinity << "," << std::endl;
   } else {
-    json << "\t\t\t\t\"vertex2_id\": " << vertex_to_id.at(x) << "," << std::endl;
+    json << "\t\t\t\t\"vertex2_id\": " << vertex_to_id.at(y) << "," << std::endl;
   }
 
   json << "\t\t\t\t\"multicolor\": [" << std::endl;

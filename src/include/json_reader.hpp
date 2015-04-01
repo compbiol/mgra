@@ -20,6 +20,8 @@ template<class mcolor_t>
 struct ReadJson {
   using edge_t = std::pair<vertex_t, vertex_t>;
   using mularc_t = structure::Mularcs<mcolor_t>;
+  using twobreak_t = event::TwoBreak<mcolor_t>;
+  using clone_t =  event::Clone<mcolor_t>;
 
   void read_jsons(std::string const & path_to_graph, std::string const & path_to_history, MultiGraph & mulgraph, History<mcolor_t> & history);
 
@@ -55,13 +57,21 @@ void ReadJson<mcolor_t>::read_json_graph(std::string const & path_to_file, Multi
               mulgraph.add_edge(c, u, v);
           }
       }
-  }
+}
+
 template<class mcolor_t>
 void ReadJson<mcolor_t>::read_json_history(std::string const & path_to_file, History<mcolor_t> & history) {
       std::ifstream input(path_to_file);
       boost::property_tree::ptree pt;
       boost::property_tree::read_json(input, pt);
+      enum type_action {insertion_action, twobreak_action, clone_action, stop_clone_action, tandem_duplication_action};
+      std::map<size_t, std::pair<type_action, size_t> > complete_history;
+      std::vector<twobreak_t> twobreak_history;
+      std::vector<clone_t> clone_history;
+
+
       for (auto twobreak : pt.get_child("history.two_breaks")) {
+          size_t operation_id = twobreak.second.get<size_t>("operation_id");
           vertex_t u1 = id_to_vertex.at(twobreak.second.get<int>("vertex1_id"));
           vertex_t v1 = id_to_vertex.at(twobreak.second.get<int>("vertex2_id"));
           vertex_t u2 = id_to_vertex.at(twobreak.second.get<int>("vertex3_id"));
@@ -73,9 +83,13 @@ void ReadJson<mcolor_t>::read_json_history(std::string const & path_to_file, His
               size_t c = color.second.get_value<size_t>();
               mcolor.insert(std::make_pair(c, c));
           }
-          history.save_twobreak(event::TwoBreak<mcolor_t>(e1, e2, structure::Mcolor(mcolor)));
+          twobreak_history.push_back(event::TwoBreak<mcolor_t>(e1, e2, structure::Mcolor(mcolor)));
+          complete_history.insert(std::make_pair(operation_id, std::make_pair(twobreak_action, twobreak_history.size() - 1)));
       }
+
+
       for (auto clone : pt.get_child("history.clone")) {
+          size_t operation_id = clone.second.get<size_t>("operation_id");
           vertex_t mother_vertex = id_to_vertex.at(clone.second.get<int>("mother_vertex_id"));
           bool is_pseudo_mother_vertex = clone.second.get<bool>("is_pseudo_mother_vertex");
           vertex_t central_u = id_to_vertex.at(clone.second.get<int>("central_vertex1_id"));
@@ -96,13 +110,20 @@ void ReadJson<mcolor_t>::read_json_history(std::string const & path_to_file, His
               size_t c = color.second.get_value<size_t>();
               mcolor.insert(std::make_pair(c, c));
           }
-
-          //I'm not sure that it's really color of mother arc
           auto mother_arc = std::make_pair(mother_vertex, structure::Mcolor(mcolor));
-          history.save_clone(event::Clone<mcolor_t>(central_e, fathers, mother_arc, is_pseudo_mother_vertex));
+          clone_history.push_back(event::Clone<mcolor_t>(central_e, fathers, mother_arc, is_pseudo_mother_vertex));
+          complete_history.insert(std::make_pair(operation_id, std::make_pair(clone_action, clone_history.size() - 1)));
       }
 
-  }
+
+      for (auto action = complete_history.begin(); action != complete_history.end(); ++action) {
+          if (action->second.first == twobreak_action) {
+              history.save_twobreak(twobreak_history[action->second.second]);
+          } else if (action->second.first == clone_action) {
+              history.save_clone(clone_history[action->second.second]);
+          }
+      }
+}
 }
 
 #endif // JSON_READER_H

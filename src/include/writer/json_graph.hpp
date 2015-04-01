@@ -72,7 +72,7 @@ void GraphJson<graph_pack_t>::save_json_graph(std::string const & path_to_save, 
   //describe infinity vertex?
   json << "," << std::endl;
   json << "\t\t\t{" << std::endl;
-  json << "\t\t\t\t\"name\": \"Infinity\"," << std::endl;
+  json << "\t\t\t\t\"name\": oo," << std::endl;
   json << "\t\t\t\t\"v_id\": " << infinity << std::endl;
   json << "\t\t\t}" << std::endl;
 

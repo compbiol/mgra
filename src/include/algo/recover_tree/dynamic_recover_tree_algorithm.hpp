@@ -17,7 +17,7 @@
 
 namespace algo {
 
-  template <class graph_pack_t>
+  template <class graph_pack_t, template <typename> class statistic_producer_t = StatisticsProducer>
   struct DynamicRecoverTreeAlgorithm : RecoverTreeAlgorithm<graph_pack_t> {
     using mcolor_t = typename RecoverTreeAlgorithm<graph_pack_t>::mcolor_t;
     using tree_t = typename RecoverTreeAlgorithm<graph_pack_t>::tree_t;
@@ -45,7 +45,8 @@ namespace algo {
     }
 
     tree_vector recover_trees() {
-      auto statistics = StatisticsProducer<graph_pack_t>::make_statistics(m_graph_pack);
+      statistic_producer_t<graph_pack_t> producer(m_graph_pack);
+      auto statistics = producer.make_statistics();
 
       pyramid_t color_pyramid;
       for (statistic_t& statistic: statistics) {

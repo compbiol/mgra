@@ -211,6 +211,9 @@ int main(int argc, char** argv) {
     cfg::get_writable().is_recover_tree = recover_tree_arg.getValue();
 
     if (cfg::get().is_recover_tree) {
+      algo::Balance<graph_pack_t> balance_stage;
+      balance_stage.run(graph_pack);
+
       INFO("Starting tree recovery")
       //Recover tree here
       graph_pack.update_graph_statistics();

@@ -11,7 +11,7 @@
 
 namespace algo {
 
-  template <class graph_pack_t>
+  template <class graph_pack_t, template <typename> class statistic_producer_t = StatisticsProducer>
   struct BruteforceRecoverTreeAlgorithm : RecoverTreeAlgorithm<graph_pack_t> {
     using mcolor_t = typename RecoverTreeAlgorithm<graph_pack_t>::mcolor_t;
     using tree_t = typename RecoverTreeAlgorithm<graph_pack_t>::tree_t;
@@ -34,7 +34,8 @@ namespace algo {
     }
 
     tree_vector recover_trees() {
-      auto statistics = StatisticsProducer<graph_pack_t>::make_statistics(m_graph_pack);
+      statistic_producer_t<graph_pack_t> producer(m_graph_pack);
+      auto statistics = producer.make_statistics();
       return build_trees(statistics);
     }
 
@@ -77,6 +78,17 @@ namespace algo {
           // So we won't forget to add the branches already screened, but consistent with new class
           for (size_t j = 0; j != i; ++j) {
             screen_branch(new_class, branch_statistics[j]);
+          }
+        }
+      }
+
+      if (cfg::get().is_debug) {
+        for (size_t i = 0; i != tree_classes.size(); ++i) {
+          std::clog << "Class " << i << std::endl;
+          auto cls = tree_classes[i];
+          for (auto& branch: cls.first) {
+            std::clog << cfg::get().mcolor_to_name(branch.first) << " + "
+                << cfg::get().mcolor_to_name(branch.second) << std::endl;
           }
         }
       }

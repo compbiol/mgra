@@ -23,10 +23,12 @@
 int main(int argc, char** argv) {
   if (parse_config_from_command_line(argc, argv)) {
     std::cerr << "ERROR: error while parsing command line arguments" << std::endl;
+    return 1;
   }
 
   if (validate_application_config()) {
     std::cerr << "ERROR: error while validating config" << std::endl;
+    return 1;
   }
 
   if (!organize_output_directory()) {

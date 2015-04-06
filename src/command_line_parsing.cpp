@@ -95,6 +95,7 @@ int parse_config_from_command_line(int argc, char** argv) {
     cfg::get_writable().out_path_to_debug_dir = path::append_path(cfg::get().out_path_directory, "debug");
     cfg::get_writable().genomes_path = path::append_path(cfg::get().out_path_directory, "genomes");
     cfg::get_writable().trees_path = path::append_path(cfg::get().out_path_directory, "trees");
+    cfg::get_writable().tree_summary_path = path::append_path(cfg::get().trees_path, "summary.newick");
     if (target_arg.getValue()) {
       cfg::get_writable().how_build = target_algo;
     } else {

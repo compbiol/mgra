@@ -10,19 +10,14 @@
 #include "command_line_parsing.hpp"
 
 #include "algo/Algorithms.hpp"
-#include "algo/recover_tree/bruteforce_recover_tree_algorithm.hpp"
-#include "algo/recover_tree/dynamic_recover_tree_algorithm.hpp"
-#include "algo/recover_tree/simple_path_statistics_producer.hpp"
-#include "algo/recover_tree/multiedges_count_statistics_producer.hpp"
+#include "algo/recover_tree/recover_tree_task.hpp"
 
-#include "logger/logger.hpp"
 #include "logger/log_writers.hpp"
 
 #include "RecoveredInfo.hpp"
 
 #include "writer/Wgenome.h"
 #include "writer/Wtransform.hpp"
-#include "writer/newick_tree_printer.hpp"
 
 
 int main(int argc, char** argv) {
@@ -42,15 +37,10 @@ int main(int argc, char** argv) {
 
   create_logger_from_config();
 
-//  Reading flags
-
 //    Reading problem configuration and genomes
   using genome_t = structure::Genome;
   using mcolor_t = structure::Mcolor;
   using graph_pack_t = GraphPack<mcolor_t>;
-  using algo_t = typename algo::RecoverTreeAlgorithm<graph_pack_t>;
-  using algo_ptr = typename algo_t::algo_ptr;
-  using tree_t = structure::BinaryTree<mcolor_t>;
 
   INFO("Parse genomes file")
   std::vector<genome_t> genomes;
@@ -73,57 +63,7 @@ int main(int argc, char** argv) {
 
 
   if (cfg::get().is_recover_tree) {
-    algo::Balance<graph_pack_t> balance_stage;
-    balance_stage.run(graph_pack);
-
-    INFO("Starting tree recovery")
-    //Recover tree here
-    graph_pack.update_graph_statistics();
-
-    algo_ptr recover_tree_algorithm;
-
-    const size_t MAX_GENOMES_FOR_BRUTEFORCE = 50;
-
-    std::shared_ptr<algo::StatisticsProducer<graph_pack_t> > producer;
-
-    if (cfg::get().recover_tree_statistic == simple_paths) {
-      producer = std::make_shared<algo::SimplePathStatisticsProducer<graph_pack_t> >(graph_pack);
-    } else {
-      producer = std::make_shared<algo::MultiEdgesCountStatisticsProducer<graph_pack_t> >(graph_pack);
-    }
-
-    if (cfg::get().get_count_genomes() < MAX_GENOMES_FOR_BRUTEFORCE) {
-      recover_tree_algorithm =
-          std::make_shared<algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
-    } else {
-      recover_tree_algorithm =
-          std::make_shared<algo::DynamicRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
-    }
-
-    auto result_trees = recover_tree_algorithm->recover_trees();
-
-    INFO("Recovered trees")
-
-    const size_t MAX_TREES_TO_DUMP = 3;
-    size_t dumped_so_far = 0;
-    writer::GraphDot<graph_pack_t> dot_writer;
-    writer::NewickTreePrinter<tree_t> newick_tree_printer(std::clog);
-
-    for (auto const& tree: result_trees) {
-      if (dumped_so_far == MAX_TREES_TO_DUMP || dumped_so_far == result_trees.size()) {
-        break;
-      }
-
-      std::ofstream numbered_outfile(path::append_path(cfg::get().trees_path,
-          std::to_string(dumped_so_far) + ".dot"));
-      dot_writer.save_subtrees(numbered_outfile, {*tree});
-      if (cfg::get().is_debug) {
-        newick_tree_printer.print_tree(tree);
-      }
-      ++dumped_so_far;
-    }
-
-    INFO("Dumped trees")
+    algo::recover_tree_task(graph_pack);
   } else {
     {
       std::ostringstream out;

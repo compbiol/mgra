@@ -96,6 +96,11 @@ struct main_config {
   std::string trees_path;
 
   /**
+  * Path where summary of recovered trees in newick format is put
+  */
+  std::string tree_summary_path;
+
+  /**
   * The statistics provider used by recover tree algorithm
   */
   recover_tree_statistic_t recover_tree_statistic;

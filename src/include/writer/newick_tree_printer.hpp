@@ -10,15 +10,21 @@ namespace writer {
   struct NewickTreePrinter {
     using tree_ptr = typename tree_t::tree_ptr;
     using node_ptr = typename tree_t::node_ptr;
-    using name_vector = std::vector<std::string>;
+    using tree_vector = std::vector<tree_ptr>;
 
-    NewickTreePrinter(std::ostream& out): m_out(out) {
+    NewickTreePrinter(std::ostream& out) : m_out(out) {
     }
 
-    void print_tree(tree_ptr tree) {
+    void print_tree(tree_ptr const& tree) {
       print_node(tree->get_root());
       end_tree();
       newline();
+    }
+
+    void print_trees(tree_vector const& trees) {
+      for (auto& tree: trees) {
+        print_tree(tree);
+      }
     }
 
     void print_node(node_ptr node) {
@@ -35,7 +41,6 @@ namespace writer {
     }
 
   private:
-
     void start_node() {
       m_out << "(";
     }
@@ -58,14 +63,6 @@ namespace writer {
 
     void newline() {
       m_out << "\n";
-    }
-
-    void start_unknown_subtree() {
-      m_out << "{";
-    }
-
-    void end_unknown_subtree() {
-      m_out << "}";
     }
 
     std::ostream& m_out;

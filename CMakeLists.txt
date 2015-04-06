@@ -23,7 +23,7 @@ ADD_CUSTOM_TARGET(ADD_HEADERS SOURCES ${ALL_HEADERS})
 FILE(GLOB_RECURSE ALL_NEW_HEADERS ${CMAKE_SOURCE_DIR}/*.hpp)
 ADD_CUSTOM_TARGET(ADD_NEW_HEADERS SOURCES ${ALL_NEW_HEADERS})
 
-set(MGRA_SOURCE src/mgra.cpp src/reader.cpp)
+set(MGRA_SOURCE src/mgra.cpp src/reader.cpp src/command_line_parsing.cpp)
 
 #	Wstats.cpp
 

@@ -10,6 +10,11 @@ enum recover_tree_statistic_t {
   simple_paths
 };
 
+enum block_file_type_t {
+  infercars,
+  grimm
+};
+
 // This structure contains information from *.cfg file
 template <class mcolor_t>
 struct main_config {
@@ -49,6 +54,33 @@ struct main_config {
   std::string out_path_to_debug_dir;
 
   /**
+  * Path to file with synteny blocks
+  */
+  std::string blocks_file_path;
+
+  block_file_type_t block_file_type;
+
+  /**
+  * Path to config file
+  */
+  std::string config_file_path;
+
+  /**
+  * Path to output directory
+  */
+  std::string out_path_directory;
+
+  /**
+  * Path to logfile
+  */
+  std::string logger_path;
+
+  /**
+  * Path where resulting genomes are put
+  */
+  std::string genomes_path;
+
+  /**
    * Different strategy for build. 
    */
   build_type how_build;
@@ -58,6 +90,14 @@ struct main_config {
    */
   bool is_recover_tree;
 
+  /**
+  * Path where recovered trees are put
+  */
+  std::string trees_path;
+
+  /**
+  * The statistics provider used by recover tree algorithm
+  */
   recover_tree_statistic_t recover_tree_statistic;
 
   using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;

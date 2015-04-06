@@ -41,12 +41,12 @@ namespace algo {
       }
 
       // Filter complete colors
-      std::remove_if(std::begin(m_result_statistics),
+      m_result_statistics.erase(std::remove_if(std::begin(m_result_statistics),
           std::end(m_result_statistics),
           [](statistic_t const& statistic) {
             return statistic.first.first.empty() || statistic.first.second.empty();
-          });
-
+          }), std::end(m_result_statistics));
+      
       // Disregard irregular edges
       for (auto& statistic: m_result_statistics) {
         statistic.second -= m_graph_pack.stats.irrer_multiedges_count[statistic.first.first];

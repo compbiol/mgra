@@ -7,11 +7,11 @@
 #include "structures/branch.hpp"
 #include "graph/graph_pack.hpp"
 #include "structures/mcolor_hash.hpp"
-#include "statistics_producer.hpp"
+#include "simple_path_statistics_producer.hpp"
 
 namespace algo {
 
-  template <class graph_pack_t, template <typename> class statistic_producer_t = StatisticsProducer>
+  template <class graph_pack_t>
   struct BruteforceRecoverTreeAlgorithm : RecoverTreeAlgorithm<graph_pack_t> {
     using mcolor_t = typename RecoverTreeAlgorithm<graph_pack_t>::mcolor_t;
     using tree_t = typename RecoverTreeAlgorithm<graph_pack_t>::tree_t;
@@ -28,14 +28,16 @@ namespace algo {
     using statistic_vector = std::vector<statistic_t>;
     using BranchHelper = structure::Branch<mcolor_t>;
     using color_set = std::unordered_set<mcolor_t>;
+    using statistic_producer_ptr = std::shared_ptr<StatisticsProducer<graph_pack_t> > const&;
 
 
-    BruteforceRecoverTreeAlgorithm(graph_pack_t& graph_pack) : m_graph_pack(graph_pack) {
+    BruteforceRecoverTreeAlgorithm(graph_pack_t& graph_pack,
+        statistic_producer_ptr statistic_producer) : m_graph_pack(graph_pack),
+                                                    m_statistic_producer(statistic_producer) {
     }
 
     tree_vector recover_trees() {
-      statistic_producer_t<graph_pack_t> producer(m_graph_pack);
-      auto statistics = producer.make_statistics();
+      auto statistics = m_statistic_producer->make_statistics();
       return build_trees(statistics);
     }
 
@@ -144,6 +146,7 @@ namespace algo {
     }
 
     graph_pack_t& m_graph_pack;
+    statistic_producer_ptr m_statistic_producer;
   };
 
 }

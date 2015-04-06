@@ -5,6 +5,11 @@
 
 #include "event/TwoBreak.hpp"
 
+enum recover_tree_statistic_t {
+  distribution,
+  simple_paths
+};
+
 // This structure contains information from *.cfg file
 template <class mcolor_t>
 struct main_config {
@@ -52,6 +57,8 @@ struct main_config {
    * Switch on/off tree recovery mode
    */
   bool is_recover_tree;
+
+  recover_tree_statistic_t recover_tree_statistic;
 
   using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
   std::vector<phylogeny_tree_t> phylotrees;

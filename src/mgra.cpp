@@ -14,6 +14,8 @@
 #include "algo/Algorithms.hpp"
 #include "algo/recover_tree/bruteforce_recover_tree_algorithm.hpp"
 #include "algo/recover_tree/dynamic_recover_tree_algorithm.hpp"
+#include "algo/recover_tree/simple_path_statistics_producer.hpp"
+#include "algo/recover_tree/multiedges_count_statistics_producer.hpp"
 
 #include "io/path_helper.hpp"
 #include "logger/logger.hpp"
@@ -147,6 +149,14 @@ int main(int argc, char** argv) {
         cmd,
         false);
 
+    TCLAP::ValueArg<std::string> recover_tree_statistic_arg("s",
+        "statistic",
+        "Statistic type",
+        false,
+        "simple_paths",
+        "which statistic is used for tree recovery",
+        cmd);
+
     cmd.parse(argc, const_cast<const char* const*>(argv));
 
 //    Check paths for cfg file, block file and output directory
@@ -210,6 +220,12 @@ int main(int argc, char** argv) {
 
     cfg::get_writable().is_recover_tree = recover_tree_arg.getValue();
 
+    if (recover_tree_statistic_arg.getValue() == "simple_paths") {
+      cfg::get_writable().recover_tree_statistic = simple_paths;
+    } else {
+      cfg::get_writable().recover_tree_statistic = distribution;
+    }
+
     if (cfg::get().is_recover_tree) {
       algo::Balance<graph_pack_t> balance_stage;
       balance_stage.run(graph_pack);
@@ -222,10 +238,20 @@ int main(int argc, char** argv) {
 
       const size_t MAX_GENOMES_FOR_BRUTEFORCE = 50;
 
-      if (cfg::get().get_count_genomes() < MAX_GENOMES_FOR_BRUTEFORCE) {
-        recover_tree_algorithm = std::make_shared<algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack);
+      std::shared_ptr<algo::StatisticsProducer<graph_pack_t> > producer;
+
+      if (cfg::get().recover_tree_statistic == simple_paths) {
+        producer = std::make_shared<algo::SimplePathStatisticsProducer<graph_pack_t> >(graph_pack);
       } else {
-        recover_tree_algorithm = std::make_shared<algo::DynamicRecoverTreeAlgorithm<graph_pack_t>>(graph_pack);
+        producer = std::make_shared<algo::MultiEdgesCountStatisticsProducer<graph_pack_t> >(graph_pack);
+      }
+
+      if (cfg::get().get_count_genomes() < MAX_GENOMES_FOR_BRUTEFORCE) {
+        recover_tree_algorithm =
+            std::make_shared<algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
+      } else {
+        recover_tree_algorithm =
+            std::make_shared<algo::DynamicRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
       }
 
       auto result_trees = recover_tree_algorithm->recover_trees();

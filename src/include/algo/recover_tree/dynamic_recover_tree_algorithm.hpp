@@ -14,10 +14,11 @@
 #include "structures/color_column.hpp"
 #include "structures/mcolor_info.hpp"
 #include "scoreboard.hpp"
+#include "simple_path_statistics_producer.hpp"
 
 namespace algo {
 
-  template <class graph_pack_t, template <typename> class statistic_producer_t = StatisticsProducer>
+  template <class graph_pack_t>
   struct DynamicRecoverTreeAlgorithm : RecoverTreeAlgorithm<graph_pack_t> {
     using mcolor_t = typename RecoverTreeAlgorithm<graph_pack_t>::mcolor_t;
     using tree_t = typename RecoverTreeAlgorithm<graph_pack_t>::tree_t;
@@ -38,15 +39,18 @@ namespace algo {
     using position_t = typename pyramid_t::position_t;
     using position_vector = typename pyramid_t::position_vector;
     using mcolor_info_t = typename pyramid_t::color_info_t;
+    using statistic_producer_ptr = std::shared_ptr<StatisticsProducer<graph_pack_t> > const&;
 
-    DynamicRecoverTreeAlgorithm(graph_pack_t& graph_pack, size_t returned_trees = 1) :
+    DynamicRecoverTreeAlgorithm(graph_pack_t& graph_pack,
+        statistic_producer_ptr statistic_producer,
+        size_t returned_trees = 1) :
         m_graph_pack(graph_pack),
-        m_returned_trees(returned_trees) {
+        m_returned_trees(returned_trees),
+        m_statistic_producer(statistic_producer){
     }
 
     tree_vector recover_trees() {
-      statistic_producer_t<graph_pack_t> producer(m_graph_pack);
-      auto statistics = producer.make_statistics();
+      auto statistics = m_statistic_producer->make_statistics();
 
       pyramid_t color_pyramid;
       for (statistic_t& statistic: statistics) {
@@ -147,6 +151,7 @@ namespace algo {
 
     graph_pack_t& m_graph_pack;
     const size_t m_returned_trees;
+    statistic_producer_ptr m_statistic_producer;
   };
 }
 

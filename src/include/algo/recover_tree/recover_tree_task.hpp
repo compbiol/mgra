@@ -18,6 +18,17 @@
 namespace algo {
 
   template <class graph_pack_t>
+  std::shared_ptr<algo::StatisticsProducer<graph_pack_t> > make_statistics_producer(graph_pack_t graph_pack) {
+    if (cfg::get().recover_tree_statistic == simple_paths) {
+      std::cout << "BOOM" << std::endl;
+      return std::make_shared<algo::SimplePathStatisticsProducer<graph_pack_t> >(graph_pack);
+    } else {
+      std::cout << "BAM" << std::endl;
+      return std::make_shared<algo::MultiEdgesCountStatisticsProducer<graph_pack_t> >(graph_pack);
+    }
+  }
+
+  template <class graph_pack_t>
   void recover_tree_task(graph_pack_t& graph_pack) {
     using mcolor_t = typename graph_pack_t::mcolor_type;
     using algo_t = typename algo::RecoverTreeAlgorithm<graph_pack_t>;
@@ -50,7 +61,7 @@ namespace algo {
           std::make_shared<algo::DynamicRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
     }
 
-    auto result_trees = recover_tree_algorithm->recover_trees();
+    auto result_trees = recover_tree_algorithm->get_result();
 
     INFO("Recovered trees")
 

@@ -1,24 +1,29 @@
 #ifndef MCOLOR_HPP
 #define MCOLOR_HPP
 
+#include <vector>
+
 #include "hash.hpp"
 
 namespace structure {
 
   struct Mcolor {
+
     enum Construct {
       Difference, Union, Intersection
     };
 
     using map_t = std::map<size_t, size_t>;
+    using color_pair_t = std::pair<size_t, size_t>;
     using citer = map_t::const_iterator;
     using iter = map_t::iterator;
+    using color_vector_t = std::vector<Mcolor>;
 
     Mcolor() {
     }
 
-    explicit Mcolor(size_t i) {
-      main_color.insert(std::make_pair(i, 1));
+    explicit Mcolor(size_t color, size_t multiplicity = 1) {
+      main_color.insert(std::make_pair(color, multiplicity));
     }
 
     Mcolor(Mcolor const& first, Mcolor const& second, Construct const& what) {
@@ -34,6 +39,16 @@ namespace structure {
           break;
       }
     }
+
+    color_vector_t break_into_parts() const {
+      color_vector_t result;
+      std::transform(std::begin(main_color), std::end(main_color), std::back_inserter(result),
+                     [](color_pair_t pair) {
+                       return Mcolor(pair.first, pair.second);
+                     });
+      return result;
+    }
+
 
     inline void insert(size_t i) {
       if (main_color.find(i) == main_color.end()) {

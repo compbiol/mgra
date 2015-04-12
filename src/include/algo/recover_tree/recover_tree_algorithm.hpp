@@ -17,6 +17,19 @@ namespace algo {
 
     virtual tree_vector recover_trees() = 0;
 
+    tree_vector get_result() {
+      auto recovered_trees = recover_trees();
+      std::for_each(std::begin(recovered_trees), std::end(recovered_trees),
+                    [this](tree_ptr const& tree) {
+                      return finalize_tree(tree);
+                    });
+      return recovered_trees;
+    }
+
+    virtual tree_ptr finalize_tree(tree_ptr tree) const {
+      return tree;
+    }
+
     virtual ~RecoverTreeAlgorithm() {
     }
   };

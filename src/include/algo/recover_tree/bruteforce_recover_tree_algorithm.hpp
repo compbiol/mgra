@@ -115,7 +115,8 @@ namespace algo {
       std::transform(std::begin(tree_classes), std::end(tree_classes), std::back_inserter(results),
                      [&appearing_colors](class_t& cls_to_fold) {
                        auto root_node = BranchHelper::fold_into_root_node(cls_to_fold.first);
-                       prune_node(root_node, appearing_colors);
+                       // FIXME: add pruning!
+                       does_need_to_prune_node(root_node, appearing_colors);
                        return std::make_shared<tree_t>(root_node);
                      });
 
@@ -126,14 +127,14 @@ namespace algo {
     * Removes the unnecessary children from the node
     * @return true if the node needs to be pruned itself
     */
-    static bool prune_node(node_ptr const& node, color_set const& appearing_colors) {
+    static bool does_need_to_prune_node(node_ptr const& node, color_set const& appearing_colors) {
       // Node needs to be pruned in two cases:
       // 1. It doesn't appear in statistics set
       // 2. All its children have to be pruned
 
       if (node->is_leaf()) {
         if (node->is_simple()) {
-          return !appearing_colors.count(node->get_data());
+          return appearing_colors.count(node->get_data()) == 0;
         }
         return true;
       }
@@ -142,8 +143,8 @@ namespace algo {
           appearing_colors.count(node->get_right_child()->get_data()) != 0;
       bool needs_to_be_pruned =
           !both_children_appear_in_statistics &&
-          prune_node(node->get_left_child(), appearing_colors) &&
-          prune_node(node->get_right_child(), appearing_colors);
+          does_need_to_prune_node(node->get_left_child(), appearing_colors) &&
+          does_need_to_prune_node(node->get_right_child(), appearing_colors);
       return needs_to_be_pruned;
     }
   };

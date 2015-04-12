@@ -27,8 +27,8 @@ namespace structure {
     }
 
     Node(Node* const par, std::string const& tree,
-        std::unordered_map<std::string, size_t> const& genome_number,
-        std::vector<std::string> const& priority_name);
+         std::unordered_map<std::string, size_t> const& genome_number,
+         std::vector<std::string> const& priority_name);
 
     mcolor_t const& get_data() const {
       return data;
@@ -96,7 +96,7 @@ namespace structure {
     }
 
     bool is_leaf() const {
-      return !has_left_child() &&  !has_right_child();
+      return !has_left_child() && !has_right_child();
     }
 
     bool is_root() const {
@@ -140,8 +140,8 @@ namespace structure {
 
   template <class mcolor_t>
   Node<mcolor_t>::Node(Node* const par, std::string const& tree,
-      std::unordered_map<std::string, size_t> const& genome_number,
-      std::vector<std::string> const& priority_name)
+                       std::unordered_map<std::string, size_t> const& genome_number,
+                       std::vector<std::string> const& priority_name)
       : parent(par), left_child(nullptr), right_child(nullptr) {
     size_t i = 0;
     for (i = tree.length() - 1; tree[i] != ':' && tree[i] != ')' && tree[i] != '}' && i >= 0; --i);
@@ -172,7 +172,8 @@ namespace structure {
         } else if (new_tree[j] == ',') {
           if (p == 0) {
             left_child = std::make_shared<node_t>(this, new_tree.substr(1, j - 1), genome_number, priority_name);
-            right_child = std::make_shared<node_t>(this, new_tree.substr(j + 1, new_tree.size() - j - 2), genome_number, priority_name);
+            right_child = std::make_shared<node_t>(this, new_tree.substr(j + 1, new_tree.size() - j - 2), genome_number,
+                                                   priority_name);
           }
         }
         if (p < 0) {
@@ -180,7 +181,6 @@ namespace structure {
           exit(3);
         }
       }
-
       if (p != 0) {
         ERROR("Bad format input (sub)tree. Check count \'(\' and \')\'")
         exit(3);
@@ -207,7 +207,6 @@ namespace structure {
             start = j + 1;
           }
         }
-
         if (name.empty()) {
           name = new_name;
         }

@@ -8,11 +8,13 @@
 #include "graph/graph_pack.hpp"
 #include "structures/mcolor_hash.hpp"
 #include "simple_path_statistics_producer.hpp"
+#include "statistics_based_recover_tree_algorithm.hpp"
 
 namespace algo {
 
   template <class graph_pack_t>
-  struct BruteforceRecoverTreeAlgorithm : RecoverTreeAlgorithm<graph_pack_t> {
+  struct BruteforceRecoverTreeAlgorithm :
+      StatisticsBasedRecoverTreeAlgorithm<graph_pack_t> {
     using mcolor_t = typename RecoverTreeAlgorithm<graph_pack_t>::mcolor_t;
     using tree_t = typename RecoverTreeAlgorithm<graph_pack_t>::tree_t;
     using node_t = typename tree_t::colored_node_t;
@@ -32,12 +34,12 @@ namespace algo {
 
 
     BruteforceRecoverTreeAlgorithm(graph_pack_t& graph_pack,
-        statistic_producer_ptr statistic_producer) : m_graph_pack(graph_pack),
-                                                    m_statistic_producer(statistic_producer) {
+                                   statistic_producer_ptr statistic_producer) :
+        StatisticsBasedRecoverTreeAlgorithm<graph_pack_t>(graph_pack, statistic_producer) {
     }
 
     tree_vector recover_trees() {
-      auto statistics = m_statistic_producer->make_statistics();
+      auto statistics = this->m_statistic_producer->make_statistics();
       return build_trees(statistics);
     }
 
@@ -90,16 +92,16 @@ namespace algo {
           auto cls = tree_classes[i];
           for (auto& branch: cls.first) {
             std::clog << cfg::get().mcolor_to_name(branch.first) << " + "
-                << cfg::get().mcolor_to_name(branch.second) << std::endl;
+            << cfg::get().mcolor_to_name(branch.second) << std::endl;
           }
         }
       }
 
       std::sort(std::begin(tree_classes), std::end(tree_classes),
           // Descending by class score
-          [](class_t const& left, class_t const& right) {
-            return left.second > right.second;
-          });
+                [](class_t const& left, class_t const& right) {
+                  return left.second > right.second;
+                });
 
       // Collect the colors appearing in the tree to speed up the strictness checking
       color_set appearing_colors;
@@ -111,11 +113,11 @@ namespace algo {
       tree_vector results;
       results.reserve(tree_classes.size());
       std::transform(std::begin(tree_classes), std::end(tree_classes), std::back_inserter(results),
-          [&appearing_colors](class_t& cls_to_fold) {
-            auto root_node = BranchHelper::fold_into_root_node(cls_to_fold.first);
-            prune_node(root_node, appearing_colors);
-            return std::make_shared<tree_t>(root_node);
-          });
+                     [&appearing_colors](class_t& cls_to_fold) {
+                       auto root_node = BranchHelper::fold_into_root_node(cls_to_fold.first);
+                       prune_node(root_node, appearing_colors);
+                       return std::make_shared<tree_t>(root_node);
+                     });
 
       return results;
     }
@@ -137,18 +139,14 @@ namespace algo {
       }
       bool both_children_appear_in_statistics =
           appearing_colors.count(node->get_left_child()->get_data()) != 0 &&
-              appearing_colors.count(node->get_right_child()->get_data()) != 0;
+          appearing_colors.count(node->get_right_child()->get_data()) != 0;
       bool needs_to_be_pruned =
           !both_children_appear_in_statistics &&
-              prune_node(node->get_left_child(), appearing_colors) &&
-              prune_node(node->get_right_child(), appearing_colors);
+          prune_node(node->get_left_child(), appearing_colors) &&
+          prune_node(node->get_right_child(), appearing_colors);
       return needs_to_be_pruned;
     }
-
-    graph_pack_t& m_graph_pack;
-    statistic_producer_ptr m_statistic_producer;
   };
-
 }
 
 #endif

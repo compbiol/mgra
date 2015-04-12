@@ -46,7 +46,7 @@ namespace algo {
           [](statistic_t const& statistic) {
             return statistic.first.first.empty() || statistic.first.second.empty();
           }), std::end(m_result_statistics));
-      
+
       // Disregard irregular edges
       for (auto& statistic: m_result_statistics) {
         statistic.second -= m_graph_pack.stats.irrer_multiedges_count[statistic.first.first];

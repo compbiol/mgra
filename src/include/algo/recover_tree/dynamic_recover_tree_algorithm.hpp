@@ -15,11 +15,12 @@
 #include "structures/mcolor_info.hpp"
 #include "scoreboard.hpp"
 #include "simple_path_statistics_producer.hpp"
+#include "statistics_based_recover_tree_algorithm.hpp"
 
 namespace algo {
 
   template <class graph_pack_t>
-  struct DynamicRecoverTreeAlgorithm : RecoverTreeAlgorithm<graph_pack_t> {
+  struct DynamicRecoverTreeAlgorithm : StatisticsBasedRecoverTreeAlgorithm<graph_pack_t> {
     using mcolor_t = typename RecoverTreeAlgorithm<graph_pack_t>::mcolor_t;
     using tree_t = typename RecoverTreeAlgorithm<graph_pack_t>::tree_t;
     using node_t = typename tree_t::colored_node_t;
@@ -42,15 +43,14 @@ namespace algo {
     using statistic_producer_ptr = std::shared_ptr<StatisticsProducer<graph_pack_t> > const&;
 
     DynamicRecoverTreeAlgorithm(graph_pack_t& graph_pack,
-        statistic_producer_ptr statistic_producer,
-        size_t returned_trees = 1) :
-        m_graph_pack(graph_pack),
-        m_returned_trees(returned_trees),
-        m_statistic_producer(statistic_producer){
+                                statistic_producer_ptr statistic_producer,
+                                size_t returned_trees = 1) :
+        StatisticsBasedRecoverTreeAlgorithm<graph_pack_t>(graph_pack, statistic_producer),
+        m_returned_trees(returned_trees) {
     }
 
     tree_vector recover_trees() {
-      auto statistics = m_statistic_producer->make_statistics();
+      auto statistics = this->m_statistic_producer->make_statistics();
 
       pyramid_t color_pyramid;
       for (statistic_t& statistic: statistics) {
@@ -70,7 +70,8 @@ namespace algo {
           auto& current_color = current_weighted_color.first;
 
           // Try to break off a color and check if the remainder color is present
-          for (size_t subcolor_level_index = current_level_index - 1; subcolor_level_index != 0; --subcolor_level_index) {
+          for (size_t subcolor_level_index = current_level_index - 1;
+               subcolor_level_index != 0; --subcolor_level_index) {
             auto& subcolor_level = color_pyramid[subcolor_level_index];
 
             for (size_t subcolor_index = 0; subcolor_index != subcolor_level.size(); ++subcolor_index) {
@@ -103,7 +104,7 @@ namespace algo {
                   remainder_color_position);
               current_info.update_if_better(new_info);
               scoreboard.update(std::make_pair(new_info.get_whole_tree_score(),
-                  position_t(current_level_index, current_color_index)));
+                                               position_t(current_level_index, current_color_index)));
             }
           }
         }
@@ -118,10 +119,10 @@ namespace algo {
       tree_vector results;
 
       std::transform(std::begin(branches_to_fold), std::end(branches_to_fold), std::back_inserter(results),
-          [](branch_vector& branches) {
-            auto root_node = BranchHelper::fold_into_root_node(branches);
-            return std::make_shared<tree_t>(root_node);
-          });
+                     [](branch_vector& branches) {
+                       auto root_node = BranchHelper::fold_into_root_node(branches);
+                       return std::make_shared<tree_t>(root_node);
+                     });
 
       return results;
     }
@@ -149,9 +150,7 @@ namespace algo {
       return result;
     }
 
-    graph_pack_t& m_graph_pack;
     const size_t m_returned_trees;
-    statistic_producer_ptr m_statistic_producer;
   };
 }
 

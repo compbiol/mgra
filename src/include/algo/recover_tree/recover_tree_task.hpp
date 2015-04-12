@@ -28,7 +28,6 @@ namespace algo {
     balance_stage.run(graph_pack);
 
     INFO("Starting tree recovery")
-    //Recover tree here
     graph_pack.update_graph_statistics();
 
     algo_ptr recover_tree_algorithm;

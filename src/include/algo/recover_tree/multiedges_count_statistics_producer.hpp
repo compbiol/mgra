@@ -18,7 +18,7 @@ namespace algo {
     using statistic_vector = typename StatisticsProducer<graph_pack_t>::statistic_vector;
 
     MultiEdgesCountStatisticsProducer(graph_pack_t& graph_pack,
-        tree_vector const& known_subtrees = cfg::get().phylotrees) :
+                                      tree_vector const& known_subtrees = cfg::get().phylotrees) :
         StatisticsProducer<graph_pack_t>(graph_pack, known_subtrees) {
     }
 
@@ -26,8 +26,8 @@ namespace algo {
     void populate_result() {
       auto& multiedges_count = StatisticsProducer<graph_pack_t>::m_graph_pack.stats.multiedges_count;
       std::copy(multiedges_count.begin(),
-          multiedges_count.end(),
-          std::back_inserter(StatisticsProducer<graph_pack_t>::m_result_statistics));
+                multiedges_count.end(),
+                std::back_inserter(StatisticsProducer<graph_pack_t>::m_result_statistics));
     }
   };
 }

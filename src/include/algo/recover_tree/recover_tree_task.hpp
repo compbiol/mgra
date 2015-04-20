@@ -75,7 +75,7 @@ namespace algo {
 
     for (size_t i = 0; i != result_trees.size(); ++i) {
       std::ofstream numbered_outfile(path::append_path(cfg::get().trees_path,
-          std::to_string(i) + ".dot"));
+                                                       std::to_string(i) + ".dot"));
       dot_writer.save_subtrees(numbered_outfile, {*result_trees[i]});
     }
     INFO("Dumped trees")

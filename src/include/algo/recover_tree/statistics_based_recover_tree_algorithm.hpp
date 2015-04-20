@@ -42,7 +42,7 @@ namespace algo {
     virtual tree_ptr finalize_tree(tree_ptr tree) const {
       std::queue<node_ptr> node_queue;
       node_queue.push(tree->get_root());
-      while(!node_queue.empty()) {
+      while (!node_queue.empty()) {
         auto current_node = node_queue.front();
         node_queue.pop();
         if (current_node->is_leaf()) {
@@ -53,10 +53,12 @@ namespace algo {
             auto right = broken_color[1];
             current_node->set_left_child(std::make_shared<node_t>(left));
             current_node->get_left_child()->set_parent(current_node.get());
-            current_node->get_left_child()->set_name(cfg::get().mcolor_to_name(current_node->get_left_child()->get_data()));
+            current_node->get_left_child()->set_name(
+                cfg::get().mcolor_to_name(current_node->get_left_child()->get_data()));
             current_node->set_right_child(std::make_shared<node_t>(right));
             current_node->get_right_child()->set_parent(current_node.get());
-            current_node->get_right_child()->set_name(cfg::get().mcolor_to_name(current_node->get_right_child()->get_data()));
+            current_node->get_right_child()->set_name(
+                cfg::get().mcolor_to_name(current_node->get_right_child()->get_data()));
           }
         } else {
           node_queue.push(current_node->get_left_child());

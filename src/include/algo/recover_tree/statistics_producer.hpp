@@ -80,7 +80,7 @@ namespace algo {
       if (cfg::get().is_debug) {
         for (auto& statistic: m_result_statistics) {
           std::clog << cfg::get().mcolor_to_name(statistic.first.first) << " + "
-              << cfg::get().mcolor_to_name(statistic.first.second) << std::endl;
+              << cfg::get().mcolor_to_name(statistic.first.second) << " : " << statistic.second << std::endl;
         }
       }
 

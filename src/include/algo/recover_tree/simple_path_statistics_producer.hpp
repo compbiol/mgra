@@ -18,7 +18,7 @@ namespace algo {
     using statistic_vector = typename StatisticsProducer<graph_pack_t>::statistic_vector;
 
     SimplePathStatisticsProducer(graph_pack_t& graph_pack,
-        tree_vector const& known_subtrees = cfg::get().phylotrees) :
+                                 tree_vector const& known_subtrees = cfg::get().phylotrees) :
         StatisticsProducer<graph_pack_t>(graph_pack, known_subtrees) {
     }
 
@@ -28,12 +28,12 @@ namespace algo {
       auto complete_color = cfg::get().complete_color();
 
       std::transform(std::begin(simple_edges_counts),
-          std::end(simple_edges_counts),
-          std::back_inserter(StatisticsProducer<graph_pack_t>::m_result_statistics),
-          [&complete_color](std::pair<mcolor_t, size_t> const& multiedge) {
-            auto compliment = mcolor_t(complete_color, multiedge.first, mcolor_t::Difference);
-            return statistic_t(branch_t(multiedge.first, compliment), multiedge.second);
-          });
+                     std::end(simple_edges_counts),
+                     std::back_inserter(StatisticsProducer<graph_pack_t>::m_result_statistics),
+                     [&complete_color](std::pair<mcolor_t, size_t> const& multiedge) {
+                       auto compliment = mcolor_t(complete_color, multiedge.first, mcolor_t::Difference);
+                       return statistic_t(branch_t(multiedge.first, compliment), multiedge.second);
+                     });
     }
   };
 }

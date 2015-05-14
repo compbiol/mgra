@@ -143,17 +143,11 @@ namespace structure {
                        std::unordered_map<std::string, size_t> const& genome_number,
                        std::vector<std::string> const& priority_name)
       : parent(par), left_child(nullptr), right_child(nullptr) {
-    std::cout << "TREE: " << tree << std::endl;
     int i = 0;
     for (i = tree.length() - 1; tree[i] != ':' && tree[i] != ')' && tree[i] != '}' && i >= 0; --i);
 
-    std::cout << tree << " 1" << std::endl;
-
     std::string new_tree = tree;
     if (i > 0) {
-      std::cout << tree << std::endl;
-      std::cout << i + 1 << std::endl;
-      std::cout << tree.length() - i - 1 << std::endl;
       name = tree.substr(i + 1, tree.length() - i - 1);
       if (tree[i] == ':') {
         new_tree = tree.substr(0, i);
@@ -161,8 +155,6 @@ namespace structure {
         new_tree = tree.substr(0, i + 1);
       }
     }
-
-    std::cout << tree << " 2" << std::endl;
 
     if (new_tree[0] == '(') {
       //non-trivial tree
@@ -227,7 +219,6 @@ namespace structure {
         name = priority_name[genome_number.find(new_tree)->second];
       }
     }
-    std::cout << tree << " 666" << std::endl;
   }
 }
 

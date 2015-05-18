@@ -26,6 +26,7 @@ namespace algo {
     void populate_result() {
       auto& simple_edges_counts = StatisticsProducer<graph_pack_t>::m_graph_pack.stats.simple_multiedges_count;
       auto complete_color = cfg::get().complete_color();
+      StatisticsProducer<graph_pack_t>::m_result_statistics.reserve(simple_edges_counts.size());
 
       std::transform(std::begin(simple_edges_counts),
                      std::end(simple_edges_counts),

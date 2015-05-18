@@ -49,8 +49,9 @@ namespace algo {
 
       // Disregard irregular edges
       for (auto& statistic: m_result_statistics) {
-        statistic.second -= m_graph_pack.stats.irrer_multiedges_count[statistic.first.first];
-        statistic.second -= m_graph_pack.stats.irrer_multiedges_count[statistic.first.second];
+        auto irregular_edges_count = m_graph_pack.stats.irrer_multiedges_count[statistic.first.first] +
+            m_graph_pack.stats.irrer_multiedges_count[statistic.first.second];
+        statistic.second -= std::min(irregular_edges_count, statistic.second);
       }
 
       size_t cumulative_score = 0;

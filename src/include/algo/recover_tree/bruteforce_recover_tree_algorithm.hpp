@@ -7,7 +7,6 @@
 #include "structures/branch.hpp"
 #include "graph/graph_pack.hpp"
 #include "structures/mcolor_hash.hpp"
-#include "simple_path_statistics_producer.hpp"
 #include "statistics_based_recover_tree_algorithm.hpp"
 
 namespace algo {

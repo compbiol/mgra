@@ -14,7 +14,6 @@
 #include "structures/color_column.hpp"
 #include "structures/mcolor_info.hpp"
 #include "scoreboard.hpp"
-#include "simple_path_statistics_producer.hpp"
 #include "statistics_based_recover_tree_algorithm.hpp"
 
 namespace algo {

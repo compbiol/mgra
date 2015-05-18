@@ -9,8 +9,8 @@
 
 #include "bruteforce_recover_tree_algorithm.hpp"
 #include "dynamic_recover_tree_algorithm.hpp"
-#include "multiedges_count_statistics_producer.hpp"
-#include "simple_path_statistics_producer.hpp"
+#include "statistics/multiedges_count_statistics_producer.hpp"
+#include "statistics/simple_path_statistics_producer.hpp"
 #include "algo/main/Balance.hpp"
 #include "structures/tree.hpp"
 #include "writer/newick_tree_printer.hpp"
@@ -18,25 +18,21 @@
 namespace algo {
 
   template <class graph_pack_t>
-  std::shared_ptr<algo::StatisticsProducer<graph_pack_t> > make_statistics_producer(graph_pack_t graph_pack) {
-    if (cfg::get().recover_tree_statistic == simple_paths) {
-      std::cout << "BOOM" << std::endl;
-      return std::make_shared<algo::SimplePathStatisticsProducer<graph_pack_t> >(graph_pack);
-    } else {
-      std::cout << "BAM" << std::endl;
-      return std::make_shared<algo::MultiEdgesCountStatisticsProducer<graph_pack_t> >(graph_pack);
-    }
-  }
-
-  template <class graph_pack_t>
   void recover_tree_task(graph_pack_t& graph_pack) {
+    using namespace algo;
     using mcolor_t = typename graph_pack_t::mcolor_type;
-    using algo_t = typename algo::RecoverTreeAlgorithm<graph_pack_t>;
+    using algo_t = RecoverTreeAlgorithm<graph_pack_t>;
     using algo_ptr = typename algo_t::algo_ptr;
     using tree_t = structure::BinaryTree<mcolor_t>;
 
-    algo::Balance<graph_pack_t> balance_stage;
-    balance_stage.run(graph_pack);
+    const size_t ROUNDS_FOR_TREE_RECOVERY = 1;
+    //FIXME: change recovery into stage and add
+    StageManager<graph_pack_t> algorithm(ROUNDS_FOR_TREE_RECOVERY,
+                                         {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
+
+    Balance<graph_pack_t>* balance_stage = new Balance<graph_pack_t>();
+    algorithm.add_stage(balance_stage);
+    algorithm.run(graph_pack);
 
     INFO("Starting tree recovery")
     graph_pack.update_graph_statistics();
@@ -48,17 +44,17 @@ namespace algo {
     std::shared_ptr<algo::StatisticsProducer<graph_pack_t> > producer;
 
     if (cfg::get().recover_tree_statistic == simple_paths) {
-      producer = std::make_shared<algo::SimplePathStatisticsProducer<graph_pack_t> >(graph_pack);
+      producer = std::make_shared<SimplePathStatisticsProducer<graph_pack_t> >(graph_pack);
     } else {
-      producer = std::make_shared<algo::MultiEdgesCountStatisticsProducer<graph_pack_t> >(graph_pack);
+      producer = std::make_shared<MultiEdgesCountStatisticsProducer<graph_pack_t> >(graph_pack);
     }
 
     if (cfg::get().get_count_genomes() < MAX_GENOMES_FOR_BRUTEFORCE) {
       recover_tree_algorithm =
-          std::make_shared<algo::BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
+          std::make_shared<BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
     } else {
       recover_tree_algorithm =
-          std::make_shared<algo::DynamicRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
+          std::make_shared<DynamicRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
     }
 
     auto result_trees = recover_tree_algorithm->get_result();

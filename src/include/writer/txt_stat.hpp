@@ -89,7 +89,7 @@ void TXT_statistics<statistics_t>::print_history_statistics(statistics_t const &
 
 template<class statistics_t>
 void TXT_statistics<statistics_t>::print_vertex_statistics(statistics_t const & info) {
-  ofstat << "... Verteces: " << info.vertex_statistics[0] << std::endl;
+  ofstat << "... Vertices: " << info.vertex_statistics[0] << std::endl;
   ofstat << "... Duplication vertex: " << info.vertex_statistics[1] << std::endl;
   ofstat << "... Insertion/deletion vertex: " << info.vertex_statistics[2] << std::endl;
   ofstat << "... Count self loop: " << info.vertex_statistics[3] << std::endl;

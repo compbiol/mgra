@@ -8,7 +8,7 @@
 #include <queue>
 
 #include "recover_tree_algorithm.hpp"
-#include "statistics_producer.hpp"
+#include "statistics/statistics_producer.hpp"
 #include "writer/newick_tree_printer.hpp"
 
 

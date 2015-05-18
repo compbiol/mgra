@@ -136,7 +136,10 @@ namespace structure {
           auto node = nodes_to_process.front();
           auto node_color = node->get_data();
           nodes_to_process.pop();
-          result.push_back(node_color.packed_compliment(complete_color));
+          if (node_color != complete_color) {
+            // Otherwise packed compliment is empty
+            result.push_back(node_color.packed_compliment(complete_color));
+          }
           if (!node->is_leaf()) {
             nodes_to_process.push(node->get_left_child());
             nodes_to_process.push(node->get_right_child());

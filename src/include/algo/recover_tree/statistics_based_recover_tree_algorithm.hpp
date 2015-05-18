@@ -46,7 +46,7 @@ namespace algo {
         auto current_node = node_queue.front();
         node_queue.pop();
         if (current_node->is_leaf()) {
-          // Check nodes such as {E, F}, which can be broken without nay more info
+          // Check nodes such as {E, F}, which can be broken without any more info
           if (current_node->get_size() == 2) {
             auto broken_color = current_node->get_data().break_into_parts();
             auto left = broken_color[0];

@@ -5,6 +5,8 @@
 #ifndef MGRA_RECOVER_TREE_TASK_HPP_
 #define MGRA_RECOVER_TREE_TASK_HPP_
 
+#include <sstream>
+
 #include "../../../utils/logger/logger.hpp"
 
 #include "bruteforce_recover_tree_algorithm.hpp"
@@ -20,10 +22,12 @@ namespace algo {
   template <class graph_pack_t>
   void recover_tree_task(graph_pack_t& graph_pack) {
     using namespace algo;
+    using namespace structure;
+    using namespace writer;
     using mcolor_t = typename graph_pack_t::mcolor_type;
     using algo_t = RecoverTreeAlgorithm<graph_pack_t>;
     using algo_ptr = typename algo_t::algo_ptr;
-    using tree_t = structure::BinaryTree<mcolor_t>;
+    using tree_t = BinaryTree<mcolor_t>;
 
     const size_t ROUNDS_FOR_TREE_RECOVERY = 1;
     //FIXME: change recovery into stage and add
@@ -63,9 +67,13 @@ namespace algo {
 
     const size_t MAX_TREES_TO_DUMP = 3;
     result_trees.resize(std::min(MAX_TREES_TO_DUMP, result_trees.size()));
-    writer::GraphDot<graph_pack_t> dot_writer;
+    if (cfg::get().is_debug) {
+      NewickTreePrinter<tree_t> newick_tree_printer(std::clog);
+      newick_tree_printer.print_trees(result_trees);
+    }
+    GraphDot<graph_pack_t> dot_writer;
     std::ofstream summary_file(cfg::get().tree_summary_path);
-    writer::NewickTreePrinter<tree_t> newick_tree_printer(summary_file);
+    NewickTreePrinter<tree_t> newick_tree_printer(summary_file);
 
     newick_tree_printer.print_trees(result_trees);
 

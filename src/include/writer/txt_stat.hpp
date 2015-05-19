@@ -148,8 +148,8 @@ namespace writer {
     ofstat << std::endl << "% Rearrangement characters:" << std::endl << std::endl;
     print_start_table(6);
     ofstat <<
-    "Multicolors & multiedges & simple vertices & simple multiedges & simple paths+cycles & irreg. multiedges\\\\" <<
-    std::endl;
+    "Multicolors & multiedges & simple vertices & simple multiedges & simple paths+cycles & irreg. multiedges";
+    line_break();
     ofstat << "\\hline" << std::endl;
 
     auto calc_value = [](std::map<mcolor_t, size_t> const& where, mcolor_t const& what) -> size_t {
@@ -199,7 +199,8 @@ namespace writer {
     }
 
     for (auto im = answer.rbegin(); im != answer.rend(); ++im) {
-      ofstat << im->second << "\\\\" << std::endl;
+      ofstat << im->second;
+      line_break();
     }
 
     print_close_table();
@@ -210,12 +211,14 @@ namespace writer {
     ofstat << std::endl << "% Insertion/Deletion characters: " << std::endl << std::endl;
     print_start_table(2);
 
-    ofstat << "insert multicolor $Q + \\bar{Q}$ & number edges \\\\" << std::endl;
+    ofstat << "insert multicolor $Q + \\bar{Q}$ & number edges";
+    line_break();
     ofstat << "\\hline" << std::endl;
 
     for (auto const& indel : info.complement_indel_stats) {
       ofstat << cfg::get().mcolor_to_name(indel.first.first) << " + "
-      << cfg::get().mcolor_to_name(indel.first.second) << " & " << indel.second << "\\\\" << std::endl;
+      << cfg::get().mcolor_to_name(indel.first.second) << " & " << indel.second;
+      line_break();
     }
 
     print_close_table();

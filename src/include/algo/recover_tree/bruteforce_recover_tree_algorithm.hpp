@@ -87,11 +87,10 @@ namespace algo {
 
       if (cfg::get().is_debug) {
         for (size_t i = 0; i != tree_classes.size(); ++i) {
-          std::clog << "Class " << i << std::endl;
           auto cls = tree_classes[i];
+          std::clog << "Class " << i << " : " << cls.second << std::endl;
           for (auto& branch: cls.first) {
-            std::clog << cfg::get().mcolor_to_name(branch.first) << " + "
-            << cfg::get().mcolor_to_name(branch.second) << std::endl;
+            std::clog << BranchHelper::branch_to_string(branch) << std::endl;
           }
         }
       }

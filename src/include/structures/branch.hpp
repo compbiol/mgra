@@ -7,6 +7,7 @@
 
 #include "config_struct.hpp"
 #include "tree.hpp"
+#include "writer/newick_tree_printer.hpp"
 
 namespace structure {
 
@@ -19,6 +20,14 @@ namespace structure {
     using node_t = typename tree_t::colored_node_t;
     using node_ptr = typename tree_t::node_ptr;
     using node_queue = std::queue<node_ptr>;
+
+    /**
+    * Takes a string and makes a string representation of it, using the provided names from config
+    * @return string representation of a branch
+    */
+    static std::string branch_to_string(branch_t const& branch) {
+      return cfg::get().mcolor_to_name(branch.first) + " + " + cfg::get().mcolor_to_name(branch.second);
+    }
 
     /**
     * Merges a given branch into tree
@@ -56,7 +65,7 @@ namespace structure {
     */
     static bool do_intersect(branch_t const& left, branch_t const& right) {
       return !(left.first.includes(right.first) || left.second.includes(right.first) ||
-          right.first.includes(left.first) || right.second.includes(left.first));
+               right.first.includes(left.first) || right.second.includes(left.first));
     }
 
     /**
@@ -68,29 +77,29 @@ namespace structure {
       return new_node;
     }
 
-    static node_ptr fold_into_root_node(branch_vector& branches, bool balance_sort = false) {
+    static node_ptr fold_into_root_node(branch_vector& branches) {
       // No branches - no tree
       assert(!branches.empty());
 
-      if (balance_sort) {
-        // Doubtful fix, sort the branches, so that the root node is most balanced
-        std::sort(std::begin(branches), std::end(branches), [](branch_t const& left, branch_t const& right) {
-          auto left_diff = std::abs(static_cast<long>(left.first.size()) - static_cast<long>(left.second.size()));
-          auto right_diff = std::abs(static_cast<long>(right.first.size()) - static_cast<long>(right.second.size()));
-          return left_diff < right_diff;
-        });
-      }
+      // Sort is done, so singleton nodes won't break nodes, for example
+      // Imagine we have a = ABC|D, b = AB|CD, c = B|ACD: if we apply a -> c -> b we won't get node AB
+      std::sort(std::begin(branches), std::end(branches), [](branch_t const& left, branch_t const& right) {
+        auto left_diff = std::abs(static_cast<long>(left.first.size()) - static_cast<long>(left.second.size()));
+        auto right_diff = std::abs(static_cast<long>(right.first.size()) - static_cast<long>(right.second.size()));
+        return left_diff < right_diff;
+      });
 
       auto branch_iter = std::begin(branches);
-      auto root_node = node_from_branch(*branch_iter);
+      auto root_node = node_from_branch(*branch_iter++);
       for (; branch_iter != std::end(branches); ++branch_iter) {
         merge_branch_into_node(root_node, *branch_iter);
       }
       root_node->set_name(
           cfg::get().mcolor_to_name(
               mcolor_t(root_node->get_left_child()->get_data(),
-                  root_node->get_right_child()->get_data(),
-                  mcolor_t::Union)));
+                       root_node->get_right_child()->get_data(),
+                       mcolor_t::Union)));
+
       return root_node;
     }
 
@@ -101,7 +110,8 @@ namespace structure {
       node->set_left_child(std::make_shared<node_t>(mcolor_t(node->get_data(), branch.first, mcolor_t::Intersection)));
       node->get_left_child()->set_parent(node.get());
       node->get_left_child()->set_name(cfg::get().mcolor_to_name(node->get_left_child()->get_data()));
-      node->set_right_child(std::make_shared<node_t>(mcolor_t(node->get_data(), branch.second, mcolor_t::Intersection)));
+      node->set_right_child(
+          std::make_shared<node_t>(mcolor_t(node->get_data(), branch.second, mcolor_t::Intersection)));
       node->get_right_child()->set_parent(node.get());
       node->get_right_child()->set_name(cfg::get().mcolor_to_name(node->get_right_child()->get_data()));
     }

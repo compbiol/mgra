@@ -81,6 +81,8 @@ namespace structure {
       // No branches - no tree
       assert(!branches.empty());
 
+      std::cout << "Start folding" << std::endl;
+
       // Sort is done, so singleton nodes won't break nodes, for example
       // Imagine we have a = ABC|D, b = AB|CD, c = B|ACD: if we apply a -> c -> b we won't get node AB
       std::sort(std::begin(branches), std::end(branches), [](branch_t const& left, branch_t const& right) {
@@ -88,6 +90,10 @@ namespace structure {
         auto right_diff = std::abs(static_cast<long>(right.first.size()) - static_cast<long>(right.second.size()));
         return left_diff < right_diff;
       });
+
+      for (auto branch: branches) {
+        std::cout << branch_to_string(branch) << std::endl;
+      }
 
       auto branch_iter = std::begin(branches);
       auto root_node = node_from_branch(*branch_iter++);

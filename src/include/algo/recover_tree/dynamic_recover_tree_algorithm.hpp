@@ -56,6 +56,7 @@ namespace algo {
         color_pyramid.insert(std::make_pair(statistic.first.first, statistic.second));
         color_pyramid.insert(std::make_pair(statistic.first.second, statistic.second));
       }
+      color_pyramid.insert(std::make_pair(cfg::get().complete_color(), 0));
 
       Scoreboard<position_t> scoreboard(m_returned_trees);
 

@@ -24,17 +24,14 @@ namespace algo {
 
   protected:
     void populate_result() {
-      auto& simple_edges_counts = StatisticsProducer<graph_pack_t>::m_graph_pack.stats.simple_multiedges_count;
-      auto complete_color = cfg::get().complete_color();
-      StatisticsProducer<graph_pack_t>::m_result_statistics.reserve(simple_edges_counts.size());
-
-      std::transform(std::begin(simple_edges_counts),
-                     std::end(simple_edges_counts),
-                     std::back_inserter(StatisticsProducer<graph_pack_t>::m_result_statistics),
-                     [&complete_color](std::pair<mcolor_t, size_t> const& multiedge) {
-                       auto compliment = mcolor_t(complete_color, multiedge.first, mcolor_t::Difference);
-                       return statistic_t(branch_t(multiedge.first, compliment), multiedge.second);
-                     });
+      auto& simple_path_lengths = StatisticsProducer<graph_pack_t>::m_graph_pack.stats.simple_path_lengths;
+      std::copy(simple_path_lengths.begin(),
+                simple_path_lengths.end(),
+                std::back_inserter(StatisticsProducer<graph_pack_t>::m_result_statistics));
+      std::for_each(StatisticsProducer<graph_pack_t>::m_result_statistics.begin(),
+                    StatisticsProducer<graph_pack_t>::m_result_statistics.end(), [](statistic_t& statistic) {
+            return std::make_pair(statistic.first, statistic.second / 2);
+          });
     }
   };
 }

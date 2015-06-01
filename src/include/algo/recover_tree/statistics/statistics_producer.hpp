@@ -54,14 +54,16 @@ namespace algo {
         statistic.second -= std::min(irregular_edges_count, statistic.second);
       }
 
-      size_t cumulative_score = 0;
-      std::for_each(std::begin(m_result_statistics), std::end(m_result_statistics),
-          [&cumulative_score](statistic_t const& statistic) {
-            cumulative_score += statistic.second;
-          });
+      if (!m_known_subtrees.empty()) {
+        size_t cumulative_score = 0;
+        std::for_each(std::begin(m_result_statistics), std::end(m_result_statistics),
+                      [&cumulative_score](statistic_t const& statistic) {
+                        cumulative_score += statistic.second;
+                      });
 
-      for (auto& branch: BranchHelper::break_trees_into_branches(m_known_subtrees)) {
-        m_result_statistics.push_back(statistic_t(branch, cumulative_score));
+        for (auto& branch: BranchHelper::break_trees_into_branches(m_known_subtrees)) {
+          m_result_statistics.push_back(statistic_t(branch, cumulative_score));
+        }
       }
 
       // Flip edges, so the smaller color is on the left

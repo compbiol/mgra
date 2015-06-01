@@ -1,10 +1,13 @@
 #ifndef STATISTICS_HPP
 #define STATISTICS_HPP
 
+#include "simple_paths_register.hpp"
+
 template<class mcolor_t>
 struct GraphPack<mcolor_t>::Statistics {
   using mcolor_type = mcolor_t;
   using branch_t = std::pair<mcolor_t, mcolor_t>;
+  using register_t = SimplePathsRegister<mcolor_t, vertex_t>;
   
   void calculate(GraphPack<mcolor_t> & graph_pack) { 
     clear();
@@ -35,6 +38,7 @@ private:
     multiedges_count.clear();
     irrer_multiedges_count.clear();
     simple_multiedges_count.clear();
+    simple_path_lengths.clear();
     simple_cycle_count.clear();
     special_cycle_count.clear();
     complement_indel_stats.clear();
@@ -54,6 +58,7 @@ public:
   std::map<branch_t, size_t> multiedges_count; 	// multiedges_count[S] = # multiedges of multicolor S.
 	std::map<mcolor_t, size_t> irrer_multiedges_count;	// ME[S] = # irregular multiedges of multicolor S.
  	std::map<mcolor_t, size_t> simple_multiedges_count;	// ME[S] = # simple multiedges of multicolor S.
+  std::map<branch_t, size_t> simple_path_lengths;
 
   //cycles
   std::map<mcolor_t, size_t> simple_cycle_count; // cycle of simple vertices
@@ -130,6 +135,7 @@ void GraphPack<mcolor_t>::Statistics::count_connected_components(GraphPack<mcolo
 template<class mcolor_t>
 void GraphPack<mcolor_t>::Statistics::count_rearrangement_statistics(GraphPack<mcolor_t> & graph_pack) {
   std::unordered_set<vertex_t> processed;
+  register_t simple_paths_register;
 
   for (vertex_t const & x : graph_pack.graph) {
     mularcs_t const & current = graph_pack.get_all_adjacent_multiedges(x); 
@@ -143,8 +149,12 @@ void GraphPack<mcolor_t>::Statistics::count_rearrangement_statistics(GraphPack<m
     	// count two times, because same underected edge (u, v) and (v, u)
       ++multiedges_count[arc.second.pack(graph_pack.multicolors.get_complement_color(arc.second))];
 
-      if ((processed.count(x) != 0) && (processed.count(arc.first) != 0)) {  
-				++simple_multiedges_count[arc.second]; //if two vertices have degree = 2 - is simple edges
+      if ((processed.count(x) != 0) && (processed.count(arc.first) != 0)) {
+        // if two vertices have degree = 2 - is simple edges
+				++simple_multiedges_count[arc.second];
+
+        auto color_pair = std::make_pair(arc.second, graph_pack.multicolors.get_complement_color(arc.second));
+        simple_paths_register.new_vertex_pair(x, arc.first, color_pair);
       } 
 
       if (arc.first == Infty) { 
@@ -154,6 +164,9 @@ void GraphPack<mcolor_t>::Statistics::count_rearrangement_statistics(GraphPack<m
       } 
     }
   }
+
+  auto lengths_inserter = std::inserter(simple_path_lengths, simple_path_lengths.end());
+  simple_paths_register.get_scored_color_pairs(lengths_inserter);
 
   // count lonely vertices (short paths) 
   for (vertex_t const & v : processed) {

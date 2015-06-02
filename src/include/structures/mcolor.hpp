@@ -50,7 +50,7 @@ namespace structure {
     }
 
 
-    inline void insert(size_t i) {
+    void insert(size_t i) {
       if (main_color.find(i) == main_color.end()) {
         main_color.insert(std::make_pair(i, 1));
       } else {
@@ -58,11 +58,11 @@ namespace structure {
       }
     }
 
-    inline void clear() {
+    void clear() {
       main_color.clear();
     }
 
-    inline bool is_one_to_one_match() const {
+    bool is_one_to_one_match() const {
       for (auto const& col : main_color) {
         if (col.second != 1) {
           return false;
@@ -71,7 +71,7 @@ namespace structure {
       return true;
     }
 
-    inline size_t how_much_includes(Mcolor const& second) const {
+    size_t how_much_includes(Mcolor const& second) const {
       size_t answer = 0;
       Mcolor current = *this;
       while (current.includes(second)) {
@@ -84,7 +84,7 @@ namespace structure {
     /**
     * Tells if this color is a superset if second one
     */
-    inline bool includes(Mcolor const& second) const {
+    bool includes(Mcolor const& second) const {
       auto first1 = main_color.cbegin();
       auto first2 = second.cbegin();
 
@@ -108,20 +108,24 @@ namespace structure {
       return true;
     }
 
-    inline bool defined(size_t i) const {
+    bool defined(size_t i) const {
       return (main_color.count(i) != 0);
     }
 
-    inline bool empty() const {
+    bool empty() const {
       return main_color.empty();
     }
 
-    inline size_t size() const {
+    size_t size() const {
       size_t size = 0;
       for (auto const& col : main_color) {
         size += col.second;
       }
       return size;
+    }
+
+    static std::pair<Mcolor, Mcolor> pack(std::pair<Mcolor, Mcolor> colors) {
+      return colors.first.pack(colors.second);
     }
 
     std::pair<Mcolor, Mcolor> pack(Mcolor const& right) const {

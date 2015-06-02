@@ -28,10 +28,6 @@ namespace algo {
       std::copy(simple_path_lengths.begin(),
                 simple_path_lengths.end(),
                 std::back_inserter(StatisticsProducer<graph_pack_t>::m_result_statistics));
-      std::for_each(StatisticsProducer<graph_pack_t>::m_result_statistics.begin(),
-                    StatisticsProducer<graph_pack_t>::m_result_statistics.end(), [](statistic_t& statistic) {
-            return std::make_pair(statistic.first, statistic.second / 2);
-          });
     }
   };
 }

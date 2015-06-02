@@ -165,8 +165,10 @@ void GraphPack<mcolor_t>::Statistics::count_rearrangement_statistics(GraphPack<m
     }
   }
 
-  auto lengths_inserter = std::inserter(simple_path_lengths, simple_path_lengths.end());
-  simple_paths_register.get_scored_color_pairs(lengths_inserter);
+  for (auto& path: simple_paths_register.simple_paths()) {
+    auto color_pair = mcolor_t::pack(path.colors());
+    simple_path_lengths[color_pair] += path.length() / 2;
+  }
 
   // count lonely vertices (short paths) 
   for (vertex_t const & v : processed) {

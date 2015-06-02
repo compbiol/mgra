@@ -96,14 +96,8 @@ struct SimplePathsRegister {
     }
   }
 
-  template <class inserter_t>
-  void get_scored_color_pairs(inserter_t& out) {
-    std::transform(m_simple_paths.begin(),
-    m_simple_paths.end(), out, [](SimplePath const& path) {
-          return std::make_pair(path.colors(), path.length());
-        });
-    m_ends.clear();
-    m_simple_paths.clear();
+  std::vector<SimplePath> simple_paths() {
+    return m_simple_paths;
   }
 private:
   std::unordered_map<vertex_t, size_t> m_ends;

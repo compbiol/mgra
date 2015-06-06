@@ -7,11 +7,11 @@
 
 
 template <class mcolor_t, class vertex_t>
-struct SimplePathsRegister {
+struct AlternatingStructuresRegister {
   using color_pair_t = std::pair<mcolor_t, mcolor_t>;
   using scored_color_pairs_t = std::vector<std::pair<color_pair_t, size_t>>;
 
-  struct SimplePath {
+  struct AlternatingStructure {
     struct ExtensibleVertex {
       ExtensibleVertex(vertex_t vertex, mcolor_t outcoming_edge_color) :
           m_vertex(vertex), m_outcoming_edge_color(outcoming_edge_color) { }
@@ -34,11 +34,12 @@ struct SimplePathsRegister {
       mcolor_t m_outcoming_edge_color;
     };
 
-    SimplePath(vertex_t left, vertex_t right, color_pair_t& colors) :
+    AlternatingStructure(vertex_t left, vertex_t right, color_pair_t& colors) :
         m_colors(colors),
         m_length(1),
         m_left(left, m_colors.second),
-        m_right(right, m_colors.second) {
+        m_right(right, m_colors.second),
+        m_is_cycle(false) {
     }
 
     void extend(vertex_t old_vertex,
@@ -60,6 +61,10 @@ struct SimplePathsRegister {
       return m_length;
     }
 
+    bool is_cycle() const {
+      return m_is_cycle;
+    }
+
   private:
     mcolor_t& alternate(mcolor_t color) {
       if (color == m_colors.first) {
@@ -72,6 +77,7 @@ struct SimplePathsRegister {
     size_t m_length;
     ExtensibleVertex m_left;
     ExtensibleVertex m_right;
+    bool m_is_cycle;
   };
 
   void new_vertex_pair(vertex_t left, vertex_t right, color_pair_t& colors) {
@@ -83,25 +89,26 @@ struct SimplePathsRegister {
     }
 
     if (left_iter == m_ends.end() && right_iter == m_ends.end()) {
-      m_ends[left] = m_simple_paths.size();
-      m_ends[right] = m_simple_paths.size();
-      m_simple_paths.push_back(SimplePath(left, right, colors));
+      m_ends[left] = m_alternating_structures.size();
+      m_ends[right] = m_alternating_structures.size();
+      m_alternating_structures.push_back(AlternatingStructure(left, right, colors));
     } else {
       auto found_end = left_iter == m_ends.end() ? right_iter : left_iter;
       auto new_end = found_end->first == left ? right : left;
       const auto path_index = found_end->second;
-      m_simple_paths[path_index].extend(found_end->first, new_end, colors.first);
+      m_alternating_structures[path_index].extend(found_end->first, new_end, colors.first);
       m_ends.erase(found_end);
       m_ends[new_end] = path_index;
     }
   }
 
-  std::vector<SimplePath> simple_paths() {
-    return m_simple_paths;
+  std::vector<AlternatingStructure> alternating_structures() {
+    return m_alternating_structures;
   }
+
 private:
   std::unordered_map<vertex_t, size_t> m_ends;
-  std::vector<SimplePath> m_simple_paths;
+  std::vector<AlternatingStructure> m_alternating_structures;
 };
 
 #endif //MGRA_SIMPLE_PATHS_REGISTER_HPP

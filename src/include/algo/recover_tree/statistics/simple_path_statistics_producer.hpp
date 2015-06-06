@@ -25,8 +25,24 @@ namespace algo {
   protected:
     void populate_result() {
       auto& simple_path_lengths = StatisticsProducer<graph_pack_t>::m_graph_pack.stats.simple_path_lengths;
-      std::copy(simple_path_lengths.begin(),
-                simple_path_lengths.end(),
+
+      std::map<branch_t, size_t> intermediate_results(simple_path_lengths.begin(),
+                                                      simple_path_lengths.end());
+
+      auto complete_color = cfg::get().complete_color();
+
+      for (auto const& collection: {StatisticsProducer<graph_pack_t>::m_graph_pack.stats.bag_count,
+                                    StatisticsProducer<graph_pack_t>::m_graph_pack.stats.cylinder_count}) {
+        std::for_each(std::begin(collection),
+                      std::end(collection),
+                      [&complete_color, &intermediate_results](std::pair<mcolor_t, size_t> const& multiedge) {
+                        auto branch = multiedge.first.packed_compliment(complete_color);
+                        intermediate_results[branch] += multiedge.second;
+                      });
+      }
+
+      std::copy(intermediate_results.begin(),
+                intermediate_results.end(),
                 std::back_inserter(StatisticsProducer<graph_pack_t>::m_result_statistics));
     }
   };

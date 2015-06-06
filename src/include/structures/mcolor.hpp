@@ -17,6 +17,7 @@ namespace structure {
     using color_pair_t = std::pair<size_t, size_t>;
     using citer = map_t::const_iterator;
     using iter = map_t::iterator;
+    using branch_t = std::pair<Mcolor, Mcolor>;
     using color_vector_t = std::vector<Mcolor>;
 
     Mcolor() {
@@ -38,6 +39,14 @@ namespace structure {
           set_intersection(first, second);
           break;
       }
+    }
+
+    static Mcolor color_union(color_vector_t const& colors) {
+      Mcolor result_color;
+      for (auto& color: colors) {
+        result_color.add_union(color);
+      }
+      return result_color;
     }
 
     color_vector_t break_into_parts() const {
@@ -82,7 +91,7 @@ namespace structure {
     }
 
     /**
-    * Tells if this color is a superset if second one
+    * Tells if this color is a superset of a second one
     */
     bool includes(Mcolor const& second) const {
       auto first1 = main_color.cbegin();
@@ -124,18 +133,18 @@ namespace structure {
       return size;
     }
 
-    static std::pair<Mcolor, Mcolor> pack(std::pair<Mcolor, Mcolor> colors) {
+    static branch_t pack(branch_t const& colors) {
       return colors.first.pack(colors.second);
     }
 
-    std::pair<Mcolor, Mcolor> pack(Mcolor const& right) const {
+    branch_t pack(Mcolor const& right) const {
       return std::make_pair(std::max(*this, right), std::min(*this, right));
     };
 
     /**
     * Gets a compliment color, given a superset and then packs it so, the first pair color is larger
     */
-    std::pair<Mcolor, Mcolor> packed_compliment(Mcolor const& supercolor) const {
+    branch_t packed_compliment(Mcolor const& supercolor) const {
       assert(supercolor.includes(*this));
       Mcolor complement(supercolor, *this, Difference);
       return pack(complement);
@@ -199,6 +208,32 @@ namespace structure {
 
       for (; first1 != first.cend(); ++first1, ++result) {
         *result = *first1;
+      }
+    }
+
+    void add_union(Mcolor const& color) {
+      auto this_iter = color.cbegin();
+      auto color_iter = color.cbegin();
+      while (true) {
+        if (color_iter == color.cend()) {
+          break;
+        }
+
+        if (this_iter == main_color.cend()) {
+          while (color_iter != color.cend()) {
+            main_color.insert(*this_iter++);
+          }
+        }
+
+        if (this_iter->first == color_iter->first) {
+          main_color[this_iter->first] += color_iter->second;
+          ++this_iter;
+          ++color_iter;
+        } else if (this_iter->first > color_iter->first) {
+          main_color.insert(*color_iter++);
+        } else if (this_iter->first < color_iter->first) {
+          ++this_iter;
+        }
       }
     }
 

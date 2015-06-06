@@ -24,10 +24,15 @@ namespace algo {
 
   protected:
     void populate_result() {
-      auto& simple_path_lengths = StatisticsProducer<graph_pack_t>::m_graph_pack.stats.simple_path_lengths;
+      std::map<branch_t, size_t> intermediate_results;
 
-      std::map<branch_t, size_t> intermediate_results(simple_path_lengths.begin(),
-                                                      simple_path_lengths.end());
+      for (statistic_t path_statistic: StatisticsProducer<graph_pack_t>::m_graph_pack.stats.simple_paths) {
+        intermediate_results[path_statistic.first] = path_statistic.second / 2;
+      }
+
+      for (statistic_t cycle_statistic: StatisticsProducer<graph_pack_t>::m_graph_pack.stats.simple_cycles) {
+        intermediate_results[cycle_statistic.first] = cycle_statistic.second / 2 - 1;
+      }
 
       auto complete_color = cfg::get().complete_color();
 

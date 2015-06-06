@@ -1,15 +1,16 @@
 #ifndef STATISTICS_HPP
 #define STATISTICS_HPP
 
-#include "alternating_structures_register.hpp"
+#include <stack>
+#include <structures/alternating_structure.hpp>
 
 template <class mcolor_t>
 struct GraphPack<mcolor_t>::Statistics {
   using mcolor_type = mcolor_t;
   using branch_t = std::pair<mcolor_t, mcolor_t>;
-  using register_t = AlternatingStructuresRegister<mcolor_t, vertex_t>;
+  using alternating_structure_t = structure::AlternatingStructure<vertex_t, GraphPack<mcolor_t>>;
   // Alternating structure is two alternating colors + length
-  using alternating_structure_t = std::pair<branch_t, size_t>;
+  using alternating_structure_info_t = std::pair<branch_t, size_t>;
 
   void calculate(GraphPack<mcolor_t>& graph_pack) {
     clear();
@@ -58,7 +59,6 @@ private:
     multiedges_count.clear();
     irrer_multiedges_count.clear();
     simple_multiedges_count.clear();
-    simple_path_lengths.clear();
     simple_cycle_count.clear();
     special_cycle_count.clear();
     complement_indel_stats.clear();
@@ -83,7 +83,6 @@ public:
   std::map<branch_t, size_t> multiedges_count;  // multiedges_count[S] = # multiedges of multicolor S.
   std::map<mcolor_t, size_t> irrer_multiedges_count;  // ME[S] = # irregular multiedges of multicolor S.
   std::map<mcolor_t, size_t> simple_multiedges_count;  // ME[S] = # simple multiedges of multicolor S.
-  std::map<branch_t, size_t> simple_path_lengths;
 
   //cycles
   std::map<mcolor_t, size_t> simple_cycle_count; // cycle of simple vertices
@@ -92,13 +91,13 @@ public:
   //indels
   std::vector<std::pair<std::pair<mcolor_t, mcolor_t>, size_t> > complement_indel_stats;
 
-  //patterns
+  // patterns
   std::map<mcolor_t, size_t> bag_count;
   std::map<mcolor_t, size_t> cylinder_count;
 
-  //alternating simple structures
-  std::vector<alternating_structure_t> simple_paths;
-  std::vector<alternating_structure_t> simple_cycles;
+  // alternating simple structures
+  std::vector<alternating_structure_info_t> simple_paths;
+  std::vector<alternating_structure_info_t> simple_cycles;
 
   //history statistics 
   std::map<mcolor_t, size_t> number_twobreaks;
@@ -231,8 +230,9 @@ void GraphPack<mcolor_t>::Statistics::count_cycles_statistics(GraphPack<mcolor_t
 
     do {
       processed.insert(current);
-
-      if (!graph_pack.is_simple_vertex(current)) break;
+      if (!graph_pack.is_simple_vertex(current)) {
+        break;
+      }
 
       mularcs_t const& mularcs_y = graph_pack.get_all_adjacent_multiedges(current);
 
@@ -394,32 +394,73 @@ void GraphPack<mcolor_t>::Statistics::count_cylinder_patterns(GraphPack<mcolor_t
 
 template <class mcolor_t>
 void GraphPack<mcolor_t>::Statistics::count_alternating_structures(GraphPack<mcolor_t>& graph_pack) {
-  std::cout << graph_pack.stats.simple_cycles.size();
-  register_t alternating_structures_register;
+  using alternating_structure_t = GraphPack<mcolor_t>::Statistics::alternating_structure_t;
 
-  for (vertex_t const& x : graph_pack.graph) {
-    mularcs_t const& current = graph_pack.get_all_adjacent_multiedges(x);
+  std::set<vertex_t> visited;
 
-    if (graph_pack.is_simple_vertex(x)) {  //we define simple vertices as a regular vertex of multidegree 2.
-      simple_vertices.insert(x);
-      ++simple_vertices_count[std::min(current.cbegin()->second, current.crbegin()->second)];
+  std::vector<alternating_structure_t> alternating_structures;
+  for (auto const& start_vertex : simple_vertices) {
+    if (visited.count(start_vertex) != 0) {
+      continue;
     }
 
-    for (arc_t const& arc : current) {
-
-      if ((simple_vertices.count(x) != 0) && (simple_vertices.count(arc.first) != 0)) {
-        // if two vertices have degree = 2 - is simple edges
-        ++simple_multiedges_count[arc.second];
-
-        auto color_pair = std::make_pair(arc.second, graph_pack.multicolors.get_complement_color(arc.second));
-        alternating_structures_register.new_vertex_pair(x, arc.first, color_pair);
+    std::stack<std::pair<vertex_t, bool>> vertices_to_visit;
+    bool add_to_right = true;
+    alternating_structure_t alternating_structure(start_vertex);
+    // We add simple neighbours
+    for (auto const& edge: graph_pack.get_all_adjacent_multiedges(start_vertex)) {
+      if (simple_vertices.count(edge.first) != 0) {
+        vertices_to_visit.push(std::make_pair(edge.first, add_to_right));
+        add_to_right = !add_to_right;
       }
     }
-  }
 
-  for (auto& structure: alternating_structures_register.alternating_structures()) {
-    auto color_pair = mcolor_t::pack(structure.colors());
-    simple_path_lengths[color_pair] += structure.length() / 2;
+    while (!vertices_to_visit.empty()) {
+      auto vertex_pair = vertices_to_visit.top();
+      vertices_to_visit.pop();
+      auto current_vertex = vertex_pair.first;
+      auto add_to_right = vertex_pair.second;
+      if (!add_to_right && visited.count(current_vertex) != 0) {
+        // We try to visit unvisited vertex, but it has already been visited
+        // so there is a cycle
+        alternating_structure.promote_to_cycle();
+        break;
+      }
+
+      if (add_to_right) {
+        alternating_structure.add_to_right(current_vertex);
+      } else {
+        alternating_structure.add_to_left(current_vertex);
+      }
+
+      visited.insert(current_vertex);
+      for (auto const& next_edge: graph_pack.get_all_adjacent_multiedges(current_vertex)) {
+        auto next_vertex = next_edge.first;
+        if (visited.count(next_vertex) != 0 || simple_vertices.count(next_vertex) == 0) {
+          // Not simple, or already visited
+          continue;
+        }
+        vertices_to_visit.push(std::make_pair(next_vertex, add_to_right));
+      }
+    }
+
+    alternating_structures.push_back(alternating_structure);
+  }
+  for (auto& alternating_structure: alternating_structures) {
+    if (!alternating_structure.is_color_alternating(graph_pack)) {
+      continue;
+    }
+    if (alternating_structure.is_cycle()) {
+      simple_cycles.push_back(alternating_structure.structure_digest());
+      for (int i = 0; i < 1; ++i) {
+        std::cout << "BOOM" << std::endl;
+      }
+    } else {
+      simple_paths.push_back(alternating_structure.structure_digest());
+      for (int i = 0; i < 1; ++i) {
+        std::cout << "BAM" << std::endl;
+      }
+    }
   }
 }
 

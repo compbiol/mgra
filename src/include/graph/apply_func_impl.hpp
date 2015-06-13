@@ -93,11 +93,7 @@ void GraphPack<mcolor_t>::apply(insdel_t const & insdel, bool record) {
     graph.add_edge(color.first, insdel.get_edge().first, insdel.get_edge().second); 
   }
 
-  if (insdel.is_insertion()) {
-    prosthetic_chromosomes.insert(insdel.get_edge().first, insdel.get_edge().second);
-  } else { 
-    prosthetic_chromosomes.insert(insdel.get_edge().first, insdel.get_edge().second);
-  }   
+  prosthetic_chromosomes.insert(insdel.get_edge().first, insdel.get_edge().second);   
 }
 
 template<class mcolor_t>

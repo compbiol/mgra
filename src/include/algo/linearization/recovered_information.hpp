@@ -1,7 +1,8 @@
 #ifndef RECOVERED_INFORMATION_HPP
 #define RECOVERED_INFORMATION_HPP
 
-#include "algo/linearization/Linearizator.hpp"
+#include "algo/linearization/utils.hpp"
+#include "algo/linearization/general_linearize.hpp"
 
 namespace algo { 
 
@@ -23,9 +24,9 @@ struct RecoveredInformation {
     std::map<std::pair<mcolor_t, mcolor_t>, transform_t> transformations;
   };
 
-  RecoveredInformation(graph_pack_t const & gp)
+  explicit RecoveredInformation(graph_pack_t const & gp)
   : graph_pack(gp)
-  , linearizator(gp)
+  , linearize_algo(gp) //, nullptr, nullptr)
   {
     for (auto const & tree : cfg::get().phylotrees) {
       init_parent_colors(tree.get_root()); 
@@ -46,7 +47,7 @@ struct RecoveredInformation {
   /**
    *
    */
-  void init_linearizate_results();
+  void init_linearize_results();
 
   /**
    *
@@ -60,7 +61,7 @@ struct RecoveredInformation {
     AncestorInformation ret; 
 
     for (auto const & local_graph : graphs) {
-      ret.genomes.push_back(linearizator.get_genome(cfg::get().mcolor_to_name(local_graph.first), local_graph.second)); 
+      ret.genomes.push_back(linearize::get_genome(graph_pack, cfg::get().mcolor_to_name(local_graph.first), local_graph.second)); 
     }
     
     for (auto const & elem : transformations) { 
@@ -74,12 +75,12 @@ struct RecoveredInformation {
 private: 
   using tree_t = typename structure::BinaryTree<mcolor_t>; 
   using node_t = typename tree_t::Node; 
-  void walk_and_linearizeate(std::unique_ptr<node_t> const & current);
+  void walk_and_linearize(std::unique_ptr<node_t> const & current);
   void init_parent_colors(std::unique_ptr<node_t> const & current); 
-    
+
 private: 
   graph_pack_t const & graph_pack;
-  Linearizator<graph_pack_t> linearizator;
+  linearize::GeneralLinearize<graph_pack_t> linearize_algo;
 
   std::map<mcolor_t, partgraph_t> graphs;
   std::map<mcolor_t, mcolor_t> parent_colors; 
@@ -112,15 +113,15 @@ void RecoveredInformation<graph_pack_t>::init_raw_results() {
 }
 
 template<class graph_pack_t>
-void RecoveredInformation<graph_pack_t>::init_linearizate_results() { 
+void RecoveredInformation<graph_pack_t>::init_linearize_results() { 
   INFO("Get history from process graph")
   init_raw_results();
-  
-  INFO("Start walk on tree and run algorithm for linearizeate")
+
+  INFO("Start walk on tree and run algorithm for linearize")
   for (auto const & tree : cfg::get().phylotrees) {
-    walk_and_linearizeate(tree.get_root()); 
+    walk_and_linearize(tree.get_root()); 
   }
-  INFO("End walk on tree and run algorithm for linearizeate")
+  INFO("End walk on tree and run algorithm for linearize")
   
   for (auto const & tree : cfg::get().phylotrees) {
     if (tree.is_phylogenetic_root()) { 
@@ -141,27 +142,28 @@ void RecoveredInformation<graph_pack_t>::init_target_results() {
 }
 
 template<class graph_pack_t>
-void RecoveredInformation<graph_pack_t>::walk_and_linearizeate(std::unique_ptr<node_t> const & current) {
+void RecoveredInformation<graph_pack_t>::walk_and_linearize(std::unique_ptr<node_t> const & current) {
+  using namespace linearize;
   auto const & left = current->get_left_child(); 
   auto const & right = current->get_right_child(); 
 
   if (left) { 
-    walk_and_linearizeate(left); 
+    walk_and_linearize(left); 
   }
 
   if (right) { 
-    walk_and_linearizeate(right); 
+    walk_and_linearize(right); 
   }
 
   if (left && right && graphs.find(current->get_data()) != graphs.end()) {     
-    size_t count_left = linearizator.count_circular_chromosome(graphs[left->get_data()]); 
-    size_t central = linearizator.count_circular_chromosome(graphs[current->get_data()]); 
-    size_t count_right = linearizator.count_circular_chromosome(graphs[right->get_data()]); 
+    size_t count_left = count_circular_chromosome(graph_pack, graphs[left->get_data()]); 
+    size_t central = count_circular_chromosome(graph_pack, graphs[current->get_data()]); 
+    size_t count_right = count_circular_chromosome(graph_pack, graphs[right->get_data()]); 
 
     if (count_left == 0 && central != 0 && count_right == 0) { 
-      std::pair<transform_t, transform_t> new_history = linearizator.linearizate(graphs[current->get_data()], transformations[left->get_data()], graphs[left->get_data()]); 
+      std::pair<transform_t, transform_t> new_history = linearize_algo.linearize(graphs[current->get_data()], transformations[left->get_data()], graphs[left->get_data()]); 
 
-      //Apply linearization twobreaks and modify transformation
+      //Apply linearizes twobreaks and modify transformation
       for (twobreak_t const & twobreak : new_history.first) { 
         transformations[current->get_data()].push_back(twobreak);
         twobreak.apply_single(graphs[current->get_data()]); 
@@ -170,30 +172,13 @@ void RecoveredInformation<graph_pack_t>::walk_and_linearizeate(std::unique_ptr<n
       transformations[left->get_data()] = new_history.second;
 
       //Check that all is good
-      //Check left
-      assert(linearizator.count_circular_chromosome(graphs[current->get_data()]) == 0);
-      partgraph_t traverse_graph = graphs[current->get_data()]; 
-      for (twobreak_t const & twobreak : transformations[left->get_data()]) { 
-        twobreak.apply_single(traverse_graph);
-      } 
-      assert(traverse_graph == graphs[left->get_data()]);
-
-      //Check right
-      traverse_graph = graphs[current->get_data()]; 
-      for (twobreak_t const & twobreak : transformations[right->get_data()]) { 
-        twobreak.apply_single(traverse_graph);
-      } 
-      assert(traverse_graph == graphs[right->get_data()]);
-
-      //Check parent
+      assert(count_circular_chromosome(graph_pack, graphs[current->get_data()]) == count_circular_chromosome(graph_pack, graphs[left->get_data()]));
+      assert(apply_transformation(graphs[current->get_data()], transformations[left->get_data()]) == graphs[left->get_data()]); //Check left
+      assert(apply_transformation(graphs[current->get_data()], transformations[right->get_data()]) == graphs[right->get_data()]); //Check right
       if (current->get_parent() != nullptr) {  
         auto iter = graphs.find(current->get_parent()->get_data());
         if (iter != graphs.end()) {  
-          traverse_graph = iter->second; 
-          for (twobreak_t const & twobreak : transformations[current->get_data()]) { 
-            twobreak.apply_single(traverse_graph);
-          } 
-          assert(traverse_graph == graphs[current->get_data()]);
+          assert(apply_transformation(iter->second, transformations[current->get_data()]) == graphs[current->get_data()]); //Check parrent
         }
       } 
     }

@@ -146,6 +146,7 @@ bool StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
   INFO("Start to replace cloning to 2-breaks")
   graph_pack.history.change_history();
   INFO("Finish to replace cloning to 2-breaks")
+
   return true;
 }
 

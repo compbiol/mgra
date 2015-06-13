@@ -17,7 +17,7 @@
 #include "algo/main/BlossomVWrapper.hpp"
 #include "algo/main/BruteForce.hpp"
 
-#include "algo/linearization/RecoveredInformation.hpp"
+#include "algo/linearization/recovered_information.hpp"
 
 namespace algo { 
 
@@ -77,7 +77,7 @@ boost::optional<typename algo::RecoveredInformation<graph_pack_t>::AncestorInfor
     if (!cfg::get().target_mcolor.empty()) { 
       recover_info.init_target_results();
     } else if (cfg::get().is_linearization_ancestors) { 
-      recover_info.init_linearizate_results();
+      recover_info.init_linearize_results();
     } else { 
       recover_info.init_raw_results();
     }

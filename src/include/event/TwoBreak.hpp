@@ -8,9 +8,9 @@ struct TwoBreak {
   using citer = typename mcolor_t::citer; 
   using edge_t = std::pair<vertex_t, vertex_t>;
   using partgraph_t = utility::sym_multihashmap<vertex_t>;
-  
-  TwoBreak() { 
-  } 
+  enum dependence_type {independent, weakly_dependent, strong_dependent};
+
+  TwoBreak() = default;
   	
   TwoBreak(edge_t const & a1, edge_t const & a2, mcolor_t const & multicolor)
   : m_multicolor(multicolor) 
@@ -68,9 +68,9 @@ struct TwoBreak {
   /*
    * This function tested two two-break on depeneds without multicolor two-break.
    * If you want to test on depeneds with multicolor, see on function is_independent.  
-   * Return: 0 - indepented, 1 - weakly dependent, 2 - strong dependent
+   * Return: indepented, weakly dependent, strong dependent
    */
-  size_t is_dependent(TwoBreak const & tested) const;
+  dependence_type is_dependent(TwoBreak const & tested) const;
  
   /*
    * This function tested two two-break on depeneds with multicolor two-break.
@@ -146,7 +146,7 @@ bool event::TwoBreak<mcolor_t>::is_independent(TwoBreak const & tested) const {
 }
 
 template<class mcolor_t>
-size_t event::TwoBreak<mcolor_t>::is_dependent(TwoBreak const & tested) const { 
+typename event::TwoBreak<mcolor_t>::dependence_type event::TwoBreak<mcolor_t>::is_dependent(TwoBreak const & tested) const { 
   auto check_lambda = [&] (size_t ind1, size_t ind2, size_t ind3) -> size_t {
     if (tested.m_arcs[ind1] != edge_t(Infty, Infty)) { 
       if (tested.m_arcs[ind1] == std::make_pair(get_vertex(ind2), get_vertex(ind3))) { 
@@ -162,7 +162,17 @@ size_t event::TwoBreak<mcolor_t>::is_dependent(TwoBreak const & tested) const {
   size_t first = check_lambda(0, 0, 2) + check_lambda(1, 1, 3);
   size_t second = check_lambda(0, 1, 3) + check_lambda(1, 0, 2);
   
-  return std::max(first, second);
+  if (std::max(first, second) == 0) { 
+    return independent; 
+  } else if (std::max(first, second) == 1) { 
+    return weakly_dependent;
+  } else if (std::max(first, second) == 2) { 
+    return strong_dependent;
+  } else { 
+    assert(false);
+  }
+
+  return independent;
 }
  
 template<class mcolor_t>

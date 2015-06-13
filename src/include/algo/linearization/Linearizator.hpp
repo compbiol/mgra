@@ -1,5 +1,5 @@
-#ifndef LINEARIZATOR_HPP
-#define LINEARIZATOR_HPP
+#ifndef LINEARIZE_HPP
+#define ABS_LINEARIZE_HPP
 
 #include "algo/linearization/MoverHistory.hpp"
 
@@ -26,19 +26,6 @@ struct Linearizator {
   }
 
   /**
-   * create genome from local graph with specified color and name. 
-   * return genome in structure::Genome class. 
-   */
-  genome_t get_genome(std::string const & name, partgraph_t const & local_graph) const;  
-
-  /**
-   * count number of circular chromosomes from genome by graph with specified color. 
-   * in paper about linearization algorithm this functon corresponding c(.)
-   * return number of cicular chromosomes in local graph (genome). 
-   */
-  size_t count_circular_chromosome(partgraph_t const & local_graph) const;
-
-  /**
    * main procedure for linearization algorithm. See paper for detailed information. 
    * get transformation HISTORY between genome P and genome Q, where c(P) > c(Q). 
    * return pair of transformations T_1, and T_2. 
@@ -54,19 +41,12 @@ private:
   * Split input transformation on deletion transformation -> classical transformation -> insertion transformation. 
   * Return tuple with deletions, two-breaks, insertions operations. 
   */
-  history_t split_history(transform_t transformation) const;
-
   transform_t get_safely_deletions(transform_t & transformation) const;
   transform_t get_safely_insertions(transform_t & transformation) const;
-
 
   transform_t classical_linearization(partgraph_t P, transform_t & transformation, partgraph_t const & Q) const; 
   transform_t deletion_linearization(partgraph_t P, transform_t & transformation, partgraph_t const & Q) const; 
 
-  /**
-  * Function get one chromosome from LOCAL_GRAPH, where X - is vertex which belong our chromosome.
-  */
-  chromosome_t get_chromosome(partgraph_t const & local_graph, vertex_t const & x, std::unordered_set<vertex_t>& processed) const;
   
 private:
   graph_pack_t const & graph_pack;
@@ -154,19 +134,11 @@ typename Linearizator<graph_pack_t>::transform_t Linearizator<graph_pack_t>::get
   return insertions;
 }
 
-
-template<class graph_pack_t>
-typename Linearizator<graph_pack_t>::history_t Linearizator<graph_pack_t>::split_history(transform_t transformation) const {  
-  transform_t deletions = get_safely_deletions(transformation);
-  transform_t insertions = get_safely_insertions(transformation);
-  return history_t(deletions, transformation, insertions);
-}
-
-
 template<class graph_pack_t>
 typename Linearizator<graph_pack_t>::change_history_t Linearizator<graph_pack_t>::linearizate(partgraph_t const & P, transform_t const & history, partgraph_t const & Q) const { 
-  transform_t del_transform; transform_t ins_transform; transform_t basic_transform; 
-  std::tie(del_transform, basic_transform, ins_transform) = split_history(history);
+  transform_t basic_transform = history;
+  transform_t del_transform = get_safely_deletions(basic_transform);
+  transform_t ins_transform = get_safely_insertions(basic_transform); 
 
   //calculate P'
   partgraph_t PP = P; 

@@ -53,6 +53,8 @@ struct AbsStage {
 
   virtual bool run(graph_pack_t & graph) = 0;
 
+  virtual ~AbsStage() { 
+  }
 protected:
 	StageManager<graph_pack_t>* m_parent;
 	friend struct StageManager<graph_pack_t>;

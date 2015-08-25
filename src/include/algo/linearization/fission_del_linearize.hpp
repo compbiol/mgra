@@ -22,7 +22,7 @@ struct IndelLinearize : public algo::linearize::AbsLinearize<graph_pack_t> {
   {
   }
 
-  change_history_t linearize(partgraph_t P, transform_t const & transform, partgraph_t const & Q) const override; 
+  change_history_t linearize(partgraph_t P, transform_t & transform, partgraph_t const & Q) const override; 
 
   void move_insertion_to_begin(transform_t & transformation, citer_transform first, citer_transform second) const {          
   	this->swap_two_twobreaks(transformation, first, second);
@@ -35,66 +35,98 @@ struct IndelLinearize : public algo::linearize::AbsLinearize<graph_pack_t> {
   void move_deletion_to_begin(transform_t & transformation, citer_transform first, citer_transform second) const;
 
   void move_insertion_to_end(transform_t & transformation, citer_transform first, citer_transform second) const; 
+
+private: 
+  std::pair<citer_transform, citer_transform> find_range(citer_transform start, partgraph_t current, citer_transform finish) const {
+    size_t c_p = count_circular_chromosome(this->graph_pack, current); size_t c_q = c_p;
+
+    std::pair<citer_transform, citer_transform> range(start, start);
+    for (; range.second != finish && (c_p <= c_q); ++range.second) { 
+      range.second->apply_single(current);
+      c_q = count_circular_chromosome(this->graph_pack, current);
+    } 
+
+    return range;
+  } 
+
 }; 
 
 
 template<class graph_pack_t>
-typename IndelLinearize<graph_pack_t>::change_history_t IndelLinearize<graph_pack_t>::linearize(partgraph_t P, transform_t const & transform, partgraph_t const & Q) const { 
-	transform_t replace_transformation; transform_t transformation = transform; 
+typename ClassicalLinearize<graph_pack_t>::citer_transform ClassicalLinearize<graph_pack_t>::one_step_induction(citer_transform start, partgraph_t current, citer_transform finish) const {  
+  auto range = find_range(start, current, finish);
+  auto last_twobreak = range.second;
 
+  if (finish != range.second) { 
+
+    if (range.second != start) { 
+      for (auto iter = (--range.second); iter != start; --iter) { 
+        if (iter->is_dependent(*last_twobeak) != twobreak_t::independent) {
+         last_twobreak = iter;
+        } 
+      }  
+
+      if (start->is_dependent(*last_twobeak) != twobreak_t::independent) {
+        last_twobreak = start;
+      } 
+    }
+
+    twobreak_t fission(last_twobreak->get_vertex(0), last_twobreak->get_vertex(1), Infty, Infty, last_twobreak->get_mcolor()); 
+    twobreak_t fusion(last_twobreak->get_vertex(0), Infty, last_twobreak->get_vertex(1), Infty, last_twobreak->get_mcolor());
+  } 
+
+} 
+
+template<class graph_pack_t>
+typename IndelLinearize<graph_pack_t>::change_history_t IndelLinearize<graph_pack_t>::linearize(partgraph_t P, transform_t & transform, partgraph_t const & Q) const {
+  auto start = transform.begin(); auto finish = transform.end();
+
+  size_t diff_chromosomes = count_circular_chromosome(this->graph_pack, P) - count_circular_chromosome(this->graph_pack, Q);
+  for (size_t i = 0; i < diff_chromosomes; ++i) { 
+    std::cerr << "Start step induction " << count_circular_chromosome(this->graph_pack, P) << std::endl;     
+    auto spliters = one_step_induction(start, P, finish);
+    transform.push_front(spliters.second); transform.push_front(spliters.first);
+    start = transform.begin(); finish = transform.end();
+    std::cerr << "Finish step induction " << count_circular_chromosome(this->graph_pack, P) << std::endl; 
+  }
+
+} 
+
+template<class graph_pack_t>
+typename IndelLinearize<graph_pack_t>::change_history_t IndelLinearize<graph_pack_t>::linearize(partgraph_t P, transform_t & transform, partgraph_t const & Q) const { 
+	transform_t replace_transformation; transform_t transformation = transform; 
   size_t c_P = count_circular_chromosome(this->graph_pack, P); 
   size_t c_Q = count_circular_chromosome(this->graph_pack, Q);
+  twobreak_t last_twobreak; 
 
   while (c_P != c_Q) { 
-  	bool changed = false; 
     partgraph_t current = P;
-    transform_t removed_chromosome; 
 
     //Find first twobreak is decrease number of circular chromosomes
-    for (auto first_j = transformation.begin(); !changed && first_j != transformation.end();) {     
+    auto first_j = transformation.begin()
+    size_t c_PP = c_P; 
+    for (; first_j != transformation.end() && (c_P <= c_PP); ++first_j) {     
       first_j->apply_single(current);
       size_t c_PP = count_circular_chromosome(this->graph_pack, current);
-
-      if (c_P > c_PP) {
-        changed = true; 
-        if (first_j == transformation.begin()) { 
-          removed_chromosome.push_back(*first_j); 
-          transformation.pop_front(); 
-        } else {  
-          removed_chromosome.push_back(*first_j); 
-          transformation.erase(first_j++); 
-
-          auto check_dependent_lambda = [&] (twobreak_t const & tested) -> bool { 
-            bool result = false; 
-            for (auto br = removed_chromosome.begin(); !result && br != removed_chromosome.end(); ++br) { 
-              if (br->is_dependent(tested) != 0) { 
-                result = true; 
-              }  
-            }
-            return result;
-          }; 
-
-          for (auto p = (--first_j); p != transformation.begin(); --p) { 
-            if (check_dependent_lambda(*p)) {
-              removed_chromosome.push_front(*p);
-              transformation.erase(p++); 
-            } 
-          }  
-
-          if (check_dependent_lambda(*transformation.begin())) {
-            removed_chromosome.push_front(*transformation.begin());
-            transformation.pop_front(); 
-          }     
-        } 
-      } else { 
-        ++first_j;
-      }
     } 
 
-    if (removed_chromosome.size() == 1) { 
-      removed_chromosome.front().apply_single(P);
-      replace_transformation.push_back(removed_chromosome.front());
-    } else if (!removed_chromosome.empty()) { 
+    if (transformation.end() != first_j) { 
+      last_twobeak = *first_j; 
+
+      if (first_j != transformation.begin()) { 
+        for (auto p = (--first_j); p != transformation.begin(); --p) { 
+          if (p->is_dependent(last_twobeak) != twobreak_t::independent) {
+           last_twobreak = *p;
+          } 
+        }  
+
+        if (transformation.begin()->is_dependent(last_twobeak) != twobreak_t::independent) {
+          last_twobreak = *transformation.begin();
+        } 
+      } 
+    } 
+
+    if (!removed_chromosome.empty()) { 
       twobreak_t temp = removed_chromosome.front(); 
       twobreak_t fission(temp.get_vertex(0), temp.get_vertex(1), Infty, Infty, temp.get_mcolor()); 
       twobreak_t fusion(temp.get_vertex(0), Infty, temp.get_vertex(1), Infty, temp.get_mcolor());

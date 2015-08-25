@@ -27,7 +27,7 @@ struct GeneralLinearize : public algo::linearize::AbsLinearize<graph_pack_t> {
   {
   }
 
-  change_history_t linearize(partgraph_t P, transform_t const & transform, partgraph_t const & Q) const override; 
+  change_history_t linearize(partgraph_t P, transform_t & transform, partgraph_t const & Q) const override; 
   
 private:
 	IndelLinearize<graph_pack_t> deletion_linearize;  
@@ -44,14 +44,13 @@ private:
 }; 
 
 template<class graph_pack_t>
-typename GeneralLinearize<graph_pack_t>::change_history_t GeneralLinearize<graph_pack_t>::linearize(partgraph_t P, transform_t const & transform, partgraph_t const & Q) const { 
+typename GeneralLinearize<graph_pack_t>::change_history_t GeneralLinearize<graph_pack_t>::linearize(partgraph_t P, transform_t & transform, partgraph_t const & Q) const { 
 	using namespace linearize; 
 
   transform_t basic_transform = transform;
  	transform_t del_transform = get_safely_deletions(basic_transform);
   transform_t ins_transform = get_safely_insertions(basic_transform); 
 
-  /*
 	std::cerr << "Deeltion two-breaks" << std::endl;
   for (auto const & twobreak : del_transform) { 
   	std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) 
@@ -69,7 +68,6 @@ typename GeneralLinearize<graph_pack_t>::change_history_t GeneralLinearize<graph
   	std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) 
   	<< " " << twobreak.get_vertex(2) << " " << twobreak.get_vertex(3) << std::endl;   
   }
-  */
     
   //calculate P' and Q'
   partgraph_t PP = apply_transformation(P, del_transform); 

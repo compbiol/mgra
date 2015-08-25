@@ -22,12 +22,24 @@ struct AbsLinearize {
   {
   }  
 
-  virtual change_history_t linearize(partgraph_t P, transform_t const & transform, partgraph_t const & Q) const = 0; 
+  virtual change_history_t linearize(partgraph_t P, transform_t & transform, partgraph_t const & Q) const = 0; 
 
   virtual ~AbsLinearize() { 
   } 
 
 protected: 
+  citer_transform swap_two_twobreaks(citer_transform first, citer_transform second, citer_transform finish, swap_t const & swap_type = first_type) const { 
+    if (first->is_dependent(*second) == twobreak_t::independent) { 
+      swap_independent_two_twobreaks(first, second); 
+    } else if (first->is_dependent(*second) == twobreak_t::weakly_dependent) { 
+      swap_transposition_two_twobreaks(first, second, swap_type);
+    } else if (first->is_dependent(*second) == twobreak_t::strong_dependent) { 
+      finish = swap_strong_dependent_two_twobreaks(first, second, finish);
+    }
+    return finish;
+  }
+
+
   void swap_two_twobreaks(transform_t & transformation, citer_transform first, citer_transform second, swap_t const & swap_type = first_type) const { 
     if (first->is_dependent(*second) == twobreak_t::independent) { 
       swap_independent_two_twobreaks(first, second); 
@@ -64,6 +76,14 @@ protected:
    */
   void swap_second_type_weakly_two_twobreaks(citer_transform first, citer_transform second) const { 
     swap_transposition_two_twobreaks(first, second, second_type);  
+  }
+
+  citer_transform swap_strong_dependent_two_twobreaks(citer_transform first, citer_transform second, citer_transform finish) const { 
+    for (++second; second != finish; ++first, ++second) { 
+      *first =  *second;
+    } 
+    --finish; 
+    return (--finish);
   }
 
   void swap_strong_dependent_two_twobreaks(transform_t & transformation, citer_transform first, citer_transform second) const { 

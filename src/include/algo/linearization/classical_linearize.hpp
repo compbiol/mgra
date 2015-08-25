@@ -23,16 +23,14 @@ struct ClassicalLinearize : public algo::linearize::AbsLinearize<graph_pack_t> {
   {
   }
 
-  change_history_t linearize(partgraph_t P, transform_t const & transform, partgraph_t const & Q) const override; 
+  change_history_t linearize(partgraph_t P, transform_t & transform, partgraph_t const & Q) const override; 
 
 private: 
-	std::pair<citer_transform, citer_transform> find_range(citer_transform const & start, partgraph_t current, citer_transform const & finish) const {
-		size_t c_p = count_circular_chromosome(this->graph_pack, current);
-		size_t c_q = c_p;
-		std::pair<citer_transform, citer_transform> range;
-	
-		range.first = start;
-		for (range.second = start; range.second != finish && (c_p <= c_q); ++range.second) { 
+	std::pair<citer_transform, citer_transform> find_range(citer_transform start, partgraph_t current, citer_transform finish) const {
+		size_t c_p = count_circular_chromosome(this->graph_pack, current); size_t c_q = c_p;
+
+		std::pair<citer_transform, citer_transform> range(start, start);
+		for (; range.second != finish && (c_p <= c_q); ++range.second) { 
 			range.second->apply_single(current);
 			c_q = count_circular_chromosome(this->graph_pack, current);
 		} 
@@ -43,7 +41,7 @@ private:
 	/**
 	 * Start subranges [....][<....][<.....][<.....][.....>]
 	 */
-	std::list<citer_transform> split_range(citer_transform const & start, partgraph_t current, citer_transform const & finish) const {
+	std::list<citer_transform> split_range(citer_transform start, partgraph_t current, citer_transform finish) const {
 		size_t c_q0 = count_circular_chromosome(this->graph_pack, current);	size_t c_q1 = c_q0;
 
 		std::list<citer_transform> start_subranges; 
@@ -58,38 +56,35 @@ private:
 		return start_subranges;
 	} 
 
-	void move_down(partgraph_t current, transform_t & transformation, citer_transform start, citer_transform finish) const { 
+	citer_transform move_down(citer_transform range_start, partgraph_t current, citer_transform range_finish, citer_transform finish) const { 
 		size_t c_q0 = count_circular_chromosome(this->graph_pack, current);	size_t c_q1 = c_q0;
 		partgraph_t P = current;
 
-		for (auto iter = start; iter != finish;) { 
-			c_q0 = c_q1;
+		for (auto iter = range_start; iter != range_finish && iter != finish;) { 
 			iter->apply_single(P);
-			c_q1 = count_circular_chromosome(this->graph_pack, P);
+			c_q0 = c_q1; c_q1 = count_circular_chromosome(this->graph_pack, P);
 
 			if (c_q0 > c_q1) { 
 				auto first = iter; auto second = iter; 
 
-				while (first != start) {
-					second = first; 
-					--first; 
-					this->swap_two_twobreaks(transformation, first, second);
+				while (first != range_start) {
+					second = first; --first; 
+					finish = this->swap_two_twobreaks(first, second, finish);
 				}
 
-				start->apply_single(current);
-				iter = (++start);
+				range_start->apply_single(current);
+				iter = (++range_start);
 				P = current;
 			} else { 
 				++iter;
 			}
 		}
+
+		return finish;
 	}
 
-	citer_transform move_up(partgraph_t Q, transform_t & transformation, citer_transform start, citer_transform finish) const { 
-		auto s = start;
-		auto mem_T = Q;
-
-		auto first = start;	auto second = ++start; auto third = ++start;
+	std::tuple<citer_transform, citer_transform> move_up(citer_transform start_range, partgraph_t Q, citer_transform finish_range, citer_transform finish) const { 
+		auto first = start_range;	auto second = ++start_range; auto third = ++start_range;
 		
 		partgraph_t P = Q;
 		first->apply_single(Q);	second->apply_single(Q);
@@ -98,17 +93,8 @@ private:
 		size_t c_q1 = count_circular_chromosome(this->graph_pack, Q);
 		
 		assert(c_q0 > c_q1);
-		while ((third != finish) && (c_q0 > c_q1)) {
-			this->swap_three_twobreaks(transformation, P, first, second, third);
-			
-			std::cerr << "Interval after swap 3" << std::endl;
-			auto T = mem_T;
-			std::cerr << count_circular_chromosome(this->graph_pack, T); 
-			for (auto it = s; it != finish; ++it) { 
-				it->apply_single(T);
-				std::cerr << "->" << count_circular_chromosome(this->graph_pack, T); 
-			}
-			std::cerr << std::endl;
+		while ((third != finish_range) && (c_q0 > c_q1)) {
+			finish = this->swap_three_twobreaks(P, first, second, third, finish);
 			
 			first->apply_single(P);
 			first = second; second = third; ++third; 
@@ -119,89 +105,70 @@ private:
 			} 
 		}
 
-		return first;
+		return std::make_pair(first, finish);
 	} 
 
-	citer_transform process_range_by_range(partgraph_t current, transform_t & transformation, std::pair<citer_transform, citer_transform> const & range, 
-																std::list<citer_transform> const & small_ranges) const { 
-		auto finish = range.second;
-
+	citer_transform process_range_by_range(citer_transform start_range, partgraph_t current, citer_transform finish_range, citer_transform finish,
+										std::list<citer_transform> const & small_ranges) const { 
+		auto finish_small_range = finish_range;
 		for (auto local_start_range = small_ranges.crbegin(); local_start_range != small_ranges.crend(); ++local_start_range) { 
 			partgraph_t P = current; 
-			for (auto iter = range.first; (iter != range.second) && (iter != *local_start_range); ++iter) { 
+			for (auto iter = start_range; (iter != finish_range) && (iter != *local_start_range); ++iter) { 
 				iter->apply_single(P);
 			} 
-
-			/*std::cerr << "INPUT RANGE" << std::endl; 
-			for (auto it = *local_start_range; it != finish; ++it) { 
-				std::cerr << it->get_vertex(0) << " " << it->get_vertex(1) << " "
-									<< it->get_vertex(2) << " " << it->get_vertex(3) << std::endl;
-			}*/
 
 			std::cerr << "Start new range " << std::endl;			
 			partgraph_t T = P;
 			auto temp = *local_start_range;
 			std::cerr << count_circular_chromosome(this->graph_pack, T); 
-			for (auto it = temp; it != finish; ++it) { 
+			for (auto it = temp; it != finish_small_range; ++it) { 
 				it->apply_single(T);
 				std::cerr << "->" << count_circular_chromosome(this->graph_pack, T); 
 			}
 			std::cerr << std::endl;
 			
 			// move to begin all >
-			auto start = *local_start_range;
-			++start;
+			auto start_small_range = *local_start_range;
 			(*local_start_range)->apply_single(P); 
-			move_down(P, transformation, start, finish);
+			finish = move_down((++start_small_range), P, finish_small_range, finish);
 
-			
 			std::cerr << "Result after move down" << std::endl;
 			T = P; 
 			(*local_start_range)->inverse().apply_single(T); 
 			std::cerr << count_circular_chromosome(this->graph_pack, T); 
-			for (auto it = *local_start_range; it != finish; ++it) { 
+			for (auto it = *local_start_range; it != finish_small_range; ++it) { 
 				it->apply_single(T);
 				std::cerr << "->" << count_circular_chromosome(this->graph_pack, T);
 			}
 			std::cerr << std::endl;
 			 
-
 			// swap all <>>
 			std::cerr << "Start move up all <>> " << std::endl;	
-			start = *local_start_range; 
+			start_small_range = *local_start_range; 
 			(*local_start_range)->inverse().apply_single(P); 
-			auto deb_temp = move_up(P, transformation, start, finish);
+			std::tie(finish_small_range, finish) = move_up(start_small_range, P, finish_small_range, finish);
 			std::cerr << "Finish move up all <>> " << std::endl;	
 
 			std::cerr << "Result after move up" << std::endl;
 			T = P; 
 			std::cerr << count_circular_chromosome(this->graph_pack, T); 
-			for (auto it = *local_start_range; it != finish; ++it) { 
+			for (auto it = *local_start_range; it != finish_small_range; ++it) { 
 				it->apply_single(T);
 				std::cerr << "->" << count_circular_chromosome(this->graph_pack, T);
 			}
 			std::cerr << std::endl;
-			
-
-			finish = deb_temp;
-
-			std::cerr << "State after process range " << std::endl;
-			T = current;
-			std::cerr << count_circular_chromosome(this->graph_pack, T); 
-			for (auto it = range.first; it != range.second; ++it) { 
-				it->apply_single(T);
-				std::cerr << "->" << count_circular_chromosome(this->graph_pack, T);
-			}
-			std::cerr << std::endl;
-
 		}		
+
+		if (*small_ranges.begin() != start_range) { 
+			finish = move_down(start_range, current, finish_small_range, finish);
+		}
 
 		return finish;
 	}
 
-	void one_step_induction(partgraph_t current, transform_t & transformation) const; 	
+	citer_transform one_step_induction(citer_transform start, partgraph_t current, citer_transform finish) const; 	
 
-	void swap_three_twobreaks(transform_t & transformation, partgraph_t const & current, citer_transform first, citer_transform second, citer_transform third) const { 		
+	citer_transform swap_three_twobreaks(partgraph_t const & current, citer_transform first, citer_transform second, citer_transform third, citer_transform finish) const { 		
 		std::cerr << "First break: " << first->get_vertex(0) << " " << first->get_vertex(1) << " " 
 				<< first->get_vertex(2) << " " << first->get_vertex(3) << std::endl;
 
@@ -217,8 +184,8 @@ private:
 	  		std::cerr << "and first and second independent case and belong one chromosome" << std::endl; 
 	    	//Theorem 4. if a and b belong to one chromosome.
 	    	//Theorem 4. if a and b belong to one linear chromosome.
-	      this->swap_two_twobreaks(transformation, second, third);
-	      this->swap_two_twobreaks(transformation, first, second);
+	      finish = this->swap_two_twobreaks(second, third, finish);
+	      finish = this->swap_two_twobreaks(first, second, finish);
 	    } else {
 	    	std::cerr << "and first and second independent case: basic swap" << std::endl; 
 	     	//Theorem 4. if a and b belong to two different chromosomes.
@@ -230,16 +197,17 @@ private:
 	    	//std::cerr << "and first and second weakly dependent case: linear or belong one" << std::endl; 
 	    	//Theorem 5. if a and b and d belong to one chromosome. 
 	    	//Theorem 5. if a and b and d belong to two different chromosomes and both linear.  
-	      this->swap_two_twobreaks(transformation, second, third);
-	      this->swap_two_twobreaks(transformation, first, second);
+	      finish = this->swap_two_twobreaks(second, third, finish);
+	      finish = this->swap_two_twobreaks(first, second, finish);
 	    } else {  
 	    	//std::cerr << "and first and second weakly dependent case: basic swap" << std::endl; 
 	      //Theorem 5. if a and b and d belong to two different chromosome and one of circular.
-	      this->swap_two_twobreaks(transformation, first, second);
+	      finish = this->swap_two_twobreaks(first, second, finish);
 	    } 
 	  } else { 
-	   	assert(false);
+	  	finish = this->swap_two_twobreaks(first, second, finish);
 	  } 
+	  return finish;
 	}
 
 	bool is_belong_one_chromosome_indep(partgraph_t P, twobreak_t const & twobreak) const; // const &
@@ -310,8 +278,8 @@ bool ClassicalLinearize<graph_pack_t>::is_belong_one_chromosome_dep(partgraph_t 
 }
 
 template<class graph_pack_t>
-void ClassicalLinearize<graph_pack_t>::one_step_induction(partgraph_t current, transform_t & transformation) const {  
-	auto range = find_range(transformation.begin(), current, transformation.end());
+typename ClassicalLinearize<graph_pack_t>::citer_transform ClassicalLinearize<graph_pack_t>::one_step_induction(citer_transform start, partgraph_t current, citer_transform finish) const {  
+	auto range = find_range(start, current, finish);
 
 	partgraph_t T = current; 
 	std::cerr << "Find big range" << std::endl;
@@ -328,31 +296,35 @@ void ClassicalLinearize<graph_pack_t>::one_step_induction(partgraph_t current, t
 
 	if (small_ranges.empty()) { 
 		std::cerr << "Process begining range without increasing and without split small ranges" << std::endl;
-		move_down(current, transformation, range.first, range.second);
+		finish = move_down(range.first, current, range.second, finish);
 	} else { 
 		std::cerr << "Process small range by small range" << std::endl;
-		auto finish = process_range_by_range(current, transformation, range, small_ranges);
-		
-		if (*small_ranges.begin() != range.first) { 
-			std::cerr << "Move down last small range" << std::endl;
-			move_down(current, transformation, range.first, finish);
-		}
+		finish = process_range_by_range(range.first, current, range.second, finish, small_ranges);
 	}
+
+	return finish; 
 } 
 
 template<class graph_pack_t>
-typename ClassicalLinearize<graph_pack_t>::change_history_t ClassicalLinearize<graph_pack_t>::linearize(partgraph_t P, transform_t const & transform, partgraph_t const & Q) const { 
-	transform_t replace_transformation; transform_t transformation = transform; 
-	size_t diff_chromosomes = count_circular_chromosome(this->graph_pack, P) - count_circular_chromosome(this->graph_pack, Q);
+typename ClassicalLinearize<graph_pack_t>::change_history_t ClassicalLinearize<graph_pack_t>::linearize(partgraph_t P, transform_t & transform, partgraph_t const & Q) const { 
+	auto start = transform.begin(); auto finish = transform.end();
 
+	size_t diff_chromosomes = count_circular_chromosome(this->graph_pack, P) - count_circular_chromosome(this->graph_pack, Q);
   for (size_t i = 0; i < diff_chromosomes; ++i) { 
   	std::cerr << "LALALA Start step induction " << count_circular_chromosome(this->graph_pack, P) << std::endl;     
-    one_step_induction(P, transformation);
-    transformation.begin()->apply_single(P);
+    finish = one_step_induction(start, P, finish);
+    start->apply_single(P);
+    ++start;
     std::cerr << "LALALA Finish step induction " << count_circular_chromosome(this->graph_pack, P) << std::endl; 
-    replace_transformation.push_back(*transformation.begin());
-    transformation.pop_front();  
   }
+
+  transform.erase(finish, transform.end());
+
+  transform_t replace_transformation; transform_t transformation = transform; 
+	for (auto it = transform.begin(); it != start; ++it) { 
+		replace_transformation.push_back(*transformation.begin());
+    transformation.pop_front();  
+  } 
 
   return std::make_pair(replace_transformation, transformation); 
 }
@@ -361,4 +333,26 @@ typename ClassicalLinearize<graph_pack_t>::change_history_t ClassicalLinearize<g
 
 } 
 
+/*
+std::cerr << "State after process range " << std::endl;
+			T = current;
+			std::cerr << count_circular_chromosome(this->graph_pack, T); 
+			for (auto it = start_range; it != finish_range; ++it) { 
+				it->apply_single(T);
+				std::cerr << "->" << count_circular_chromosome(this->graph_pack, T);
+			}
+			std::cerr << std::endl;
+
+		auto s = start_range;
+		auto mem_T = Q;
+std::cerr << "Interval after swap 3" << std::endl;
+			auto T = mem_T;
+			std::cerr << count_circular_chromosome(this->graph_pack, T); 
+			for (auto it = s; it != finish_range; ++it) { 
+				it->apply_single(T);
+				std::cerr << "->" << count_circular_chromosome(this->graph_pack, T); 
+			}
+			std::cerr << std::endl;
+			
+	*/
 #endif

@@ -22,7 +22,7 @@ struct AbsLinearize {
   {
   }  
 
-  virtual change_history_t linearize(partgraph_t P, transform_t & transform, partgraph_t const & Q) const = 0; 
+  virtual transform_t linearize(partgraph_t P, transform_t & transform, partgraph_t const & Q, size_t diff_chromosomes) const = 0; 
 
   virtual ~AbsLinearize() { 
   } 

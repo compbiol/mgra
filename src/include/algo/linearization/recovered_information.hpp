@@ -26,7 +26,7 @@ struct RecoveredInformation {
 
   explicit RecoveredInformation(graph_pack_t const & gp)
   : graph_pack(gp)
-  , linearize_algo(gp) //, nullptr, nullptr)
+  , linearize_algo(gp)
   {
     for (auto const & tree : cfg::get().phylotrees) {
       init_parent_colors(tree.get_root()); 
@@ -161,18 +161,17 @@ void RecoveredInformation<graph_pack_t>::walk_and_linearize(std::unique_ptr<node
     size_t count_right = count_circular_chromosome(graph_pack, graphs[right->get_data()]); 
 
     if (count_left == 0 && central != 0 && count_right == 0) { 
-      std::pair<transform_t, transform_t> new_history = linearize_algo.linearize(graphs[current->get_data()], transformations[left->get_data()], graphs[left->get_data()]); 
-
+      transform_t linearize_history = linearize_algo.linearize(graphs[current->get_data()], transformations[left->get_data()], graphs[left->get_data()], central); 
+      
       //Apply linearizes twobreaks and modify transformation
-      for (twobreak_t const & twobreak : new_history.first) { 
+      for (twobreak_t const & twobreak : linearize_history) { 
         transformations[current->get_data()].push_back(twobreak);
         twobreak.apply_single(graphs[current->get_data()]); 
         transformations[right->get_data()].push_front(twobreak.inverse());  
       } 
-      transformations[left->get_data()] = new_history.second;
+      //transformations[left->get_data()] = new_history.second;
 
-      //Check that all is good
-      assert(count_circular_chromosome(graph_pack, graphs[current->get_data()]) == count_circular_chromosome(graph_pack, graphs[left->get_data()]));
+      assert(count_circular_chromosome(graph_pack, graphs[current->get_data()]) == count_circular_chromosome(graph_pack, graphs[left->get_data()]));//Check that all is good
       assert(apply_transformation(graphs[current->get_data()], transformations[left->get_data()]) == graphs[left->get_data()]); //Check left
       assert(apply_transformation(graphs[current->get_data()], transformations[right->get_data()]) == graphs[right->get_data()]); //Check right
       if (current->get_parent() != nullptr) {  

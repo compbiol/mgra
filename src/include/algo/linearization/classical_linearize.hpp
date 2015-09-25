@@ -275,15 +275,13 @@ typename graph_pack_t::transform_t ClassicalLinearize<graph_pack_t>::linearize(p
     ++start; 
   }
 
-
-  /*linearize_transformation.insert(linearize_transformation.begin(), transform.begin(), start);  
+ 	linearize_transformation.insert(linearize_transformation.begin(), transform.begin(), start);  
   transform.erase(finish, transform.end());
   for (size_t i = 0; i < linearize_transformation.size(); ++i) { 
   	transform.pop_front();
-  } */
+  } 
   
-	linearize_transformation.splice(linearize_transformation.end(), transform, transform.begin(), start);
-  return linearize_transformation;
+	return linearize_transformation;
 }
 
 }

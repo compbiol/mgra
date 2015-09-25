@@ -21,7 +21,7 @@ struct ProcessWithBlossomV : public algo::AbsStage<graph_pack_t> {
   ProcessWithBlossomV()
   : AbsStage<graph_pack_t>("Total resolve component with score function and blossomV", "wrap_blossom", post_stage_t, 3) 
   , max_number(0)
-  , super_infinity("ooo")
+  , super_infinity("oooo")
   { 
   }
 
@@ -176,7 +176,7 @@ void ProcessWithBlossomV<graph_pack_t>::init_process_tc_edges(graph_pack_t const
 
 template<class graph_pack_t>
 std::vector<std::tuple<int, int, int> > ProcessWithBlossomV<graph_pack_t>::init(graph_pack_t const & graph_pack,
-      std::set<vertex_t> const & vertex_set) {
+  std::set<vertex_t> const & vertex_set) {
   max_number = 0; 
 
   score_edges.clear();
@@ -197,14 +197,14 @@ std::vector<std::tuple<int, int, int> > ProcessWithBlossomV<graph_pack_t>::init(
         int num_x = vertex_to_number(v);  
         int num_y = -1; 
         if (arc.first == Infty) { 
-          vertex_t pseudo_vertex = "o" + std::to_string(pseudo_infinity_verteces.size()) + "o";
+          vertex_t pseudo_vertex = "oo" + std::to_string(pseudo_infinity_verteces.size()) + "oo";
           num_y = vertex_to_number(pseudo_vertex);
           this->pseudo_infinity_verteces.insert(num_y);
-          vertex_t double_pseudo_vertex = "oo" + std::to_string(double_pseudo_infinity_verteces.size()) + "oo";
+          vertex_t double_pseudo_vertex = "ooo" + std::to_string(double_pseudo_infinity_verteces.size()) + "ooo";
           int num_z = vertex_to_number(double_pseudo_vertex);
           this->double_pseudo_infinity_verteces.insert(num_z);
 
-          graph_edges.push_back(std::make_tuple(num_y, num_z, 0));   
+          graph_edges.push_back(std::make_tuple(num_y, num_z, 200));   
         } else { 
           num_y = vertex_to_number(arc.first);
         }        
@@ -221,9 +221,11 @@ std::vector<std::tuple<int, int, int> > ProcessWithBlossomV<graph_pack_t>::init(
   if (vertex2num.size() % 2 != 0 && !pseudo_infinity_verteces.empty()) {   
     int num_y = vertex_to_number(super_infinity);
     for (int num_x : double_pseudo_infinity_verteces) { 
-      graph_edges.push_back(std::make_tuple(num_x, num_y, 0)); 
+      graph_edges.push_back(std::make_tuple(num_x, num_y, 200)); 
     } 
   }
+
+  //std::cerr << vertex_set.size() << " " << pseudo_infinity_verteces.size() << " " << double_pseudo_infinity_verteces.size() << " " << vertex2num.size() << std::endl;
 
   assert((vertex2num.size() % 2 == 0) && (max_number % 2 == 0) && (num2vertex.size() % 2 == 0));
 

@@ -131,7 +131,6 @@ bool ProcessClone<graph_pack_t>::run(graph_pack_t & graph_pack) {
           if (is_all_forks) {
             if (is_good_clones(graph_pack, possible_clones)) {
               for (auto const & clone : possible_clones) {
-                //std::cerr << "Do clone in first case" << std::endl;
                 found = true;
                 graph_pack.apply(clone);
                 ++number_rear;
@@ -160,8 +159,6 @@ bool ProcessClone<graph_pack_t>::run(graph_pack_t & graph_pack) {
 
               if (additional_color.empty() && is_good_clones(graph_pack, included_clones)) { 
                 for (auto const & clone : included_clones) {
-                  //std::cerr << " Do 2-break in second case " << std::endl;
-                  //std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) << " " << twobreak.get_vertex(3) << " " << genome_match::mcolor_to_name(twobreak.get_mcolor()) << std::endl;
                   graph_pack.apply(clone);
                   found = true;
                   ++number_rear;
@@ -173,20 +170,6 @@ bool ProcessClone<graph_pack_t>::run(graph_pack_t & graph_pack) {
               } 
             } 
           }
-
-          /*CASE 3: Mobility of one*/
-          /*if (!found) {
-            for (auto const & clone : possible_clones) {
-              size_t count = graph_pack.mobility_score(edge_t(clone.get_central_arc().second, clone.get_mother_edge().first), clone.get_mcolor(), edge_t(clone.get_central_arc().first, "")); 
-              
-              if (count == 0) { 
-                found = true;
-                graph_pack.apply(clone);
-                ++number_rear;
-              } 
-            } 
-          }*/
-
         }
       }
     }

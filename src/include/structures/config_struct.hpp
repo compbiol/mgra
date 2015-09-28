@@ -5,56 +5,113 @@
 
 #include "event/TwoBreak.hpp"
 
-/*This structures containes information from *.cfg file */
-template<class mcolor_t>
+enum recover_tree_statistic_t {
+  distribution,
+  simple_paths
+};
+
+enum block_file_type_t {
+  infercars,
+  grimm
+};
+
+// This structure contains information from *.cfg file
+template <class mcolor_t>
 struct main_config {
-  using twobreak_t = event::TwoBreak<mcolor_t>; 
+  using twobreak_t = event::TwoBreak<mcolor_t>;
 
-  mcolor_t name_to_mcolor(std::string const & temp) const;
-  std::string mcolor_to_name(mcolor_t const & temp) const;
+  mcolor_t name_to_mcolor(std::string const& temp) const;
 
-  inline bool is_genome_name(std::string const & name) const {
+  std::string mcolor_to_name(mcolor_t const& temp) const;
+
+  inline bool is_genome_name(std::string const& name) const {
     return (genome_number.count(name) != 0);
-  } 
+  }
 
-  inline size_t get_genome_number(std::string const & name) const {
-    assert (genome_number.count(name) != 0); 
+  inline size_t get_genome_number(std::string const& name) const {
+    assert (genome_number.count(name) != 0);
     return genome_number.find(name)->second;
-  } 
+  }
 
-  inline std::string const & get_priority_name(size_t index) const {
+  inline std::string const& get_priority_name(size_t index) const {
     assert(index < priority_name.size());
     return priority_name[index];
   }
 
-  inline std::string const & get_RGBcolor(size_t index) const { 
+  inline std::string const& get_RGBcolor(size_t index) const {
     return RGBcolors[RGBcoeff * index];
-  } 
+  }
+
+  mcolor_t complete_color() const;
 
   DECLARE_DELEGATE_CONST_METHOD(size_t, priority_name, get_count_genomes, size)
 
   /*fuction which can init all config*/
-  void parse(std::unordered_map<std::string, std::vector<std::string> > const & input);  
+  void parse(std::unordered_map<std::string, std::vector<std::string> > const& input);
   //void save();
 
-public:  
-  bool is_debug; 
-  std::string out_path_to_debug_dir; 
+  bool is_debug;
+  std::string out_path_to_debug_dir;
+
+  /**
+  * Path to file with synteny blocks
+  */
+  std::string blocks_file_path;
+
+  block_file_type_t block_file_type;
+
+  /**
+  * Path to config file
+  */
+  std::string config_file_path;
+
+  /**
+  * Path to output directory
+  */
+  std::string out_path_directory;
+
+  /**
+  * Path to logfile
+  */
+  std::string logger_path;
+
+  /**
+  * Path where resulting genomes are put
+  */
+  std::string genomes_path;
 
   /**
    * Different strategy for build. 
    */
-  build_type how_build;  
+  build_type how_build;
+
+  /**
+   * Switch on/off tree recovery mode
+   */
+  bool is_recover_tree;
+
+  /**
+  * Path where recovered trees are put
+  */
+  std::string trees_path;
+
+  /**
+  * Path where summary of recovered trees in newick format is put
+  */
+  std::string tree_summary_path;
+
+  /**
+  * The statistics provider used by recover tree algorithm
+  */
+  recover_tree_statistic_t recover_tree_statistic;
 
   using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
   std::vector<phylogeny_tree_t> phylotrees;
-  
+
   /**
    * Number of stage and rounds 
    */
-  bool is_reconstructed_trees; //Switch on/off stage for reconstruction trees
-
-  size_t rounds; 
+  size_t rounds;
   std::vector<algo::kind_stage> pipeline;
 
   bool is_linearization_ancestors; //Switch on/off stage for linearization procedure
@@ -65,32 +122,37 @@ public:
   size_t size_component_in_bruteforce;
 
   std::list<twobreak_t> completion;
-  
-  mcolor_t target_mcolor;    
-  
+
+  mcolor_t target_mcolor;
+
   std::string colorscheme;
 
-private: 
-  int RGBcoeff; 
+private:
+  size_t RGBcoeff;
   std::vector<std::string> RGBcolors;
 
-  std::vector<std::string> priority_name;  
+  std::vector<std::string> priority_name;
   std::unordered_map<std::string, size_t> genome_number;
   std::map<mcolor_t, std::string> mcolor_name;
-  
-private: 
-  void default_rgb_colors(); 
-  void default_algorithm(); 
+
+  void default_rgb_colors();
+
+  void default_algorithm();
+
   void default_target_algorithm();
-  
+
   /**
    * Different parse function
    */
-  void parse_genomes(std::vector<std::string> const & input);
-  void parse_trees(std::vector<std::string> const & input);
-  void parse_algorithm(std::vector<std::string> const & input);
-  void parse_target(std::vector<std::string> const & input);
-  void parse_completion(std::vector<std::string> const & input);
+  void parse_genomes(std::vector<std::string> const& input);
+
+  void parse_trees(std::vector<std::string> const& input);
+
+  void parse_algorithm(std::vector<std::string> const& input);
+
+  void parse_target(std::vector<std::string> const& input);
+
+  void parse_completion(std::vector<std::string> const& input);
 };
 
 #include "structures/config_struct_impl.hpp"

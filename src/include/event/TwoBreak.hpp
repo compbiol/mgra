@@ -58,6 +58,8 @@ struct TwoBreak {
       return m_arcs[1].second; 
     } 
     assert(false);
+//    TODO: fix error with no return
+    return m_arcs[0].first;
   } 
 
   /* 

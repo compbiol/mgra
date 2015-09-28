@@ -74,7 +74,7 @@ private:
 template<class graph_pack_t> 
 bool StageManager<graph_pack_t>::run(graph_pack_t& graph_pack) {
   writer::TXT_statistics<typename graph_pack_t::Statistics> debug_stat; 
-  writer::GraphDot<graph_pack_t> debug_dots; 
+  writer::GraphDot<graph_pack_t> debug_dots;
 
   size_t num_stage = 0;
   bool isChanged = true; 

@@ -19,11 +19,11 @@
 
 #include "algo/linearization/recovered_information.hpp"
 
-namespace algo { 
+namespace algo {
 
-template<class graph_pack_t> 
-void StageManager<graph_pack_t>::add_stage(kind_stage stage) { 
-  if (stage == balance_k) { 
+template<class graph_pack_t>
+void StageManager<graph_pack_t>::add_stage(kind_stage stage) {
+  if (stage == balance_k) {
     add_stage(new Balance<graph_pack_t>(1));
   } else if (stage == simple_path_k) {
     add_stage(new ProcessSimplePath<graph_pack_t>(3));
@@ -39,16 +39,15 @@ void StageManager<graph_pack_t>::add_stage(kind_stage stage) {
     add_stage(new IncreaseNumberComponents<graph_pack_t>(1));
   } else if (stage == change_canform_k) {
     add_stage(new ChangeCanformInfinity<graph_pack_t>());
-  } else if (stage == bruteforce_k) { 
+  } else if (stage == bruteforce_k) {
     add_stage(new BruteForce<graph_pack_t>(cfg::get().size_component_in_bruteforce));
   } else if (stage == blossomv_k) {
     add_stage(new ProcessWithBlossomV<graph_pack_t>());
   } else if (stage == completion_k) {
     add_stage(new ProcessComplection<graph_pack_t>(cfg::get().completion));
-  } 
+  }
 }
 
-}
 
 /**
  * This pipeline uses in main converter, when avaliable
@@ -64,8 +63,8 @@ boost::optional<typename algo::RecoveredInformation<graph_pack_t>::AncestorInfor
   using namespace algo; 
   StageManager<graph_pack_t> algorithm(cfg::get().rounds, {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
 
-  for (auto const & name_stage : cfg::get().pipeline) { 
-    algorithm.add_stage(name_stage); 
+  for (auto const &name_stage : cfg::get().pipeline) {
+    algorithm.add_stage(name_stage);
   }
 
   INFO("Run pipeline") 
@@ -95,7 +94,7 @@ boost::optional<typename algo::RecoveredInformation<graph_pack_t>::AncestorInfor
 
   INFO("Start wgd algorithm for convert from breakpoint graph to identity breakpoint graph");
 
-  using namespace algo; 
+  using namespace algo;
   StageManager<graph_pack_t> algorithm(cfg::get().rounds, {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
 
   INFO("Run algorithms stages")

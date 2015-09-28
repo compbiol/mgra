@@ -140,7 +140,7 @@ typename graph_pack_t::transform_t GeneralLinearize<graph_pack_t>::linearize(par
   assert(apply_transformation(QQ, ins_transform) == Q);
   size_t c_Q = count_circular_chromosome(this->graph_pack, Q);
   assert(c_P > c_Q); 
-  INFO("Number of circular chromosomes" << c_P << " " << c_PP << " " << c_QQ)
+  INFO("Number of circular chromosomes" << c_P << " " << c_PP << " " << c_QQ << " " << c_Q)
 
   //Run classical linearization.
   transform_t linearize_transform; 

@@ -74,9 +74,10 @@ struct RecoveredInformation {
 
 private: 
   using tree_t = typename structure::BinaryTree<mcolor_t>; 
-  using node_t = typename tree_t::Node; 
-  void walk_and_linearize(std::unique_ptr<node_t> const & current);
-  void init_parent_colors(std::unique_ptr<node_t> const & current); 
+  using node_t = typename tree_t::colored_node_t; 
+  using node_ptr = typename tree_t::node_ptr; 
+  void walk_and_linearize(node_ptr const & current);
+  void init_parent_colors(node_ptr const & current); 
 
 private: 
   graph_pack_t const & graph_pack;
@@ -142,7 +143,7 @@ void RecoveredInformation<graph_pack_t>::init_target_results() {
 }
 
 template<class graph_pack_t>
-void RecoveredInformation<graph_pack_t>::walk_and_linearize(std::unique_ptr<node_t> const & current) {
+void RecoveredInformation<graph_pack_t>::walk_and_linearize(RecoveredInformation<graph_pack_t>::node_ptr const & current) {
   using namespace linearize;
   auto const & left = current->get_left_child(); 
   auto const & right = current->get_right_child(); 
@@ -169,7 +170,6 @@ void RecoveredInformation<graph_pack_t>::walk_and_linearize(std::unique_ptr<node
         twobreak.apply_single(graphs[current->get_data()]); 
         transformations[right->get_data()].push_front(twobreak.inverse());  
       } 
-      //transformations[left->get_data()] = new_history.second;
 
       assert(count_circular_chromosome(graph_pack, graphs[current->get_data()]) == count_circular_chromosome(graph_pack, graphs[left->get_data()]));//Check that all is good
       assert(apply_transformation(graphs[current->get_data()], transformations[left->get_data()]) == graphs[left->get_data()]); //Check left
@@ -182,10 +182,10 @@ void RecoveredInformation<graph_pack_t>::walk_and_linearize(std::unique_ptr<node
       } 
     }
   }
-} 
+}
 
 template<class graph_pack_t>
-void RecoveredInformation<graph_pack_t>::init_parent_colors(std::unique_ptr<node_t> const & current) {
+void RecoveredInformation<graph_pack_t>::init_parent_colors(RecoveredInformation<graph_pack_t>::node_ptr const & current) {
   auto const & left = current->get_left_child(); 
   auto const & right = current->get_right_child(); 
 

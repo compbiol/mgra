@@ -5,10 +5,7 @@
 #include "io/path_helper.hpp"
 #include "tclap/CmdLine.h"
 
-#include "logger/log_writers.hpp"
-
 #include "command_line_parsing.hpp"
-#include "structures/config_struct.hpp"
 
 int parse_config_from_command_line(int argc, char** argv) {
   try {

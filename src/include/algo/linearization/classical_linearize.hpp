@@ -219,7 +219,7 @@ bool ClassicalLinearize<graph_pack_t>::is_belong_one_chromosome_dep(partgraph_t 
   	return false;
 	};
 
-	auto const & a = first.get_arc(0); auto const & b = first.get_arc(1);
+	auto const & a = first.get_arc(0);
 	edge_t c; edge_t d; 
 
 	if (check_lambda(0, 0, 2) || check_lambda(0, 1, 3)) { 
@@ -231,7 +231,8 @@ bool ClassicalLinearize<graph_pack_t>::is_belong_one_chromosome_dep(partgraph_t 
 	std::unordered_set<vertex_t> chromosome_set; 
 	auto chr1 = get_chromosome_by_edge(this->graph_pack, P, a, chromosome_set);
 	assert((a.second == Infty || chromosome_set.count(a.second) != 0)); 
-	assert((b.first == Infty || chromosome_set.count(b.first) != 0) && (b.second == Infty || chromosome_set.count(b.second) != 0));
+	assert((first.get_arc(1).first == Infty || chromosome_set.count(first.get_arc(1).first) != 0) 
+					&& (first.get_arc(1).second == Infty || chromosome_set.count(first.get_arc(1).second) != 0));
 
 	if ((d.first == Infty || chromosome_set.count(d.first) != 0) 
 			&& (d.second == Infty || chromosome_set.count(d.second) != 0) 

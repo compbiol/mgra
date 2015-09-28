@@ -2,8 +2,8 @@
 // Created by Nikita Kartashov on 16/03/2015.
 //
 
-#ifndef _MGRA_GRAPH_DOT_IMPL_H_
-#define _MGRA_GRAPH_DOT_IMPL_H_
+#ifndef DOT_GRAPH_IMPL_HPP_
+#define DOT_GRAPH_IMPL_HPP_
 
 namespace writer {
   template <class graph_pack_t>

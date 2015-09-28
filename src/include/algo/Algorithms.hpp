@@ -103,6 +103,7 @@ boost::optional<typename algo::RecoveredInformation<graph_pack_t>::AncestorInfor
   return boost::none;
 }
 
+}
 /*
 template<class graph_pack_t>
 struct Algorithm { 

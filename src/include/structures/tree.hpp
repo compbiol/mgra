@@ -11,7 +11,6 @@ namespace structure {
     using tree_t = BinaryTree<mcolor_t, node_t>;
     using tree_ptr = std::shared_ptr<tree_t>;
     using branch_t = std::pair<mcolor_t, mcolor_t>;
-    using node_unique_ptr = typename colored_node_t::node_unique_ptr;
     using node_ptr = typename colored_node_t::node_ptr;
     using node_const_ptr = typename colored_node_t::node_const_ptr;
 

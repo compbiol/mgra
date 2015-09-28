@@ -48,7 +48,7 @@ namespace writer {
   };
 }
 
-#include "graph_dot_impl.h"
+#include "dot_graph_impl.hpp"
 
 #endif
 

@@ -62,6 +62,10 @@ struct TwoBreak {
     return m_arcs[0].first;
   } 
 
+  inline mcolor_t get_multicolor() const {
+      return m_multicolor;
+  }
+
   /* 
    * Apply current two-break on local graph without color
    */

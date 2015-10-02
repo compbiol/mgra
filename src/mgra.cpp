@@ -1,4 +1,3 @@
-
 /* 
 ** Module: MGRA main body
 **
@@ -15,7 +14,6 @@
 
 #include "writer/txt_genome.hpp"
 #include "writer/txt_transform.hpp"
-
 
 int main(int argc, char** argv) {
   if (parse_config_from_command_line(argc, argv)) {
@@ -103,8 +101,9 @@ int main(int argc, char** argv) {
     } 
   }
 
+
   INFO("MGRA log can be found here " << cfg::get().out_path_to_logger_file)
   INFO("Thank you for using MGRA!")
-  
+
   return 0;
 }

@@ -61,7 +61,7 @@ boost::optional<typename algo::RecoveredInformation<graph_pack_t>::AncestorInfor
 
   INFO("Init pipeline") 
   using namespace algo; 
-  StageManager<graph_pack_t> algorithm(cfg::get().rounds, {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
+  StageManager<graph_pack_t> algorithm(cfg::get().rounds, cfg::get().out_path_to_saves_dir, {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
 
   for (auto const &name_stage : cfg::get().pipeline) {
     algorithm.add_stage(name_stage);
@@ -94,8 +94,8 @@ boost::optional<typename algo::RecoveredInformation<graph_pack_t>::AncestorInfor
 
   INFO("Start wgd algorithm for convert from breakpoint graph to identity breakpoint graph");
 
-  using namespace algo;
-  StageManager<graph_pack_t> algorithm(cfg::get().rounds, {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
+  using namespace algo; 
+  StageManager<graph_pack_t> algorithm(cfg::get().rounds, cfg::get().out_path_to_saves_dir,  {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
 
   INFO("Run algorithms stages")
   algorithm.run(graph_pack);

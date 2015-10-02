@@ -63,7 +63,7 @@ struct main_config {
   std::string out_path_directory; // Path to output directory
   std::string out_path_to_logger_file; // Path to logfile
   std::string out_path_to_debug_dir; // Path to debug dir
-  std::string out_path_to_save_dir; // Path to debug dir
+  std::string out_path_to_saves_dir; // Path to debug dir
   std::string out_path_to_genomes_dir; //Path where resulting genomes are put
   std::string out_path_to_transfomations_dir; //Path where resulting genomes are put
   std::string trees_path; //Path where recovered trees are put

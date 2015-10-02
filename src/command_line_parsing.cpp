@@ -83,7 +83,7 @@ int parse_config_from_command_line(int argc, char** argv) {
     cfg::get_writable().out_path_directory = path::make_full_path(output_arg.getValue());
     cfg::get_writable().out_path_to_logger_file = path::append_path(cfg::get_writable().out_path_directory, LOGGER_FILENAME);
     cfg::get_writable().out_path_to_debug_dir = path::append_path(cfg::get().out_path_directory, DEBUG_DIRNAME);
-    cfg::get_writable().out_path_to_save_dir = path::append_path(cfg::get().out_path_directory, SAVES_DIRNAME);
+    cfg::get_writable().out_path_to_saves_dir = path::append_path(cfg::get().out_path_directory, SAVES_DIRNAME);
     cfg::get_writable().out_path_to_genomes_dir = path::append_path(cfg::get().out_path_directory, GENOMES_DIRNAME);
     cfg::get_writable().out_path_to_transfomations_dir = path::append_path(cfg::get().out_path_directory, TRANS_DIRNAME);
     cfg::get_writable().trees_path = path::append_path(cfg::get().out_path_directory, "trees");
@@ -145,7 +145,7 @@ bool organize_output_directory() {
       create_dir_if_not_exists(cfg::get().trees_path);
 
   if (cfg::get().is_debug) {
-    result = result && create_dir_if_not_exists(cfg::get().out_path_to_debug_dir);
+    result = result && create_dir_if_not_exists(cfg::get().out_path_to_debug_dir) && create_dir_if_not_exists(cfg::get().out_path_to_saves_dir);
   }
 
   return result;

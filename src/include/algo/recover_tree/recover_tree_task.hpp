@@ -31,7 +31,7 @@ namespace algo {
 
     const size_t ROUNDS_FOR_TREE_RECOVERY = 1;
     //FIXME: change recovery into stage and add
-    StageManager<graph_pack_t> algorithm(ROUNDS_FOR_TREE_RECOVERY,
+    StageManager<graph_pack_t> algorithm(ROUNDS_FOR_TREE_RECOVERY, cfg::get().out_path_to_saves_dir,
                                          {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
 
     Balance<graph_pack_t>* balance_stage = new Balance<graph_pack_t>();

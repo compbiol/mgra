@@ -7,7 +7,6 @@
 
 #include "config_struct.hpp"
 #include "tree.hpp"
-#include "writer/newick_tree_printer.hpp"
 
 namespace structure {
 

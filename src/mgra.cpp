@@ -8,7 +8,6 @@
 ** 
 */
 
-
 #include "command_line_parsing.hpp"
 
 #include "algo/Algorithms.hpp"
@@ -104,7 +103,7 @@ int main(int argc, char** argv) {
     } 
   }
 
-  INFO("MGRA log can be found here " << cfg::get().logger_path)
+  INFO("MGRA log can be found here " << cfg::get().out_path_to_logger_file)
   INFO("Thank you for using MGRA!")
   
   return 0;

@@ -66,7 +66,7 @@ std::string main_config<mcolor_t>::mcolor_to_name(mcolor_t const& color) const {
  */
 template <class mcolor_t>
 void load(main_config<mcolor_t>& cfg, std::string const& filename) {
-  TRACE("Start load cfg file in MGRA1 format")
+  TRACE("Start load cfg file in MGRA format")
   std::unordered_map<std::string, std::vector<std::string> > problem_config;
 
   std::ifstream input(filename);
@@ -105,7 +105,6 @@ mcolor_t main_config<mcolor_t>::complete_color() const {
 /*
  * Different fucntion, which parse our input. 
  */
-
 template <class mcolor_t>
 void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<std::string> > const& input) {
   // Required section
@@ -124,6 +123,7 @@ void main_config<mcolor_t>::parse(std::unordered_map<std::string, std::vector<st
   } else {
     TRACE("No trees section detected, should be in recover tree mode")
     //FIXME: Need to add parameter
+
   }
 
   // Optional section

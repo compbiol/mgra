@@ -42,6 +42,7 @@ struct main_config {
     return RGBcolors[RGBcoeff * index];
   }
 
+  //FIXME: NEED TO REMOVE OR OPTIMIZE
   mcolor_t complete_color() const;
 
   DECLARE_DELEGATE_CONST_METHOD(size_t, priority_name, get_count_genomes, size)
@@ -51,34 +52,22 @@ struct main_config {
   //void save();
 
   bool is_debug;
-  std::string out_path_to_debug_dir;
-
-  /**
-  * Path to file with synteny blocks
-  */
-  std::string blocks_file_path;
-
   block_file_type_t block_file_type;
-
+  
   /**
-  * Path to config file
+  * Paths to different files
   */
-  std::string config_file_path;
+  std::string config_file_path; //Path to input config file
+  std::string blocks_file_path; //Path to input genomes file with synteny blocks
 
-  /**
-  * Path to output directory
-  */
-  std::string out_path_directory;
-
-  /**
-  * Path to logfile
-  */
-  std::string logger_path;
-
-  /**
-  * Path where resulting genomes are put
-  */
-  std::string genomes_path;
+  std::string out_path_directory; // Path to output directory
+  std::string out_path_to_logger_file; // Path to logfile
+  std::string out_path_to_debug_dir; // Path to debug dir
+  std::string out_path_to_save_dir; // Path to debug dir
+  std::string out_path_to_genomes_dir; //Path where resulting genomes are put
+  std::string out_path_to_transfomations_dir; //Path where resulting genomes are put
+  std::string trees_path; //Path where recovered trees are put
+  std::string tree_summary_path; //Path where summary of recovered trees in newick format is put
 
   /**
    * Different strategy for build. 
@@ -91,20 +80,9 @@ struct main_config {
   bool is_recover_tree;
 
   /**
-  * Path where recovered trees are put
-  */
-  std::string trees_path;
-
-  /**
-  * Path where summary of recovered trees in newick format is put
-  */
-  std::string tree_summary_path;
-
-  /**
   * The statistics provider used by recover tree algorithm
   */
   recover_tree_statistic_t recover_tree_statistic;
-
   using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
   std::vector<phylogeny_tree_t> phylotrees;
 
@@ -113,7 +91,6 @@ struct main_config {
    */
   size_t rounds;
   std::vector<algo::kind_stage> pipeline;
-
   bool is_linearization_ancestors; //Switch on/off stage for linearization procedure
 
   /**

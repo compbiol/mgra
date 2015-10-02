@@ -9,7 +9,7 @@
 
 #include "recover_tree_algorithm.hpp"
 #include "statistics/statistics_producer.hpp"
-#include "writer/newick_tree_printer.hpp"
+#include "writer/txt_newick_tree.hpp"
 
 
 namespace algo {

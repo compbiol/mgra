@@ -15,7 +15,7 @@
 #include "statistics/simple_path_statistics_producer.hpp"
 #include "algo/main/Balance.hpp"
 #include "structures/tree.hpp"
-#include "writer/newick_tree_printer.hpp"
+#include "writer/txt_newick_tree.hpp"
 
 namespace algo {
 
@@ -68,12 +68,12 @@ namespace algo {
     const size_t MAX_TREES_TO_DUMP = 3;
     result_trees.resize(std::min(MAX_TREES_TO_DUMP, result_trees.size()));
     if (cfg::get().is_debug) {
-      NewickTreePrinter<tree_t> newick_tree_printer(std::clog);
+      TXT_NewickTree<tree_t> newick_tree_printer(std::clog);
       newick_tree_printer.print_trees(result_trees);
     }
     GraphDot<graph_pack_t> dot_writer;
     std::ofstream summary_file(cfg::get().tree_summary_path);
-    NewickTreePrinter<tree_t> newick_tree_printer(summary_file);
+    TXT_NewickTree<tree_t> newick_tree_printer(summary_file);
 
     newick_tree_printer.print_trees(result_trees);
 

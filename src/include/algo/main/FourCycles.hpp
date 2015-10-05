@@ -157,7 +157,7 @@ bool ProcessFourCycles<graph_pack_t>::process_good_four_cycles(graph_pack_t& gra
 						&& marked.count(i1) == 0 && marked.count(j2) == 0
 						&& graph_pack.get_all_adjacent_multiedges(i1).get_vertex(c0) == j2) { 
 					TRACE("FIRST TYPE")
-					INFO("FIRST TYPE")
+					//INFO("FIRST TYPE")
 					ancestor_adjacency.push_back(edge_t(i, i1));
 					ancestor_adjacency.push_back(edge_t(j, j2));
 					in_ancestor.insert(i); in_ancestor.insert(i1); in_ancestor.insert(j); in_ancestor.insert(j2);
@@ -167,7 +167,7 @@ bool ProcessFourCycles<graph_pack_t>::process_good_four_cycles(graph_pack_t& gra
 						&& marked.count(i2) == 0 && marked.count(j1) == 0
 						&& graph_pack.get_all_adjacent_multiedges(i2).get_vertex(c0) == j1) { 
 					TRACE("SECOND TYPE")
-					INFO("2 TYPE")
+					//INFO("2 TYPE")
 					ancestor_adjacency.push_back(edge_t(i, i2));
 					ancestor_adjacency.push_back(edge_t(j, j1));
 					in_ancestor.insert(i); in_ancestor.insert(i2); in_ancestor.insert(j); in_ancestor.insert(j1);
@@ -177,7 +177,7 @@ bool ProcessFourCycles<graph_pack_t>::process_good_four_cycles(graph_pack_t& gra
 						&& marked.count(i1) == 0 && marked.count(j1) == 0
 						&& graph_pack.get_all_adjacent_multiedges(i1).get_vertex(c2) == j1) { 
 					TRACE("THIRD TYPE")	    
-					INFO("3 TYPE")
+					//INFO("3 TYPE")
 					ancestor_adjacency.push_back(edge_t(i, j));
 					ancestor_adjacency.push_back(edge_t(i1, j1));				
 					in_ancestor.insert(i); in_ancestor.insert(j); in_ancestor.insert(i1); in_ancestor.insert(j1);
@@ -187,7 +187,7 @@ bool ProcessFourCycles<graph_pack_t>::process_good_four_cycles(graph_pack_t& gra
 						&& marked.count(i2) == 0 && marked.count(j2) == 0
 						&& graph_pack.get_all_adjacent_multiedges(i2).get_vertex(c1) == j2) { 
 					TRACE("FOURTH TYPE")
-					INFO("4 TYPE")
+					//INFO("4 TYPE")
 					//INFO("See on " << i << " " << j << " " << i1 << " " << j1 << " " << i2 << " " << j2)
 					ancestor_adjacency.push_back(edge_t(i, j));
 					ancestor_adjacency.push_back(edge_t(i2, j2));				
@@ -198,8 +198,8 @@ bool ProcessFourCycles<graph_pack_t>::process_good_four_cycles(graph_pack_t& gra
 						&& marked.count(i1) == 0 && marked.count(j1) == 0 
 						&& graph_pack.get_all_adjacent_multiedges(i1).get_vertex(c0) == j1 && (i2 == j1 || j2 == i1)) { 
 					TRACE("FIFTH TYPE")
-					INFO("5 TYPE")
-					std::cerr << i << " " << j << " " << i1 << " " << j1 << std::endl;
+					//INFO("5 TYPE")
+					//std::cerr << i << " " << j << " " << i1 << " " << j1 << std::endl;
 		    	ancestor_adjacency.push_back(edge_t(i, i1));
 					ancestor_adjacency.push_back(edge_t(j, j1));				
 					in_ancestor.insert(i); in_ancestor.insert(j); in_ancestor.insert(i1); in_ancestor.insert(j1);
@@ -222,7 +222,7 @@ bool ProcessFourCycles<graph_pack_t>::process_good_four_cycles(graph_pack_t& gra
 						&& graph_pack.get_all_adjacent_multiedges(i2).get_vertex(c0) == j2 
 						&& i1 != j2 && j1 != i2) { 
 					TRACE("SEVENTH TYPE")
-					INFO("SEVENTH TYPE")
+					//INFO("SEVENTH TYPE")
 					ancestor_adjacency.push_back(edge_t(i, j));
 					ancestor_adjacency.push_back(edge_t(i1, j1));
 					ancestor_adjacency.push_back(edge_t(i2, j2));				

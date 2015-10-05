@@ -1,3 +1,11 @@
+MGRA 2.3
+======== 
+* Little change in configuration file
+* Add saves in output options
+* Improve accurancy
+* New linearization algorithm.
+* Fixed a few bugs
+
 MGRA 2.2 
 ======== 
 * Integrate blossom V in bruteforce stage.

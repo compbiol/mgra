@@ -26,22 +26,6 @@ namespace details {
 
 using namespace path;
 
-void copy_file(std::string from_path, std::string to_path) {
-    using namespace std;
-
-    make_full_path(from_path);
-    make_full_path(to_path  );
-
-    if (from_path == to_path)
-        return;
-
-    std::ifstream source(from_path, ios::binary);
-    std::ofstream dest  (to_path.c_str()  , ios::binary);
-
-    dest << source.rdbuf();
-}
-
-
 void hard_link(std::string from_path, std::string to_path) {
     make_full_path(from_path);
     make_full_path(to_path  );
@@ -92,6 +76,21 @@ files_t folders_in_folder(std::string const& path) {
 }
 
 } // details
+
+void copy_file(std::string from_path, std::string to_path) {
+    using namespace std;
+
+    make_full_path(from_path);
+    make_full_path(to_path  );
+
+    if (from_path == to_path)
+        return;
+
+    std::ifstream source(from_path, ios::binary);
+    std::ofstream dest  (to_path.c_str()  , ios::binary);
+
+    dest << source.rdbuf();
+}
 
 path::files_t files_by_prefix(std::string const& path) {
     using namespace details;

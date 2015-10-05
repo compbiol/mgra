@@ -1,9 +1,11 @@
 MGRA 
 ======
 
-Version: 2.2.0
+Version: 2.3.0 beta
 
-Release date: 25th August 2014
+Release date: 5 October 2015
+
+Server' website: http://mgra.cblab.org/
 
 Description
 -----------
@@ -21,13 +23,14 @@ See *docs/USAGE.md* file.
 
 Authors
 -------
-- Pavel Avdeyev (Academic University, St. Petersburg, Russia)
+- Pavel Avdeyev (The George Washington University, Washington, DC)
+- Nikita Kartashov (Academic University, St. Petersburg, Russia)
 - Shuai Jiang (University of South Carolina)
 - Max Alekseyev (The George Washington University, Washington, DC)
 
 Citation
 --------
-- S. Jiang, P. Avdeyev, F. Hu, and M. A. Alekseyev. "Reconstruction of ancestral genomes in presence of gene gain and loss", 2014. (submitted)
+- P. Avdeyev, S. Jiang, S. Aganezov, F. Hu, and M. A. Alekseyev. "Reconstruction of ancestral genomes in presence of gene gain and loss", 2016. (submitted)
 - M. A. Alekseyev and P. A. Pevzner. "Breakpoint Graphs and Ancestral Genome Reconstructions". Genome Research 19(5) (2009), pp. 943-957
 
 Related publications
@@ -46,6 +49,7 @@ Acknowledgements
 The work was supported by National Science Foundation under the grant No IIS-1253614.
 
 We would like to thank:
+- Nadiya Sitdykova 
 - Aleksey Gurevich (testing and some useful suggestions)
 
 Licence
@@ -60,3 +64,4 @@ http://pub.ist.ac.at/~vnk/software.html#BLOSSOM5
 * Boost (Boost Software License)
 
 http://www.boost.org
+

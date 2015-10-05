@@ -2,7 +2,7 @@ Installation instructions for MGRA
 ==================================
 Supported operating systems
 ------------
-MGRA was tested under Linux and Mac OS.
+MGRA was tested under Linux.
 
 Binary distribution
 -------------------
@@ -14,8 +14,7 @@ Build requirements
 ------------------
 * CMake 2.8.10+
 * Make
-* GCC C++ compiler with C++11 support (version 4.6.3+ works fine)
-* BOOST library 1.54.0+
+* GCC C++ compiler with C++11 support (version 4.8.3+ works fine)
 
 Building from the source code
 -----------------------------
@@ -23,7 +22,7 @@ Building and installing MGRA from the source code is done with the following com
 
 	mkdir build
 	cd build
-	cmake ../src
+	cmake ../
 	make
 	sudo make install 
 
@@ -32,7 +31,7 @@ location other than /usr/local/bin, one needs to run CMake with -DCMAKE_INSTALL_
 option:
 
 	cd build
-	cmake ../src -DCMAKE_INSTALL_PREFIX="<install destination>"
+	cmake ../ -DCMAKE_INSTALL_PREFIX="<install destination>"
 	make
 	make install
 

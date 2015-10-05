@@ -21,12 +21,9 @@ MGRA 2.1
 
 MGRA 2.0
 ========
-* Change all rules for work. This changes described in paper: 
-
-S. Jiang, P. Avdeyev, F. Hu, and M. A. Alekseyev. "Reconstruction of ancestral genomes in presence of gene gain and loss", 2014. (submitted)
+* Add gene deletions and gene insertions
+* Change all rules for work with genomes without indels
 
 MGRA 1.0
 ========
-* Initital release which described in paper: 
-
-M. A. Alekseyev and P. A. Pevzner. "Breakpoint Graphs and Ancestral Genome Reconstructions"
+* Initital release

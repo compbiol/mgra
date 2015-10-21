@@ -21,6 +21,8 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  std::cerr << "Finish " << std::endl;
+
   if (validate_application_config()) {
     std::cerr << "ERROR: error while validating config" << std::endl;
     return 1;
@@ -100,7 +102,6 @@ int main(int argc, char** argv) {
       } 
     } 
   }
-
 
   INFO("MGRA log can be found here " << cfg::get().out_path_to_logger_file)
   INFO("Thank you for using MGRA!")

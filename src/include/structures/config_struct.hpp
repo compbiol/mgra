@@ -2,7 +2,7 @@
 #define GONFIG_STRUCT_HPP
 
 #include "defined.h"
-
+#include "json/json.h"
 #include "event/TwoBreak.hpp"
 
 enum recover_tree_statistic_t {
@@ -47,8 +47,13 @@ struct main_config {
 
   DECLARE_DELEGATE_CONST_METHOD(size_t, priority_name, get_count_genomes, size)
 
-  /*fuction which can init all config*/
+  void load(Json::Value const & root);
+  
+  /** 
+   * Fuction which can init all config
+   */
   void parse(std::unordered_map<std::string, std::vector<std::string> > const& input);
+  //void load(std::string const & path_to_file);
   //void save();
 
   bool is_debug;
@@ -59,6 +64,7 @@ struct main_config {
   * Paths to different files
   */
   std::string config_file_path; //Path to input config file
+  std::vector<std::string> path_to_blocks_file;
   std::string blocks_file_path; //Path to input genomes file with synteny blocks
 
   std::string out_path_directory; // Path to output directory
@@ -112,14 +118,35 @@ private:
 
   std::vector<std::string> priority_name;
   std::unordered_map<std::string, size_t> genome_number;
+  std::unordered_map<size_t, std::string> number_to_genome;
+  
   std::map<mcolor_t, std::string> mcolor_name;
 
+private:
   void default_rgb_colors();
 
   void default_algorithm();
 
   void default_target_algorithm();
 
+  /**
+   * Different load function
+   */
+  void load_genomes(Json::Value const& genomes);
+  void load_genome(Json::Value const& genome, size_t index);
+  void load_files(Json::Value const& path_to_files);
+  void load_trees(Json::Value const& trees);
+  void load_tree(Json::Value const& tree);
+  void load_wgd_events(Json::Value const& wgds);
+  void load_wgd_event(Json::Value const& wgd);
+  void load_target(Json::Value const& target);
+  void load_complections(Json::Value const& twobreaks); 
+  void load_complection(Json::Value const& twobreak); 
+
+  void load_output_directory(Json::Value const& path_to_dir); 
+  void load_saves(Json::Value const& enable_saves); 
+  void load_debug(Json::Value const& enable_debug); 
+  
   /**
    * Different parse function
    */

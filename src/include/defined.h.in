@@ -52,10 +52,10 @@ enum build_type { default_algo, wgd_algo, assembly_algo, target_algo };
 
 namespace algo { 
 
-enum kind_stage {balance_k, 
-								 simple_path_k, 
-								 four_cycles_k, 
-								 fair_edge_k,
+enum kind_stage {balance_k,
+                 simple_path_k,
+				 four_cycles_k,
+				 fair_edge_k,
                  clone_k, 
                  fair_clone_edge_k, 
                  components_k, 

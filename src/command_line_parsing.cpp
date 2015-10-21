@@ -89,13 +89,13 @@ int parse_config_from_command_line(int argc, char** argv) {
     cfg::get_writable().out_path_directory = path::make_full_path(output_arg.getValue());
   
     if (cfg::get().get_count_genomes() < 2) {
-      std::cerr << "At least two input genomes required" << std::endl;
+      std::cerr << "ERROR: At least two input genomes required" << std::endl;
       return 1;
     }
 
     return 0;
   } catch (TCLAP::ArgException& e) {
-    std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
+    std::cerr << "ERROR: " << e.error() << " for arg " << e.argId() << std::endl;
     return 1;
   }
 }

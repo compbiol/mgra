@@ -1,8 +1,6 @@
 #ifndef CONFIG_SINGLTONE_HPP
 #define CONFIG_SINGLTONE_HPP
 
-//#include "verify.hpp"
-
 #include <string>
 
 namespace config_common {

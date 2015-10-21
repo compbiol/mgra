@@ -10,7 +10,8 @@
 #include "command_line_parsing.hpp"
 
 #include "algo/Algorithms.hpp"
-#include "algo/recover_tree/recover_tree_task.hpp"
+#include "recover_tree_task.hpp"
+#include "reader/reader.h"
 
 #include "writer/txt_genome.hpp"
 #include "writer/txt_transform.hpp"

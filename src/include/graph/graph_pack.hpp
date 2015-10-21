@@ -1,7 +1,7 @@
 #ifndef GRAPH_PACK_HPP
 #define GRAPH_PACK_HPP
 
-#include "structures/config_struct.hpp"
+//#include "structures/config_struct.hpp"
 
 #include "graph/multigraph.hpp"
 #include "graph/multicolors.hpp"

@@ -14,13 +14,6 @@ int parse_config_from_command_line(int argc, char** argv) {
     TCLAP::CmdLine cmd("MGRA (Multiple Genome Rearrangements & Ancestors) (c) 2008-2015 by Pavel Avdeyev, Nikita Kartashov, Shuai Jiang, Max Alekseyev. Distributed under GNU GENERAL PUBLIC LICENSE license.",
         ' ', VERSION);
 
-    /*TCLAP::SwitchArg recover_tree_arg("r",
-        "recover_tree",
-        "Recover phylogenetic tree instead of ancestral genomes",
-        cmd,
-        false);
-    */
-
     TCLAP::ValueArg<std::string> path_to_cfg_file_arg("c",
         "config",
         "Input configure file",

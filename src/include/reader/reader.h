@@ -3,7 +3,7 @@
 
 #include "defined.h"
 #include "io/path_helper.hpp"
-#include "structures/config_struct.hpp"
+#include "config/config_struct.hpp"
 
 namespace reader { 
   using genome_t = structure::Genome;

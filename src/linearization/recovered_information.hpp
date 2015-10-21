@@ -1,8 +1,8 @@
 #ifndef RECOVERED_INFORMATION_HPP
 #define RECOVERED_INFORMATION_HPP
 
-#include "algo/linearization/utils.hpp"
-#include "algo/linearization/general_linearize.hpp"
+#include "utils.hpp"
+#include "general_linearize.hpp"
 
 namespace algo { 
 

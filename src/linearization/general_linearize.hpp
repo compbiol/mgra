@@ -1,9 +1,9 @@
 #ifndef GENERAL_LINEARIZE_HPP
 #define GENERAL_LINEARIZE_HPP
 
-#include "algo/linearization/abs_linearize.hpp"
-#include "algo/linearization/fission_del_linearize.hpp"
-#include "algo/linearization/classical_linearize.hpp"
+#include "abs_linearize.hpp"
+#include "fission_del_linearize.hpp"
+#include "classical_linearize.hpp"
 
 namespace algo { 
 

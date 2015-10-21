@@ -3,8 +3,7 @@
 
 #include "io/path_helper.hpp"
 #include "graph/graph_pack.hpp"
-#include "structures/config_struct.hpp"
-#include "reader.h"
+#include "config/config_struct.hpp"
 
 namespace writer {
 

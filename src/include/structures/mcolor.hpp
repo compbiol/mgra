@@ -1,7 +1,7 @@
 #ifndef MCOLOR_HPP
 #define MCOLOR_HPP
 
-#include "hash.hpp"
+#include "utility/hash.hpp"
 
 namespace structure {
 

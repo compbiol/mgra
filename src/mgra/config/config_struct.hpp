@@ -161,7 +161,7 @@ private:
   void parse_completion(std::vector<std::string> const& input);
 };
 
-#include "structures/config_struct_impl.hpp"
+#include "config/config_struct_impl.hpp"
 
 using cfg = config_common::config<main_config<structure::Mcolor> >;
 

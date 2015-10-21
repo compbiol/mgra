@@ -6,18 +6,18 @@
 #include "graph/graph_pack.hpp"
 #include "algo/Stage.hpp"
 
-#include "algo/main/Balance.hpp"
-#include "algo/main/SimplePath.hpp"
-#include "algo/main/FourCycles.hpp"
-#include "algo/main/FairEdge.hpp"
-#include "algo/main/Clone.hpp"
-#include "algo/main/IncreaseComponents.hpp"
-#include "algo/main/FairEdgeAndClone.hpp"
+#include "algo/stages/Balance.hpp"
+#include "algo/stages/SimplePath.hpp"
+#include "algo/stages/FourCycles.hpp"
+#include "algo/stages/FairEdge.hpp"
+#include "algo/stages/Clone.hpp"
+#include "algo/stages/IncreaseComponents.hpp"
+#include "algo/stages/FairEdgeAndClone.hpp"
 
-#include "algo/main/BlossomVWrapper.hpp"
-#include "algo/main/BruteForce.hpp"
+#include "algo/stages/BlossomVWrapper.hpp"
+#include "algo/stages/BruteForce.hpp"
 
-#include "algo/linearization/recovered_information.hpp"
+#include "recovered_information.hpp"
 
 namespace algo {
 

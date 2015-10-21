@@ -7,13 +7,11 @@
 
 #include <sstream>
 
-#include "../../../utils/logger/logger.hpp"
-
 #include "bruteforce_recover_tree_algorithm.hpp"
 #include "dynamic_recover_tree_algorithm.hpp"
 #include "statistics/multiedges_count_statistics_producer.hpp"
 #include "statistics/simple_path_statistics_producer.hpp"
-#include "algo/main/Balance.hpp"
+#include "algo/stages/Balance.hpp"
 #include "structures/tree.hpp"
 #include "writer/txt_newick_tree.hpp"
 

@@ -10,7 +10,7 @@
 #include "logger/logger.hpp"
 #include "logger/log_writers.hpp"
 #include "io/copy_file.hpp"
-#include "structures/config_struct.hpp"
+#include "config/config_struct.hpp"
 
 /**
  * 

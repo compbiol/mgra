@@ -7,6 +7,7 @@
 ** 
 */
 
+#include <algo/recover_tree_task.hpp>
 #include "command_line_parsing.hpp"
 
 #include "algo/Algorithms.hpp"
@@ -21,8 +22,6 @@ int main(int argc, char** argv) {
     std::cerr << "ERROR: error while parsing command line arguments" << std::endl;
     return 1;
   }
-
-  std::cerr << "Finish " << std::endl;
 
   if (validate_application_config()) {
     std::cerr << "ERROR: error while validating config" << std::endl;

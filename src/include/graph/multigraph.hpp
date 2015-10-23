@@ -1,7 +1,7 @@
 #ifndef MULTIGRAPH_HPP
 #define MULTIGRAPH_HPP
 
-#include "defined.h" 
+#include "defined.hpp"
 
 struct MultiGraph {
   using orf_t = std::string;

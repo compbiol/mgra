@@ -1,7 +1,7 @@
 #ifndef JSON_READER_H
 #define JSON_READER_H
 
-#include "defined.h"
+#include "defined.hpp"
 #include "graph/multigraph.hpp"
 #include "graph/history.hpp"
 #include "event/TwoBreak.hpp"

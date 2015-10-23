@@ -1,7 +1,7 @@
 #ifndef READER_H_
 #define READER_H_
 
-#include "defined.h"
+#include "defined.hpp"
 #include "io/path_helper.hpp"
 #include "config/config_struct.hpp"
 

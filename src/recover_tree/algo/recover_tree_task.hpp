@@ -17,8 +17,8 @@
 
 namespace algo {
 
-  template <class graph_pack_t>
-  void recover_tree_task(graph_pack_t& graph_pack) {
+template<class graph_pack_t>
+void recover_tree_task(graph_pack_t &graph_pack) {
     using namespace algo;
     using namespace structure;
     using namespace writer;
@@ -32,7 +32,7 @@ namespace algo {
     StageManager<graph_pack_t> algorithm(ROUNDS_FOR_TREE_RECOVERY, cfg::get().out_path_to_saves_dir,
                                          {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
 
-    Balance<graph_pack_t>* balance_stage = new Balance<graph_pack_t>();
+    Balance<graph_pack_t> *balance_stage = new Balance<graph_pack_t>();
     algorithm.add_stage(balance_stage);
     algorithm.run(graph_pack);
 
@@ -46,17 +46,17 @@ namespace algo {
     std::shared_ptr<algo::StatisticsProducer<graph_pack_t> > producer;
 
     if (cfg::get().recover_tree_statistic == simple_paths) {
-      producer = std::make_shared<SimplePathStatisticsProducer<graph_pack_t> >(graph_pack);
+        producer = std::make_shared<SimplePathStatisticsProducer<graph_pack_t> >(graph_pack);
     } else {
-      producer = std::make_shared<MultiEdgesCountStatisticsProducer<graph_pack_t> >(graph_pack);
+        producer = std::make_shared<MultiEdgesCountStatisticsProducer<graph_pack_t> >(graph_pack);
     }
 
     if (cfg::get().get_count_genomes() < MAX_GENOMES_FOR_BRUTEFORCE) {
-      recover_tree_algorithm =
-          std::make_shared<BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
+        recover_tree_algorithm =
+                std::make_shared<BruteforceRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
     } else {
-      recover_tree_algorithm =
-          std::make_shared<DynamicRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
+        recover_tree_algorithm =
+                std::make_shared<DynamicRecoverTreeAlgorithm<graph_pack_t>>(graph_pack, producer);
     }
 
     auto result_trees = recover_tree_algorithm->get_result();
@@ -66,8 +66,8 @@ namespace algo {
     const size_t MAX_TREES_TO_DUMP = 3;
     result_trees.resize(std::min(MAX_TREES_TO_DUMP, result_trees.size()));
     if (cfg::get().is_debug) {
-      TXT_NewickTree<tree_t> newick_tree_printer(std::clog);
-      newick_tree_printer.print_trees(result_trees);
+        TXT_NewickTree<tree_t> newick_tree_printer(std::clog);
+        newick_tree_printer.print_trees(result_trees);
     }
     GraphDot<graph_pack_t> dot_writer;
     std::ofstream summary_file(cfg::get().tree_summary_path);
@@ -76,12 +76,13 @@ namespace algo {
     newick_tree_printer.print_trees(result_trees);
 
     for (size_t i = 0; i != result_trees.size(); ++i) {
-      std::ofstream numbered_outfile(path::append_path(cfg::get().trees_path,
-                                                       std::to_string(i) + ".dot"));
-      dot_writer.save_subtrees(numbered_outfile, {*result_trees[i]});
+        std::ofstream numbered_outfile(path::append_path(cfg::get().trees_path,
+                                                         std::to_string(i) + ".dot"));
+        dot_writer.save_subtrees(numbered_outfile, {*result_trees[i]});
     }
     INFO("Dumped trees")
-  }
+}
+
 }
 
 #endif //MGRA_RECOVER_TREE_TASK_HPP_

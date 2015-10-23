@@ -5,7 +5,8 @@
 #ifndef _MGRA_ARG_PARSING_HPP_
 #define _MGRA_ARG_PARSING_HPP_
 
-#include "defined.h" 
+#include "version.h"
+#include "defined.hpp"
 
 #include "logger/logger.hpp"
 #include "logger/log_writers.hpp"

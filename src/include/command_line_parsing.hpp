@@ -2,10 +2,10 @@
 // Created by Nikita Kartashov on 06/04/2015.
 //
 
-#ifndef _MGRA_ARG_PARSING_HPP_
-#define _MGRA_ARG_PARSING_HPP_
+#ifndef MGRA_ARG_PARSING_HPP_
+#define MGRA_ARG_PARSING_HPP_
 
-#include "version.h"
+#include "version.hpp"
 #include "defined.hpp"
 
 #include "logger/logger.hpp"

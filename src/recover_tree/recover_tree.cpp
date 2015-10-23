@@ -4,8 +4,7 @@
 
 #include "defined.hpp"
 #include "config/config_struct.hpp"
-
-//#include "recover_tree_task.hpp"
+#include "command_line_parsing.hpp"
 
 int main(int argc, char** argv) {
     if (parse_config_from_command_line(argc, argv)) {

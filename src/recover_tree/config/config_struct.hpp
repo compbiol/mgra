@@ -5,7 +5,8 @@
 #ifndef MGRA_CONFIG_STRUCT_HPP
 #define MGRA_CONFIG_STRUCT_HPP
 
-#include "json/json.h"
+#include "event/TwoBreak.hpp"
+#include "JsonCpp/json/json.h"
 
 template<class mcolor_t>
 struct tree_config {
@@ -13,6 +14,7 @@ struct tree_config {
 
     void load(Json::Value const &root);
 
+    DECLARE_DELEGATE_CONST_METHOD(size_t, priority_name, get_count_genomes, size)
 private:
     void load_genomes(Json::Value const &genomes);
 
@@ -37,7 +39,7 @@ public:
 
     std::string tree_summary_path; //Path where summary of recovered trees in newick format is put
 
-    recover_tree_statistic_t recover_tree_statistic;
+    //recover_tree_statistic_t recover_tree_statistic;
 
     using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
     std::vector<phylogeny_tree_t> phylotrees;
@@ -48,6 +50,8 @@ private:
     std::unordered_map<std::string, size_t> genome_number;
 
     std::unordered_map<size_t, std::string> number_to_genome;
+
+    std::map<mcolor_t, std::string> mcolor_name;
 };
 
 #include "config/config_struct_impl.hpp"

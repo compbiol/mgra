@@ -7,11 +7,9 @@
 ** 
 */
 
-#include <algo/recover_tree_task.hpp>
 #include "command_line_parsing.hpp"
 
 #include "algo/Algorithms.hpp"
-#include "recover_tree_task.hpp"
 #include "reader/reader.h"
 
 #include "writer/txt_genome.hpp"
@@ -60,9 +58,9 @@ int main(int argc, char** argv) {
   graph_pack_t graph_pack(genomes);
   INFO("End build graph")
 
-  if (cfg::get().is_recover_tree) {
-    algo::recover_tree_task(graph_pack);
-  } else {
+  //if (cfg::get().is_recover_tree) {
+  //  algo::recover_tree_task(graph_pack);
+  //} else {
     {
       std::ostringstream out;
       out << "Determine " << graph_pack.multicolors.count_vec_T_consitent_color() << " \\vec{T}-consistent colors in tree:\n";
@@ -72,7 +70,8 @@ int main(int argc, char** argv) {
       INFO(out.str())
     }
 
-    boost::optional<algo::RecoveredInformation<graph_pack_t>::AncestorInformation> result; 
+#if 0
+    boost::optional<algo::RecoveredInformation<graph_pack_t>::AncestorInformation> result;
     if (cfg::get().how_build == default_algo) { 
       result = algo::main_algorithm(graph_pack);
     } else if (cfg::get().how_build == wgd_algo) { 
@@ -80,7 +79,7 @@ int main(int argc, char** argv) {
     } 
 
     /*Save different output information in files*/
-    if (result) { 
+    if (result) {
       using ancestor_information_t = algo::RecoveredInformation<graph_pack_t>::AncestorInformation;
       ancestor_information_t info = *result; 
 
@@ -100,8 +99,9 @@ int main(int argc, char** argv) {
         writer::TXT_genome<genome_t> writer_genome(path::append_path(cfg::get().out_path_directory, "genomes"));
         writer_genome.save_genomes(info.genomes); 
       } 
-    } 
-  }
+    }
+  //}
+#endif
 
   INFO("MGRA log can be found here " << cfg::get().out_path_to_logger_file)
   INFO("Thank you for using MGRA!")

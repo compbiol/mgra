@@ -4,10 +4,11 @@
 # See file LICENSE for details.
 ############################################################################
 
-project(input CXX)
+project(io_lib CXX)
 
-add_library(input STATIC
-            path_helper.cpp
-            copy_file.cpp)
+include_directories(${MGRA_MAIN_INCLUDE_DIR}
+                    ${MGRA_MAIN_LIB_DIR})
+
+add_library(io_lib STATIC path_helper.cpp copy_file.cpp)
 
 

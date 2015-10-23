@@ -1,4 +1,4 @@
-#include "reader/reader.h"
+#include "reader/reader.hpp"
 
 std::vector<structure::Genome> reader::read_infercars(std::string const & path_to_file) {
   std::ifstream input(path_to_file);

@@ -25,11 +25,6 @@ int parse_config_from_command_line(int argc, char** argv) {
     cmd.parse(argc, const_cast<const char* const*>(argv));
     cfg::create_instance(path_to_cfg_file_arg.getValue());
 
-    if (cfg::get().get_count_genomes() < 3) {
-      std::cerr << "ERROR: At least four input genomes required" << std::endl;
-      return 1;
-    }
-
     return 0;
   } catch (TCLAP::ArgException& e) {
     std::cerr << "ERROR: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -75,7 +70,7 @@ void create_logger_from_config() {
 }
 
 bool organize_output_directory() {
-  std::string const LOGGER_FILENAME = "mgra.log";
+  /*std::string const LOGGER_FILENAME = "mgra.log";
   std::string const INPUT_DIRNAME = "input";
   std::string const DEBUG_DIRNAME = "debug";
   std::string const SAVES_DIRNAME = "saves";
@@ -110,6 +105,6 @@ bool organize_output_directory() {
   path::copy_file(cfg::get().blocks_file_path, path::append_path(cfg::get().out_path_to_input_dir, "blocks.txt"));
   cfg::get_writable().blocks_file_path = path::append_path(cfg::get().out_path_to_input_dir, "blocks.txt");
   path::copy_file(cfg::get_writable().config_file_path, path::append_path(cfg::get().out_path_to_input_dir, "config.txt"));
-  cfg::get_writable().config_file_path = path::append_path(cfg::get().out_path_to_input_dir, "config.txt");
-  return result;
+  cfg::get_writable().config_file_path = path::append_path(cfg::get().out_path_to_input_dir, "config.txt");*/
+  return true;
 }

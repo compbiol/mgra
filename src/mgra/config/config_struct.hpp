@@ -2,13 +2,8 @@
 #define MGRA_GONFIG_STRUCT_HPP
 
 #include "defined.hpp"
-#include "json/json.h"
+#include "JsonCpp/json/json.h"
 #include "event/TwoBreak.hpp"
-
-enum recover_tree_statistic_t {
-    distribution,
-    simple_paths
-};
 
 // This structure contains information from *.cfg file
 template<class mcolor_t>

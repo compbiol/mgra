@@ -1,37 +1,16 @@
+# -*- cmake -*-
 
-project( CXX)
+project(recover_tree CXX)
 
+set(PROJECT_NAME recover_tree)
+include_directories(${MGRA_SOURCE_DIR}/include)
+include_directories(${MGRA_SOURCE_DIR}/libs)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories(${CMAKE_SOURCE_DIR}/debruijn)
+target_link_libraries(recover_tree ${COMMON_LIBRARIES})
 
-add_executable(dipspades
-        ../debruijn/kmer_coverage_model.cpp
-        ../debruijn/config_struct.cpp
-        ../debruijn/path_extend/pe_config_struct.cpp
-        ../debruijn/path_extend/bidirectional_path.cpp
-        ../debruijn/stage.cpp
-        ../debruijn/construction.cpp
-        ../debruijn/gap_closer.cpp
-        ../debruijn/simplification.cpp
-        ../debruijn/mismatch_correction.cpp
-        ../debruijn/pair_info_count.cpp
-        ../debruijn/distance_estimation.cpp
-        ../debruijn/repeat_resolving.cpp
-        ../debruijn/genomic_info_filler.cpp
-        dipspades_config.cpp
-        utils/files_utils.cpp
-        main.cpp)
+add_executable(recover_tree main.cpp
+                command_line_parsing.cpp
+                ${MGRA_SOURCE_DIR}/include/reader/reader.cpp
+                )
 
-target_link_libraries(dipspades input mph_index BamTools yaml-cpp nlopt ${COMMON_LIBRARIES} ssw)
-
-if (SPADES_STATIC_BUILD)
-    set_target_properties(dipspades PROPERTIES LINK_SEARCH_END_STATIC 1)
-endif()
-
-install(TARGETS dipspades
-        DESTINATION bin
-        COMPONENT runtime)
-install(DIRECTORY "${SPADES_CFG_DIR}/dipspades"
-        DESTINATION share/spades/configs
-        FILES_MATCHING PATTERN "*.info.template")

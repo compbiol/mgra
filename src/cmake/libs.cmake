@@ -14,18 +14,20 @@ set_property(TARGET BLOSSOM5 APPEND_STRING PROPERTY COMPILE_FLAGS " -w")
 
 # Google Test & Mock
 if (MGRA_TESTS_ON)
-    set(TEST_PROJECT_NAME full_test)
+    message("Start build test library")
+    set(MGRA_TESTS_PROJECT_NAME mgra_tests)
     set(MGRA_TESTS_DIRECTORY tests)
-    FILE(GLOB_RECURSE MGRA_TEST_SOURCE ${TESTS_DIRECTORY}/*.cpp)
 
+    FILE(GLOB_RECURSE MGRA_TESTS_SOURCE ${MGRA_TESTS_DIRECTORY}/*.cpp)
+
+    include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
     add_subdirectory(server_test_library/gtest-1.7.0)
 
     enable_testing()
 
-    include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
-
-    add_executable(${TEST_PROJECT_NAME} ${MGRA_TEST_SOURCE})
-    target_link_libraries(${TEST_PROJECT_NAME} gtest gtest_main)
+    include_directories(${MGRA_TESTS_DIRECTORY}/include ${MGRA_MAIN_INCLUDE_DIR} ${MGRA_MAIN_LIB_DIR})
+    add_executable(${MGRA_TESTS_PROJECT_NAME} ${MGRA_TESTS_SOURCE})
+    target_link_libraries(${MGRA_TESTS_PROJECT_NAME} gtest gtest_main)
 
     # We need thread support
     #	find_package(Threads REQUIRED)

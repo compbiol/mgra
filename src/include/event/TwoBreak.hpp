@@ -1,5 +1,5 @@
-#ifndef TWOBREAK_HPP
-#define TWOBREAK_HPP
+#ifndef MGRA_TWOBREAK_HPP
+#define MGRA_TWOBREAK_HPP
 
 namespace event { 
 
@@ -268,4 +268,4 @@ event::TwoBreak<mcolor_t> event::TwoBreak<mcolor_t>::get_canonical_twobreak() co
   return TwoBreak(new_arc[0], new_arc[1], m_multicolor);
 }
 
-#endif
+#endif //MGRA_TWOBREAK_HPP

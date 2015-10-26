@@ -33,4 +33,16 @@ bool organize_output_directory();
  */
 void create_logger_from_config();
 
+/**
+ * Create directory with cheks
+ */
+inline bool create_dir_if_not_exists(std::string const &directory) {
+    if (path::check_existence(directory)) {
+        if (path::FileExists(directory)) return false;
+    } else {
+        return path::make_dir(directory);
+    }
+    return true;
+}
+
 #endif //_MGRA_ARG_PARSING_HPP_

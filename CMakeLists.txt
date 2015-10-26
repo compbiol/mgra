@@ -7,6 +7,9 @@
 # Hard prerequisites
 cmake_minimum_required(VERSION 2.8.12)
 
+# Global name of project
+project(MGRA CXX)
+
 # allow more human readable "if then else" constructs
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
 
@@ -16,7 +19,7 @@ ADD_CUSTOM_TARGET(ADD_HEADERS SOURCES ${ALL_HEADERS})
 FILE(GLOB_RECURSE ALL_NEW_HEADERS ${CMAKE_SOURCE_DIR}/*.hpp)
 ADD_CUSTOM_TARGET(ADD_NEW_HEADERS SOURCES ${ALL_NEW_HEADERS})
 
-# modules to find additional libraries (like zlib, boost and etc)
+# Modules to find additional libraries and flags (like blossom V, boost and etc)
 # Add path for custom modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/src/cmake")
 
@@ -41,7 +44,7 @@ if ((CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR) OR (CMAKE_SOURCE_DIR STREQUAL "
 endif()
 
 # Default configuration
-set(MGRA_DEFAULT_BUILD_TYPE "RelWithAsserts" CACHE STRING "SPAdes default build type")
+set(MGRA_DEFAULT_BUILD_TYPE "RelWithAsserts" CACHE STRING "MGRA default build type")
 if (NOT CMAKE_BUILD_TYPE)
 	message("Setting default build configuration: ${MGRA_DEFAULT_BUILD_TYPE}")
 	set(CMAKE_BUILD_TYPE "${MGRA_DEFAULT_BUILD_TYPE}" CACHE STRING
@@ -63,28 +66,10 @@ add_subdirectory(${MGRA_MAIN_SRC_DIR}/recover_tree)
 # Build main module
 add_subdirectory(${MGRA_MAIN_SRC_DIR}/mgra)
 
+# Build linearization module
 #add_subdirectory(${MGRA_MAIN_SRC_DIR}/linearization)
 
-
-#include_directories(${CMAKE_BINARY_DIR}
-#			src/libs/JsonCpp/
-#			src/include
-#			src/recover_tree
-#			src/mgra
-#			src/linearization
-#			src/libs
-#			)
-
-
-
-#if(WIN32)
-#	message(SEND_ERROR "Windows is unsupported system, please use UNIX or OS X systems")
-#else()
-#	set(LIB_DIR "lib/MGRA")
-#	set(SHARE_DIR "share/MGRA")
-#	set(DOC_DIR "share/MGRA/doc")
-#	install(TARGETS mgra RUNTIME DESTINATION bin)
-#	install(FILES ${ROOT_DIR}/NEWS.md ${ROOT_DIR}/README.md ${ROOT_DIR}/USAGE.md ${ROOT_DIR}/INSTALL.md ${ROOT_DIR}/COPYING DESTINATION ${DOC_DIR})
-#endif()
+# Add pack option
+include(pack)
 
 

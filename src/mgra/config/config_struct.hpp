@@ -4,11 +4,45 @@
 #include "defined.hpp"
 #include "JsonCpp/json/json.h"
 #include "event/TwoBreak.hpp"
+#include "event/WGD.hpp"
+
+/**
+ * Enum describe type of algorithm transforming multibreakpoint graph
+ */
+enum build_type {
+    default_algo,
+    target_algo,
+    wgd_algo,
+    user_algo
+};
+
+/**
+ * Enum describe kind of stage which involved in algorithm
+ */
+enum kind_stage {
+    balance_k,
+    simple_path_k,
+    four_cycles_k,
+    fair_edge_k,
+    clone_k,
+    fair_clone_edge_k,
+    components_k,
+    change_canform_k,
+    bruteforce_k,
+    blossomv_k,
+    completion_k
+};
 
 // This structure contains information from *.cfg file
 template<class mcolor_t>
 struct main_config {
+    using wgd_t = event::WGD<mcolor_t>;
     using twobreak_t = event::TwoBreak<mcolor_t>;
+    using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
+
+    inline std::string const &get_RGBcolor(size_t index) const {
+        return RGBcolors[RGBcoeff * index];
+    }
 
     mcolor_t name_to_mcolor(std::string const &temp) const;
 
@@ -19,7 +53,7 @@ struct main_config {
     }
 
     inline size_t get_genome_number(std::string const &name) const {
-        assert (genome_number.count(name) != 0);
+        assert(genome_number.count(name) != 0);
         return genome_number.find(name)->second;
     }
 
@@ -28,32 +62,31 @@ struct main_config {
         return priority_name[index];
     }
 
-    inline std::string const &get_RGBcolor(size_t index) const {
-        return RGBcolors[RGBcoeff * index];
-    }
-
     DECLARE_DELEGATE_CONST_METHOD(size_t, priority_name, get_count_genomes, size)
 
+    /**
+     * Main function for init full config from JSON format
+     */
     void load(Json::Value const &root);
 
     /**
-     * Function which can init all config
+     * Main function for save full config in JSON format
      */
-    void parse(std::unordered_map<std::string, std::vector<std::string> > const &input);
-    //void load(std::string const & path_to_file);
-    //void save();
-
-    bool is_debug;
-    bool is_saves;
-    block_file_type_t block_file_type;
+    Json::Value save() const;
 
     /**
-    * Paths to different files
-    */
+     * Paths to different files
+     */
     std::string config_file_path; //Path to input config file
-    std::vector<std::string> path_to_blocks_file;
-    std::string blocks_file_path; //Path to input genomes file with synteny blocks
 
+    block_file_type_t block_file_type;
+    std::vector<std::string> path_to_blocks_file; //Path to input genomes file with synteny blocks
+
+    std::string blocks_file_path;
+
+    /**
+     * Paths to different out directories
+     */
     std::string out_path_directory; // Path to output directory
     std::string out_path_to_logger_file; // Path to logfile
     std::string out_path_to_input_dir; // Path to input dir containing config and block
@@ -63,31 +96,54 @@ struct main_config {
     std::string out_path_to_transfomations_dir; //Path where resulting genomes are put
 
     /**
-     * Different strategy for build.
+     * Strategy for mgra algorithm: default, target, users
      */
     build_type how_build;
 
     /**
-    * The statistics provider used by recover tree algorithm
-    */
-    using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
+     * Input (sub) phylotrees
+     */
     std::vector<phylogeny_tree_t> phylotrees;
-    bool is_linearization_ancestors;
 
     /**
-     * Number of stage and rounds
+     * Input WGD events
+     */
+    std::vector<wgd_t> wgds_events;
+
+    /**
+     * Input reconstruction target genome
+     */
+    mcolor_t target;
+
+    /**
+     * Number of rounds (i.e. change number of split T-consistent colors)
      */
     size_t rounds;
-    std::vector<algo::kind_stage> pipeline;
 
     /**
-     * Switch on/off bruteforce stage for small components
+     * Pipeline from stages which transforms multibreakpoint graph.
+     */
+    std::vector<kind_stage> pipeline;
+
+    /**
+     * Size of components which would be processed in bruteforce stage (time confusing).
      */
     size_t size_component_in_bruteforce;
 
+    /**
+     *
+     */
     std::list<twobreak_t> completion;
 
-    mcolor_t target_mcolor;
+    /**
+     *
+     */
+    bool is_debug;
+
+    /**
+     *
+     */
+    bool is_saves;
 
     std::string colorscheme;
 
@@ -102,12 +158,6 @@ private:
     std::map<mcolor_t, std::string> mcolor_name;
 
 private:
-    void default_rgb_colors();
-
-    void default_algorithm();
-
-    void default_target_algorithm();
-
     /**
      * Different load function
      */
@@ -120,6 +170,10 @@ private:
     void load_trees(Json::Value const &trees);
 
     void load_tree(Json::Value const &tree);
+
+    void load_algorithm(Json::Value const &algo);
+
+    void load_pipeline(Json::Value const &stages);
 
     void load_wgd_events(Json::Value const &wgds);
 
@@ -138,17 +192,46 @@ private:
     void load_debug(Json::Value const &enable_debug);
 
     /**
-     * Different parse function
+     * Different save function
      */
-    void parse_genomes(std::vector<std::string> const &input);
+    Json::Value save_genomes() const;
 
-    void parse_trees(std::vector<std::string> const &input);
+    Json::Value save_genome(size_t ind) const;
 
-    void parse_algorithm(std::vector<std::string> const &input);
+    Json::Value save_files() const;
 
-    void parse_target(std::vector<std::string> const &input);
+    Json::Value save_trees() const;
 
-    void parse_completion(std::vector<std::string> const &input);
+    Json::Value save_tree(size_t ind) const;
+
+    Json::Value save_algorithm() const;
+
+    Json::Value save_pipeline() const;
+
+    Json::Value save_wgd_events() const;
+
+    Json::Value save_wgd_event(size_t ind) const;
+
+    Json::Value save_target() const;
+
+    Json::Value save_complections() const;
+
+    Json::Value save_complection(size_t ind) const;
+
+    Json::Value save_output_directory() const;
+
+    Json::Value save_saves() const;
+
+    Json::Value save_debug() const;
+
+    /**
+     * Default strategy for init config
+     */
+    void default_rgb_colors();
+
+    void default_algorithm();
+
+    void default_target_algorithm();
 };
 
 #include "config/config_struct_impl.hpp"
@@ -156,4 +239,3 @@ private:
 using cfg = config_common::config<main_config<structure::Mcolor> >;
 
 #endif //MGRA_CONFIG_STRUCT_HPP
-

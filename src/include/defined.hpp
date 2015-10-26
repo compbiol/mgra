@@ -48,26 +48,6 @@ vertex_t const Infty = "oo";
 #include "structures/mularcs.hpp"
 #include "structures/genome.hpp"
 
-enum build_type { default_algo, wgd_algo, assembly_algo, target_algo };
-
 enum block_file_type_t { infercars, grimm };
-
-namespace algo {
-
-enum kind_stage {balance_k,
-    simple_path_k,
-    four_cycles_k,
-    fair_edge_k,
-    clone_k,
-    fair_clone_edge_k,
-    components_k,
-    change_canform_k,
-    bruteforce_k,
-    blossomv_k,
-    completion_k
-};
-
-}
-
 
 #endif //MGRA_DEFINED_HPP

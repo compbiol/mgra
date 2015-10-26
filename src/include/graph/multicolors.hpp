@@ -118,8 +118,8 @@ Multicolors<mcolor_t>::Multicolors() {
     } 
     nodes_color.erase(remove_color);
   } else if (cfg::get().how_build == target_algo) { 
-    remove_color = cfg::get().target_mcolor;
-    nodes_color.erase(cfg::get().target_mcolor);
+    remove_color = cfg::get().target;
+    nodes_color.erase(cfg::get().target);
   }
   vec_T_consistent_colors = nodes_color;
 

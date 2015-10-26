@@ -13,8 +13,8 @@ struct config {
     return (std::string::npos == pos) ? "" : fname.substr(0, pos);
   }
 
-  static void create_instance(std::string const & filename) {
-    load(inner_cfg(), filename);
+  static void create_instance(std::istream & source) {
+    load(inner_cfg(), source);
     is_initialized() = true;
   }
 

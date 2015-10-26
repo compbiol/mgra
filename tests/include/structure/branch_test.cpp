@@ -3,7 +3,7 @@
 //
 
 #include "gtest/gtest.h"
-#include "structures/branch.hpp"
+/*#include "structures/branch.hpp"
 #include "structures/mcolor.hpp"
 
 using namespace structure;
@@ -17,4 +17,4 @@ TEST(BranchTest, DoIntersect) {
   auto left_branch = branch_t(left, right);
   auto right_branch = branch_t(Mcolor(left, right, Mcolor::Union), Mcolor());
   ASSERT_FALSE(BranchHelper::do_intersect(left_branch, right_branch));
-}
+}*/

@@ -338,7 +338,7 @@ void GraphPack<mcolor_t>::Statistics::count_bag_patterns(GraphPack<mcolor_t> con
             }
             auto all_colors = {double_color, start_first_color, second_last_color};
             auto cumulative_color = mcolor_t::color_union(all_colors);
-            if (!cumulative_color.includes(cfg::get().complete_color())) {
+            if (!cumulative_color.includes(graph_pack.multicolors.get_complete_color())) {
               continue;
             }
             ++bag_count[double_color];
@@ -381,7 +381,7 @@ void GraphPack<mcolor_t>::Statistics::count_cylinder_patterns(GraphPack<mcolor_t
             }
             auto all_colors = {double_color, start_first_color, second_last_color};
             auto cumulative_color = mcolor_t::color_union(all_colors);
-            if (!cumulative_color.includes(cfg::get().complete_color())) {
+            if (!cumulative_color.includes(graph_pack.multicolors.get_complete_color())) {
               continue;
             }
             ++cylinder_count[double_color];

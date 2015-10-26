@@ -19,8 +19,8 @@ struct MultiGraph {
     std::unordered_set<orf_t> blocks;
 
     for (auto const & genome : genomes) { 
-      for(auto const & chromosome : genome) {
-        for(auto const & orf : chromosome.second) {
+      for (auto const & chromosome : genome) {
+        for (auto const & orf : chromosome.second) {
       	  if (blocks.count(orf.second.first) == 0) { 
       	    obverse_edges.insert(std::make_pair(orf.second.first + "t", orf.second.first + "h"));
       	    obverse_edges.insert(std::make_pair(orf.second.first + "h", orf.second.first + "t"));
@@ -32,7 +32,7 @@ struct MultiGraph {
       }
     }
 
-    for(size_t i = 0; i < genomes.size(); ++i) {
+    for (size_t i = 0; i < genomes.size(); ++i) {
       add_edges(i, genomes[i]); 
     }	
   } 
@@ -133,7 +133,7 @@ private:
   }
 
 protected:
-  std::set<vertex_t> vertex_set; //set of vertice
+  std::set<vertex_t> vertex_set; //set of vertices
   std::unordered_map<vertex_t, vertex_t> obverse_edges; //obverse relation 
   std::vector<partgraph_t> m_local_graphs; //local graphs of each color 
 };	

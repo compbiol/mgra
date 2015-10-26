@@ -6,7 +6,7 @@ set(CPACK_CMAKE_GENERATOR "Unix Makefiles")
 set(CPACK_PACKAGE_NAME "MGRA")
 set(CPACK_PACKAGE_VENDOR "The George Washington University")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${MGRA_MAIN_SRC_DIR}/../README.md")
-set(CPACK_RESOURCE_FILE_LICENSE "${MGRA_MAIN_SRC_DIR}/../COPYING")
+set(CPACK_RESOURCE_FILE_LICENSE "${MGRA_MAIN_SRC_DIR}/../LICENSE")
 
 # Version of MGRA
 set(CPACK_PACKAGE_VERSION_MAJOR ${MGRA_VERSION_MAJOR})
@@ -19,9 +19,17 @@ set(CPACK_SOURCE_GENERATOR "TBZ2")
 set(CPACK_SOURCE_IGNORE_FILES "\\\\.git.*;/build/.+;${CPACK_SOURCE_IGNORE_FILES};")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
 
-#set(CPACK_STRIP_FILES bin/spades bin/hammer bin/ionhammer bin/dipspades bin/spades-bwa bin/corrector bin/scaffold_correction)
-
 #set(CPACK_PACKAGE_INSTALL_DIRECTORY "MGRA")
 #set(CMAKE_SOURCE_DIR ${ROOT_DIR})
+
+#if(WIN32)
+#	message(SEND_ERROR "Windows is unsupported system, please use UNIX or OS X systems")
+#else()
+#	set(LIB_DIR "lib/MGRA")
+#	set(SHARE_DIR "share/MGRA")
+#	set(DOC_DIR "share/MGRA/doc")
+#	install(TARGETS mgra RUNTIME DESTINATION bin)
+#	install(FILES ${ROOT_DIR}/NEWS.md ${ROOT_DIR}/README.md ${ROOT_DIR}/USAGE.md ${ROOT_DIR}/INSTALL.md ${ROOT_DIR}/COPYING DESTINATION ${DOC_DIR})
+#endif()
 
 include(CPack)

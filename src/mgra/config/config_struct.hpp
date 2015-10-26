@@ -32,9 +32,6 @@ struct main_config {
         return RGBcolors[RGBcoeff * index];
     }
 
-    //FIXME: NEED TO REMOVE OR OPTIMIZE
-    mcolor_t complete_color() const;
-
     DECLARE_DELEGATE_CONST_METHOD(size_t, priority_name, get_count_genomes, size)
 
     void load(Json::Value const &root);
@@ -64,8 +61,6 @@ struct main_config {
     std::string out_path_to_saves_dir; // Path to saves dir
     std::string out_path_to_genomes_dir; //Path where resulting genomes are put
     std::string out_path_to_transfomations_dir; //Path where resulting genomes are put
-    std::string trees_path; //Path where recovered trees are put
-    std::string tree_summary_path; //Path where summary of recovered trees in newick format is put
 
     /**
      * Different strategy for build.
@@ -73,14 +68,8 @@ struct main_config {
     build_type how_build;
 
     /**
-     * Switch on/off tree recovery mode
-     */
-    bool is_recover_tree;
-
-    /**
     * The statistics provider used by recover tree algorithm
     */
-    recover_tree_statistic_t recover_tree_statistic;
     using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
     std::vector<phylogeny_tree_t> phylotrees;
     bool is_linearization_ancestors;
@@ -159,7 +148,7 @@ private:
 
     void parse_target(std::vector<std::string> const &input);
 
-    void parse_completion(std::vector<<std::string> const &input);
+    void parse_completion(std::vector<std::string> const &input);
 };
 
 #include "config/config_struct_impl.hpp"

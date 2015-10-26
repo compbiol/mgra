@@ -63,10 +63,6 @@ int parse_config_from_command_line(int argc, char** argv) {
     cfg::get_writable().is_debug = debug_arg.getValue();
     cfg::get_writable().is_saves = saves_arg.getValue();
     cfg::get_writable().how_build = default_algo;
-    
-    // Disable
-    cfg::get_writable().is_recover_tree = false; //recover_tree_arg.getValue();
-    cfg::get_writable().recover_tree_statistic = distribution;
 
     cfg::create_instance(path_to_cfg_file_arg.getValue());
 

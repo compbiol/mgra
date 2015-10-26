@@ -9,11 +9,11 @@
 
 #include "command_line_parsing.hpp"
 
-#include "algo/Algorithms.hpp"
-#include "reader/reader.h"
+//#include "algo/Algorithms.hpp"
+//#include "reader/reader.hpp"
 
-#include "writer/txt_genome.hpp"
-#include "writer/txt_transform.hpp"
+//#include "writer/txt_genome.hpp"
+//#include "writer/txt_transform.hpp"
 
 int main(int argc, char** argv) {
   if (parse_config_from_command_line(argc, argv)) {
@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
   //Reading problem configuration and genomes
   using genome_t = structure::Genome;
   using mcolor_t = structure::Mcolor;
-  using graph_pack_t = GraphPack<mcolor_t>;
+  /*using graph_pack_t = GraphPack<mcolor_t>;
 
   INFO("Parse genomes file")
   std::vector<genome_t> genomes;
@@ -69,6 +69,7 @@ int main(int argc, char** argv) {
       }
       INFO(out.str())
     }
+*/
 
 #if 0
     boost::optional<algo::RecoveredInformation<graph_pack_t>::AncestorInformation> result;

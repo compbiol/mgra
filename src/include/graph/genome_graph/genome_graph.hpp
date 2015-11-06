@@ -10,6 +10,7 @@
 template<class vertex_t>
 struct GenomeGraph {
     using genome_t = structure::Genome;
+    using edge_t = std::pair<vertex_t, vertex_t>
     using twobreak_t = event::TwoBreak<structure::Mcolor>;
     using clone_t =  event::Clone<structure::Mcolor>;
     using insdel_t = event::InsDel<structure::Mcolor>;
@@ -27,6 +28,10 @@ struct GenomeGraph {
         edges.insert(u, v);
     }
 
+    inline void add_edge(edge_t const & edge) {
+        add_edge(edge.first, edge.second);
+    }
+
     inline void erase_vertex(vertex_t const & v) {
         assert(vertices.count(v) == 0);
         vertices.erase(v);
@@ -36,6 +41,10 @@ struct GenomeGraph {
         assert(vertices.count(u) == 0);
         assert(vertices.count(v) == 0);
         edges.erase(u, v);
+    }
+
+    inline void erase_edge(edge_t const & edge) {
+        erase_edge(edge.first, edge.second);
     }
 
     /**
@@ -67,6 +76,20 @@ struct GenomeGraph {
         }
     }
 
+    inline bool is_vertex(vertex_t const & v) const {
+        return (vertices.count(v) != 0);
+    }
+
+    inline bool is_edge(vertex_t const & u, vertex_t const & v) const {
+        assert(vertices.count(u) != 0);
+        assert(vertices.count(v) != 0);
+        return (edges.find(u, v) != edges.end());
+    }
+
+    inline bool is_edge(edge_t const & edge) const {
+        return is_edge(edge.first, edge.second);
+    }
+
     /**
      * Count number of circular chromosomes in genome.
      * In paper about linearization algorithm this function corresponding c(.)
@@ -93,6 +116,17 @@ private:
 
 template <class vertex_t>
 void GenomeGraph<vertex_t>::apply(twobreak_t & event) {
+    for(size_t i = 0; i < 2; ++i) {
+        if (event.get_arc(i).first != Infty || event.get_arc(i).second != Infty) {
+            erase_edge(event.get_arc(i));
+        }
+    }
+
+    for(size_t i = 0; i < 2; ++i) {
+        if (event.get_vertex(i) != Infty || event.get_vertex(i + 2) != Infty) {
+            add_edge(event.get_vertex(i), event.get_vertex(i + 2));
+        }
+    }
 }
 
 template <class vertex_t>
@@ -101,6 +135,7 @@ void GenomeGraph<vertex_t>::apply(clone_t & event) {
 
 template <class vertex_t>
 void GenomeGraph<vertex_t>::apply(insdel_t & event) {
+    add_edge(event.get_edge());
 }
 
 template <class vertex_t>

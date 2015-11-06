@@ -15,6 +15,7 @@ struct tree_config {
     void load(Json::Value const &root);
 
     DECLARE_DELEGATE_CONST_METHOD(size_t, priority_name, get_count_genomes, size)
+
 private:
     void load_genomes(Json::Value const &genomes);
 

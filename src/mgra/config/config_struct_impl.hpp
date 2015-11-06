@@ -6,11 +6,12 @@
  */
 template<class mcolor_t>
 void load(main_config<mcolor_t> &cfg, std::istream & source) {
-    INFO("Start load cfg file in MGRA format")
+    INFO("Start load cfg file in MGRA format");
 
     Json::Value root;
     Json::Reader reader;
     bool isError =  reader.parse(source, root);
+
 
     if (!isError) {
       std::string error_msg = "Failed to parse JSON config\n" + reader.getFormattedErrorMessages();
@@ -18,7 +19,9 @@ void load(main_config<mcolor_t> &cfg, std::istream & source) {
       exit(1);
     }
 
+
     cfg.load(root);
+    std::cerr << "Finish load cfg file in MGRA format" << std::endl;
 
     INFO("Finish load cfg file in MGRA format")
 }
@@ -94,10 +97,16 @@ void main_config<mcolor_t>::load(Json::Value const &root) {
         exit(1);
     }
 
+    if (!root["format_of_blocks"].isNull()) {
+        load_block_type(root["format_of_blocks"]);
+    } else {
+        std::cerr << "ERROR: format_of_blocks section is required" << std::endl;
+        exit(1);
+    }
+
     if (!root["files"].isNull()) {
         load_files(root["files"]);
     } else {
-        std::cerr << "ERROR: files section is required" << std::endl;
         exit(1);
     }
 
@@ -124,10 +133,13 @@ void main_config<mcolor_t>::load(Json::Value const &root) {
         default_target_algorithm();
     }
 
-    if (!root["output_directory"].isNull()) {
+    if (!out_path_directory.empty()) {
+        default_directory_organization();
+    } else if (!root["output_directory"].isNull()) {
         load_output_directory(root["output_directory"]);
+        default_directory_organization();
     } else {
-        std::cerr << "ERROR: output directory is required" << std::endl;
+        std::cerr << "ERROR: output directory is required. Please type -o <dirname> or in config file" << std::endl;
         exit(1);
     }
 
@@ -149,6 +161,8 @@ Json::Value main_config<mcolor_t>::save() const {
     Json::Value root;
 
     root["genomes"] = save_genomes();
+
+    root["format_of_blocks"] = save_block_type();
 
     root["files"] = save_files();
 
@@ -230,6 +244,7 @@ void main_config<mcolor_t>::load_genome(Json::Value const &genome, size_t index)
 
         priority_name[index] = name;
         genome_number.insert(std::make_pair(name, index));
+        number_to_genome.insert(std::make_pair(index, name));
     }
 
     // Parse optional section about genome aliases names
@@ -249,19 +264,36 @@ void main_config<mcolor_t>::load_genome(Json::Value const &genome, size_t index)
 }
 
 template<class mcolor_t>
+void main_config<mcolor_t>::load_block_type(Json::Value const &type_of_file) {
+    if (!type_of_file.isString()) {
+        std::cerr << "ERROR: type format of block files must have string format" << std::endl;
+        exit(1);
+    }
+
+    if (type_of_file.asString() == "infercars") {
+        block_file_type = block_file_type_t::infercars;
+    } else if (type_of_file.asString() == "grimm") {
+        block_file_type = block_file_type_t::grimm;
+    } else {
+        std::cerr << "ERROR: Unsuported type of blocks (grimm, infercars required)" << std::endl;
+    }
+}
+
+template<class mcolor_t>
 void main_config<mcolor_t>::load_files(Json::Value const &path_to_files) {
     if (!path_to_files.isArray()) {
         std::cerr << "ERROR: files section is array with at least one blocks file" << std::endl;
         exit(1);
     }
 
+    std::string dir_with_cfg = path::parent_path(config_file_path);
+
     for (Json::Value::iterator it = path_to_files.begin(); it != path_to_files.end(); ++it) {
         if (!it->isString()) {
             std::cerr << "ERROR: path to file must have string type" << std::endl;
             exit(1);
         }
-
-        path_to_blocks_file.push_back(it->asString());
+        path_to_blocks_file.push_back(path::make_full_path(path::append_path(dir_with_cfg, it->asString())));
     }
 }
 
@@ -500,20 +532,6 @@ void main_config<mcolor_t>::load_output_directory(Json::Value const &path_to_dir
     }
 
     out_path_directory = path_to_dir.asString();
-
-    std::string const LOGGER_FILENAME = "mgra.log";
-    std::string const INPUT_DIRNAME = "input";
-    std::string const DEBUG_DIRNAME = "debug";
-    std::string const SAVES_DIRNAME = "saves";
-    std::string const GENOMES_DIRNAME = "genomes";
-    std::string const TRANS_DIRNAME = "transformations";
-
-    out_path_to_logger_file = path::append_path(out_path_directory, LOGGER_FILENAME);
-    out_path_to_input_dir = path::append_path(out_path_directory, INPUT_DIRNAME);
-    out_path_to_debug_dir = path::append_path(out_path_directory, DEBUG_DIRNAME);
-    out_path_to_saves_dir = path::append_path(out_path_directory, SAVES_DIRNAME);
-    out_path_to_genomes_dir = path::append_path(out_path_directory, GENOMES_DIRNAME);
-    out_path_to_transfomations_dir = path::append_path(out_path_directory, TRANS_DIRNAME);
 }
 
 template<class mcolor_t>
@@ -551,15 +569,41 @@ Json::Value main_config<mcolor_t>::save_genomes() const {
 template<class mcolor_t>
 Json::Value main_config<mcolor_t>::save_genome(size_t ind) const {
     Json::Value genome(Json::objectValue);
-    genome["genome_id"] = Json::Value(ind);
-    //TODO
+
+    genome["genome_id"] = Json::Value((int) ind);
+
+    genome["priorety_name"] = Json::Value(priority_name[ind]);
+
+    genome["aliases"] = Json::Value(Json::arrayValue);
+    auto range = number_to_genome.equal_range(ind);
+    for (auto it = range.first; it != range.second; ++it) {
+        genome["aliases"].append(Json::Value(it->second));
+    }
+
     return genome;
+}
+
+template<class mcolor_t>
+Json::Value main_config<mcolor_t>::save_block_type() const {
+    Json::Value type;
+
+    if (block_file_type == block_file_type_t::infercars) {
+        type = Json::Value("infercars");
+    } else if (block_file_type == block_file_type_t::grimm) {
+        type = Json::Value("grimm");
+    }
+
+    return type;
 }
 
 template<class mcolor_t>
 Json::Value main_config<mcolor_t>::save_files() const {
     Json::Value files(Json::arrayValue);
-    //TODO
+
+    for (auto it = path_to_blocks_file.cbegin(); it != path_to_blocks_file.cend(); ++it) {
+        files.append(Json::Value(*it));
+    }
+
     return files;
 }
 
@@ -576,23 +620,47 @@ Json::Value main_config<mcolor_t>::save_trees() const {
 
 template<class mcolor_t>
 Json::Value main_config<mcolor_t>::save_tree(size_t ind) const {
-    Json::Value tree(Json::objectValue);
-    //TODO
+    std::ostringstream out;
+    writer::TXT_NewickTree<phylogeny_tree_t> printer(out);
+    printer.print_tree(phylotrees[ind]);
+    Json::Value tree(out.str());
     return tree;
 }
 
 template<class mcolor_t>
 Json::Value main_config<mcolor_t>::save_algorithm() const {
     Json::Value algo(Json::objectValue);
-    algo["rounds"] = Json::Value(rounds);
-    //TODO
+    algo["rounds"] = Json::Value((int) rounds);
+    algo["stages"] = save_pipeline();
     return algo;
 }
 
 template<class mcolor_t>
 Json::Value main_config<mcolor_t>::save_pipeline() const {
     Json::Value stages(Json::arrayValue);
-    //TODO
+
+    for (auto stage = pipeline.cbegin(); stage != pipeline.cend(); ++stage) {
+        if (*stage == kind_stage::balance_k) {
+            stages.append(Json::Value("balance"));
+        } else if (*stage == kind_stage::simple_path_k) {
+            stages.append(Json::Value("simple_path"));
+        } else if (*stage == kind_stage::four_cycles_k) {
+            stages.append(Json::Value("four_cycles"));
+        } else if (*stage == kind_stage::fair_edge_k) {
+            stages.append(Json::Value("fair_edge"));
+        } else if (*stage == kind_stage::clone_k) {
+            stages.append(Json::Value("clone"));
+        } else if (*stage == kind_stage::fair_clone_edge_k) {
+            stages.append(Json::Value("fair_clone_edge"));
+        } else if (*stage == kind_stage::components_k) {
+            stages.append(Json::Value("components"));
+        } else if (*stage == kind_stage::bruteforce_k) {
+            stages.append(Json::Value("bruteforce"));
+        } else if (*stage == kind_stage::blossomv_k) {
+            stages.append(Json::Value("blossomv"));
+        }
+    }
+
     return stages;
 }
 
@@ -612,7 +680,7 @@ Json::Value main_config<mcolor_t>::save_wgd_event(size_t ind) const {
     Json::Value wgd;
     wgd["parent"] = Json::Value(mcolor_to_name(wgds_events[ind].get_parent()));
     wgd["children"] = Json::Value(mcolor_to_name(wgds_events[ind].get_children()));
-    wgd["multiplicity"] = Json::Value(wgds_events[ind].get_multiplicity());
+    wgd["multiplicity"] = Json::Value((int) wgds_events[ind].get_multiplicity());
     return wgd;
 }
 
@@ -625,18 +693,19 @@ template<class mcolor_t>
 Json::Value main_config<mcolor_t>::save_complections() const {
     Json::Value complects(Json::arrayValue);
 
-    for (size_t ind = 0; ind < completion.size(); ++ind) {
-        complects.append(save_complection(ind));
+    for (auto it = completion.cbegin(); it != completion.cend(); ++it) {
+        complects.append(save_complection(it));
     }
 
     return complects;
 }
 
 template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_complection(size_t ind) const {
-    Json::Value complect;
-    //TODO
-    return complect;
+Json::Value main_config<mcolor_t>::save_complection(typename std::list<twobreak_t>::const_iterator const & twobreak) const {
+    std::ostringstream out;
+    out << twobreak->get_vertex(0) << " " << twobreak->get_vertex(1) << " " << twobreak->get_vertex(2) << " " <<
+            twobreak->get_vertex(3) << " " << mcolor_to_name(twobreak->get_multicolor());
+    return Json::Value(out.str());
 }
 
 template<class mcolor_t>
@@ -653,7 +722,6 @@ template<class mcolor_t>
 Json::Value main_config<mcolor_t>::save_debug() const {
     return Json::Value(is_debug);
 }
-
 
 /**
 * Function, which initilization structure on default parameters
@@ -683,6 +751,23 @@ void main_config<mcolor_t>::default_target_algorithm() {
     pipeline.push_back(kind_stage::clone_k);
     pipeline.push_back(kind_stage::components_k);
     pipeline.push_back(kind_stage::change_canform_k);
+}
+
+template<class mcolor_t>
+void main_config<mcolor_t>::default_directory_organization() {
+    std::string const LOGGER_FILENAME = "mgra.log";
+    std::string const INPUT_DIRNAME = "input";
+    std::string const DEBUG_DIRNAME = "debug";
+    std::string const SAVES_DIRNAME = "saves";
+    std::string const GENOMES_DIRNAME = "genomes";
+    std::string const TRANS_DIRNAME = "transformations";
+
+    out_path_to_logger_file = path::append_path(out_path_directory, LOGGER_FILENAME);
+    out_path_to_input_dir = path::append_path(out_path_directory, INPUT_DIRNAME);
+    out_path_to_debug_dir = path::append_path(out_path_directory, DEBUG_DIRNAME);
+    out_path_to_saves_dir = path::append_path(out_path_directory, SAVES_DIRNAME);
+    out_path_to_genomes_dir = path::append_path(out_path_directory, GENOMES_DIRNAME);
+    out_path_to_transfomations_dir = path::append_path(out_path_directory, TRANS_DIRNAME);
 }
 
 template<class mcolor_t>

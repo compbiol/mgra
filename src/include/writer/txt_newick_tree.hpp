@@ -14,6 +14,11 @@ struct TXT_NewickTree {
   {
   }
 
+  void print_tree(tree_t const & tree) {
+    print_node(tree.get_root());
+    end_tree();
+  }
+
   void print_tree(tree_ptr const& tree) {
     print_node(tree->get_root());
     end_tree();

@@ -24,22 +24,6 @@ int parse_config_from_command_line(int argc, char **argv) {
                                                           "filename",
                                                           cmd);
 
-        TCLAP::ValueArg<std::string> path_to_blocks_grimm_file_arg("g",
-                                                                   "grimm_genomes",
-                                                                   "Input file contains genomes in GRIMM format",
-                                                                   true,
-                                                                   "",
-                                                                   "filename");
-
-        TCLAP::ValueArg<std::string> path_to_blocks_infercars_file_arg("i",
-                                                                       "infercars_genomes",
-                                                                       "Input file contains genomes in InferCARs format",
-                                                                       true,
-                                                                       "",
-                                                                       "filename");
-
-        cmd.xorAdd(path_to_blocks_grimm_file_arg, path_to_blocks_infercars_file_arg);
-
         TCLAP::ValueArg<std::string> output_arg("o",
                                                 "output",
                                                 "Output directory",
@@ -62,28 +46,14 @@ int parse_config_from_command_line(int argc, char **argv) {
 
         cmd.parse(argc, const_cast<const char *const *>(argv));
 
+        cfg::get_writable().config_file_path = path_to_cfg_file_arg.getValue();
+        cfg::get_writable().out_path_directory = path::make_full_path(output_arg.getValue());
+        cfg::get_writable().how_build = default_algo;
         cfg::get_writable().is_debug = debug_arg.getValue();
         cfg::get_writable().is_saves = saves_arg.getValue();
-        cfg::get_writable().how_build = default_algo;
 
         std::ifstream cfg_file(path_to_cfg_file_arg.getValue());
         cfg::create_instance(cfg_file);
-
-        cfg::get_writable().config_file_path = path_to_cfg_file_arg.getValue();
-        if (path_to_blocks_grimm_file_arg.isSet()) {
-            cfg::get_writable().blocks_file_path = path_to_blocks_grimm_file_arg.getValue();
-            cfg::get_writable().block_file_type = grimm;
-        } else if (path_to_blocks_infercars_file_arg.isSet()) {
-            cfg::get_writable().blocks_file_path = path_to_blocks_infercars_file_arg.getValue();
-            cfg::get_writable().block_file_type = infercars;
-        }
-
-        cfg::get_writable().out_path_directory = path::make_full_path(output_arg.getValue());
-
-        if (cfg::get().get_count_genomes() < 2) {
-            std::cerr << "ERROR: At least two input genomes required" << std::endl;
-            return 1;
-        }
 
         return 0;
     } catch (TCLAP::ArgException &e) {
@@ -93,8 +63,9 @@ int parse_config_from_command_line(int argc, char **argv) {
 }
 
 int validate_application_config() {
-    path::CheckFileExistenceFATAL(cfg::get().config_file_path);
-    path::CheckFileExistenceFATAL(cfg::get().blocks_file_path);
+    for (auto file = cfg::get().path_to_blocks_file.cbegin(); file != cfg::get().path_to_blocks_file.end(); ++file) {
+        path::CheckFileExistenceFATAL(*file);
+    }
 
     if (path::check_existence(cfg::get().out_path_directory)) {
         if (path::FileExists(cfg::get().out_path_directory)) {
@@ -107,6 +78,7 @@ int validate_application_config() {
             return 1;
         }
     }
+
     return 0;
 }
 
@@ -129,15 +101,22 @@ bool organize_output_directory() {
         result = result && create_dir_if_not_exists(cfg::get().out_path_to_debug_dir);
     }
 
+
     if (cfg::get().is_saves) {
         result = result && create_dir_if_not_exists(cfg::get().out_path_to_saves_dir);
     }
 
-    // Copy
-    path::copy_file(cfg::get().blocks_file_path, path::append_path(cfg::get().out_path_to_input_dir, "blocks.txt"));
-    cfg::get_writable().blocks_file_path = path::append_path(cfg::get().out_path_to_input_dir, "blocks.txt");
-    path::copy_file(cfg::get_writable().config_file_path,
-                    path::append_path(cfg::get().out_path_to_input_dir, "config.txt"));
+
+    //Copy input files
+    for (auto file = cfg::get_writable().path_to_blocks_file.begin(); file != cfg::get_writable().path_to_blocks_file.end(); ++file) {
+        path::copy_file(*file, path::append_path(cfg::get().out_path_to_input_dir, path::filename(*file)));
+        *file = path::append_path(cfg::get().out_path_to_input_dir, path::filename(*file));
+    }
+
+    //Save config
     cfg::get_writable().config_file_path = path::append_path(cfg::get().out_path_to_input_dir, "config.txt");
+    std::ofstream save_cfg(cfg::get_writable().config_file_path);
+    Json::StyledStreamWriter cfg_writer; cfg_writer.write(save_cfg, cfg::get().save());
+
     return result;
 }

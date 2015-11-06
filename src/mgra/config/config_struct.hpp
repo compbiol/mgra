@@ -3,6 +3,7 @@
 
 #include "defined.hpp"
 #include "JsonCpp/json/json.h"
+#include "writer/txt_newick_tree.hpp"
 #include "event/TwoBreak.hpp"
 #include "event/WGD.hpp"
 
@@ -75,14 +76,15 @@ struct main_config {
     Json::Value save() const;
 
     /**
-     * Paths to different files
+     * Path to config file
      */
     std::string config_file_path; //Path to input config file
 
-    block_file_type_t block_file_type;
+    /**
+     * Information about blocks file
+     */
+    block_file_type_t block_file_type; //Type of input dataset
     std::vector<std::string> path_to_blocks_file; //Path to input genomes file with synteny blocks
-
-    std::string blocks_file_path;
 
     /**
      * Paths to different out directories
@@ -96,9 +98,11 @@ struct main_config {
     std::string out_path_to_transfomations_dir; //Path where resulting genomes are put
 
     /**
-     * Strategy for mgra algorithm: default, target, users
+     * Information about genomes
      */
-    build_type how_build;
+    std::vector<std::string> priority_name;
+    std::unordered_map<std::string, size_t> genome_number;
+    std::unordered_multimap<size_t, std::string> number_to_genome;
 
     /**
      * Input (sub) phylotrees
@@ -114,6 +118,11 @@ struct main_config {
      * Input reconstruction target genome
      */
     mcolor_t target;
+
+    /**
+     * Strategy for mgra algorithm: default, target, users
+     */
+    build_type how_build;
 
     /**
      * Number of rounds (i.e. change number of split T-consistent colors)
@@ -151,10 +160,6 @@ private:
     size_t RGBcoeff;
     std::vector<std::string> RGBcolors;
 
-    std::vector<std::string> priority_name;
-    std::unordered_map<std::string, size_t> genome_number;
-    std::unordered_map<size_t, std::string> number_to_genome;
-
     std::map<mcolor_t, std::string> mcolor_name;
 
 private:
@@ -164,6 +169,8 @@ private:
     void load_genomes(Json::Value const &genomes);
 
     void load_genome(Json::Value const &genome, size_t index);
+
+    void load_block_type(Json::Value const &type_files);
 
     void load_files(Json::Value const &path_to_files);
 
@@ -198,6 +205,8 @@ private:
 
     Json::Value save_genome(size_t ind) const;
 
+    Json::Value save_block_type() const;
+
     Json::Value save_files() const;
 
     Json::Value save_trees() const;
@@ -216,7 +225,7 @@ private:
 
     Json::Value save_complections() const;
 
-    Json::Value save_complection(size_t ind) const;
+    Json::Value save_complection(typename std::list<twobreak_t>::const_iterator const & twobreak) const;
 
     Json::Value save_output_directory() const;
 
@@ -228,6 +237,8 @@ private:
      * Default strategy for init config
      */
     void default_rgb_colors();
+
+    void default_directory_organization();
 
     void default_algorithm();
 

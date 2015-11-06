@@ -156,7 +156,7 @@ Node<mcolor_t>::Node(Node* const par, std::string const& tree,
   if (new_tree[0] == '(') {
     //non-trivial tree
     if (new_tree[new_tree.size() - 1] != ')') {
-      ERROR("Bad format input (sub)tree. Check count \')\'")
+      std::cerr << "Bad format input (sub)tree. Check count \')\'" << std::endl;
       exit(3);
     }
 
@@ -174,12 +174,12 @@ Node<mcolor_t>::Node(Node* const par, std::string const& tree,
         }
       }
       if (p < 0) {
-        ERROR("Bad format input (sub)tree. Check count \'(\' and \')\'")
+        std::cerr << "Bad format input (sub)tree. Check count \'(\' and \')\'" << std::endl;
         exit(3);
       }
     }
     if (p != 0) {
-      ERROR("Bad format input (sub)tree. Check count \'(\' and \')\'")
+      std::cerr << "Bad format input (sub)tree. Check count \'(\' and \')\'" << std::endl;
       exit(3);
     }
 
@@ -195,7 +195,7 @@ Node<mcolor_t>::Node(Node* const par, std::string const& tree,
         if (new_tree[j] == ',' || new_tree[j] == '}') {
           std::string const& str = new_tree.substr(start, j - start);
           if (genome_number.count(str) == 0) {
-            ERROR("Unknown genome in (sub)tree: " << str)
+            std::cerr << "Unknown genome in (sub)tree: " << str << std::endl;
             exit(3);
           }
           data.insert(genome_number.find(str)->second);
@@ -209,7 +209,7 @@ Node<mcolor_t>::Node(Node* const par, std::string const& tree,
       }
     } else {
       if (genome_number.count(new_tree) == 0) {
-        ERROR("Unknown genome in (sub)tree: " << new_tree)
+        std::cerr << "Unknown genome in (sub)tree: " << new_tree << std::endl;
         exit(3);
       }
       data.insert(genome_number.find(new_tree)->second);

@@ -14,6 +14,19 @@ struct WGD {
 
     WGD(mcolor_t const &parent, mcolor_t const &children, size_t multiplicity)
             : m_parent(parent), m_children(children), m_multiplicity(multiplicity) {
+        assert(!parent.empty());
+        assert(!children.empty());
+        assert(parent.includes(children));
+    }
+
+    mcolor_t get_corresponding_color() const {
+        mcolor_t result;
+        for (auto color : m_children) {
+            result.insert(color.first, m_multiplicity);
+        }
+
+        assert(!result.empty());
+        return result;
     }
 
     DECLARE_GETTER(mcolor_t, m_parent, parent)

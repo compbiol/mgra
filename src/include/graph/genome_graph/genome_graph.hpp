@@ -6,15 +6,18 @@
 #define MGRA_GENOME_GRAPH_HPP
 
 #define "defined.hpp"
+#define "two_break.hpp"
 
 template<class vertex_t>
 struct GenomeGraph {
     using genome_t = structure::Genome;
-    using edge_t = std::pair<vertex_t, vertex_t>
-    using twobreak_t = event::TwoBreak<structure::Mcolor>;
-    using clone_t =  event::Clone<structure::Mcolor>;
-    using insdel_t = event::InsDel<structure::Mcolor>;
-    using tandem_duplication_t = event::TandemDuplication<structure::Mcolor>;
+    using vertex_ptr = typename vertex_t::vertex_ptr;
+    using edge_t = std::pair<vertex_ptr, vertex_ptr>;
+
+    using twobreak_t = event::TwoBreak<vertex_t>;
+    //using clone_t =  event::Clone<structure::Mcolor>;
+    //using insdel_t = event::InsDel<structure::Mcolor>;
+    //using tandem_duplication_t = event::TandemDuplication<structure::Mcolor>;
 
 
     inline void add_vertex(vertex_t const & v) {
@@ -55,17 +58,17 @@ struct GenomeGraph {
     /**
      * Apply clone operation on genome graph. (also see event/Clone.hpp. About clone operations see in mgra2 paper)
      */
-    void apply(clone_t & event);
+    //void apply(clone_t & event);
 
     /**
      * Apply insertion/deletion operation on genome graph. (also see event/InsDel.hpp)
      */
-    void apply(insdel_t & event);
+    //void apply(insdel_t & event);
 
     /**
      * Apply tandem duplication operation on genome graph. (also see event/TandemDuplication.hpp)
      */
-    void apply(tandem_duplication_t & event);
+    //void apply(tandem_duplication_t & event);
 
     /**
      * Apply series of twobreaks on genome graph
@@ -110,14 +113,14 @@ struct GenomeGraph {
     utility::equivalence<vertex_t> get_connected_components() const;
 
 private:
-    std::unordered_set<vertex_t> vertices;
-    utility::sym_multihashmap<vertex_t> edges;
+    std::unordered_set<vertex_ptr> vertices;
+    utility::sym_multihashmap<vertex_ptr> edges;
 };
 
 template <class vertex_t>
-void GenomeGraph<vertex_t>::apply(twobreak_t & event) {
+void GenomeGraph<vertex_t>::apply(twobreak_t const & event) {
     for(size_t i = 0; i < 2; ++i) {
-        if (event.get_arc(i).first != Infty || event.get_arc(i).second != Infty) {
+        if (!event.get_arc(i).first->is_infinity() || !event.get_arc(i).second->is_infinity()) {
             erase_edge(event.get_arc(i));
         }
     }
@@ -129,7 +132,7 @@ void GenomeGraph<vertex_t>::apply(twobreak_t & event) {
     }
 }
 
-template <class vertex_t>
+/*template <class vertex_t>
 void GenomeGraph<vertex_t>::apply(clone_t & event) {
 }
 
@@ -140,18 +143,20 @@ void GenomeGraph<vertex_t>::apply(insdel_t & event) {
 
 template <class vertex_t>
 void GenomeGraph<vertex_t>::apply(tandem_duplication_t & event) {
-}
+}*/
 
 template <class vertex_t>
 size_t GenomeGraph<vertex_t>::count_circular_chromosome() const {
+    return 0;
 }
 
-template <class vertex_t>
+/*template <class vertex_t>
 GenomeGraph<vertex_t>::genome_t GenomeGraph<vertex_t>::get_genome(std::string const & name) const {
+
 }
 
 template <class vertex_t>
 utility::equivalence<vertex_t> GenomeGraph<vertex_t>::get_connected_components() const {
-}
+}*/
 
 #endif //MGRA_GENOME_GRAPH_HPP

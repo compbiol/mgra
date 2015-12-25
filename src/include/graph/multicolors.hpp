@@ -54,7 +54,7 @@ struct Multicolors {
   DECLARE_CONST_ITERATOR( citer, vec_T_consistent_colors, cend_vec_T_consistent_color, cend )
   
 private: 
-  using tree_t = typename structure::BinaryTree<mcolor_t>; 
+  using tree_t = typename structure::phyl_tree::BinaryTree<mcolor_t>;
   using node_t = typename tree_t::colored_node_t;
   using colors_median_t = std::tuple<mcolor_t, mcolor_t, mcolor_t>; 
 
@@ -106,8 +106,8 @@ Multicolors<mcolor_t>::Multicolors() {
   }
   
   //If target is empty we put root in nearest node. Work fine only complete tree.
-  //Need tested on subtrees. 
-  if (cfg::get().how_build == default_algo) { 
+  //Need tested on subtrees. TODO keep for main algo and remove for recover tree
+  //if (cfg::get().how_build == default_algo) {
     for (auto const & tree : cfg::get().phylotrees) {
       if (tree.is_phylogenetic_root()) { 
         mcolor_t const & left_color = tree.get_root()->get_left_child()->get_data();
@@ -117,10 +117,10 @@ Multicolors<mcolor_t>::Multicolors() {
       } 
     } 
     nodes_color.erase(remove_color);
-  } else if (cfg::get().how_build == target_algo) { 
-    remove_color = cfg::get().target;
-    nodes_color.erase(cfg::get().target);
-  }
+  //} else if (cfg::get().how_build == target_algo) {
+  //  remove_color = cfg::get().target;
+  //  nodes_color.erase(cfg::get().target);
+  //}
   vec_T_consistent_colors = nodes_color;
 
   //check consistency for multicolors
@@ -147,32 +147,33 @@ Multicolors<mcolor_t>::Multicolors() {
 template<class mcolor_t>
 void Multicolors<mcolor_t>::get_vector_colors_from_tree(std::shared_ptr<const node_t> const& current,
                                      std::set<mcolor_t>& vec_colors) const { 
-  if (current->get_left_child()) {
+  if (current->has_left_child()) {
     get_vector_colors_from_tree(current->get_left_child(), vec_colors); 
   }
 
   vec_colors.insert(current->get_data());
 
-  if (current->get_right_child()) {
+  if (current->has_right_child()) {
     get_vector_colors_from_tree(current->get_right_child(), vec_colors); 
   }
 }
 
 template<class mcolor_t>
 void Multicolors<mcolor_t>::get_median_colors_from_tree(std::shared_ptr<const node_t> const& current) {
-  auto const & left = current->get_left_child();
-  if (left) { 
-    get_median_colors_from_tree(left); 
+  if (current->has_left_child()) {
+    get_median_colors_from_tree(current->get_left_child());
   }
 
-  auto const & right = current->get_right_child();
-  if (right) { 
-    get_median_colors_from_tree(right); 
+  if (current->has_right_child()) {
+    get_median_colors_from_tree(current->get_right_child());
   }
 
-  if (left && right && current->get_parent() != nullptr) { 
-    mcolor_t parent = mcolor_t(complete_color, mcolor_t(left->get_data(), right->get_data(), mcolor_t::Union), mcolor_t::Difference);
-    median_colors.push_back(std::make_tuple(left->get_data(), right->get_data(), parent));
+  if (current->has_left_child() && current->has_right_child() && current->get_parent() != nullptr) {
+    mcolor_t parent = mcolor_t(complete_color,
+                               mcolor_t(current->get_left_child()->get_data(), current->get_right_child()->get_data(),
+                                        mcolor_t::Union), mcolor_t::Difference);
+    median_colors.push_back(
+            std::make_tuple(current->get_left_child()->get_data(), current->get_right_child()->get_data(), parent));
   }
 }
 

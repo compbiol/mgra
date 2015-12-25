@@ -93,12 +93,12 @@ namespace writer {
 /**
 * Functions for output tree in legend.dot file
 */
-  template <class graph_pack_t>
+#if 0
+    template <class graph_pack_t>
   std::string GraphDot<graph_pack_t>::get_branches_from_tree(std::shared_ptr<const node_t> const& current,
       std::vector<std::string>& info) const {
     auto const& left = current->get_left_child();
     auto const& right = current->get_right_child();
-
     if (!left && !right) {
       if (!current->get_children().empty()) {
         for (auto const& lc : current->get_children()) {
@@ -120,7 +120,7 @@ namespace writer {
 
     return current->get_name();
   }
-
+#endif
 
   template <class graph_pack_t>
   void GraphDot<graph_pack_t>::save_subtrees() {
@@ -154,7 +154,7 @@ namespace writer {
 
     std::vector<std::string> info;
     for (auto const& tree : trees) {
-      get_branches_from_tree(tree.get_root(), info);
+      std::cerr << cfg::get().mcolor_to_name(tree.get_root()->get_data()) << std::endl;//get_branches_from_tree(tree.get_root(), info); //FIXME
     }
 
     for (auto const& str : info) {

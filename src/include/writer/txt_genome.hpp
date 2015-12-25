@@ -35,6 +35,7 @@ void writer::TXT_genome<genome_t>::save_genome_in_text_format(genome_t const & g
   std::ofstream out(path::append_path(m_path, (outname + ".gen")));
 
   out << "# Genome " << genome.get_name() << std::endl;
+  out << ">" << genome.get_name() << std::endl;
 
   std::string chr_title;
 

@@ -1,103 +1,111 @@
-#ifndef GENOME_H_
-#define GENOME_H_
+#ifndef GENOME_HPP
+#define GENOME_HPP
 
-namespace structure { 
+namespace structure {
 
-struct Chromosome { 
-  using orf_t = std::string;
-  using gene_t = std::pair<orf_t, int>;
+struct Chromosome {
+    using orf_t = std::string;
+    using gene_t = std::pair<orf_t, int>;
 
-  Chromosome () 
-  : m_is_circular(false) 
-  { 
-  }
+    Chromosome()
+            : m_is_circular(false) {
+    }
 
-  Chromosome (std::list<gene_t> const & path, bool is_circular) 
-  : m_is_circular(is_circular) 
-  {
-    size_t offset = 0; 
-    for (auto const & gene : path) { 
-      main_chromosome.insert(std::make_pair(offset++, gene));
-    }  
-  }
+    Chromosome(std::list<gene_t> const &path, bool is_circular)
+            : m_is_circular(is_circular) {
+        size_t offset = 0;
+        for (auto const &gene : path) {
+            main_chromosome.insert(std::make_pair(offset++, gene));
+        }
+    }
 
-  inline void insert(orf_t const & gene, size_t offset, int sign) { 
-    auto gen = gene_t(gene, sign);
-    main_chromosome.insert(std::make_pair(offset, gen));
-  } 
+    inline void insert(orf_t const &gene, size_t offset, int sign) {
+        auto gen = gene_t(gene, sign);
+        main_chromosome.insert(std::make_pair(offset, gen));
+    }
 
-  inline void set_circular() { 
-    m_is_circular = true; 
-  } 
+    inline void set_circular() {
+        m_is_circular = true;
+    }
 
-  inline bool is_circular() const { 
-    return m_is_circular;
-  }
-  
-  DECLARE_DELEGATE_CONST_METHOD(size_t, main_chromosome, size, size)
-  
-  using citer = std::map<size_t, gene_t>::const_iterator; 
-  using criter = std::map<size_t, gene_t>::const_reverse_iterator;
+    inline bool is_circular() const {
+        return m_is_circular;
+    }
 
-  DECLARE_CONST_ITERATOR( citer, main_chromosome, begin, cbegin ) 
-  DECLARE_CONST_ITERATOR( citer, main_chromosome, end, cend ) 
-  DECLARE_CONST_ITERATOR( criter, main_chromosome, crbegin, crbegin ) 
-  DECLARE_CONST_ITERATOR( criter, main_chromosome, crend, crend )
+    DECLARE_DELEGATE_CONST_METHOD(size_t, main_chromosome, size, size)
 
-private: 
-  bool m_is_circular; 
-  std::map<size_t, gene_t> main_chromosome;
-}; 
+    using citer = std::map<size_t, gene_t>::const_iterator;
+    using criter = std::map<size_t, gene_t>::const_reverse_iterator;
 
-struct Genome {
-  using orf_t = std::string;
-  using coord_t = std::pair<std::string, size_t>; // (contig, offset)
-  using gene_t = std::pair<orf_t, int>;
-  using chromosome_t = structure::Chromosome; 
-  
-  Genome() {
-  } 
+    DECLARE_CONST_ITERATOR(citer, main_chromosome, begin, cbegin)
 
-  explicit Genome(std::string const & name) 
-  : m_name(name) 
-  {
-  } 
+    DECLARE_CONST_ITERATOR(citer, main_chromosome, end, cend)
 
-  inline void insert(orf_t const & gene, std::string const & chromosome, size_t offset, int sign) { 
-    //, size_t start, size_t end) {
-    //const coord_t& p = std::make_pair(chromosome, offset);
-    //const gene_t& orf = std::make_pair(gene, sign); 
-    main_genome[chromosome].insert(gene, offset, sign);
-  }   
+    DECLARE_CONST_ITERATOR(criter, main_chromosome, crbegin, crbegin)
 
-  inline void insert(std::string const & name_chr, chromosome_t const & chr) {
-    main_genome.insert(std::make_pair(name_chr, chr)); 
-  } 
-	
-  inline void registrate_circular_chr(std::string const & name) { 
-    main_genome[name].set_circular();
-  }  
+    DECLARE_CONST_ITERATOR(criter, main_chromosome, crend, crend)
 
-  inline size_t size() const { 
-    size_t sz = 0; 
-    std::for_each(main_genome.begin(), main_genome.end(), [&](std::pair<std::string, chromosome_t> const & chromosome) {
-      sz += chromosome.second.size(); 
-    });
-    return sz; 
-  }
-
-  DECLARE_GETTER(std::string const &, m_name, name)
-  DECLARE_DELEGATE_CONST_METHOD(size_t, main_genome, count_chromosome, size)
-  
-  using citer = std::map<std::string, chromosome_t>::const_iterator; 
-  DECLARE_CONST_ITERATOR( citer, main_genome, begin, cbegin ) 
-  DECLARE_CONST_ITERATOR( citer, main_genome, end, cend ) 
-  
-private: 
-  std::string m_name;
-  std::map<std::string, chromosome_t> main_genome;
+private:
+    bool m_is_circular;
+    std::map<size_t, gene_t> main_chromosome;
 };
 
-} 
+struct Genome {
+    using orf_t = std::string;
+    using coord_t = std::pair<std::string, size_t>; // (contig, offset)
+    using gene_t = std::pair<orf_t, int>;
+    using chromosome_t = structure::Chromosome;
+
+    Genome() {
+    }
+
+    explicit Genome(std::string const &name)
+            : m_name(name) {
+    }
+
+    inline void set_name(std::string const &name) {
+        m_name = name;
+    }
+
+    inline void insert(orf_t const &gene, std::string const &chromosome, size_t offset, int sign) {
+        //, size_t start, size_t end) {
+        //const coord_t& p = std::make_pair(chromosome, offset);
+        //const gene_t& orf = std::make_pair(gene, sign);
+        main_genome[chromosome].insert(gene, offset, sign);
+    }
+
+    inline void insert(std::string const &name_chr, chromosome_t const &chr) {
+        main_genome.insert(std::make_pair(name_chr, chr));
+    }
+
+    inline void registrate_circular_chr(std::string const &name) {
+        main_genome[name].set_circular();
+    }
+
+    inline size_t size() const {
+        size_t sz = 0;
+        std::for_each(main_genome.begin(), main_genome.end(),
+                      [&](std::pair<std::string, chromosome_t> const &chromosome) {
+                          sz += chromosome.second.size();
+                      });
+        return sz;
+    }
+
+    DECLARE_GETTER(std::string const &, m_name, name)
+
+    DECLARE_DELEGATE_CONST_METHOD(size_t, main_genome, count_chromosome, size)
+
+    using citer = std::map<std::string, chromosome_t>::const_iterator;
+
+    DECLARE_CONST_ITERATOR(citer, main_genome, begin, cbegin)
+
+    DECLARE_CONST_ITERATOR(citer, main_genome, end, cend)
+
+private:
+    std::string m_name;
+    std::map<std::string, chromosome_t> main_genome;
+};
+
+}
 
 #endif

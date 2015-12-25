@@ -8,7 +8,7 @@ namespace writer {
     using mcolor_t = typename graph_pack_t::mcolor_type;
     using edge_t = typename graph_pack_t::edge_t;
     using mularcs_t = typename graph_pack_t::mularcs_t;
-    using tree_t = typename structure::BinaryTree<mcolor_t>;
+    using tree_t = typename structure::phyl_tree::BinaryTree<mcolor_t>;
     using node_t = typename tree_t::colored_node_t;
 
     GraphDot()

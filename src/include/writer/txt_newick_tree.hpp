@@ -33,7 +33,7 @@ struct TXT_NewickTree {
 
   void print_node(node_ptr node) {
     if (node->is_leaf()) {
-      m_out << node->get_name();
+      ;//m_out << cfg::get().mcolor_to_name(node->get_data());
     } else {
       start_node();
       print_node(node->get_left_child());

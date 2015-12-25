@@ -5,7 +5,6 @@
 #ifndef MGRA_DYNAMIC_RECOVER_TREE_ALGORITHM_HPP_
 #define MGRA_DYNAMIC_RECOVER_TREE_ALGORITHM_HPP_
 
-#include <queue>
 
 #include "recover_tree_algorithm.hpp"
 #include "structures/branch.hpp"

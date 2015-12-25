@@ -151,13 +151,13 @@ void tree_config<mcolor_t>::load_tree(Json::Value const& tree) {
     using node_t = typename tree_t::colored_node_t;
 
     std::function<void(std::shared_ptr<const node_t>)> get_names_lambda = [&](std::shared_ptr<const node_t> current) -> void {
-        if (current->get_left_child()) {
+        if (current->has_left_child()) {
             get_names_lambda(current->get_left_child());
         }
 
         mcolor_name.insert(std::make_pair(current->get_data(), current->get_name()));
 
-        if (current->get_right_child()) {
+        if (current->has_right_child()) {
             get_names_lambda(current->get_right_child());
         }
     };

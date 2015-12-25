@@ -33,9 +33,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-using vertex_t = std::string;
-vertex_t const Infty = "oo";
-
 #include "utility/config_singl.hpp"
 #include "utility/property.hpp"
 #include "utility/sym_multihashmap.hpp"
@@ -44,8 +41,9 @@ vertex_t const Infty = "oo";
 #include "logger/logger.hpp"
 
 #include "structures/phyl_tree/tree.hpp"
+
 #include "structures/mcolor.hpp"
-#include "structures/mularcs.hpp"
+//#include "structures/mularcs.hpp"
 #include "structures/genome.hpp"
 
 enum block_file_type_t { infercars, grimm };

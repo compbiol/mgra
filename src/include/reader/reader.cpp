@@ -52,8 +52,9 @@ std::vector<structure::Genome> reader::read_infercars(std::string const & path_t
       std::istringstream istr(line);
       std::string genome_name;
       istr >> genome_name;
-      if (cfg::get().is_genome_name(genome_name)) {
-        size_t k = cfg::get().get_genome_number(genome_name);
+      auto genome_name_it = cfg::get().genome_number.find(genome_name);
+      if (genome_name_it != cfg::get().genome_number.end()) {
+        size_t k = genome_name_it->second;
         istr >> chromosome[k] >> start_block[k] >> end_block[k] >> sign[k];
         ++count_block[k];
       } else { 
@@ -77,7 +78,8 @@ std::vector<structure::Genome> reader::read_grimm(std::string const & path_to_fi
 
   size_t nchr = 0;
   size_t number_genome = 0;
-  std::vector<genome_t> genomes(cfg::get().get_count_genomes());   
+  std::vector<genome_t> genomes(cfg::get().get_count_genomes());
+
   auto inserter_lambda = [&] (std::string gene, std::string const & chr, size_t offset) {
     int sign = (gene[0] == '-')? -1: +1; 
     if (gene[0] == '-' || gene[0] == '+') {
@@ -93,11 +95,14 @@ std::vector<structure::Genome> reader::read_grimm(std::string const & path_to_fi
 	
     if (line[0] == '>') {		
       line = boost::trim_left_copy(line.substr(1));
-      if (cfg::get().is_genome_name(line)) {
-        number_genome = cfg::get().get_genome_number(line);
+      auto genome_name_it = cfg::get().genome_number.find(line);
+      if (genome_name_it != cfg::get().genome_number.end()) {
+        number_genome = genome_name_it->second;
+        genomes[number_genome].set_name(cfg::get().priority_name[number_genome]);
         nchr = 0; 
       } else { 
         std::cerr << "Unknown genome: " << line << std::endl;
+        exit(1);
       } 
     } else if (!line.empty() && (line[0] != '#')) {
       ++nchr;			

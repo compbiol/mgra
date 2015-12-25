@@ -7,6 +7,7 @@
 
 #include "version.hpp"
 #include "defined.hpp"
+#include "reader/reader.hpp"
 
 #include "logger/logger.hpp"
 #include "logger/log_writers.hpp"
@@ -43,6 +44,35 @@ inline bool create_dir_if_not_exists(std::string const &directory) {
         return path::make_dir(directory);
     }
     return true;
+}
+
+/**
+ * Parse input genomes from files
+ */
+inline std::vector<structure::Genome> parse_genomes() {
+    std::vector<structure::Genome> genomes;
+
+    INFO("Parse genomes file")
+    if (cfg::get().block_file_type == infercars) {
+        for (auto file = cfg::get().path_to_blocks_file.cbegin();
+             file != cfg::get().path_to_blocks_file.cend(); ++file) {
+            genomes = reader::read_infercars(*file);
+        }
+    } else if (cfg::get().block_file_type == grimm) {
+        for (auto file = cfg::get().path_to_blocks_file.cbegin();
+             file != cfg::get().path_to_blocks_file.cend(); ++file) {
+            genomes = reader::read_grimm(*file);
+        }
+    }
+    INFO("End parsing genomes file")
+
+    for (size_t i = 0; i < genomes.size(); ++i) {
+        std::ostringstream out;
+        out << "Download genome " << genomes[i].get_name() << " with " << genomes[i].size() << " blocks.";
+        INFO(out.str())
+    }
+
+    return genomes;
 }
 
 #endif //_MGRA_ARG_PARSING_HPP_

@@ -21,8 +21,6 @@ void load(main_config<mcolor_t> &cfg, std::istream & source) {
 
 
     cfg.load(root);
-    std::cerr << "Finish load cfg file in MGRA format" << std::endl;
-
     INFO("Finish load cfg file in MGRA format")
 }
 
@@ -59,8 +57,8 @@ mcolor_t main_config<mcolor_t>::name_to_mcolor(std::string const &temp) const {
  */
 template<class mcolor_t>
 std::string main_config<mcolor_t>::mcolor_to_name(mcolor_t const &color) const {
-    if (mcolor_name.find(color) != mcolor_name.end()) {
-        return mcolor_name.find(color)->second;
+    if (multicolor_to_name.find(color) != multicolor_to_name.end()) {
+        return multicolor_to_name.find(color)->second;
     } else {
         if (color.size() == 1) {
             return priority_name[color.cbegin()->first];
@@ -125,8 +123,8 @@ void main_config<mcolor_t>::load(Json::Value const &root) {
         load_target(root["target"]);
     }
 
-    if (!root["Algorithm"].isNull()) {
-        load_algorithm(root["Algorithm"]);
+    if (!root["algorithm"].isNull()) {
+        load_algorithm(root["algorithm"]);
     } else if (how_build == default_algo) {
         default_algorithm();
     } else if (how_build == target_algo) {
@@ -176,7 +174,7 @@ Json::Value main_config<mcolor_t>::save() const {
         root["target"] = save_target();
     }
 
-    root["Algorithm"] = save_algorithm();
+    root["algorithm"] = save_algorithm();
 
     root["output_directory"] = save_output_directory();
 
@@ -316,23 +314,9 @@ void main_config<mcolor_t>::load_tree(Json::Value const &tree) {
         exit(1);
     }
 
-    using tree_t = typename structure::BinaryTree<mcolor_t>;
-    using node_t = typename tree_t::colored_node_t;
-
-    std::function<void(std::shared_ptr<const node_t>)> get_names_lambda = [&](std::shared_ptr<const node_t> current) -> void {
-        if (current->get_left_child()) {
-            get_names_lambda(current->get_left_child());
-        }
-
-        mcolor_name.insert(std::make_pair(current->get_data(), current->get_name()));
-
-        if (current->get_right_child()) {
-            get_names_lambda(current->get_right_child());
-        }
-    };
-
-    phylotrees.push_back(phylogeny_tree_t(tree.asString(), genome_number, priority_name));
-    get_names_lambda(phylotrees.crbegin()->get_root());
+    using namespace structure::phyl_tree;
+    phylotrees.push_back(TreeBuilder<phylogeny_tree_t>::build_tree(tree.asString(), genome_number, multicolor_to_name,
+                                                                   priority_name.size()));
 }
 
 template<class mcolor_t>
@@ -375,7 +359,7 @@ void main_config<mcolor_t>::load_pipeline(Json::Value const &stages) {
         exit(1);
     }
 
-    if (!stages.empty()) {
+    if (stages.empty()) {
         std::cerr << "ERROR: stages field in algorithm section is array with at least one stage" << std::endl;
         exit(1);
     }
@@ -620,9 +604,10 @@ Json::Value main_config<mcolor_t>::save_trees() const {
 
 template<class mcolor_t>
 Json::Value main_config<mcolor_t>::save_tree(size_t ind) const {
+    assert(ind != phylotrees.size());
     std::ostringstream out;
-    writer::TXT_NewickTree<phylogeny_tree_t> printer(out);
-    printer.print_tree(phylotrees[ind]);
+    //writer::TXT_NewickTree<phylogeny_tree_t> printer(out); //FIXME
+    //printer.print_tree(phylotrees[ind]);
     Json::Value tree(out.str());
     return tree;
 }

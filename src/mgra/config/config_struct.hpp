@@ -3,7 +3,6 @@
 
 #include "defined.hpp"
 #include "JsonCpp/json/json.h"
-#include "writer/txt_newick_tree.hpp"
 #include "event/TwoBreak.hpp"
 #include "event/WGD.hpp"
 
@@ -39,7 +38,7 @@ template<class mcolor_t>
 struct main_config {
     using wgd_t = event::WGD<mcolor_t>;
     using twobreak_t = event::TwoBreak<mcolor_t>;
-    using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
+    using phylogeny_tree_t = structure::phyl_tree::BinaryTree<mcolor_t>;
 
     inline std::string const &get_RGBcolor(size_t index) const {
         return RGBcolors[RGBcoeff * index];
@@ -103,6 +102,7 @@ struct main_config {
     std::vector<std::string> priority_name;
     std::unordered_map<std::string, size_t> genome_number;
     std::unordered_multimap<size_t, std::string> number_to_genome;
+    std::map<mcolor_t, std::string> multicolor_to_name;
 
     /**
      * Input (sub) phylotrees
@@ -159,8 +159,6 @@ struct main_config {
 private:
     size_t RGBcoeff;
     std::vector<std::string> RGBcolors;
-
-    std::map<mcolor_t, std::string> mcolor_name;
 
 private:
     /**

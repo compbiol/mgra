@@ -1,27 +1,27 @@
 #ifndef CONFIG_STRUCT_IMPL_HPP
 #define CONFIG_STRUCT_IMPL_HPP
 
+namespace config {
+
 /*
  * Read configure file in JSON format and init all config
  */
 template<class mcolor_t>
-void load(main_config<mcolor_t> &cfg, std::istream & source) {
+void load(mgra_config <mcolor_t> &cfg, std::istream &source) {
     INFO("Start load cfg file in MGRA format");
 
     Json::Value root;
     Json::Reader reader;
-    bool isError =  reader.parse(source, root);
+    bool isError = reader.parse(source, root);
 
 
     if (!isError) {
-      std::string error_msg = "Failed to parse JSON config\n" + reader.getFormattedErrorMessages();
-      std::cerr << error_msg << std::endl;
-      exit(1);
+        std::string error_msg = "Failed to parse JSON config\n" + reader.getFormattedErrorMessages();
+        std::cerr << error_msg << std::endl;
+        exit(1);
     }
 
-
     cfg.load(root);
-    std::cerr << "Finish load cfg file in MGRA format" << std::endl;
 
     INFO("Finish load cfg file in MGRA format")
 }
@@ -30,7 +30,7 @@ void load(main_config<mcolor_t> &cfg, std::istream & source) {
  * Convert string to color. If string is bad, terminate program.
  */
 template<class mcolor_t>
-mcolor_t main_config<mcolor_t>::name_to_mcolor(std::string const &temp) const {
+mcolor_t mgra_config<mcolor_t>::name_to_mcolor(std::string const &temp) const {
     mcolor_t answer;
     if (temp[0] == '{' && temp[temp.length() - 1] == '}') {
         std::string current = "";
@@ -58,38 +58,38 @@ mcolor_t main_config<mcolor_t>::name_to_mcolor(std::string const &temp) const {
  * Convert multicolor to string with genomes name.
  */
 template<class mcolor_t>
-std::string main_config<mcolor_t>::mcolor_to_name(mcolor_t const &color) const {
-    if (mcolor_name.find(color) != mcolor_name.end()) {
-        return mcolor_name.find(color)->second;
-    } else {
-        if (color.size() == 1) {
-            return priority_name[color.cbegin()->first];
-        }
-        std::string answer = "{";
-        if (!color.empty()) {
-            std::string const &main_sym = priority_name[color.cbegin()->first];
-            answer += main_sym;
-            for (size_t i = 1; i < color.cbegin()->second; ++i) {
-                answer += ("," + main_sym);
-            }
-
-            for (auto col = (++color.cbegin()); col != color.cend(); ++col) {
-                std::string const &sym = priority_name[col->first];
-                for (size_t i = 0; i < col->second; ++i) {
-                    answer += ("," + sym);
-                }
-            }
-        }
-        answer += '}';
-        return answer;
+std::string mgra_config<mcolor_t>::mcolor_to_name(mcolor_t const &color) const {
+    /*if (multicolor_to_name.find(color) != multicolor_to_name.end()) {
+        return multicolor_to_name.find(color)->second;
+    } else {*/
+    if (color.size() == 1) {
+        return priority_name[color.cbegin()->first];
     }
+    std::string answer = "{";
+    if (!color.empty()) {
+        std::string const &main_sym = priority_name[color.cbegin()->first];
+        answer += main_sym;
+        for (size_t i = 1; i < color.cbegin()->second; ++i) {
+            answer += ("," + main_sym);
+        }
+
+        for (auto col = (++color.cbegin()); col != color.cend(); ++col) {
+            std::string const &sym = priority_name[col->first];
+            for (size_t i = 0; i < col->second; ++i) {
+                answer += ("," + sym);
+            }
+        }
+    }
+    answer += '}';
+    return answer;
+    //}
 }
 
 /*
- * Different function, which load our input.
+ * Different function, which load input.
  */
 template<class mcolor_t>
-void main_config<mcolor_t>::load(Json::Value const &root) {
+void mgra_config<mcolor_t>::load(Json::Value const &root) {
     if (!root["genomes"].isNull()) {
         load_genomes(root["genomes"]);
     } else {
@@ -110,15 +110,16 @@ void main_config<mcolor_t>::load(Json::Value const &root) {
         exit(1);
     }
 
-    if (!root["trees"].isNull()) {
-        load_trees(root["trees"]);
+    if (!root["tree"].isNull()) {
+        load_tree(root["tree"]);
     } else {
-        std::cerr << "ERROR: trees section is required" << std::endl;
+        std::cerr << "ERROR: tree section is required" << std::endl;
         exit(1);
     }
 
-    if (!root["WGD"].isNull()) {
-        load_wgd_events(root["WGD"]);
+    if (!root["wgd"].isNull()) {
+        load_wgd_events(root["wgd"]);
+        structure::phyl_tree::refine_tree_by_wgds(phylotree, wgds_events);
     }
 
     if (!root["target"].isNull()) {
@@ -131,6 +132,8 @@ void main_config<mcolor_t>::load(Json::Value const &root) {
         default_algorithm();
     } else if (how_build == target_algo) {
         default_target_algorithm();
+    } else if (how_build == wgd_algo) {
+        default_wgd_algorithm();
     }
 
     if (!out_path_directory.empty()) {
@@ -154,10 +157,12 @@ void main_config<mcolor_t>::load(Json::Value const &root) {
     if (!root["debug_enable"].isNull()) {
         load_debug(root["debug_enable"]);
     }
+
+    default_rgb_colors();
 }
 
-template <class mcolor_t>
-Json::Value main_config<mcolor_t>::save() const {
+template<class mcolor_t>
+Json::Value mgra_config<mcolor_t>::save() const {
     Json::Value root;
 
     root["genomes"] = save_genomes();
@@ -166,10 +171,10 @@ Json::Value main_config<mcolor_t>::save() const {
 
     root["files"] = save_files();
 
-    root["trees"] = save_trees();
+    root["tree"] = save_tree();
 
     if (!wgds_events.empty()) {
-        root["WGD"] = save_wgd_events();
+        root["wgd"] = save_wgd_events();
     }
 
     if (!target.empty()) {
@@ -195,148 +200,7 @@ Json::Value main_config<mcolor_t>::save() const {
  * Load functions
  */
 template<class mcolor_t>
-void main_config<mcolor_t>::load_genomes(Json::Value const &genomes) {
-    if (!genomes.isArray()) {
-        std::cerr << "ERROR: genomes section is array with at least three genomes" << std::endl;
-        exit(1);
-    }
-
-    priority_name.resize(genomes.size());
-    size_t i = 0;
-    for (Json::Value::iterator it = genomes.begin(); it != genomes.end(); ++it) {
-        load_genome(*it, i++);
-    }
-}
-
-template<class mcolor_t>
-void main_config<mcolor_t>::load_genome(Json::Value const &genome, size_t index) {
-    if (!genome.isObject()) {
-        std::cerr << "ERROR: genome section must be object" << std::endl;
-        exit(1);
-    }
-
-    // Parse optional section about genome id
-    if (!genome["genome_id"].isNull()) {
-        if (!genome["genome_id"].isInt()) {
-            std::cerr << "ERROR: genome_id field in genome section must have int type" << std::endl;
-            exit(1);
-        }
-        index = (size_t) genome["genome_id"].asInt();
-    }
-
-    // Parse required section priority name
-    {
-        if (genome["priority_name"].isNull()) {
-            std::cerr << "ERROR: priority name is required field for genome section" << std::endl;
-            exit(1);
-        }
-
-        if (!genome["priority_name"].isString()) {
-            std::cerr << "ERROR: priority_name field in genome section must have string type" << std::endl;
-            exit(1);
-        }
-
-        auto const &name = genome["priority_name"].asString();
-        if (genome_number.count(name) > 0) {
-            std::cerr << "ERROR: Genome identificator " << name << " is not unique!" << std::endl;
-            exit(1);
-        }
-
-        priority_name[index] = name;
-        genome_number.insert(std::make_pair(name, index));
-        number_to_genome.insert(std::make_pair(index, name));
-    }
-
-    // Parse optional section about genome aliases names
-    if (!genome["aliases"].isNull()) {
-        if (!genome["aliases"].isArray()) {
-            std::cerr << "ERROR: aliases field in genomes section is array with at least one names" << std::endl;
-            exit(1);
-        }
-        for (Json::Value::iterator alias = genome["aliases"].begin(); alias != genome["aliases"].end(); ++alias) {
-            if (genome_number.count(alias->asString()) > 0) {
-                std::cerr << "ERROR: Duplicate alias " << alias->asString() << std::endl;
-                exit(1);
-            }
-            genome_number.insert(std::make_pair(alias->asString(), index));
-        }
-    }
-}
-
-template<class mcolor_t>
-void main_config<mcolor_t>::load_block_type(Json::Value const &type_of_file) {
-    if (!type_of_file.isString()) {
-        std::cerr << "ERROR: type format of block files must have string format" << std::endl;
-        exit(1);
-    }
-
-    if (type_of_file.asString() == "infercars") {
-        block_file_type = block_file_type_t::infercars;
-    } else if (type_of_file.asString() == "grimm") {
-        block_file_type = block_file_type_t::grimm;
-    } else {
-        std::cerr << "ERROR: Unsuported type of blocks (grimm, infercars required)" << std::endl;
-    }
-}
-
-template<class mcolor_t>
-void main_config<mcolor_t>::load_files(Json::Value const &path_to_files) {
-    if (!path_to_files.isArray()) {
-        std::cerr << "ERROR: files section is array with at least one blocks file" << std::endl;
-        exit(1);
-    }
-
-    std::string dir_with_cfg = path::parent_path(config_file_path);
-
-    for (Json::Value::iterator it = path_to_files.begin(); it != path_to_files.end(); ++it) {
-        if (!it->isString()) {
-            std::cerr << "ERROR: path to file must have string type" << std::endl;
-            exit(1);
-        }
-        path_to_blocks_file.push_back(path::make_full_path(path::append_path(dir_with_cfg, it->asString())));
-    }
-}
-
-template<class mcolor_t>
-void main_config<mcolor_t>::load_trees(Json::Value const &trees) {
-    if (!trees.isArray()) {
-        std::cerr << "ERROR: trees section is array with one full tree or at least one subtrees" << std::endl;
-        exit(1);
-    }
-
-    for (Json::Value::iterator it = trees.begin(); it != trees.end(); ++it) {
-        load_tree(*it);
-    }
-}
-
-template<class mcolor_t>
-void main_config<mcolor_t>::load_tree(Json::Value const &tree) {
-    if (!tree.isString()) {
-        std::cerr << "ERROR: tree must have string type" << std::endl;
-        exit(1);
-    }
-
-    using tree_t = typename structure::BinaryTree<mcolor_t>;
-    using node_t = typename tree_t::colored_node_t;
-
-    std::function<void(std::shared_ptr<const node_t>)> get_names_lambda = [&](std::shared_ptr<const node_t> current) -> void {
-        if (current->get_left_child()) {
-            get_names_lambda(current->get_left_child());
-        }
-
-        mcolor_name.insert(std::make_pair(current->get_data(), current->get_name()));
-
-        if (current->get_right_child()) {
-            get_names_lambda(current->get_right_child());
-        }
-    };
-
-    phylotrees.push_back(phylogeny_tree_t(tree.asString(), genome_number, priority_name));
-    get_names_lambda(phylotrees.crbegin()->get_root());
-}
-
-template<class mcolor_t>
-void main_config<mcolor_t>::load_algorithm(Json::Value const &algo) {
+void mgra_config<mcolor_t>::load_algorithm(Json::Value const &algo) {
     if (!algo.isObject()) {
         std::cerr << "ERROR: algorithm must have object type" << std::endl;
     }
@@ -369,7 +233,7 @@ void main_config<mcolor_t>::load_algorithm(Json::Value const &algo) {
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::load_pipeline(Json::Value const &stages) {
+void mgra_config<mcolor_t>::load_pipeline(Json::Value const &stages) {
     if (!stages.isArray()) {
         std::cerr << "ERROR: stages field in algorithm section must have array type" << std::endl;
         exit(1);
@@ -380,35 +244,35 @@ void main_config<mcolor_t>::load_pipeline(Json::Value const &stages) {
         exit(1);
     }
 
-    for (Json::Value::iterator it = stages.begin(); it != stages.end(); ++it) {
-        if (it->asString() == "balance") {
+    for (auto const &stage : stages) {
+        if (stage.asString() == "balance") {
             pipeline.push_back(kind_stage::balance_k);
-        } else if (it->asString() == "simple_path") {
+        } else if (stage.asString() == "simple_path") {
             pipeline.push_back(kind_stage::simple_path_k);
-        } else if (it->asString() == "four_cycles") {
+        } else if (stage.asString() == "four_cycles") {
             pipeline.push_back(kind_stage::four_cycles_k);
-        } else if (it->asString() == "fair_edge") {
+        } else if (stage.asString() == "fair_edge") {
             pipeline.push_back(kind_stage::fair_edge_k);
-        } else if (it->asString() == "clone") {
+        } else if (stage.asString() == "clone") {
             pipeline.push_back(kind_stage::clone_k);
-        } else if (it->asString() == "fair_clone_edge") {
+        } else if (stage.asString() == "fair_clone_edge") {
             pipeline.push_back(kind_stage::fair_clone_edge_k);
-        } else if (it->asString() == "components") {
+        } else if (stage.asString() == "components") {
             pipeline.push_back(kind_stage::components_k);
-        } else if (it->asString() == "bruteforce") {
+        } else if (stage.asString() == "bruteforce") {
             if (how_build == target_algo) {
                 std::cerr << "ERROR: Don't use bruteforce stage in target reconstruction" << std::endl;
                 exit(1);
             }
             pipeline.push_back(kind_stage::bruteforce_k);
-        } else if (it->asString() == "blossomv") {
+        } else if (stage.asString() == "blossomv") {
             if (how_build == target_algo) {
                 std::cerr << "ERROR : Don't use blossom V stage in target reconstruction" << std::endl;
                 exit(1);
             }
             pipeline.push_back(kind_stage::blossomv_k);
         } else {
-            std::cerr << "Unknown option " << it->asString() << std::endl;
+            std::cerr << "Unknown option " << stage.asString() << std::endl;
             exit(1);
         }
     }
@@ -417,102 +281,100 @@ void main_config<mcolor_t>::load_pipeline(Json::Value const &stages) {
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::load_wgd_events(Json::Value const &wgds) {
+void mgra_config<mcolor_t>::load_wgd_events(Json::Value const &wgds) {
     if (!wgds.isArray()) {
         std::cerr << "ERROR: wgd section is array at least one wgd event" << std::endl;
         exit(1);
     }
 
-    for (Json::Value::iterator it = wgds.begin(); it != wgds.end(); ++it) {
-        load_wgd_event(*it);
+    for (auto const &wgd : wgds) {
+        load_wgd_event(wgd);
     }
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::load_wgd_event(Json::Value const &wgd) {
+void mgra_config<mcolor_t>::load_wgd_event(Json::Value const &wgd) {
     if (!wgd.isObject()) {
         std::cerr << "ERROR: wgd must have object type" << std::endl;
         exit(1);
     }
 
-    mcolor_t parent;
-    mcolor_t children;
-    size_t mult;
-
     // Parse parent of wgd event
-    if (!wgd["parent"].isNull()) {
-        if (!wgd["parent"].isString()) {
-            std::cerr << "ERROR: parent name in wgd branch must have string type. Example \"{A,B,C}\" " << std::endl;
-            exit(1);
-        }
-
-        parent = name_to_mcolor(wgd["parent"].asString());
-    } else {
+    if (wgd["parent"].isNull()) {
         std::cerr << "ERROR: wgd branch must have parent name" << std::endl;
         exit(1);
     }
 
-    // Parse children of wgd event
-    if (!wgd["children"].isNull()) {
-        if (!wgd["children"].isString()) {
-            std::cerr << "ERROR: children name in wgd branch must have string type. Example \"{A,B,C}\" " << std::endl;
-            exit(1);
-        }
+    if (!wgd["parent"].isString()) {
+        std::cerr << "ERROR: parent name in wgd branch must have string type." << std::endl;
+        exit(1);
+    }
 
-        children = name_to_mcolor(wgd["children"].asString());
-    } else {
+    // Parse children of wgd event
+    if (wgd["children"].isNull()) {
         std::cerr << "ERROR: wgd branch must have children name" << std::endl;
         exit(1);
     }
 
-    // Parse multiplicity of wgd
-    if (!wgd["multiplicity"].isNull()) {
-        if (!wgd["multiplicity"].isInt()) {
-            std::cerr << "ERROR: multiplicity field in wgd branch must have intered type." << std::endl;
-            exit(1);
-        }
-
-        if (wgd["multiplicity"].asInt() < 0) {
-            std::cerr << "ERROR: multiplicity must have positive value." << std::endl;
-            exit(1);
-        }
-
-        mult = (size_t) wgd["multiplicity"].asInt();
-    } else {
-        std::cerr << "ERROR: wgd must have multiplicity" << std::endl;
+    if (!wgd["children"].isString()) {
+        std::cerr << "ERROR: children name in wgd branch must have string type. " << std::endl;
         exit(1);
     }
 
-    wgds_events.push_back(wgd_t(parent, children, mult));
+    std::vector<std::string> names;
+    if (!wgd["names"].isNull()) {
+        if (!wgd["names"].isArray()) {
+            std::cerr << "ERROR: wgs's names must have array type." << std::endl;
+            exit(1);
+        }
+
+        if (wgd["names"].size() < 1) {
+            std::cerr << "ERROR: wgd branch must have at least one name" << std::endl;
+            exit(1);
+        }
+
+        for (auto name : wgd["names"]) {
+            if (!name.isString()) {
+                std::cerr << "ERROR: wgd's names must have string type" << std::endl;
+                exit(1);
+            }
+
+            names.push_back(name.asString());
+        }
+    } else {
+        std::cerr << "ERROR: wgd branch must have at least one name" << std::endl;
+        exit(1);
+    }
+
+    wgds_events.insert(std::make_pair(std::make_pair(wgd["parent"].asString(), wgd["children"].asString()),
+                       wgd_t(wgd["parent"].asString(), wgd["children"].asString(), names)));
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::load_target(Json::Value const &target_json) {
+void mgra_config<mcolor_t>::load_target(Json::Value const &target_json) {
     if (!target_json.isString()) {
         std::cerr << "ERROR: target must have string type" << std::endl;
         exit(1);
     }
 
-    std::istringstream is(target_json.asString());
-    std::string temp;
-    is >> temp;
-    target = name_to_mcolor(temp);
+    target = target_json.asString();
+    boost::trim(target);
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::load_complections(Json::Value const &twobreaks) {
+void mgra_config<mcolor_t>::load_complections(Json::Value const &twobreaks) {
     if (!twobreaks.isArray()) {
         std::cerr << "ERROR: complection section is array at least one two-break event" << std::endl;
         exit(1);
     }
 
-    for (Json::Value::iterator it = twobreaks.begin(); it != twobreaks.end(); ++it) {
-        load_complection(*it);
+    for (auto const &twobreak : twobreaks) {
+        load_complection(twobreak);
     }
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::load_complection(Json::Value const &twobreak) {
+void mgra_config<mcolor_t>::load_complection(Json::Value const &twobreak) {
     if (!twobreak.isString()) {
         std::cerr << "ERROR: twobreak must have string type" << std::endl;
         exit(1);
@@ -525,17 +387,7 @@ void main_config<mcolor_t>::load_complection(Json::Value const &twobreak) {
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::load_output_directory(Json::Value const &path_to_dir) {
-    if (!path_to_dir.isString()) {
-        std::cerr << "ERROR: path_to_dir field must have string type" << std::endl;
-        exit(1);
-    }
-
-    out_path_directory = path_to_dir.asString();
-}
-
-template<class mcolor_t>
-void main_config<mcolor_t>::load_saves(Json::Value const &enable_saves) {
+void mgra_config<mcolor_t>::load_saves(Json::Value const &enable_saves) {
     if (!enable_saves.isBool()) {
         std::cerr << "ERROR: saves field must have bool type" << std::endl;
         exit(1);
@@ -545,7 +397,7 @@ void main_config<mcolor_t>::load_saves(Json::Value const &enable_saves) {
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::load_debug(Json::Value const &enable_debug) {
+void mgra_config<mcolor_t>::load_debug(Json::Value const &enable_debug) {
     if (!enable_debug.isBool()) {
         std::cerr << "ERROR: debug field must have bool type" << std::endl;
         exit(1);
@@ -554,81 +406,8 @@ void main_config<mcolor_t>::load_debug(Json::Value const &enable_debug) {
     is_debug = enable_debug.asBool();
 }
 
-/**
- * Save functions
- */
 template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_genomes() const {
-    Json::Value genomes(Json::arrayValue);
-    for (size_t ind = 0; ind != priority_name.size(); ++ind) {
-        genomes.append(save_genome(ind));
-    }
-    return genomes;
-}
-
-template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_genome(size_t ind) const {
-    Json::Value genome(Json::objectValue);
-
-    genome["genome_id"] = Json::Value((int) ind);
-
-    genome["priorety_name"] = Json::Value(priority_name[ind]);
-
-    genome["aliases"] = Json::Value(Json::arrayValue);
-    auto range = number_to_genome.equal_range(ind);
-    for (auto it = range.first; it != range.second; ++it) {
-        genome["aliases"].append(Json::Value(it->second));
-    }
-
-    return genome;
-}
-
-template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_block_type() const {
-    Json::Value type;
-
-    if (block_file_type == block_file_type_t::infercars) {
-        type = Json::Value("infercars");
-    } else if (block_file_type == block_file_type_t::grimm) {
-        type = Json::Value("grimm");
-    }
-
-    return type;
-}
-
-template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_files() const {
-    Json::Value files(Json::arrayValue);
-
-    for (auto it = path_to_blocks_file.cbegin(); it != path_to_blocks_file.cend(); ++it) {
-        files.append(Json::Value(*it));
-    }
-
-    return files;
-}
-
-template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_trees() const {
-    Json::Value trees(Json::arrayValue);
-
-    for (size_t ind = 0; ind != phylotrees.size(); ++ind) {
-        trees.append(save_tree(ind));
-    }
-
-    return trees;
-}
-
-template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_tree(size_t ind) const {
-    std::ostringstream out;
-    writer::TXT_NewickTree<phylogeny_tree_t> printer(out);
-    printer.print_tree(phylotrees[ind]);
-    Json::Value tree(out.str());
-    return tree;
-}
-
-template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_algorithm() const {
+Json::Value mgra_config<mcolor_t>::save_algorithm() const {
     Json::Value algo(Json::objectValue);
     algo["rounds"] = Json::Value((int) rounds);
     algo["stages"] = save_pipeline();
@@ -636,27 +415,27 @@ Json::Value main_config<mcolor_t>::save_algorithm() const {
 }
 
 template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_pipeline() const {
+Json::Value mgra_config<mcolor_t>::save_pipeline() const {
     Json::Value stages(Json::arrayValue);
 
-    for (auto stage = pipeline.cbegin(); stage != pipeline.cend(); ++stage) {
-        if (*stage == kind_stage::balance_k) {
+    for (auto const &stage : pipeline) {
+        if (stage == kind_stage::balance_k) {
             stages.append(Json::Value("balance"));
-        } else if (*stage == kind_stage::simple_path_k) {
+        } else if (stage == kind_stage::simple_path_k) {
             stages.append(Json::Value("simple_path"));
-        } else if (*stage == kind_stage::four_cycles_k) {
+        } else if (stage == kind_stage::four_cycles_k) {
             stages.append(Json::Value("four_cycles"));
-        } else if (*stage == kind_stage::fair_edge_k) {
+        } else if (stage == kind_stage::fair_edge_k) {
             stages.append(Json::Value("fair_edge"));
-        } else if (*stage == kind_stage::clone_k) {
+        } else if (stage == kind_stage::clone_k) {
             stages.append(Json::Value("clone"));
-        } else if (*stage == kind_stage::fair_clone_edge_k) {
+        } else if (stage == kind_stage::fair_clone_edge_k) {
             stages.append(Json::Value("fair_clone_edge"));
-        } else if (*stage == kind_stage::components_k) {
+        } else if (stage == kind_stage::components_k) {
             stages.append(Json::Value("components"));
-        } else if (*stage == kind_stage::bruteforce_k) {
+        } else if (stage == kind_stage::bruteforce_k) {
             stages.append(Json::Value("bruteforce"));
-        } else if (*stage == kind_stage::blossomv_k) {
+        } else if (stage == kind_stage::blossomv_k) {
             stages.append(Json::Value("blossomv"));
         }
     }
@@ -665,32 +444,38 @@ Json::Value main_config<mcolor_t>::save_pipeline() const {
 }
 
 template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_wgd_events() const {
+Json::Value mgra_config<mcolor_t>::save_wgd_events() const {
     Json::Value events(Json::arrayValue);
-
-    for (size_t ind = 0; ind < completion.size(); ++ind) {
-        events.append(save_wgd_event(ind));
-    }
+    //TODO here
+    //for (size_t ind = 0; ind < completion.size(); ++ind) {
+    //    ;//events.append(save_wgd_event(ind));
+    //}
 
     return events;
 }
 
 template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_wgd_event(size_t ind) const {
+Json::Value mgra_config<mcolor_t>::save_wgd_event(size_t ind) const {
+    assert(ind != 0); //TODO here
     Json::Value wgd;
-    wgd["parent"] = Json::Value(mcolor_to_name(wgds_events[ind].get_parent()));
-    wgd["children"] = Json::Value(mcolor_to_name(wgds_events[ind].get_children()));
-    wgd["multiplicity"] = Json::Value((int) wgds_events[ind].get_multiplicity());
+    /*wgd["parent"] = Json::Value(wgds_events[ind].get_parent());
+    wgd["children"] = Json::Value(wgds_events[ind].get_children());
+    wgd["names"] = Json::Value(Json::arrayValue);
+
+    for (auto const &name : wgds_events[ind]) {
+        wgd["names"].append(Json::Value(name));
+    }*/
+
     return wgd;
 }
 
 template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_target() const {
-    return Json::Value(mcolor_to_name(target));
+Json::Value mgra_config<mcolor_t>::save_target() const {
+    return Json::Value(target);
 }
 
 template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_complections() const {
+Json::Value mgra_config<mcolor_t>::save_complections() const {
     Json::Value complects(Json::arrayValue);
 
     for (auto it = completion.cbegin(); it != completion.cend(); ++it) {
@@ -701,33 +486,29 @@ Json::Value main_config<mcolor_t>::save_complections() const {
 }
 
 template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_complection(typename std::list<twobreak_t>::const_iterator const & twobreak) const {
+Json::Value mgra_config<mcolor_t>::save_complection(
+        typename std::list<twobreak_t>::const_iterator const &twobreak) const {
     std::ostringstream out;
     out << twobreak->get_vertex(0) << " " << twobreak->get_vertex(1) << " " << twobreak->get_vertex(2) << " " <<
-            twobreak->get_vertex(3) << " " << mcolor_to_name(twobreak->get_multicolor());
+    twobreak->get_vertex(3) << " " << mcolor_to_name(twobreak->get_multicolor());
     return Json::Value(out.str());
 }
 
 template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_output_directory() const {
-    return Json::Value(out_path_directory);
-}
-
-template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_saves() const {
+Json::Value mgra_config<mcolor_t>::save_saves() const {
     return Json::Value(is_saves);
 }
 
 template<class mcolor_t>
-Json::Value main_config<mcolor_t>::save_debug() const {
+Json::Value mgra_config<mcolor_t>::save_debug() const {
     return Json::Value(is_debug);
 }
 
 /**
-* Function, which initilization structure on default parameters
-*/
+ * Function, which initilization structure on default parameters
+ */
 template<class mcolor_t>
-void main_config<mcolor_t>::default_algorithm() {
+void mgra_config<mcolor_t>::default_algorithm() {
     size_component_in_bruteforce = 0;
     rounds = 3;
     pipeline.push_back(kind_stage::balance_k);
@@ -741,7 +522,15 @@ void main_config<mcolor_t>::default_algorithm() {
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::default_target_algorithm() {
+void mgra_config<mcolor_t>::default_wgd_algorithm() {
+    size_component_in_bruteforce = 0;
+    rounds = 1;
+    pipeline.push_back(kind_stage::simple_path_k);
+    pipeline.push_back(kind_stage::irregular_fair_edge_k);
+}
+
+template<class mcolor_t>
+void mgra_config<mcolor_t>::default_target_algorithm() {
     size_component_in_bruteforce = 0;
     rounds = 3;
     pipeline.push_back(kind_stage::balance_k);
@@ -754,7 +543,7 @@ void main_config<mcolor_t>::default_target_algorithm() {
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::default_directory_organization() {
+void mgra_config<mcolor_t>::default_directory_organization() {
     std::string const LOGGER_FILENAME = "mgra.log";
     std::string const INPUT_DIRNAME = "input";
     std::string const DEBUG_DIRNAME = "debug";
@@ -771,7 +560,7 @@ void main_config<mcolor_t>::default_directory_organization() {
 }
 
 template<class mcolor_t>
-void main_config<mcolor_t>::default_rgb_colors() {
+void mgra_config<mcolor_t>::default_rgb_colors() {
     if (priority_name.size() < 10) {
         colorscheme = "set19";
         for (size_t i = 1; i < priority_name.size() + 1; ++i) {
@@ -822,4 +611,5 @@ void main_config<mcolor_t>::default_rgb_colors() {
     }
 }
 
+}
 #endif // CONFIG_STRUCT_IMPL_HPP

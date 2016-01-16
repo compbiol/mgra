@@ -5,7 +5,7 @@ namespace writer {
 
 template<class graph_pack_t>
 struct HistoryJson {
-  using mcolor_t = typename graph_pack_t::mcolor_type;
+  using mcolor_t = typename graph_pack_t::mcolor_t;
   using twobreak_t = typename graph_pack_t::twobreak_t;
   using clone_t =  typename graph_pack_t::clone_t;
   using type_action = typename History<mcolor_t>::type_action;

@@ -9,6 +9,7 @@
 #include "algo/stages/Balance.hpp"
 #include "algo/stages/SimplePath.hpp"
 #include "algo/stages/FourCycles.hpp"
+#include "algo/stages/IrregularFairEdge.hpp"
 #include "algo/stages/FairEdge.hpp"
 #include "algo/stages/Clone.hpp"
 #include "algo/stages/IncreaseComponents.hpp"
@@ -22,13 +23,17 @@
 namespace algo {
 
 template<class graph_pack_t>
-void StageManager<graph_pack_t>::add_stage(kind_stage stage) {
+void StageManager<graph_pack_t>::add_stage(config::kind_stage stage) {
+  using namespace config;
+
   if (stage == balance_k) {
     add_stage(new Balance<graph_pack_t>(1));
   } else if (stage == simple_path_k) {
     add_stage(new ProcessSimplePath<graph_pack_t>(3));
   } else if (stage == four_cycles_k) {
     add_stage(new ProcessFourCycles<graph_pack_t>(1));
+  } else if (stage == irregular_fair_edge_k) {
+    add_stage(new ProcessIrregularFairEdge<graph_pack_t>(1));
   } else if (stage == fair_edge_k) {
     add_stage(new ProcessFairEdge<graph_pack_t>(3));
   } else if (stage == clone_k) {
@@ -55,7 +60,7 @@ void StageManager<graph_pack_t>::add_stage(kind_stage stage) {
  */
 template<class graph_pack_t> 
 boost::optional<typename algo::RecoveredInformation<graph_pack_t>::AncestorInformation> main_algorithm(graph_pack_t & graph_pack) {
-  assert(cfg::get().how_build == default_algo); 
+  assert(cfg::get().how_build == config::default_algo);
 
   INFO("Start algorithm for convert from breakpoint graph to identity breakpoint graph");
 
@@ -88,12 +93,16 @@ boost::optional<typename algo::RecoveredInformation<graph_pack_t>::AncestorInfor
 
 template<class graph_pack_t> 
 boost::optional<typename algo::RecoveredInformation<graph_pack_t>::AncestorInformation> wgd_algorithm(graph_pack_t & graph_pack) {
-  assert(cfg::get().how_build == default_algo); 
+  assert(cfg::get().how_build == config::wgd_algo);
 
   INFO("Start wgd algorithm for convert from breakpoint graph to identity breakpoint graph");
 
-  using namespace algo; 
-  StageManager<graph_pack_t> algorithm(cfg::get().rounds, cfg::get().out_path_to_saves_dir,  {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
+  using namespace algo;
+  StageManager<graph_pack_t> algorithm(cfg::get().rounds, cfg::get().out_path_to_saves_dir, {cfg::get().is_debug, cfg::get().out_path_to_debug_dir});
+
+  for (auto const &name_stage : cfg::get().pipeline) {
+    algorithm.add_stage(name_stage);
+  }
 
   INFO("Run algorithms stages")
   algorithm.run(graph_pack);

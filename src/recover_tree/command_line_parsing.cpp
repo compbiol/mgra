@@ -60,5 +60,14 @@ void create_logger_from_config() {
 }
 
 bool organize_output_directory() {
-  return true;
+  // Create different directories.
+  bool result = create_dir_if_not_exists(cfg::get().trees_path) &&
+                create_dir_if_not_exists(cfg::get().tree_summary_path);
+
+  //Save config
+  cfg::get_writable().config_file_path = path::append_path(cfg::get().out_path_directory, "config.txt");
+  std::ofstream save_cfg(cfg::get_writable().config_file_path);
+  Json::StyledStreamWriter cfg_writer; cfg_writer.write(save_cfg, cfg::get().save());
+
+  return result;
 }

@@ -35,8 +35,8 @@ public:
 
     std::string out_path_to_logger_file; // Path to logfile
 
-    using phylogeny_tree_t = structure::BinaryTree<mcolor_t>;
-    std::vector<phylogeny_tree_t> phylotrees;
+    using phylogeny_tree_t = structure::BinaryTree<std::string>;
+    phylogeny_tree_t phylotree;
 
 private:
     std::vector<std::string> priority_name;

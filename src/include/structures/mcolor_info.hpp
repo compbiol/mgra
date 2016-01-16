@@ -5,6 +5,7 @@
 #ifndef MGRA_MCOLOR_INFO_HPP_
 #define MGRA_MCOLOR_INFO_HPP_
 
+//FIXME NEED to remove or rearrange
 namespace structure {
   template <class mcolor_t>
   struct McolorInfo {

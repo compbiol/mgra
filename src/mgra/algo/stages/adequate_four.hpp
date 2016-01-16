@@ -6,7 +6,7 @@ namespace algo {
 template<class graph_pack_t>
 struct ProcessAS4Patterns : public algo::AbsStage<graph_pack_t> {
 
-    using mcolor_t = typename graph_pack_t::mcolor_type;
+    using mcolor_t = typename graph_pack_t::mcolor_t;
     using edge_t = typename graph_pack_t::edge_t;
     using arc_t = typename graph_pack_t::arc_t;
     using mularcs_t = typename graph_pack_t::mularcs_t;

@@ -129,41 +129,29 @@ void tree_config<mcolor_t>::load_files(Json::Value const& path_to_files) {
 }
 
 template <class mcolor_t>
-void tree_config<mcolor_t>::load_trees(Json::Value const& trees) {
-    if (!trees.isArray()) {
-        std::cerr << "ERROR: trees section is array with one full tree or at least one subtrees" << std::endl;
-        exit(1);
-    }
-
-    for (Json::Value::iterator it = trees.begin(); it != trees.end(); ++it) {
-        load_tree(*it);
-    }
-}
-
-template <class mcolor_t>
 void tree_config<mcolor_t>::load_tree(Json::Value const& tree) {
     if (!tree.isString()) {
         std::cerr << "ERROR: tree must have string type" << std::endl;
         exit(1);
     }
 
-    using tree_t = typename structure::BinaryTree<mcolor_t>;
-    using node_t = typename tree_t::colored_node_t;
+    /*using tree_t = typename structure::BinaryTree<mcolor_t>;
+    using node_t = typename tree_t::node_t;
 
     std::function<void(std::shared_ptr<const node_t>)> get_names_lambda = [&](std::shared_ptr<const node_t> current) -> void {
-        if (current->get_left_child()) {
+        if (current->has_left_child()) {
             get_names_lambda(current->get_left_child());
         }
 
         mcolor_name.insert(std::make_pair(current->get_data(), current->get_name()));
 
-        if (current->get_right_child()) {
+        if (current->has_right_child()) {
             get_names_lambda(current->get_right_child());
         }
-    };
+    };*/
 
-    phylotrees.push_back(phylogeny_tree_t(tree.asString(), genome_number, priority_name));
-    get_names_lambda(phylotrees.crbegin()->get_root());
+    //phylotree = tree.asString(), genome_number, priority_name));
+    //get_names_lambda(phylotrees.crbegin()->get_root());
 }
 
 

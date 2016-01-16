@@ -8,13 +8,11 @@
 */
 
 #include "command_line_parsing.hpp"
-
+#include "algo/Algorithms.hpp"
 #include "reader/reader.hpp"
 
-#include "algo/Algorithms.hpp"
-
-#include "writer/txt_genome.hpp"
-#include "writer/txt_transform.hpp"
+//#include "writer/txt_genome.hpp"
+//#include "writer/txt_transform.hpp"
 
 int main(int argc, char** argv) {
     if (parse_config_from_command_line(argc, argv)) {
@@ -32,52 +30,46 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+
     create_logger_from_config();
 
-    //Reading problem configuration and genomes
     using genome_t = structure::Genome;
     using mcolor_t = structure::Mcolor;
     using graph_pack_t = GraphPack<mcolor_t>;
 
-    INFO("Parse genomes file")
-    std::vector<genome_t> genomes;
-    if (cfg::get().block_file_type == infercars) {
-        for (auto file = cfg::get().path_to_blocks_file.cbegin(); file != cfg::get().path_to_blocks_file.cend(); ++file) {
-            genomes = reader::read_infercars(*file);
-        }
-    } else if (cfg::get().block_file_type == grimm) {
-        for (auto file = cfg::get().path_to_blocks_file.cbegin(); file != cfg::get().path_to_blocks_file.cend(); ++file) {
-            genomes = reader::read_grimm(*file);
-        }
-    }
-
-    for (size_t i = 0; i < genomes.size(); ++i) {
-        std::ostringstream out;
-        out << "Download genome " << cfg::get().get_priority_name(i) << " with " << genomes[i].size() << " blocks.";
-        INFO(out.str())
-    }
+    std::vector<genome_t> genomes = parse_genomes();
 
     //Do job
     INFO("Start build graph")
-    graph_pack_t graph_pack(genomes);
+    graph_pack_t graph_pack(genomes, cfg::get().phylotree, cfg::get().genome_number, cfg::get().target);
     INFO("End build graph")
 
     {
         std::ostringstream out;
-        out << "Determine " << graph_pack.multicolors.count_vec_T_consitent_color() << " \\vec{T}-consistent colors in tree:\n";
+        out << "Determine \\vec{T}-consistent colors in tree:\n";
         for (auto id = graph_pack.multicolors.cbegin_vec_T_consistent_color(); id != graph_pack.multicolors.cend_vec_T_consistent_color(); ++id) {
             out << cfg::get().mcolor_to_name(*id) << " ";
         }
         INFO(out.str())
     }
 
-    boost::optional<algo::RecoveredInformation<graph_pack_t>::AncestorInformation> result;
-    if (cfg::get().how_build == default_algo) {
-        result = algo::main_algorithm(graph_pack);
-    } else if (cfg::get().how_build == wgd_algo) {
-        result = algo::wgd_algorithm(graph_pack);
+    {
+        std::ostringstream out;
+        out << "Determine T-consistent colors in tree:\n";
+        for (auto id = graph_pack.multicolors.cbegin_T_consistent_color(); id != graph_pack.multicolors.cend_T_consistent_color(); ++id) {
+            out << cfg::get().mcolor_to_name(*id) << " ";
+        }
+        INFO(out.str())
     }
 
+    boost::optional<algo::RecoveredInformation<graph_pack_t>::AncestorInformation> result;
+    /*if (cfg::get().how_build == config::default_algo) {
+        result = algo::main_algorithm(graph_pack);
+    } else if (cfg::get().how_build == config::wgd_algo) {*/
+    result = algo::wgd_algorithm(graph_pack);
+    //}
+
+#if 0
     /*Save different output information in files*/
     if (result) {
         using ancestor_information_t = algo::RecoveredInformation<graph_pack_t>::AncestorInformation;
@@ -103,6 +95,6 @@ int main(int argc, char** argv) {
 
     INFO("MGRA log can be found here " << cfg::get().out_path_to_logger_file)
     INFO("Thank you for using MGRA!")
-
+#endif
     return 0;
 }

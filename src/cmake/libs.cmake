@@ -20,8 +20,8 @@ if (MGRA_TESTS_ON)
 
     FILE(GLOB_RECURSE MGRA_TESTS_SOURCE ${MGRA_TESTS_DIRECTORY}/*.cpp)
 
-    include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
-    add_subdirectory(server_test_library/gtest-1.7.0)
+    include_directories(server_test_library/gtest/include server_test_library/gtest/)
+    add_subdirectory(server_test_library/gtest)
 
     enable_testing()
 

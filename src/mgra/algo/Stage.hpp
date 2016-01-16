@@ -3,67 +3,68 @@
 
 #include "graph/graph_pack.hpp"
 
-namespace algo { 
+namespace algo {
 
 /**
  *
  */
-enum stage_type {pre_stage_t, round_stage_t, post_stage_t};  
+enum stage_type {
+    pre_stage_t, round_stage_t, post_stage_t
+};
 
 /**
  *
  */
-template<class graph_pack_t> 
-struct StageManager; 
+template<class graph_pack_t>
+struct StageManager;
 
 /**
  *
  */
-template<class graph_pack_t> 
-struct AbsStage {  
-	AbsStage(std::string const & name, std::string const & id, stage_type type, size_t max_round = 0)
-	: m_parent(nullptr) 
-	, max_avaliable_round(max_round) 
-	, m_type(type)
-	, m_name(name)
-	, m_id(id)
-	{
-	}
+template<class graph_pack_t>
+struct AbsStage {
+    AbsStage(std::string const &name, std::string const &id, stage_type type, size_t max_round = 0)
+            : m_parent(nullptr), max_avaliable_round(max_round), m_type(type), m_name(name), m_id(id) {
+    }
 
-	AbsStage(AbsStage<graph_pack_t> && stage) = default;
-	AbsStage(AbsStage<graph_pack_t> const & stage) = delete;
-	AbsStage<graph_pack_t>& operator=(AbsStage<graph_pack_t> && stage) = default;
-  AbsStage<graph_pack_t>& operator=(AbsStage<graph_pack_t> const & stage) = delete;
+    AbsStage(AbsStage<graph_pack_t> &&stage) = default;
 
-  std::string const & name() const { 
-  	return m_name; 
-  }
+    AbsStage(AbsStage<graph_pack_t> const &stage) = delete;
 
-  std::string const & id() const { 
-  	return m_id; 
-  }
+    AbsStage<graph_pack_t> &operator=(AbsStage<graph_pack_t> &&stage) = default;
 
-  size_t get_max_round() const { 
-  	return max_avaliable_round;
-  }
+    AbsStage<graph_pack_t> &operator=(AbsStage<graph_pack_t> const &stage) = delete;
 
-  stage_type get_stage_type() const { 
-  	return m_type;
-  }
+    std::string const &name() const {
+        return m_name;
+    }
 
-  virtual bool run(graph_pack_t & graph) = 0;
+    std::string const &id() const {
+        return m_id;
+    }
 
-  virtual ~AbsStage() { 
-  }
+    size_t get_max_round() const {
+        return max_avaliable_round;
+    }
+
+    stage_type get_stage_type() const {
+        return m_type;
+    }
+
+    virtual bool run(graph_pack_t &graph) = 0;
+
+    virtual ~AbsStage() {
+    }
+
 protected:
-	StageManager<graph_pack_t>* m_parent;
-	friend struct StageManager<graph_pack_t>;
+    StageManager<graph_pack_t> *m_parent;
+    friend struct StageManager<graph_pack_t>;
 
 private:
-	size_t const max_avaliable_round; 
-	stage_type const m_type;
-  std::string m_name;
-  std::string m_id;
+    size_t const max_avaliable_round;
+    stage_type const m_type;
+    std::string m_name;
+    std::string m_id;
 };
 
 /*
@@ -72,22 +73,21 @@ private:
 template<class graph_pack_t>
 struct ChangeCanformInfinity : public AbsStage<graph_pack_t> {
 
-	ChangeCanformInfinity(size_t max_round = 3) 
-	: AbsStage<graph_pack_t>("Change canformQoo", "ChangeCanformInf", post_stage_t, max_round)
-	{
-	}
+    ChangeCanformInfinity(size_t max_round = 3)
+            : AbsStage<graph_pack_t>("Change canformQoo", "ChangeCanformInf", post_stage_t, max_round) {
+    }
 
-	bool run(graph_pack_t & graph_pack) { 
-		if (graph_pack.get_canformQoo()) { 
-      graph_pack.set_canformQoo(false);
-      return true; 
-		} else { 
-			return false;
-		} 
-	}
+    bool run(graph_pack_t &graph_pack) {
+        if (graph_pack.get_canformQoo()) {
+            graph_pack.set_canformQoo(false);
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-private: 
-	DECL_LOGGER("ChangeCanformInf")	
+private:
+    DECL_LOGGER("ChangeCanformInf")
 };
 
 /*
@@ -95,53 +95,51 @@ private:
  */
 template<class graph_pack_t>
 struct ProcessComplection : public AbsStage<graph_pack_t> {
-  using transform_t = typename graph_pack_t::transform_t;
+    using transform_t = typename graph_pack_t::transform_t;
 
-	ProcessComplection(transform_t const & complection, size_t max_round = 3) 
-	: AbsStage<graph_pack_t>("Change canformQoo", "ProcessComplection", post_stage_t, max_round)
-	, is_process(false)
-	, m_complection(complection)
-	{
-	}
+    ProcessComplection(transform_t const &complection, size_t max_round = 3)
+            : AbsStage<graph_pack_t>("Change canformQoo", "ProcessComplection", post_stage_t, max_round),
+              is_process(false), m_complection(complection) {
+    }
 
-	bool run(graph_pack_t & graph_pack) { 
-		if (!m_complection.empty() && !is_process) { 
-      is_process = true;
-      for (auto const & twobreak : m_complection) {
-        graph_pack.apply(twobreak);
-      }
-      return true;
-		} else { 
-			return false;
-		} 
-	}
+    bool run(graph_pack_t &graph_pack) {
+        if (!m_complection.empty() && !is_process) {
+            is_process = true;
+            for (auto const &twobreak : m_complection) {
+                graph_pack.apply(twobreak);
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-private: 
-	bool is_process; 
-	transform_t const & m_complection;
-	DECL_LOGGER("ProcessComplection")	
+private:
+    bool is_process;
+    transform_t const &m_complection;
+
+    DECL_LOGGER("ProcessComplection")
 };
 
-/*
+/**
  *
  */
-template<class graph_pack_t> 
-void split_by_mobile_property(graph_pack_t & graph_pack,
-      vertex_t const & v, 
-      typename graph_pack_t::mularcs_t const & mularcs, 
-      std::set<typename graph_pack_t::arc_t>& mobiles, 
-      std::set<typename graph_pack_t::arc_t>& non_mobiles)
-{ 
-  for (auto const & arc : mularcs) { 
-    if (graph_pack.is_mobility_edge(v, arc.second, arc.first)) { 
-      mobiles.insert(arc); 
-    } else { 
-      non_mobiles.insert(arc);
+template<class graph_pack_t>
+void split_by_mobile_property(graph_pack_t &graph_pack,
+                              vertex_t const &v,
+                              typename graph_pack_t::mularcs_t const &mularcs,
+                              std::set<typename graph_pack_t::arc_t> &mobiles,
+                              std::set<typename graph_pack_t::arc_t> &non_mobiles) {
+    for (auto const &arc : mularcs) {
+        if (graph_pack.is_mobility_edge(v, arc.second, arc.first)) {
+            mobiles.insert(arc);
+        } else {
+            non_mobiles.insert(arc);
+        }
     }
-  }   
 }
 
-} 
+}
 
 #include "StageManager.hpp"
 

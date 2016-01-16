@@ -8,7 +8,7 @@ namespace writer {
 
 template<class graph_pack_t>
 struct SaveJson {
-  using mcolor_t = typename graph_pack_t::mcolor_type;
+  using mcolor_t = typename graph_pack_t::mcolor_t;
   using edge_t = typename graph_pack_t::edge_t;
   using mularcs_t = typename graph_pack_t::mularcs_t;
 

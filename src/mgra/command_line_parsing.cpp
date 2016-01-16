@@ -2,10 +2,9 @@
 // Created by Nikita Kartashov on 06/04/2015.
 //
 
-#include "io/path_helper.hpp"
+#include "command_line_parsing.hpp"
 #include "tclap/CmdLine.h"
 
-#include "command_line_parsing.hpp"
 
 int parse_config_from_command_line(int argc, char **argv) {
     try {
@@ -48,7 +47,7 @@ int parse_config_from_command_line(int argc, char **argv) {
 
         cfg::get_writable().config_file_path = path_to_cfg_file_arg.getValue();
         cfg::get_writable().out_path_directory = path::make_full_path(output_arg.getValue());
-        cfg::get_writable().how_build = default_algo;
+        cfg::get_writable().how_build = config::wgd_algo;
         cfg::get_writable().is_debug = debug_arg.getValue();
         cfg::get_writable().is_saves = saves_arg.getValue();
 

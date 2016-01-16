@@ -11,7 +11,10 @@ void GraphPack<mcolor_t>::apply(twobreak_t const & twobreak, bool record) {
   if (record) {
     history.save_twobreak(twobreak);
   }
- 
+
+  std::cerr << twobreak.get_vertex(0) << " " << twobreak.get_vertex(1) << " " << twobreak.get_vertex(2) << " " <<
+  twobreak.get_vertex(3) << std::endl;
+
   for (auto const & color : twobreak) {
     for (size_t i = 0; i < 2; ++i) {
       if (twobreak.get_arc(i).first != Infty || twobreak.get_arc(i).second != Infty) {

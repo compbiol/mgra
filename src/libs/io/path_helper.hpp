@@ -17,7 +17,6 @@
 #include "verify.hpp"
 
 namespace path {
-//todo review and make names consistent!
 
 typedef std::vector<std::string> files_t;
 
@@ -36,7 +35,6 @@ std::string parent_path(std::string const& path);
 bool check_existence(std::string const& path);
 void remove_if_exists(std::string const& path);
 
-//todo move to cpp and reduce code duplication!!!
 /**
  * Checks if file exists.
  * Analogs: http://www.techbytes.ca/techbyte103.html , http://www.gamedev.net/topic/211918-determining-if-a-file-exists-c/
@@ -69,4 +67,5 @@ inline void make_dirs(const std::string& path) {
 // doesn't support symlinks
 std::string resolve(std::string const& path);
 std::string make_relative_path(std::string p, std::string base = current_dir());
+
 }

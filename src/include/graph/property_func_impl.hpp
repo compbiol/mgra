@@ -6,7 +6,7 @@
  */
 template<class mcolor_t>
 bool GraphPack<mcolor_t>::is_simple_vertex(vertex_t const & v) const {
-  return (!is_duplication_vertex(v) && !is_indel_vertex(v) && (this->graph.degree_vertex(v) == 2)); 
+  return (this->graph.degree_vertex(v) == 2); //(!is_duplication_vertex(v) && !is_indel_vertex(v) &&
 }  
 
 template<class mcolor_t>

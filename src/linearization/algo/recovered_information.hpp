@@ -8,7 +8,7 @@ namespace algo {
 
 template<class graph_pack_t>
 struct RecoveredInformation {
-  using mcolor_t = typename graph_pack_t::mcolor_type;
+  using mcolor_t = typename graph_pack_t::mcolor_t;
   using twobreak_t = typename graph_pack_t::twobreak_t; 
   using transform_t = typename graph_pack_t::transform_t;
   using partgraph_t = typename graph_pack_t::partgraph_t; 
@@ -28,15 +28,17 @@ struct RecoveredInformation {
   : graph_pack(gp)
   , linearize_algo(gp)
   {
-    for (auto const & tree : cfg::get().phylotrees) {
+
+    ;
+    /*for (auto const & tree : cfg::get().phylotrees) {
       init_parent_colors(tree.get_root()); 
       if (tree.is_phylogenetic_root()) { 
-        mcolor_t const & left_color = tree.get_root()->get_left_child()->get_data();
-        mcolor_t const & right_color = tree.get_root()->get_right_child()->get_data();  
+        mcolor_t const & left_color = tree.get_root()->get_most_left_child()->get_data();
+        mcolor_t const & right_color = tree.get_root()->get_most_right_child()->get_data();
         parent_colors.insert(std::make_pair(left_color, right_color));
         parent_colors.insert(std::make_pair(right_color, left_color));
       } 
-    }
+    }*/
   }
 
   /**
@@ -73,8 +75,8 @@ struct RecoveredInformation {
   }
 
 private: 
-  using tree_t = typename structure::BinaryTree<mcolor_t>; 
-  using node_t = typename tree_t::colored_node_t; 
+  using tree_t = typename structure::phyl_tree::BinaryTree<mcolor_t>;
+  using node_t = typename tree_t::node_t;
   using node_ptr = typename tree_t::node_ptr; 
   void walk_and_linearize(node_ptr const & current);
   void init_parent_colors(node_ptr const & current); 
@@ -119,22 +121,21 @@ void RecoveredInformation<graph_pack_t>::init_linearize_results() {
   init_raw_results();
 
   INFO("Start walk on tree and run algorithm for linearize")
-  for (auto const & tree : cfg::get().phylotrees) {
-    walk_and_linearize(tree.get_root()); 
-  }
+  walk_and_linearize(cfg::get().phylotree.get_root());
   INFO("End walk on tree and run algorithm for linearize")
-  
-  for (auto const & tree : cfg::get().phylotrees) {
-    if (tree.is_phylogenetic_root()) { 
-      mcolor_t const & left_color = tree.get_root()->get_left_child()->get_data();
-      mcolor_t const & right_color = tree.get_root()->get_right_child()->get_data();  
+
+  //Todo check here on binary
+  /*for (auto const & tree : cfg::get().phylotrees) {
+    //if (tree.is_phylogenetic_root()) {
+      mcolor_t const & left_color = tree.get_root()->get_most_left_child()->get_data();
+      mcolor_t const & right_color = tree.get_root()->get_most_right_child()->get_data();
       for (twobreak_t const & twobreak : transformations[right_color]) { 
         transformations[left_color].push_front(twobreak.inverse());
       }
       transformations.erase(right_color);
-      break;
-    }
-  }
+      //break;
+    //}
+  }*/
 }
 
 template<class graph_pack_t>
@@ -145,18 +146,19 @@ void RecoveredInformation<graph_pack_t>::init_target_results() {
 template<class graph_pack_t>
 void RecoveredInformation<graph_pack_t>::walk_and_linearize(RecoveredInformation<graph_pack_t>::node_ptr const & current) {
   using namespace linearize;
-  auto const & left = current->get_left_child(); 
-  auto const & right = current->get_right_child(); 
 
-  if (left) { 
-    walk_and_linearize(left); 
+  if (current->has_left_child()) {
+    walk_and_linearize(current->get_most_left_child());
   }
 
-  if (right) { 
-    walk_and_linearize(right); 
+  if (current->has_right_child()) {
+    walk_and_linearize(current->get_most_right_child());
   }
 
-  if (left && right && graphs.find(current->get_data()) != graphs.end()) {     
+  if (current->has_left_child() && current->has_right_child() && graphs.find(current->get_data()) != graphs.end()) {
+    auto const & left = current->get_most_left_child();
+    auto const & right = current->get_most_right_child();
+
     size_t count_left = count_circular_chromosome(graph_pack, graphs[left->get_data()]); 
     size_t central = count_circular_chromosome(graph_pack, graphs[current->get_data()]); 
     size_t count_right = count_circular_chromosome(graph_pack, graphs[right->get_data()]); 
@@ -186,20 +188,17 @@ void RecoveredInformation<graph_pack_t>::walk_and_linearize(RecoveredInformation
 
 template<class graph_pack_t>
 void RecoveredInformation<graph_pack_t>::init_parent_colors(RecoveredInformation<graph_pack_t>::node_ptr const & current) {
-  auto const & left = current->get_left_child(); 
-  auto const & right = current->get_right_child(); 
-
-  if (left) { 
-    init_parent_colors(left); 
+  if (current->has_left_child()) {
+    init_parent_colors(current->get_most_left_child());
   }
 
-  if (right) { 
-    init_parent_colors(right); 
+  if (current->has_right_child()) {
+    init_parent_colors(current->get_most_right_child());
   }
 
-  if (left && right && graph_pack.multicolors.is_T_consistent_color(current->get_data())) { 
-    parent_colors.insert(std::make_pair(left->get_data(), current->get_data()));
-    parent_colors.insert(std::make_pair(right->get_data(), current->get_data()));
+  if (current->has_left_child() && current->has_right_child() && graph_pack.multicolors.is_T_consistent_color(current->get_data())) {
+    parent_colors.insert(std::make_pair(current->get_most_left_child()->get_most_left_child(), current->get_data()));
+    parent_colors.insert(std::make_pair(current->get_most_right_child()->get_most_right_child(), current->get_data()));
   } 
 }
 

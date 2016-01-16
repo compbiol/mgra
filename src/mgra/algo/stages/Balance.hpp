@@ -5,7 +5,7 @@ namespace algo {
 
 template<class graph_pack_t>
 struct Balance : public algo::AbsStage<graph_pack_t> { 
-  using mcolor_t = typename graph_pack_t::mcolor_type;
+  using mcolor_t = typename graph_pack_t::mcolor_t;
   using mularcs_t = typename graph_pack_t::mularcs_t; 
   using insdel_t = typename graph_pack_t::insdel_t;
   

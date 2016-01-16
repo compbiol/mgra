@@ -10,7 +10,7 @@ struct ProcessWithBlossomV : public algo::AbsStage<graph_pack_t> {
   using int_edge_t = std::pair<int, int>;
   using weight_edge_t = std::tuple<int, int, int>;
   
-  using mcolor_t = typename graph_pack_t::mcolor_type;
+  using mcolor_t = typename graph_pack_t::mcolor_t;
   
   using edge_t = typename graph_pack_t::edge_t;  
   using arc_t = typename graph_pack_t::arc_t; 

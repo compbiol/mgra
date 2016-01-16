@@ -41,13 +41,13 @@ vertex_t const Infty = "oo";
 #include "utility/sym_multihashmap.hpp"
 #include "utility/equivalence.hpp"
 
+#include "io/path_helper.hpp"
 #include "logger/logger.hpp"
 
-#include "structures/tree.hpp"
+#include "structures/config/abs_config.hpp"
+
 #include "structures/mcolor.hpp"
 #include "structures/mularcs.hpp"
 #include "structures/genome.hpp"
-
-enum block_file_type_t { infercars, grimm };
 
 #endif //MGRA_DEFINED_HPP

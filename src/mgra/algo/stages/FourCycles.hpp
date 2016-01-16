@@ -6,7 +6,7 @@ namespace algo {
 template<class graph_pack_t>
 struct ProcessFourCycles : public algo::AbsStage<graph_pack_t> { 
 
-  using mcolor_t = typename graph_pack_t::mcolor_type;
+  using mcolor_t = typename graph_pack_t::mcolor_t;
   using edge_t = typename graph_pack_t::edge_t;  
   using arc_t = typename graph_pack_t::arc_t; 
   using mularcs_t = typename graph_pack_t::mularcs_t; 
@@ -118,7 +118,7 @@ template<class graph_pack_t>
 bool ProcessFourCycles<graph_pack_t>::process_good_four_cycles(graph_pack_t& graph_pack) { 
 	TRACE("Process good four cycles")
 	bool isChanged = false; 
-	auto medians = graph_pack.multicolors.get_medians_colors(); 
+	auto medians = graph_pack.multicolors.get_median_colors();
 	std::vector<edge_t> ancestor_adjacency;
 	std::unordered_set<vertex_t> in_ancestor;
 

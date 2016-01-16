@@ -39,14 +39,14 @@ struct sym_multihashmap: public std::unordered_multimap<item_class, item_class, 
     ++m_card;
   }
 
-  const_iterator find(item_class const & x, item_class const & y) { 
+  const_iterator find(item_class const & x, item_class const & y) const {
     std::pair<const_iterator, const_iterator> range = multi_hashmap::equal_range(x);
     for (auto it = range.first; it != range.second; ++it) { 
       if (it->second == y) { 
       	return it; 
       } 
     } 
-    return multi_hashmap::end();
+    return multi_hashmap::cend();
   } 
 
   void erase(item_class const & x, item_class const & y) {

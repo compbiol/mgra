@@ -7,7 +7,7 @@ namespace linearize {
 
 template<class graph_pack_t>
 struct AbsLinearize {
-  using mcolor_t = typename graph_pack_t::mcolor_type;
+  using mcolor_t = typename graph_pack_t::mcolor_t;
   using edge_t = typename graph_pack_t::edge_t;
   using twobreak_t = typename graph_pack_t::twobreak_t; 
   using transform_t = typename graph_pack_t::transform_t;

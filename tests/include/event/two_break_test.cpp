@@ -14,16 +14,17 @@ using vertex_ptr = typename vertex_t::vertex_ptr;
 
 class TwoBreakTest : public testing::Test {
     virtual void SetUp() override {
-        verteces.push_back(vertex_ptr(new vertex_t(1, "1h")));
-        verteces.push_back(vertex_ptr(new vertex_t(2, "1t")));
-        verteces.push_back(vertex_ptr(new vertex_t(3, "2h")));
-        verteces.push_back(vertex_ptr(new vertex_t(4, "2t")));
-        verteces.push_back(vertex_ptr(new vertex_t(5, "3t")));
-        verteces.push_back(vertex_ptr(new vertex_t(6, "3h")));
-        verteces.push_back(vertex_ptr(new vertex_t(7, "oo", vertex_t::tag_t::infinity)));
+        verteces.push_back(vertex_ptr(new vertex_t(1, "1h"))); //0
+        verteces.push_back(vertex_ptr(new vertex_t(2, "1t"))); //1
+        verteces.push_back(vertex_ptr(new vertex_t(3, "2h"))); //2
+        verteces.push_back(vertex_ptr(new vertex_t(4, "2t"))); //3
+        verteces.push_back(vertex_ptr(new vertex_t(5, "3t"))); //4
+        verteces.push_back(vertex_ptr(new vertex_t(6, "3h"))); //5
+        verteces.push_back(vertex_ptr(new vertex_t(7, "oo", vertex_t::tag_t::infinity))); //6
 
         color_twobreaks.push_back(color_twobreak_t(verteces[0], verteces[1], verteces[2], verteces[3], Mcolor(1)));
 
+        //classical non-color two-breaks
         twobreaks.push_back(twobreak_t(verteces[0], verteces[1], verteces[2], verteces[3])); //0
         twobreaks.push_back(twobreak_t(std::make_pair(verteces[0], verteces[2]), std::make_pair(verteces[1], verteces[3]))); //1
         twobreaks.push_back(twobreak_t(color_twobreaks[0])); //2
@@ -34,15 +35,24 @@ class TwoBreakTest : public testing::Test {
         twobreaks.push_back(twobreak_t(verteces[2], verteces[3], verteces[1], verteces[0])); //7
         twobreaks.push_back(twobreak_t(verteces[3], verteces[2], verteces[0], verteces[1])); //8
         twobreaks.push_back(twobreak_t(verteces[3], verteces[2], verteces[1], verteces[0])); //9
+        twobreaks.push_back(twobreak_t(verteces[0], verteces[1], verteces[4], verteces[5])); //10
+        twobreaks.push_back(twobreak_t(verteces[1], verteces[0], verteces[4], verteces[5])); //11
+        twobreaks.push_back(twobreak_t(verteces[1], verteces[0], verteces[5], verteces[4])); //12
+        twobreaks.push_back(twobreak_t(verteces[4], verteces[5], verteces[0], verteces[1])); //13
+        twobreaks.push_back(twobreak_t(verteces[4], verteces[5], verteces[1], verteces[0])); //14
+        twobreaks.push_back(twobreak_t(verteces[5], verteces[4], verteces[0], verteces[1])); //15
+        twobreaks.push_back(twobreak_t(verteces[5], verteces[4], verteces[1], verteces[0])); //16
 
-        twobreaks.push_back(twobreak_t(verteces[0], verteces[1], verteces[5], verteces[6])); //10
-        twobreaks.push_back(twobreak_t(verteces[1], verteces[0], verteces[5], verteces[6])); //11
-        twobreaks.push_back(twobreak_t(verteces[1], verteces[0], verteces[6], verteces[5])); //12
-        twobreaks.push_back(twobreak_t(verteces[5], verteces[6], verteces[0], verteces[1])); //13
-        twobreaks.push_back(twobreak_t(verteces[5], verteces[6], verteces[1], verteces[0])); //14
-        twobreaks.push_back(twobreak_t(verteces[6], verteces[5], verteces[0], verteces[1])); //15
-        twobreaks.push_back(twobreak_t(verteces[6], verteces[5], verteces[1], verteces[0])); //16
+        //non-color two-breaks contains one infinity vertex
+        twobreaks.push_back(twobreak_t(verteces[0], verteces[1], verteces[2], verteces[6])); //17
+        twobreaks.push_back(twobreak_t(verteces[0], verteces[1], verteces[6], verteces[2])); //18
+        twobreaks.push_back(twobreak_t(verteces[2], verteces[6], verteces[0], verteces[1])); //19
+        twobreaks.push_back(twobreak_t(verteces[6], verteces[2], verteces[0], verteces[1])); //20
+        twobreaks.push_back(twobreak_t(verteces[0], verteces[6], verteces[1], verteces[2])); //21
+        twobreaks.push_back(twobreak_t(verteces[0], verteces[2], verteces[1], verteces[6])); //22
+        twobreaks.push_back(twobreak_t(verteces[3], verteces[4], verteces[2], verteces[6])); //23
 
+        //non-color two-breaks contains one infinity verteces
         //TODO CONTINUE change
         //TODO ADD INFINITY
     }
@@ -108,21 +118,41 @@ TEST_F(TwoBreakTest, TestInverseFunction) {
 }
 
 TEST_F(TwoBreakTest, TestDependentFunction) {
+    //classic non-color two-breaks
+
     EXPECT_EQ(twobreaks[0].is_dependent(twobreaks[1]), twobreak_t::dependence_type::strong_dependent);
+    EXPECT_EQ(twobreaks[1].is_dependent(twobreaks[0]), twobreak_t::dependence_type::strong_dependent);
     EXPECT_EQ(twobreaks[5].is_dependent(twobreaks[1]), twobreak_t::dependence_type::strong_dependent);
+    EXPECT_EQ(twobreaks[1].is_dependent(twobreaks[5]), twobreak_t::dependence_type::strong_dependent);
     EXPECT_EQ(twobreaks[6].is_dependent(twobreaks[1]), twobreak_t::dependence_type::strong_dependent);
+    EXPECT_EQ(twobreaks[1].is_dependent(twobreaks[6]), twobreak_t::dependence_type::strong_dependent);
     EXPECT_EQ(twobreaks[9].is_dependent(twobreaks[1]), twobreak_t::dependence_type::strong_dependent);
+    EXPECT_EQ(twobreaks[1].is_dependent(twobreaks[9]), twobreak_t::dependence_type::strong_dependent);
 
     EXPECT_EQ(twobreaks[3].is_dependent(twobreaks[1]), twobreak_t::dependence_type::independent);
     EXPECT_EQ(twobreaks[4].is_dependent(twobreaks[1]), twobreak_t::dependence_type::independent);
     EXPECT_EQ(twobreaks[7].is_dependent(twobreaks[1]), twobreak_t::dependence_type::independent);
     EXPECT_EQ(twobreaks[8].is_dependent(twobreaks[1]), twobreak_t::dependence_type::independent);
+    EXPECT_EQ(twobreaks[10].is_dependent(twobreaks[1]), twobreak_t::dependence_type::independent);
+    EXPECT_EQ(twobreaks[12].is_dependent(twobreaks[1]), twobreak_t::dependence_type::independent);
+    EXPECT_EQ(twobreaks[13].is_dependent(twobreaks[1]), twobreak_t::dependence_type::independent);
+    EXPECT_EQ(twobreaks[16].is_dependent(twobreaks[1]), twobreak_t::dependence_type::independent);
 
     EXPECT_EQ(twobreaks[1].is_dependent(twobreaks[10]), twobreak_t::dependence_type::weakly_dependent);
     EXPECT_EQ(twobreaks[1].is_dependent(twobreaks[12]), twobreak_t::dependence_type::weakly_dependent);
     EXPECT_EQ(twobreaks[1].is_dependent(twobreaks[13]), twobreak_t::dependence_type::weakly_dependent);
     EXPECT_EQ(twobreaks[1].is_dependent(twobreaks[16]), twobreak_t::dependence_type::weakly_dependent);
 
+    //classic non-color two-breaks with one infinity vertex
+    EXPECT_EQ(twobreaks[17].is_dependent(twobreaks[22]), twobreak_t::dependence_type::strong_dependent);
+    EXPECT_EQ(twobreaks[21].is_dependent(twobreaks[18]), twobreak_t::dependence_type::strong_dependent);
+    EXPECT_EQ(twobreaks[18].is_dependent(twobreaks[21]), twobreak_t::dependence_type::strong_dependent);
+    EXPECT_EQ(twobreaks[19].is_dependent(twobreaks[22]), twobreak_t::dependence_type::strong_dependent);
+    EXPECT_EQ(twobreaks[20].is_dependent(twobreaks[21]), twobreak_t::dependence_type::strong_dependent);
+
+    //EXPECT_EQ(twobreaks[1].is_dependent(twobreaks[13]), twobreak_t::dependence_type::weakly_dependent);
+    //EXPECT_EQ(twobreaks[1].is_dependent(twobreaks[16]), twobreak_t::dependence_type::weakly_dependent);
+    //EXPECT_EQ(twobreaks[0].is_dependent(twobreaks[1]), twobreak_t::dependence_type::strong_dependent);
     //TODO think many tests
 }
 

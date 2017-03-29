@@ -307,7 +307,7 @@ TEST_F(AlgorihmsTest, TwoGeneomesGetMedians) {
     get_T_multicolors(tree, genome_number, mcolor_name, complete_color);
     name_mcolor = swipe(mcolor_name);
     get_median_colors(tree, complete_color, name_mcolor, medians);
-    EXPECT_EQ(medians.size(), 0);
+    EXPECT_EQ(medians.size(), 3);
 }
 
 TEST_F(AlgorihmsTest, ThreeGeneomesGetMedians) {
@@ -337,10 +337,13 @@ TEST_F(AlgorihmsTest, ThreeGeneomesGetMedians) {
     get_T_multicolors(tree, genome_number, mcolor_name, complete_color);
     name_mcolor = swipe(mcolor_name);
     get_median_colors(tree, complete_color, name_mcolor, medians);
-    EXPECT_EQ(medians.size(), 1);
-    EXPECT_EQ(std::get<0>(medians[0]), mcolor_t({1, 1}));
-    EXPECT_EQ(std::get<1>(medians[0]), mcolor_t(2));
-    EXPECT_EQ(std::get<2>(medians[0]), mcolor_t(3));
+    EXPECT_EQ(medians.size(), 2);
+    EXPECT_EQ(std::get<0>(medians[0]), mcolor_t(1));
+    EXPECT_EQ(std::get<1>(medians[0]), mcolor_t(1));
+    EXPECT_EQ(std::get<2>(medians[0]), mcolor_t({2, 3}));
+    EXPECT_EQ(std::get<0>(medians[1]), mcolor_t({1, 1}));
+    EXPECT_EQ(std::get<1>(medians[1]), mcolor_t(2));
+    EXPECT_EQ(std::get<2>(medians[1]), mcolor_t(3));
 }
 
 TEST_F(AlgorihmsTest, NGeneomesGetMedians) {
@@ -375,13 +378,16 @@ TEST_F(AlgorihmsTest, NGeneomesGetMedians) {
     name_mcolor = swipe(mcolor_name);
     get_median_colors(tree, complete_color, name_mcolor, medians);
 
-    EXPECT_EQ(medians.size(), 2);
-    EXPECT_EQ(std::get<0>(medians[0]), mcolor_t({1, 1}));
-    EXPECT_EQ(std::get<1>(medians[0]), mcolor_t(2));
-    EXPECT_EQ(std::get<2>(medians[0]), mcolor_t({3, 4, 5, 6, 7}));
-    EXPECT_EQ(std::get<0>(medians[1]), mcolor_t(5));
-    EXPECT_EQ(std::get<1>(medians[1]), mcolor_t(6));
-    EXPECT_EQ(std::get<2>(medians[1]), mcolor_t({1, 1, 2, 3, 4, 7}));
+    EXPECT_EQ(medians.size(), 3);
+    EXPECT_EQ(std::get<0>(medians[0]), mcolor_t(1));
+    EXPECT_EQ(std::get<1>(medians[0]), mcolor_t(1));
+    EXPECT_EQ(std::get<2>(medians[0]), mcolor_t({2, 3, 4, 5, 6, 7}));
+    EXPECT_EQ(std::get<0>(medians[1]), mcolor_t({1, 1}));
+    EXPECT_EQ(std::get<1>(medians[1]), mcolor_t(2));
+    EXPECT_EQ(std::get<2>(medians[1]), mcolor_t({3, 4, 5, 6, 7}));
+    EXPECT_EQ(std::get<0>(medians[2]), mcolor_t(5));
+    EXPECT_EQ(std::get<1>(medians[2]), mcolor_t(6));
+    EXPECT_EQ(std::get<2>(medians[2]), mcolor_t({1, 1, 2, 3, 4, 7}));
 }
 
 //TODO write test on destroy on branches

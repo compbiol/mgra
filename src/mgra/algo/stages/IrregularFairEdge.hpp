@@ -28,7 +28,7 @@ struct ProcessIrregularFairEdge : public algo::AbsStage<graph_pack_t> {
 
 
 private:
-    DECL_LOGGER("ProcessFairEdge");
+    DECL_LOGGER("ProcessIrregularFairEdge");
 };
 
 template<class graph_pack_t>

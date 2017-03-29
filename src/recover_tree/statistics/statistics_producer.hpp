@@ -11,7 +11,7 @@ template<class graph_pack_t>
 struct StatisticsProducer {
     using mcolor_t = typename graph_pack_t::mcolor_type;
     using tree_t = typename tree_config<mcolor_t>::phylogeny_tree_t;
-    using branch_t = typename structure::Branch<mcolor_t>;
+    using branch_t = typename structure::phyl_tree::Branch<mcolor_t>;
     using statistic_t = std::pair<branch_t, size_t>;
 
     StatisticsProducer(graph_pack_t const &graph_pack, std::vector<tree_t> const &known_subtrees = cfg::get().phylotrees)
@@ -57,11 +57,11 @@ struct StatisticsProducer {
         }
 
         // Flip edges, so the smaller color is on the left
-        for (auto &statistic: m_result_statistics) {
+        /*for (auto &statistic: m_result_statistics) {
             if (statistic.first.left.size() > statistic.first.right.size()) {
                 statistic.first.canonize();
             }
-        }
+        }*/
 
         // Descending by number of edges sort
         std::sort(std::begin(m_result_statistics), std::end(m_result_statistics),

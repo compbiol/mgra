@@ -63,10 +63,10 @@ int main(int argc, char** argv) {
     }
 
     boost::optional<algo::RecoveredInformation<graph_pack_t>::AncestorInformation> result;
-    /*if (cfg::get().how_build == config::default_algo) {
+    if (cfg::get().how_build == config::default_algo) {
         result = algo::main_algorithm(graph_pack);
-    } else if (cfg::get().how_build == config::wgd_algo) {*/
-    result = algo::wgd_algorithm(graph_pack);
+    } //else if (cfg::get().how_build == config::wgd_algo) {
+    //result = algo::wgd_algorithm(graph_pack);
     //}
 
 #if 0

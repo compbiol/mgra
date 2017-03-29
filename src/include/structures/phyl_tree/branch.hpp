@@ -10,25 +10,13 @@ struct Branch {
     mcolor_t left;
     mcolor_t right;
 
-    Branch() = default;
-
     Branch(mcolor_t const &l, mcolor_t const &r)
     : left(l)
     , right(r)
     {
+        assert(!left.empty());
+        assert(!right.empty());
         canonize();
-    }
-
-    void init_by_complement(mcolor_t const &color, mcolor_t const &complete) {
-        left = color;
-        right = mcolor_t(complete, color, mcolor_t::Difference);
-        canonize();
-    }
-
-    void canonize() {
-        if (left > right) {
-            std::swap(left, right);
-        }
     }
 
     /**
@@ -79,6 +67,13 @@ struct Branch {
 
     bool operator==(Branch const &branch) const {
         return (left == branch.left) && (right == branch.right);
+    }
+
+private:
+    void canonize() {
+        if (left > right) {
+            std::swap(left, right);
+        }
     }
 };
 

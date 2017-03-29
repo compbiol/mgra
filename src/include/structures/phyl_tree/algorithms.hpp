@@ -96,7 +96,7 @@ inline void get_median_colors(tree_t const &tree, mcolor_t const &complete_color
             get_medians(children);
         }
 
-        if ((node->get_type() == node_t::classic) && !node->is_leaf()) {
+        if ((node->get_type() == node_t::classic || node->get_type() == node_t::whole_duplication) && !node->is_leaf()) {
             assert(node->has_childrens());
             assert(name_mcolor.count(node->get_most_left_child()->get_data()) != 0);
             assert(name_mcolor.count(node->get_most_right_child()->get_data()) != 0);

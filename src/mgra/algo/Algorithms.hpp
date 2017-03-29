@@ -10,6 +10,7 @@
 #include "algo/stages/SimplePath.hpp"
 #include "algo/stages/FourCycles.hpp"
 #include "algo/stages/IrregularFairEdge.hpp"
+#include "algo/stages/PerfectChords.hpp"
 #include "algo/stages/FairEdge.hpp"
 #include "algo/stages/Clone.hpp"
 #include "algo/stages/IncreaseComponents.hpp"
@@ -34,6 +35,8 @@ void StageManager<graph_pack_t>::add_stage(config::kind_stage stage) {
     add_stage(new ProcessFourCycles<graph_pack_t>(1));
   } else if (stage == irregular_fair_edge_k) {
     add_stage(new ProcessIrregularFairEdge<graph_pack_t>(1));
+  } else if (stage == perfect_chords_k) {
+    add_stage(new ProcessPerfectChords<graph_pack_t>(1));
   } else if (stage == fair_edge_k) {
     add_stage(new ProcessFairEdge<graph_pack_t>(3));
   } else if (stage == clone_k) {

@@ -43,6 +43,6 @@ private:
 #include "structures/phyl_tree/tree_builder.hpp"
 #include "structures/phyl_tree/algorithms.hpp"
 #include "structures/phyl_tree/newick_tree_printer.hpp"
-#include "structures/branch.hpp"
+#include "structures/phyl_tree/branch.hpp"
 
 #endif

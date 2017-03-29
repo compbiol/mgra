@@ -25,6 +25,7 @@ enum kind_stage {
     simple_path_k,
     four_cycles_k,
     irregular_fair_edge_k,
+    perfect_chords_k,
     fair_edge_k,
     clone_k,
     fair_clone_edge_k,

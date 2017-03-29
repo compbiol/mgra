@@ -142,7 +142,7 @@ template<class vertex_t>
 typename TwoBreak<vertex_t, void>::dependence_type TwoBreak<vertex_t, void>::is_dependent(
         TwoBreak<vertex_t, void> const &tested) const {
     auto check_lambda = [&](size_t ind1, size_t ind2, size_t ind3) -> size_t {
-        if (!(tested.m_verteces[ind1]->is_infinity() && tested.m_verteces[ind2]->is_infinity())) {
+        if (!(tested.m_verteces[ind2]->is_infinity() && tested.m_verteces[ind3]->is_infinity())) {
             if (tested.get_edge(ind1) == edge_t(m_verteces[ind2], m_verteces[ind3])) {
                 return 1;
             }

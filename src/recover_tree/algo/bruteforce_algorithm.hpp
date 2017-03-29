@@ -4,7 +4,7 @@
 #include "recover_tree_algorithm.hpp"
 #include "statistics_based_recover_tree_algorithm.hpp"
 
-#include "structures/branch.hpp"
+#include "structures/phyl_tree/branch.hpp"
 #include "graph/graph_pack.hpp"
 
 namespace algo {
@@ -20,7 +20,7 @@ struct BruteforceRecoverTreeAlgorithm :
     using node_t = typename tree_t::node_t;
     using node_ptr = typename tree_t::node_ptr;
 
-    using branch_t = structure::Branch<mcolor_t>;
+    using branch_t = structure::phyl_tree::Branch<mcolor_t>;
 
     using class_t = std::pair<std::vector<branch_t>, size_t>;
     using class_vector = std::vector<class_t>;

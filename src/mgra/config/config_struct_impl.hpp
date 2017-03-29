@@ -527,6 +527,7 @@ void mgra_config<mcolor_t>::default_wgd_algorithm() {
     rounds = 1;
     pipeline.push_back(kind_stage::simple_path_k);
     pipeline.push_back(kind_stage::irregular_fair_edge_k);
+    pipeline.push_back(kind_stage::perfect_chords_k);
 }
 
 template<class mcolor_t>

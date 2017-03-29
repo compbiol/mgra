@@ -6,7 +6,7 @@
 template<class mcolor_t>
 struct GraphPack<mcolor_t>::Statistics {
     using mcolor_type = mcolor_t;
-    using branch_t = structure::Branch<mcolor_t>;
+    using branch_t = structure::phyl_tree::Branch<mcolor_t>;
     using alternating_structure_t = structure::AlternatingStructure<vertex_t, GraphPack<mcolor_t>>;
 
     void calculate(GraphPack<mcolor_t> &graph_pack) {
@@ -185,6 +185,7 @@ void GraphPack<mcolor_t>::Statistics::count_indel_statistics(GraphPack<mcolor_t>
               });
 }
 
+//what about inginity vertex
 template<class mcolor_t>
 void GraphPack<mcolor_t>::Statistics::count_alternating_structures(GraphPack<mcolor_t> &graph_pack) {
     std::set<vertex_t> visited;

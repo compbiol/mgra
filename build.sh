@@ -17,7 +17,7 @@ cmake -DCMAKE_BUILD_TYPE=Debug ${HOME_DIR}
 make
 
 # Run tests
-./MGRA_test
+# ./MGRA_test
 
 #############################
 ## END ######################

@@ -66,10 +66,11 @@ struct RecoveredInformation {
       ret.genomes.push_back(linearize::get_genome(graph_pack, cfg::get().mcolor_to_name(local_graph.first), local_graph.second)); 
     }
     
+    /*
     for (auto const & elem : transformations) { 
       assert(parent_colors.find(elem.first) != parent_colors.cend());
       ret.transformations.insert(std::make_pair(std::make_pair(elem.first, parent_colors.find(elem.first)->second), elem.second));  
-    }
+    }*/
     
     return ret;
   }

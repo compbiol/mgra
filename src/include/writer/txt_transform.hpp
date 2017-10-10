@@ -5,7 +5,7 @@ namespace writer {
 
 template <class graph_pack_t>
 struct TXT_transformation {
-	using mcolor_t = typename graph_pack_t::mcolor_type;
+	using mcolor_t = typename graph_pack_t::mcolor_t;
 	using transform_t = typename graph_pack_t::transform_t;
 	using partgraph_t = typename graph_pack_t::partgraph_t;
 

@@ -1,0 +1,21 @@
+dist: trusty
+sudo: false
+language: cpp
+compiler: gcc
+
+# Restrict to working branches
+branches:
+  only:
+    - devel
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - cmake-data
+      - cmake
+
+script:
+  - ./build.sh Debug
+  - ./build/MGRA_test

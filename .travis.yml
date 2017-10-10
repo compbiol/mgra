@@ -17,4 +17,5 @@ addons:
       - cmake
 
 script:
-  - ./build.sh
+  - ./build.sh Debug
+  - ./build/MGRA_test

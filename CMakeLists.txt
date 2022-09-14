@@ -37,7 +37,7 @@ set(ROOT_DIR "${CMAKE_SOURCE_DIR}/..")
 set(COMPILE_OPTION_FLAG "-std=c++11" )
 set(DEBUG_FLAG "-g3")
 set(OPTIMIZE_FLAG "-O2 -pipe -finline-functions -finline-limit=1000") # -DPSEUDO_EDGE
-set(WARNS "-Wall -Werror -Wextra -pedantic-errors")
+set(WARNS "-Wall -Wextra -pedantic-errors")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILE_OPTION_FLAG} ${OPTIMIZE_FLAG} ${WARNS}")

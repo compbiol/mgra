@@ -30,12 +30,12 @@ Authors
 
 Citation
 --------
-- P. Avdeyev, S. Jiang, S. Aganezov, F. Hu, and M. A. Alekseyev. "Reconstruction of ancestral genomes in presence of gene gain and loss". Journal of Computational Biology 23:3 (2016), 150–164. doi:(10.1089/cmb.2015.0160)[https://dx.doi.org/10.1089/cmb.2015.0160] bioRxiv:(10.1101/040196)[https://dx.doi.org/10.1101/040196]
+- P. Avdeyev, S. Jiang, S. Aganezov, F. Hu, and M. A. Alekseyev. "Reconstruction of ancestral genomes in presence of gene gain and loss". Journal of Computational Biology 23:3 (2016), 150–164. doi:[10.1089/cmb.2015.0160](https://dx.doi.org/10.1089/cmb.2015.0160) bioRxiv:[10.1101/040196](https://dx.doi.org/10.1101/040196)
 - M. A. Alekseyev and P. A. Pevzner. "Breakpoint Graphs and Ancestral Genome Reconstructions". Genome Research 19(5) (2009), pp. 943-957
 
 Related publications
 --------------------
-- P. Avdeyev, S. Jiang, and M. A. Alekseyev. "Linearization of Median Genomes under the Double-Cut-and-Join-Indel Model". Evolutionary Bioinformatics 15 (2019), 1–12. doi:(10.1177/1176934318820534)[https://doi.org/10.1177/1176934318820534]
+- P. Avdeyev, S. Jiang, and M. A. Alekseyev. "Linearization of Median Genomes under the Double-Cut-and-Join-Indel Model". Evolutionary Bioinformatics 15 (2019), 1–12. doi:[10.1177/1176934318820534](https://doi.org/10.1177/1176934318820534)
 
 Contacts
 --------

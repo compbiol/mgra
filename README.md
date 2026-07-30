@@ -39,7 +39,7 @@ Related publications
 
 Contacts
 --------
-You can send your feedback at Max Alekseyev maxal@gwu.edu
+You can send your feedback to Max Alekseyev maxal@gwu.edu
  
 You also can report bugs or suggest features using issue tracker at GitHub
 https://github.com/ablab/mgra/issues

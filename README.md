@@ -5,7 +5,7 @@ Version: 2.3.0 beta
 
 Release date: 5 October 2015
 
-Server' website: http://mgra.cblab.org/
+Server' website: <s>http://mgra.cblab.org/</s> (decomissioned)
 
 Description
 -----------
@@ -23,19 +23,19 @@ See *docs/USAGE.md* file.
 
 Authors
 -------
-- Pavel Avdeyev (The George Washington University, Washington, DC)
+- Pavel Avdeyev (University of Texas Southwestern Medical Center, TX)
 - Nikita Kartashov (Academic University, St. Petersburg, Russia)
 - Shuai Jiang (University of South Carolina)
 - Max Alekseyev (The George Washington University, Washington, DC)
 
 Citation
 --------
-- P. Avdeyev, S. Jiang, S. Aganezov, F. Hu, and M. A. Alekseyev. "Reconstruction of ancestral genomes in presence of gene gain and loss", 2016. (submitted)
+- P. Avdeyev, S. Jiang, S. Aganezov, F. Hu, and M. A. Alekseyev. "Reconstruction of ancestral genomes in presence of gene gain and loss". Journal of Computational Biology 23:3 (2016), 150–164. doi:(10.1089/cmb.2015.0160)[https://dx.doi.org/10.1089/cmb.2015.0160] bioRxiv:(10.1101/040196)[https://dx.doi.org/10.1101/040196]
 - M. A. Alekseyev and P. A. Pevzner. "Breakpoint Graphs and Ancestral Genome Reconstructions". Genome Research 19(5) (2009), pp. 943-957
 
 Related publications
 --------------------
-- S. Jiang and M. A. Alekseyev. "Linearization of Median Genomes under DCJ". Proceedings of the 14th Workshop on Algorithms in Bioinformatics" (WABI 2014), Lecture Notes in Computer Science 8701 (2014), pp. 97-106 
+- P. Avdeyev, S. Jiang, and M. A. Alekseyev. "Linearization of Median Genomes under the Double-Cut-and-Join-Indel Model". Evolutionary Bioinformatics 15 (2019), 1–12. doi:(10.1177/1176934318820534)[https://doi.org/10.1177/1176934318820534]
 
 Contacts
 --------
